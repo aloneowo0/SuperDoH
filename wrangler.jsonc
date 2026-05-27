@@ -1,0 +1,9 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-doh-v2",
+  "main": "_worker.js",
+  "compatibility_date": "2025-05-27",
+  "observability": {
+    "enabled": true
+  }
+}

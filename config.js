@@ -1,0 +1,37 @@
+/** Active DNS upstream endpoints. */
+export const UPSTREAMS = {
+    google: 'https://dns.google/dns-query',
+    cloudflare: 'https://cloudflare-dns.com/dns-query',
+    // quad9:    'https://dns11.quad9.net/dns-query',
+    // adguard:  'https://dns.adguard-dns.com/dns-query',
+    // opendns:  'https://dns.opendns.com/dns-query',
+};
+
+/** Concurrency: wait after the first valid response (ms). */
+export const GRACE_WINDOW_MS = 50;
+
+/** Concurrency: hard cap on total wait (ms). */
+export const HARD_TIMEOUT_MS = 800;
+
+/** EDNS client-subnet IPv4 prefix length. */
+export const ECS_PREFIX4 = 24;
+
+/** EDNS client-subnet IPv6 prefix length. */
+export const ECS_PREFIX6 = 56;
+
+/** A/AAAA answers matching these ranges are blocked. */
+export const BLOCKED_RANGES = [
+    { family: 4, addr: [127, 0, 0, 0], mask: 8 },            // loopback
+    { family: 4, addr: [0, 0, 0, 0], mask: 32 },              // null
+    { family: 6, mask: 128 },                                  // :: (unspecified)
+    { family: 6, addr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], mask: 128 }, // ::1
+];
+
+/** Recognized EDNS modes. */
+export const EDNS_MODES = ['keep', 'auto', 'plus'];
+
+/** Default EDNS mode when none is specified. */
+export const DEFAULT_MODE = 'auto';
+
+/** Upstream key that triggers concurrent-fetch behaviour. */
+export const MIX_PROVIDER = 'mix';
