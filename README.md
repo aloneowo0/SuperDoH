@@ -17,12 +17,13 @@
 
 ```bash
 # 1. 编辑配置
-cp .env.example .env   # 或直接编辑 .env
-# 开关上游：GOOGLE=true / YANDEX=false ...
+# 首次部署时从模板复制：
+cp .env.example .env
+# 然后编辑 .env：开关上游、调整参数 ...
 # 调整参数：HARD_TIMEOUT_MS、ECS_PROTECT_MS ...
 
 # 2. 生成运行配置
-node scripts/build-config.cjs
+npm run build          # 或 node scripts/build-config.cjs
 
 # 3. 部署
 npx wrangler deploy
