@@ -142,16 +142,21 @@ function parseIPv6(ip) {
 function generateConfig(env, upstreams) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
-            const ecs = String(cfg.ecs);
-            const plus = String(cfg.plus);
-            return `    ${name}: { url: '${cfg.url}', ecs: ${ecs}, plus: ${plus} },`;
+            return `    ${name}: { url: '${cfg.url}', ecs: ${cfg.ecs}, plus: ${cfg.plus} },`;
         })
         .join('\n');
 
-    const blockedEntries = parseBlockedCidrs(env.BLOCKED_CIDRS || '');
-    const blockedStr = blockedEntries.length > 0
-        ? JSON.stringify(blockedEntries, null, 4)
-            .replace(/"([^"]+)":/g, '$1:')
+    const blocked = parseBlockedCidrs(env.BLOCKED_CIDRS || '');
+    const labels = { '127.0.0.0/8': 'loopback', '0.0.0.0/32': 'null', '::/128': '::', '::1/128': '::1' };
+    const blockedLines = blocked.map((e, i) => {
+        let line = `    { family: ${e.family}, `;
+        if (e.addr) line += `addr: [${e.addr.join(', ')}], `;
+        line += `mask: ${e.mask} }`;
+        if (i < blocked.length - 1) line += ',';
+        return line;
+    });
+    const blockedStr = blockedLines.length > 0
+        ? '[\n' + blockedLines.join('\n') + '\n];'
         : '[]';
 
     return `/**

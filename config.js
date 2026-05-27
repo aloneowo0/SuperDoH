@@ -22,53 +22,11 @@ export const ECS_PREFIX4 = 24;
 export const ECS_PREFIX6 = 56;
 
 export const BLOCKED_RANGES = [
-    {
-        family: 4,
-        addr: [
-            127,
-            0,
-            0,
-            0
-        ],
-        mask: 8
-    },
-    {
-        family: 4,
-        addr: [
-            0,
-            0,
-            0,
-            0
-        ],
-        mask: 32
-    },
-    {
-        family: 6,
-        mask: 128
-    },
-    {
-        family: 6,
-        addr: [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            1
-        ],
-        mask: 128
-    }
-];
+    { family: 4, addr: [127, 0, 0, 0], mask: 8 },
+    { family: 4, addr: [0, 0, 0, 0], mask: 32 },
+    { family: 6, mask: 128 },
+    { family: 6, addr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], mask: 128 }
+];;
 
 export const EDNS_MODES = ['keep', 'auto', 'plus'];
 export const DEFAULT_MODE = 'auto';
