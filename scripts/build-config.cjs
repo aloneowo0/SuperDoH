@@ -146,7 +146,6 @@ function generateConfig(env, upstreams) {
         .join('\n');
 
     const blocked = parseBlockedCidrs(env.BLOCKED_CIDRS || '');
-    const labels = { '127.0.0.0/8': 'loopback', '0.0.0.0/32': 'null', '::/128': '::', '::1/128': '::1' };
     const blockedLines = blocked.map((e, i) => {
         let line = `    { family: ${e.family}, `;
         if (e.addr) line += `addr: [${e.addr.join(', ')}], `;

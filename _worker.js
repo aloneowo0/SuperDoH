@@ -6,10 +6,6 @@ import { resolveRoute } from './router.js';
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
 
-function timed(upstreamTime) {
-  return { ...DNS_HEADERS, 'X-Upstream-Time': String(upstreamTime) };
-}
-
 export default {
   async fetch(request) {
     let body = null;
