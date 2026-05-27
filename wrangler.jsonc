@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "cloudflare-doh-v2",
+  "name": "workers-doh",
   "main": "_worker.js",
   "compatibility_date": "2025-05-27",
   "observability": {
