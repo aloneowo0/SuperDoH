@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "Workers-DoH",
+  "name": "workers-doh",
   "main": "_worker.js",
   "compatibility_date": "2025-05-27",
   "observability": {
