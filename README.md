@@ -20,7 +20,7 @@
 git clone https://github.com/YOUR_USER/cloudflare-doh-v2 && cd cloudflare-doh-v2
 
 # 2. 编辑配置
-cp .env.example .env
+# 直接编辑 .env
 # 按需开关上游、调整超时 ...
 
 # 3. 生成运行配置并推送
