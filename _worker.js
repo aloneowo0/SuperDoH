@@ -121,7 +121,11 @@ async function rfc8484Passthrough(route, request) {
 
 async function passthroughSingle(request, upstreamUrl) {
   try {
-    const upstreamReq = new Request(upstreamUrl, {
+    const qs = request.method === 'GET' && request.url.includes('?')
+      ? request.url.slice(request.url.indexOf('?')).replace(/[?&]mode=[^&]*/g, '').replace(/^&/, '?')
+      : '';
+    const url = qs ? upstreamUrl + qs : upstreamUrl;
+    const upstreamReq = new Request(url, {
       method: request.method,
       headers: { 'Accept': 'application/dns-message' },
       body: request.method !== 'GET' ? await request.clone().arrayBuffer() : undefined,
@@ -130,6 +134,48 @@ async function passthroughSingle(request, upstreamUrl) {
     const responseBody = await response.arrayBuffer();
     if (response.status === 200 && answersPass(responseBody)) return dnsResponse(responseBody);
   } catch (_) {}
+
+  const fallback = request.method !== 'GET' ? await request.clone().arrayBuffer() : new ArrayBuffer(12);
+  return dnsResponse(servfail(fallback));
+}
+
+async function passthroughAll(route, request) {
+  const started = Date.now();
+  const deadline = started + HARD_TIMEOUT_MS;
+
+  const pool = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
+    name,
+    promise: (async () => {
+      try {
+        const qs = request.method === 'GET' && request.url.includes('?')
+          ? request.url.slice(request.url.indexOf('?')).replace(/[?&]mode=[^&]*/g, '').replace(/^&/, '?')
+          : '';
+        const url = qs ? cfg.url + qs : cfg.url;
+        const upstreamReq = new Request(url, {
+          method: request.method,
+          headers: { 'Accept': 'application/dns-message' },
+          body: request.method !== 'GET' ? await request.clone().arrayBuffer() : undefined,
+        });
+        const response = await fetch(upstreamReq);
+        const responseBody = await response.arrayBuffer();
+        return response.status === 200 && answersPass(responseBody)
+          ? { valid: true, response: responseBody, time: Date.now() - started }
+          : { valid: false };
+      } catch (_) { return { valid: false }; }
+    })(),
+  }));
+
+  while (pool.length && Date.now() < deadline) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    const settled = await Promise.race([
+      ...pool.map((p) => p.promise.then((r) => ({ pending: p, result: r }))),
+      sleep(remaining).then(() => null),
+    ]);
+    if (!settled) break;
+    pool.splice(pool.indexOf(settled.pending), 1);
+    if (settled.result.valid) return dnsResponse(settled.result.response, settled.result.time);
+  }
 
   const fallback = request.method !== 'GET' ? await request.clone().arrayBuffer() : new ArrayBuffer(12);
   return dnsResponse(servfail(fallback));
