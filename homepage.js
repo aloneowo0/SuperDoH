@@ -69,7 +69,7 @@ footer a{color:var(--primary-color)}
     <h3>主要功能</h3>
     <ul>
       <li><strong>多上游并发</strong>：/mix 端点同时查询所有上游，返回最快响应</li>
-      <li><strong>EDNS 支持</strong>：mode=keep 透传原始 EDNS，mode=plus 强制补全客户端子网</li>
+       <li><strong>EDNS 支持</strong>：mode=keep 透传原始 EDNS，mode=auto 智能补全 ECS（默认），mode=plus 强制补全</li>
       <li><strong>灵活路由</strong>：每个上游独立路径，可单独使用</li>
       <li><strong>零配置部署</strong>：基于 Cloudflare Worker/Pages，无需服务器</li>
     </ul>
@@ -97,7 +97,7 @@ footer a{color:var(--primary-color)}
 
   <section>
     <h2>使用方法</h2>
-    <p>所有端点均支持 JSON 查询和 DNS wire-format 请求（POST application/dns-message）。</p>
+    <p>所有端点通过 POST application/dns-message（DNS wire-format 二进制）查询。</p>
     <h3>并发模式</h3>
     <pre><code>curl "https://__HOST__/mix/query-dns?name=example.com&type=A"
 # 全部上游并发，返回最快有效响应</code></pre>
@@ -110,7 +110,7 @@ footer a{color:var(--primary-color)}
     <h3>单上游查询</h3>
     <pre><code>curl "https://__HOST__/google/query-dns?name=example.com"
 curl "https://__HOST__/cloudflare/query-dns?name=example.com"</code></pre>
-    <p style="font-size:.85em;color:#666;margin-top:.8rem">更多可选上游：<span class="endpoint">/quad9/query-dns</span> <span class="endpoint">/adguard/query-dns</span> <span class="endpoint">/opendns/query-dns</span>（在 config.js 中取消注释即可启用）</p>
+    <p style="font-size:.85em;color:#666;margin-top:.8rem">更多上游可通过编辑 <code>.env</code> 启用（设置 <code>=true</code> 后运行 <code>npm run build</code>）</p>
   </section>
 </div>
 <footer>
@@ -206,7 +206,7 @@ footer a{color:var(--primary-color)}
     <h3>Key Features</h3>
     <ul>
       <li><strong>Multi-upstream race</strong>: /mix endpoint queries all upstreams concurrently, returns the fastest valid response</li>
-      <li><strong>EDNS control</strong>: mode=keep passes through original EDNS, mode=plus injects client-subnet</li>
+      <li><strong>EDNS control</strong>: mode=keep passes through original EDNS, mode=auto intelligently fills ECS (default), mode=plus forces full extension</li>
       <li><strong>Flexible routing</strong>: Each upstream at its own dedicated path</li>
       <li><strong>Zero-config deploy</strong>: Cloudflare Worker/Pages, no server maintenance</li>
     </ul>
@@ -234,7 +234,7 @@ footer a{color:var(--primary-color)}
 
   <section>
     <h2>Usage</h2>
-    <p>All endpoints support JSON queries and DNS wire-format requests (POST application/dns-message).</p>
+    <p>All endpoints use POST application/dns-message (DNS wire-format binary).</p>
     <h3>Concurrent mode</h3>
     <pre><code>curl "https://__HOST__/mix/query-dns?name=example.com&type=A"
 # Queries all upstreams, returns fastest response</code></pre>
@@ -247,7 +247,7 @@ footer a{color:var(--primary-color)}
     <h3>Single upstream</h3>
     <pre><code>curl "https://__HOST__/google/query-dns?name=example.com"
 curl "https://__HOST__/cloudflare/query-dns?name=example.com"</code></pre>
-    <p style="font-size:.85em;color:#666;margin-top:.8rem">More optional upstreams: <span class="endpoint">/quad9/query-dns</span> <span class="endpoint">/adguard/query-dns</span> <span class="endpoint">/opendns/query-dns</span> (uncomment in config.js to enable)</p>
+    <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams by editing <code>.env</code> (set <code>=true</code> then run <code>npm run build</code>)</p>
   </section>
 </div>
 <footer>

@@ -11,7 +11,7 @@
 - **10 个预设上游** — Google / Cloudflare / Quad9 / AdGuard / OpenDNS / Yandex / DNSPod / AliDNS / 360 / NextDNS
 - **自定义上游** — 通过 .env 添加任意 DoH 端点
 - **Homepage** — 内置中英文管理页，展示 EDNS 能力表 + 延迟检测
-- **跨平台** — 支持 Cloudflare Workers / Vercel / EdgeOne Pages
+- **跨平台** — Cloudflare Workers 基准实现，Vercel / EdgeOne Pages 适配计划中
 
 ## 快速开始
 
@@ -85,11 +85,11 @@ BLOCKED_CIDRS=127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128
 
 ```
 t=0   并发 fire 全部上游
-      ├── 保护期 20ms ───┐
+       ├── 保护期 20ms ───┐
 t=10  [google] ECS ✅ 到了 → 有效 → 立即返回
-t=15  [cf]    非 ECS 到了 → 缓存，等窗口结束
-t=20  保护期结束，缓存的结果现在可用
-      继续等剩余上游 → 谁先到有效用谁
+t=15  [cf]    非 ECS 到了 → 丢弃，继续等
+t=20  保护期结束，所有新到的响应均可立即返回
+       接着等 → 谁先到有效用谁
 ```
 
 ### ECS 未启用时（mode=keep 且无 ECS）
@@ -116,19 +116,20 @@ t=5   [cf] 到了 → 有效 → 立即返回（纯竞速）
 
 ## 使用示例
 
+所有查询使用 `POST application/dns-message`（DNS wire format 二进制）。
+
 ```bash
 # 并发查询（默认 auto）
-curl -X POST -H "Content-Type: application/dns-message" \
-  --data-binary @query.bin \
+echo -n -e '\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x02qq\x03com\x00\x00\x01\x00\x01' \
+  | curl -sS -X POST -H "Content-Type: application/dns-message" \
+  --data-binary @- \
   "https://your-worker.dev/mix/query-dns"
 
 # 单上游 + plus 模式
-curl -X POST -H "Content-Type: application/dns-message" \
-  --data-binary @query.bin \
+echo -n -e '\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x02qq\x03com\x00\x00\x01\x00\x01' \
+  | curl -sS -X POST -H "Content-Type: application/dns-message" \
+  --data-binary @- \
   "https://your-worker.dev/google/query-dns?mode=plus"
-
-# v1 兼容
-curl "https://your-worker.dev/query-dns?name=example.com&type=A"
 ```
 
 ## 注意事项
@@ -149,6 +150,7 @@ cloudflare-doh-v2/
 ├── edns.js                   # DNS 包解析、EDNS 注入/过滤
 ├── homepage.js               # 中英文管理页
 ├── wrangler.jsonc            # Cloudflare 部署配置
+├── .gitignore
 └── package.json
 ```
 
