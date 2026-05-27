@@ -104,8 +104,8 @@ function stripLocalParams(search) {
 }
 
 async function rfc8484Passthrough(route, request) {
-  const target = route.provider === MIX_PROVIDER
-    ? Object.values(UPSTREAMS)[0]
+  let target = route.provider === MIX_PROVIDER
+    ? (UPSTREAMS['google'] || Object.values(UPSTREAMS)[0])
     : UPSTREAMS[route.provider];
   if (!target) return jsonError('unknown_provider');
 
