@@ -18,13 +18,19 @@ export default {
           : serveHomepage(request, UPSTREAMS, upstreamNames);
       }
       if (route.error) return jsonError(route.error);
+
+      const clientIP = request.headers.get('CF-Connecting-IP');
+      const acceptHeader = request.headers.get('Accept') || '';
+      if (acceptHeader.includes('application/dns-json')) {
+        return await rfc8484Passthrough(route, request, clientIP);
+      }
+
       if (request.method === 'GET') {
         body = buildQueryFromURL(new URL(request.url));
         if (!body) return jsonError('missing_name_or_type');
       } else {
         body = await request.clone().arrayBuffer();
       }
-      const clientIP = request.headers.get('CF-Connecting-IP');
       if (route.provider === MIX_PROVIDER) {
         return await concurrentAll(body, clientIP, route.mode, route.queryString);
       }
@@ -71,6 +77,34 @@ function buildQueryFromURL(url) {
   out.set(nameBytes, 12);
   out.set(new Uint8Array(question), 12 + nameBytes.length);
   return out.buffer;
+}
+
+async function rfc8484Passthrough(route, request, clientIP) {
+  const target = route.provider === MIX_PROVIDER
+    ? Object.values(UPSTREAMS)[0]
+    : UPSTREAMS[route.provider];
+  if (!target) return jsonError('unknown_provider');
+
+  const url = new URL(target.url + route.queryString);
+  const upstreamReq = new Request(url, {
+    method: request.method,
+    headers: {
+      'Accept': 'application/dns-json',
+      'Content-Type': request.headers.get('Content-Type') || 'application/dns-json',
+    },
+    body: request.method !== 'GET' ? await request.clone().arrayBuffer() : null,
+  });
+
+  try {
+    const response = await fetch(upstreamReq);
+    const body = await response.arrayBuffer();
+    return new Response(body, {
+      status: response.status,
+      headers: { 'Content-Type': 'application/dns-json' },
+    });
+  } catch (_) {
+    return jsonError('upstream_error', 502);
+  }
 }
 
 async function singleUpstream(provider, body, clientIP, mode, queryString) {
