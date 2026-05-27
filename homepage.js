@@ -115,7 +115,7 @@ curl "https://__HOST__/cloudflare/query-dns?name=example.com"</code></pre>
 </div>
 <footer>
   <div class="container">
-    <p>Forked from <a href="https://github.com/jqknono/cloudflare-doh">jqknono/cloudflare-doh</a> | MIT License</p>
+    <p>MIT License</p>
   </div>
 </footer>
 <script>
@@ -252,7 +252,7 @@ curl "https://__HOST__/cloudflare/query-dns?name=example.com"</code></pre>
 </div>
 <footer>
   <div class="container">
-    <p>Forked from <a href="https://github.com/jqknono/cloudflare-doh">jqknono/cloudflare-doh</a> | MIT License</p>
+    <p>MIT License</p>
   </div>
 </footer>
 <script>
