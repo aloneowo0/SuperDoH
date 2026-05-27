@@ -1,4 +1,4 @@
-import { ECS_PRIORITY, GRACE_WINDOW_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, NO_ECS_PRIORITY, UPSTREAMS } from './config.js';
+import { HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS } from './config.js';
 import { autoMode, detectECS, filterAnswers, keepMode, plusMode } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { resolveRoute } from './router.js';
@@ -54,47 +54,49 @@ async function singleUpstream(provider, body, clientIP, mode, queryString) {
 
 async function concurrentAll(body, clientIP, mode, queryString) {
   const hasEcs = mode !== 'keep' || detectECS(body);
-  const priority = hasEcs ? ECS_PRIORITY : NO_ECS_PRIORITY;
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
-  const pending = priority
-    .filter((name) => UPSTREAMS[name])
-    .map((name) => ({
-      name,
-      promise: queryUpstream(name, UPSTREAMS[name].url,
-        applyMode(body, clientIP, mode, name), started),
-    }));
+  const racePool = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
+    name,
+    ecs: cfg.ecs,
+    promise: queryUpstream(name, cfg.url, applyMode(body, clientIP, mode, name), started),
+  }));
 
-  const results = [];
-  let graceStop = 0;
+  if (hasEcs) {
+    // Phase 1: ECS-supported only, 20ms head start
+    const phase1End = started + 20;
+    const ecsPool = racePool.filter((u) => u.ecs);
+    while (ecsPool.length && Date.now() < Math.min(phase1End, deadline)) {
+      const remaining = Math.min(phase1End, deadline) - Date.now();
+      if (remaining <= 0) break;
+      const settled = await Promise.race([
+        ...ecsPool.map((u) => u.promise.then((r) => ({ upstream: u, result: r }))),
+        sleep(remaining).then(() => null),
+      ]);
+      if (!settled) break;
+      ecsPool.splice(ecsPool.indexOf(settled.upstream), 1);
+      if (settled.result.valid) return dnsResponse(settled.result.response, settled.result.time);
+    }
+    // Phase 2: add non-ECS, continue racing
+    const allPool = [...ecsPool, ...racePool.filter((u) => !u.ecs)];
+    return raceFirstValid(allPool, deadline, body);
+  }
 
-  while (pending.length && Date.now() < deadline) {
+  return raceFirstValid(racePool, deadline, body);
+}
+
+async function raceFirstValid(pool, deadline, body) {
+  while (pool.length && Date.now() < deadline) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
     const settled = await Promise.race([
-      ...pending.map((p) => p.promise.then((result) => ({ pending: p, result }))),
+      ...pool.map((u) => u.promise.then((r) => ({ upstream: u, result: r }))),
       sleep(remaining).then(() => null),
     ]);
     if (!settled) break;
-    const idx = pending.indexOf(settled.pending);
-    if (idx >= 0) pending.splice(idx, 1);
-    results.push(settled.result);
-
-    if (settled.result.valid && !graceStop) {
-      graceStop = Date.now() + GRACE_WINDOW_MS;
-    }
-    if (graceStop && Date.now() >= graceStop) {
-      for (const name of priority) {
-        const result = results.find((r) => r.name === name && r.valid);
-        if (result) return dnsResponse(result.response, result.time);
-      }
-    }
-  }
-
-  for (const name of priority) {
-    const result = results.find((r) => r.name === name && r.valid);
-    if (result) return dnsResponse(result.response, result.time);
+    pool.splice(pool.indexOf(settled.upstream), 1);
+    if (settled.result.valid) return dnsResponse(settled.result.response, settled.result.time);
   }
   return dnsResponse(servfail(body));
 }
