@@ -56,45 +56,37 @@ async function concurrentAll(body, clientIP, mode, queryString) {
   const hasEcs = mode !== 'keep' || detectECS(body);
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
-
-  // Fire all upstreams concurrently
-  const pool = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
-    name,
-    ecs: cfg.ecs,
-    promise: queryUpstream(name, cfg.url, applyMode(body, clientIP, mode, name), started),
-    held: false,
-  }));
-
   const protectEnd = hasEcs ? started + ECS_PROTECT_MS : 0;
 
-  while (pool.some((u) => !u.held) && Date.now() < deadline) {
+  // Fire all upstreams concurrently, each wrapped to capture result
+  const pending = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
+    name,
+    ecs: cfg.ecs,
+    promise: queryUpstream(name, cfg.url, applyMode(body, clientIP, mode, name), started)
+      .then((r) => ({ ecs: cfg.ecs, result: r })),
+  }));
+
+  while (pending.length && Date.now() < deadline) {
     const remaining = Math.min(protectEnd > Date.now() ? protectEnd : deadline, deadline) - Date.now();
     if (remaining <= 0) break;
     const settled = await Promise.race([
-      ...pool.filter((u) => !u.held).map((u) => u.promise.then((r) => ({ upstream: u, result: r }))),
+      ...pending.map((p) => p.promise.then((r) => ({ pending: p, value: r }))),
       sleep(remaining).then(() => null),
     ]);
     if (!settled) break;
-    settled.upstream.held = true;
+    pending.splice(pending.indexOf(settled.pending), 1);
 
     if (protectEnd && Date.now() < protectEnd) {
       // Protection window: only return valid ECS responses
-      if (settled.upstream.ecs && settled.result.valid) {
-        return dnsResponse(settled.result.response, settled.result.time);
+      if (settled.value.ecs && settled.value.result.valid) {
+        return dnsResponse(settled.value.result.response, settled.value.result.time);
       }
-      // Non-ECS or invalid → held, continue waiting
       continue;
     }
 
     // After protection: any valid response wins
-    if (settled.result.valid) return dnsResponse(settled.result.response, settled.result.time);
-  }
-
-  // Still nothing? Check any buffered valid results
-  for (const u of pool) {
-    if (u.held) {
-      const result = await u.promise;
-      if (result.valid) return dnsResponse(result.response, result.time);
+    if (settled.value.result.valid) {
+      return dnsResponse(settled.value.result.response, settled.value.result.time);
     }
   }
 
