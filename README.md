@@ -15,21 +15,11 @@
 
 ## 快速开始
 
-**在线部署（推荐）**
-
 1. Fork 本仓库
-2. 在线编辑 `.env`：开关上游、调整超时
+2. 在线编辑 `.env`：开关上游、调整参数
 3. Cloudflare 控制台 → Workers & Pages → 连接仓库
-4. Build command 设为 `npm run build`
-5. 保存，自动部署
-
-**本地部署**
-
-```bash
-git clone https://github.com/YOUR_USER/Workers-DoH && cd Workers-DoH
-# 编辑 .env 后运行：
-npm run build && git add config.js && git commit -m "update config" && git push
-```
+4. Build command 设为 `npm run build`，保存即自动部署
+5. 之后改 `.env` 推送即可自动更新
 
 ## 配置
 
