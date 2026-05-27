@@ -14,8 +14,8 @@ export default {
       const upstreamNames = [MIX_PROVIDER, ...Object.keys(UPSTREAMS)];
       if (route.home) {
         return new URL(request.url).pathname === '/en'
-          ? serveHomepageEn(request, upstreamNames)
-          : serveHomepage(request, upstreamNames);
+          ? serveHomepageEn(request, UPSTREAMS)
+          : serveHomepage(request, UPSTREAMS);
       }
       if (route.error) return jsonError(route.error);
       body = await request.clone().arrayBuffer();

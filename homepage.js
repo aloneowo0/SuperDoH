@@ -44,6 +44,11 @@ footer a{color:var(--primary-color)}
 #results th{border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
 #results td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
 #results tr:hover td{background:#fafafa}
+.caps-table{width:100%;border-collapse:collapse;margin-top:8px}
+.caps-table th{background:#f5f5f5;border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
+.caps-table td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
+.caps-table .yes{color:#27ae60;font-weight:700}
+.caps-table .no{color:#e74c3c}
 @media(max-width:600px){header h1{font-size:1.5rem}section{padding:1rem}.lang-switch{float:none;display:inline-block;margin-top:.5rem}}
 </style>
 </head>
@@ -71,6 +76,12 @@ footer a{color:var(--primary-color)}
   <section>
     <h2>可用端点</h2>
     <p>__UPSTREAM_LIST__</p>
+  </section>
+
+  <section>
+    <h2>上游 EDNS 能力</h2>
+    <p>部署时自动探测或手动标记的 EDNS 支持情况：</p>
+    __EDNS_CAPS_TABLE__
   </section>
 
   <section>
@@ -167,6 +178,11 @@ footer a{color:var(--primary-color)}
 #results th{border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
 #results td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
 #results tr:hover td{background:#fafafa}
+.caps-table{width:100%;border-collapse:collapse;margin-top:8px}
+.caps-table th{background:#f5f5f5;border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
+.caps-table td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
+.caps-table .yes{color:#27ae60;font-weight:700}
+.caps-table .no{color:#e74c3c}
 @media(max-width:600px){header h1{font-size:1.5rem}section{padding:1rem}.lang-switch{float:none;display:inline-block;margin-top:.5rem}}
 </style>
 </head>
@@ -194,6 +210,12 @@ footer a{color:var(--primary-color)}
   <section>
     <h2>Available Endpoints</h2>
     <p>__UPSTREAM_LIST__</p>
+  </section>
+
+  <section>
+    <h2>Upstream EDNS Capabilities</h2>
+    <p>Auto-detected or manually configured EDNS support:</p>
+    __EDNS_CAPS_TABLE__
   </section>
 
   <section>
@@ -268,11 +290,26 @@ function buildCheckboxes(names) {
     .join('');
 }
 
-function inject(html, host, upstreamNames) {
+function buildCapsTable(upstreams) {
+  if (!upstreams || Object.keys(upstreams).length === 0) return '<em>none</em>';
+  let rows = '<table class="caps-table"><thead><tr><th>Upstream</th><th>URL</th><th>ECS</th><th>Plus</th></tr></thead><tbody>';
+  for (const [name, cfg] of Object.entries(upstreams)) {
+    const ecs = cfg.ecs ? '<span class="yes">\u2705</span>' : '<span class="no">\u2716</span>';
+    const plus = cfg.plus ? '<span class="yes">\u2705</span>' : '<span class="no">\u2716</span>';
+    const urlShort = cfg.url.length > 60 ? cfg.url.slice(0, 57) + '...' : cfg.url;
+    rows += `<tr><td><strong>${name}</strong></td><td style="font-size:.82em;word-break:break-all">${urlShort}</td><td>${ecs}</td><td>${plus}</td></tr>`;
+  }
+  rows += '</tbody></table>';
+  return rows;
+}
+
+function inject(html, host, upstreams) {
+  const names = Object.keys(upstreams);
   return html
     .replaceAll('__HOST__', host)
-    .replace('__UPSTREAM_LIST__', buildUpstreamList(upstreamNames))
-    .replace('__UPSTREAM_CHECKBOXES__', buildCheckboxes(upstreamNames));
+    .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
+    .replace('__UPSTREAM_CHECKBOXES__', buildCheckboxes(names))
+    .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams));
 }
 
 // ── Exports ────────────────────────────────────────────────────────
@@ -280,12 +317,12 @@ function inject(html, host, upstreamNames) {
 /**
  * Serve Chinese homepage.
  * @param {Request} request
- * @param {string[]} upstreamNames  e.g. ['mix', 'google', 'cloudflare']
+ * @param {object} upstreams  UPSTREAMS config object
  * @returns {Response}
  */
-export function serveHomepage(request, upstreamNames) {
+export function serveHomepage(request, upstreams) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_CN, host, upstreamNames), {
+  return new Response(inject(HTML_CN, host, upstreams), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
@@ -294,12 +331,12 @@ export function serveHomepage(request, upstreamNames) {
 /**
  * Serve English homepage.
  * @param {Request} request
- * @param {string[]} upstreamNames  e.g. ['mix', 'google', 'cloudflare']
+ * @param {object} upstreams  UPSTREAMS config object
  * @returns {Response}
  */
-export function serveHomepageEn(request, upstreamNames) {
+export function serveHomepageEn(request, upstreams) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_EN, host, upstreamNames), {
+  return new Response(inject(HTML_EN, host, upstreams), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
