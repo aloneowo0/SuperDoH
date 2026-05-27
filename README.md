@@ -15,20 +15,21 @@
 
 ## 快速开始
 
+**在线部署（推荐）**
+
+1. Fork 本仓库
+2. 在线编辑 `.env`：开关上游、调整超时
+3. Cloudflare 控制台 → Workers & Pages → 连接仓库
+4. Build command 设为 `npm run build`
+5. 保存，自动部署
+
+**本地部署**
+
 ```bash
-# 1. Fork 本仓库，Clone 到本地
-git clone https://github.com/YOUR_USER/cloudflare-doh-v2 && cd cloudflare-doh-v2
-
-# 2. 编辑配置
-# 直接编辑 .env
-# 按需开关上游、调整超时 ...
-
-# 3. 生成运行配置并推送
+git clone https://github.com/YOUR_USER/Workers-DoH && cd Workers-DoH
+# 编辑 .env 后运行：
 npm run build && git add config.js && git commit -m "update config" && git push
 ```
-
-> Cloudflare Workers 检测到 main 分支更新后自动部署。
-> 也可在 Cloudflare 控制台将 Build command 设为 `npm run build`，之后每次改 `.env` 直接在线编辑即可，无需本地构建。
 
 ## 配置
 
@@ -142,7 +143,7 @@ echo -n -e '\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x02qq\x03com\x00\x0
 ## 项目结构
 
 ```
-cloudflare-doh-v2/
+Workers-DoH/
 ├── .env                      # 用户配置（上游开关、超时等）
 ├── scripts/build-config.cjs  # 构建脚本：.env → config.js
 ├── config.js                 # 运行时配置（自动生成）
