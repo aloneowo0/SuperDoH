@@ -12,7 +12,7 @@ export const UPSTREAMS = {
 };
 
 /** Concurrency: grace window after first valid response arrives (ms). */
-export const GRACE_WINDOW_MS = 80;
+export const GRACE_WINDOW_MS = 20;
 
 /** Concurrency: hard cap on total wait (ms). */
 export const HARD_TIMEOUT_MS = 800;
