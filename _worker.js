@@ -81,8 +81,12 @@ async function concurrentAll(body, clientIP, mode, queryString) {
     if (idx >= 0) pending.splice(idx, 1);
     results.push(settled.result);
 
-    if (!graceStop && settled.result.valid) {
-      graceStop = Date.now() + GRACE_WINDOW_MS;
+    if (settled.result.valid) {
+      // If this is the #1 priority, return immediately
+      if (settled.result.name === priority[0]) {
+        return dnsResponse(settled.result.response, settled.result.time);
+      }
+      if (!graceStop) graceStop = Date.now() + GRACE_WINDOW_MS;
     }
     if (graceStop && Date.now() >= graceStop) {
       for (const name of priority) {
