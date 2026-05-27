@@ -1,4 +1,4 @@
-import { ECS_PRIORITY, HARD_TIMEOUT_MS, MIX_PROVIDER, NO_ECS_PRIORITY, UPSTREAMS } from './config.js';
+import { ECS_PRIORITY, GRACE_WINDOW_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, NO_ECS_PRIORITY, UPSTREAMS } from './config.js';
 import { autoMode, detectECS, filterAnswers, keepMode, plusMode } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { resolveRoute } from './router.js';
@@ -67,6 +67,8 @@ async function concurrentAll(body, clientIP, mode, queryString) {
     }));
 
   const results = [];
+  let graceStop = 0;
+
   while (pending.length && Date.now() < deadline) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
@@ -78,6 +80,16 @@ async function concurrentAll(body, clientIP, mode, queryString) {
     const idx = pending.indexOf(settled.pending);
     if (idx >= 0) pending.splice(idx, 1);
     results.push(settled.result);
+
+    if (!graceStop && settled.result.valid) {
+      graceStop = Date.now() + GRACE_WINDOW_MS;
+    }
+    if (graceStop && Date.now() >= graceStop) {
+      for (const name of priority) {
+        const result = results.find((r) => r.name === name && r.valid);
+        if (result) return dnsResponse(result.response, result.time);
+      }
+    }
   }
 
   for (const name of priority) {
