@@ -3,7 +3,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const dns = require('dns');
 const { execSync } = require('child_process');
 
 // ── 预设上游的 URL 和 EDNS 能力 ──────────────────────────────────
@@ -160,7 +159,7 @@ function generateConfig(env, upstreams) {
         : '[]';
 
     return `/**
- * DoH Proxy v2 — 配置文件（由 scripts/build-config.js 自动生成）
+ * DoH Proxy v2 — 配置文件（由 scripts/build-config.cjs 自动生成）
  * 不要手动编辑此文件，修改 .env 后重新运行构建脚本。
  */
 
