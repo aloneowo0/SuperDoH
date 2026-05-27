@@ -17,12 +17,6 @@ export const ECS_PROTECT_MS = 20;
 /** Concurrency: hard cap on total wait (ms). */
 export const HARD_TIMEOUT_MS = 800;
 
-/** Mix priority when ECS is present (ECS-supported first, non-supported last). */
-export const ECS_PRIORITY = ['google', 'quad9', 'opendns', 'adguard', 'alidns', 'dnspod', '360', 'cloudflare', 'yandex'];
-
-/** Mix priority when no ECS (base order). */
-export const NO_ECS_PRIORITY = ['cloudflare', 'google', 'quad9', 'opendns', 'adguard', 'alidns', 'dnspod', 'yandex', '360'];
-
 /** EDNS client-subnet IPv4 prefix length. */
 export const ECS_PREFIX4 = 24;
 
