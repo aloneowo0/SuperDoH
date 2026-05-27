@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build-config.cjs",
+    "predeploy": "npm run build",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
