@@ -1,7 +1,7 @@
 /** Active DNS upstream endpoints with EDNS capability flags. */
 export const UPSTREAMS = {
     google:     { url: 'https://dns.google/dns-query',         ecs: true,  plus: true  },
-    cloudflare: { url: 'https://cloudflare-dns.com/dns-query', ecs: false, plus: false },
+    cloudflare: { url: 'https://cloudflare-dns.com/dns-query', ecs: true,  plus: true  },
     quad9:      { url: 'https://dns11.quad9.net/dns-query',   ecs: true,  plus: true  },
     adguard:    { url: 'https://dns.adguard-dns.com/dns-query', ecs: true,  plus: true  },
     opendns:    { url: 'https://dns.opendns.com/dns-query',   ecs: true,  plus: true  },
