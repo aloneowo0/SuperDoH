@@ -102,21 +102,11 @@ function parseBlockedCidrs(cidrsStr) {
             if (cidr.includes(':')) {
                 const [ip, pfxStr] = cidr.split('/');
                 const mask = parseInt(pfxStr) || 128;
-                // :: → skip addr (matches all zeros)
-                if (ip === '::') {
+                const addr = parseIPv6(ip);
+                if (!addr) continue;
+                if (addr.every(b => b === 0)) {
                     entries.push({ family: 6, mask });
                 } else {
-                    // Parse IPv6 address into 16-byte array
-                    const parts = ip.split(':');
-                    const addr = new Array(16).fill(0);
-                    const expanded = ip.includes('::')
-                        ? expandIPv6(ip) : ip;
-                    const bytes = expanded.split(':').flatMap(g =>
-                        [parseInt(g.slice(0,2)||'0',16), parseInt(g.slice(2,4)||'0',16)]
-                    );
-                    for (let i = 0; i < Math.min(bytes.length, 16); i++) {
-                        addr[i] = bytes[i];
-                    }
                     entries.push({ family: 6, addr, mask });
                 }
             } else {
@@ -130,22 +120,31 @@ function parseBlockedCidrs(cidrsStr) {
     return entries;
 }
 
-function expandIPv6(ip) {
+function parseIPv6(ip) {
+    // Expand :: to full 8 groups
     const parts = ip.split('::');
-    const left = parts[0] ? parts[0].split(':') : [];
-    const right = parts[1] ? parts[1].split(':') : [];
-    const missing = 8 - left.length - right.length;
-    return [...left, ...Array(missing).fill('0'), ...right].join(':');
+    if (parts.length > 2) return null;
+    const left = parts[0] ? parts[0].split(':').filter(g => g !== '') : [];
+    const right = parts[1] ? parts[1].split(':').filter(g => g !== '') : [];
+    const fill = 8 - left.length - right.length;
+    if (fill < 0) return null;
+    const groups = [...left, ...Array(fill).fill('0'), ...right];
+    const addr = new Array(16).fill(0);
+    for (let i = 0; i < 8; i++) {
+        const val = parseInt(groups[i] || '0', 16);
+        addr[i * 2] = (val >> 8) & 0xFF;
+        addr[i * 2 + 1] = val & 0xFF;
+    }
+    return addr;
 }
 
 // ── 生成 config.js ─────────────────────────────────────────────────
 function generateConfig(env, upstreams) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
-            const ecs = String(cfg.ecs).padEnd(5);
-            const plus = String(cfg.plus).padEnd(5);
-            return `    ${name.padEnd(12)}: { url: '${cfg.url}', ` +
-                   `ecs: ${ecs}, plus: ${plus} },`;
+            const ecs = String(cfg.ecs);
+            const plus = String(cfg.plus);
+            return `    ${name}: { url: '${cfg.url}', ecs: ${ecs}, plus: ${plus} },`;
         })
         .join('\n');
 
