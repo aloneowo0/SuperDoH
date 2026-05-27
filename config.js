@@ -4,11 +4,16 @@
  */
 
 export const UPSTREAMS = {
+    360         : { url: 'https://doh.360.cn/dns-query', ecs: true , plus: true  },
     google      : { url: 'https://dns.google/dns-query', ecs: true , plus: true  },
     cloudflare  : { url: 'https://cloudflare-dns.com/dns-query', ecs: true , plus: true  },
     quad9       : { url: 'https://dns11.quad9.net/dns-query', ecs: true , plus: true  },
     adguard     : { url: 'https://dns.adguard-dns.com/dns-query', ecs: true , plus: true  },
     opendns     : { url: 'https://dns.opendns.com/dns-query', ecs: true , plus: true  },
+    yandex      : { url: 'https://common.dot.dns.yandex.net/dns-query', ecs: false, plus: false },
+    dnspod      : { url: 'https://sm2.doh.pub/dns-query', ecs: true , plus: true  },
+    alidns      : { url: 'https://dns.alidns.com/dns-query', ecs: true , plus: true  },
+    nextdns     : { url: 'https://dns.nextdns.io', ecs: true , plus: true  },
 };
 
 export const ECS_PROTECT_MS = 20;
