@@ -19,6 +19,10 @@ export default {
       }
       if (route.error) return jsonError(route.error);
       body = await request.clone().arrayBuffer();
+      if (!body || body.byteLength === 0) {
+        body = buildQueryFromURL(new URL(request.url));
+        if (!body) return jsonError('missing_name_or_type');
+      }
       const clientIP = request.headers.get('CF-Connecting-IP');
       if (route.provider === MIX_PROVIDER) {
         return await concurrentAll(body, clientIP, route.mode, route.queryString);
@@ -29,6 +33,44 @@ export default {
     }
   },
 };
+
+function buildQueryFromURL(url) {
+  const name = url.searchParams.get('name') || url.searchParams.get('dns');
+  if (!name) return null;
+  const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
+  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12 };
+  const qtype = typeMap[typeStr] || 1;
+
+  const buf = new ArrayBuffer(12);
+  const view = new DataView(buf);
+  view.setUint16(0, Math.floor(Math.random() * 65536));
+  view.setUint16(2, 0x0100);
+  view.setUint16(4, 1);
+  view.setUint16(6, 0);
+  view.setUint16(8, 0);
+  view.setUint16(10, 0);
+
+  const labels = name.replace(/\.+$/, '').split('.');
+  const nameBytes = [];
+  for (const label of labels) {
+    if (label.length > 63) return null;
+    nameBytes.push(label.length);
+    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
+  }
+  nameBytes.push(0);
+
+  const question = new ArrayBuffer(4);
+  const qv = new DataView(question);
+  qv.setUint16(0, qtype);
+  qv.setUint16(2, 1);
+
+  const total = 12 + nameBytes.length + 4;
+  const out = new Uint8Array(total);
+  out.set(new Uint8Array(buf), 0);
+  out.set(nameBytes, 12);
+  out.set(new Uint8Array(question), 12 + nameBytes.length);
+  return out.buffer;
+}
 
 async function singleUpstream(provider, body, clientIP, mode, queryString) {
   const upstream = UPSTREAMS[provider];

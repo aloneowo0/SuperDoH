@@ -1,4 +1,4 @@
-# DoH Proxy v2
+# Workers-DoH
 
 基于 Cloudflare Workers 的轻量级 DNS over HTTPS 代理，支持多上游并发竞速和 EDNS Client-Subnet 注入。
 
@@ -55,7 +55,7 @@ BLOCKED_CIDRS=127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128
 
 ## API
 
-所有端点支持 POST `application/dns-message`（DNS wire format）。
+所有端点支持 `POST application/dns-message` 和 `GET ?name=&type=`。
 
 | 端点 | 说明 |
 |------|------|

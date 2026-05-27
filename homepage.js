@@ -58,7 +58,7 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/en" class="lang-switch">EN</a>
-    <h1>DoH 服务</h1>
+    <h1>Workers-DoH</h1>
     <p class="subtitle">轻量级 DNS over HTTPS 代理</p>
   </div>
 </header>
@@ -97,7 +97,7 @@ footer a{color:var(--primary-color)}
 
   <section>
     <h2>使用方法</h2>
-    <p>所有端点通过 POST application/dns-message（DNS wire-format 二进制）查询。</p>
+    <p>支持 POST application/dns-message 二进制和 GET 查询参数（?name=&type=）。</p>
     <h3>并发模式</h3>
     <pre><code>curl "https://__HOST__/mix/query-dns?name=example.com&type=A"
 # 全部上游并发，返回最快有效响应</code></pre>
@@ -195,8 +195,8 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/" class="lang-switch">中文</a>
-    <h1>DoH Service</h1>
-    <p class="subtitle">A lightweight DNS over HTTPS proxy</p>
+    <h1>Workers-DoH</h1>
+    <p class="subtitle">DNS over HTTPS on Cloudflare Workers</p>
   </div>
 </header>
 <div class="container">
@@ -234,7 +234,7 @@ footer a{color:var(--primary-color)}
 
   <section>
     <h2>Usage</h2>
-    <p>All endpoints use POST application/dns-message (DNS wire-format binary).</p>
+    <p>Supports POST application/dns-message binary and GET query params (?name=&type=).</p>
     <h3>Concurrent mode</h3>
     <pre><code>curl "https://__HOST__/mix/query-dns?name=example.com&type=A"
 # Queries all upstreams, returns fastest response</code></pre>

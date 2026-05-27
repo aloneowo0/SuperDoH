@@ -1,5 +1,5 @@
 /**
- * DoH Proxy v2 — 配置文件（由 scripts/build-config.cjs 自动生成）
+ * Workers-DoH — 配置文件（由 scripts/build-config.cjs 自动生成）
  * 不要手动编辑此文件，修改 .env 后重新运行构建脚本。
  */
 
