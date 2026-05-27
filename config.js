@@ -9,7 +9,7 @@ export const UPSTREAMS = {
     dnspod:     { url: 'https://sm2.doh.pub/dns-query',       ecs: true,  plus: true  },
     alidns:     { url: 'https://dns.alidns.com/dns-query',    ecs: true,  plus: true  },
     360:        { url: 'https://doh.360.cn/dns-query',        ecs: true,  plus: true  },
-    nextdns:    { url: 'https://dns.nextdns.io',           ecs: false, plus: true  },
+    nextdns:    { url: 'https://dns.nextdns.io',           ecs: true,  plus: true  },
 };
 
 /** Mix: protection window for ECS-supported upstreams (ms). Non-ECS responses are buffered until this expires. */
