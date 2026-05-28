@@ -24,10 +24,18 @@ export default {
         return await rfc8484Passthrough(route, request);
       }
 
-      // keep mode: forward request as-is, only filter the response
+      // keep mode: do not modify EDNS; encode local GET helpers as plain DNS wire-format
       if (route.mode === 'keep') {
+        const url = new URL(request.url);
+        if (request.method === 'GET' && (url.searchParams.has('name') || url.searchParams.has('dns'))) {
+          body = buildQueryFromURL(url);
+          if (!body) return jsonError('missing_name_or_type');
+          if (route.provider === MIX_PROVIDER) return await concurrentAll(body, null, route.mode);
+          return await singleUpstream(route.provider, body, null, route.mode);
+        }
+
         if (route.provider === MIX_PROVIDER) {
-          return await passthroughAll(route, request);
+          return await passthroughAll(request);
         }
         const upstream = UPSTREAMS[route.provider];
         if (!upstream) return jsonError('unknown_provider');
@@ -155,7 +163,7 @@ async function passthroughSingle(request, upstreamUrl) {
   return dnsResponse(servfail(fallback));
 }
 
-async function passthroughAll(route, request) {
+async function passthroughAll(request) {
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
