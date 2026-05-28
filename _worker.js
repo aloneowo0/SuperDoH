@@ -1,5 +1,5 @@
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS } from './config.js';
-import { autoMode, detectECS, filterAnswers, keepMode, plusMode } from './edns.js';
+import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { resolveRoute } from './router.js';
 
@@ -25,25 +25,7 @@ export default {
         return await rfc8484Passthrough(route, request);
       }
 
-      // keep mode: do not modify EDNS; encode local GET helpers as plain DNS wire-format
-      if (route.mode === 'keep') {
-        const url = new URL(request.url);
-        if (request.method === 'GET' && (url.searchParams.has('name') || url.searchParams.has('dns'))) {
-          body = buildQueryFromURL(url);
-          if (!body) return jsonError('missing_name_or_type');
-          if (route.provider === MIX_PROVIDER) return await concurrentAll(body, null, route.mode);
-          return await singleUpstream(route.provider, body, null, route.mode);
-        }
-
-        if (route.provider === MIX_PROVIDER) {
-          return await passthroughAll(request);
-        }
-        const upstream = UPSTREAMS[route.provider];
-        if (!upstream) return jsonError('unknown_provider');
-        return await passthroughSingle(request, upstream.url);
-      }
-
-      // auto/plus: build or read body, apply EDNS, forward
+      // Global auto: build body, inject EDNS, forward
       if (request.method === 'GET') {
         body = buildQueryFromURL(new URL(request.url));
         if (!body) return jsonError('missing_name_or_type');
@@ -52,9 +34,9 @@ export default {
       }
       const clientIP = request.headers.get('CF-Connecting-IP');
       if (route.provider === MIX_PROVIDER) {
-        return await concurrentAll(body, clientIP, route.mode);
+        return await concurrentAll(body, clientIP);
       }
-      return await singleUpstream(route.provider, body, clientIP, route.mode);
+      return await singleUpstream(route.provider, body, clientIP);
     } catch (_) {
       return body ? dnsResponse(servfail(body)) : jsonError('internal_error', 500);
     }
@@ -108,10 +90,6 @@ function buildQueryFromURL(url) {
   return out.buffer;
 }
 
-function stripLocalParams(search) {
-  return search.replace(/[?&]mode=[^&]*/g, '').replace(/^&/, '?');
-}
-
 async function rfc8484Passthrough(route, request) {
   let target = route.provider === MIX_PROVIDER
     ? (UPSTREAMS['google'] || Object.values(UPSTREAMS)[0])
@@ -122,7 +100,7 @@ async function rfc8484Passthrough(route, request) {
     ? 'https://dns.google/resolve'
     : target.url;
 
-  const query = stripLocalParams(route.queryString);
+  const query = route.queryString;
   const upstreamReq = new Request(jsonUrl + query, {
     method: request.method,
     headers: {
@@ -144,78 +122,16 @@ async function rfc8484Passthrough(route, request) {
   }
 }
 
-async function passthroughSingle(request, upstreamUrl) {
-  try {
-    const qs = request.method === 'GET' && request.url.includes('?')
-      ? stripLocalParams(request.url.slice(request.url.indexOf('?')))
-      : '';
-    const url = qs ? upstreamUrl + qs : upstreamUrl;
-    const upstreamReq = new Request(url, {
-      method: request.method,
-      headers: { 'Accept': 'application/dns-message' },
-      body: request.method !== 'GET' ? await request.clone().arrayBuffer() : undefined,
-    });
-    const response = await fetch(upstreamReq);
-    const responseBody = await response.arrayBuffer();
-    if (response.status === 200 && answersPass(responseBody)) return dnsResponse(responseBody);
-  } catch (_) {}
-
-  const fallback = request.method !== 'GET' ? await request.clone().arrayBuffer() : new ArrayBuffer(12);
-  return dnsResponse(servfail(fallback));
-}
-
-async function passthroughAll(request) {
-  const started = Date.now();
-  const deadline = started + HARD_TIMEOUT_MS;
-
-  const pool = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
-    name,
-    promise: (async () => {
-      try {
-        const qs = request.method === 'GET' && request.url.includes('?')
-          ? stripLocalParams(request.url.slice(request.url.indexOf('?')))
-          : '';
-        const url = qs ? cfg.url + qs : cfg.url;
-        const upstreamReq = new Request(url, {
-          method: request.method,
-          headers: { 'Accept': 'application/dns-message' },
-          body: request.method !== 'GET' ? await request.clone().arrayBuffer() : undefined,
-        });
-        const response = await fetch(upstreamReq);
-        const responseBody = await response.arrayBuffer();
-        return response.status === 200 && answersPass(responseBody)
-          ? { valid: true, response: responseBody, time: Date.now() - started }
-          : { valid: false };
-      } catch (_) { return { valid: false }; }
-    })(),
-  }));
-
-  while (pool.length && Date.now() < deadline) {
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) break;
-    const settled = await Promise.race([
-      ...pool.map((p) => p.promise.then((r) => ({ pending: p, result: r }))),
-      sleep(remaining).then(() => null),
-    ]);
-    if (!settled) break;
-    pool.splice(pool.indexOf(settled.pending), 1);
-    if (settled.result.valid) return dnsResponse(settled.result.response, settled.result.time);
-  }
-
-  const fallback = request.method !== 'GET' ? await request.clone().arrayBuffer() : new ArrayBuffer(12);
-  return dnsResponse(servfail(fallback));
-}
-
-async function singleUpstream(provider, body, clientIP, mode) {
+async function singleUpstream(provider, body, clientIP) {
   const upstream = UPSTREAMS[provider];
   if (!upstream) return dnsResponse(servfail(body));
-  const modeBody = applyMode(body, clientIP, mode, provider);
+  const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
   try {
     const response = await fetch(upstream.url, {
       method: 'POST',
       headers: DNS_HEADERS,
-      body: modeBody,
+      body: queryBody,
     });
     const responseBody = await response.arrayBuffer();
     const elapsed = Date.now() - started;
@@ -225,17 +141,16 @@ async function singleUpstream(provider, body, clientIP, mode) {
   return dnsResponse(servfail(body));
 }
 
-async function concurrentAll(body, clientIP, mode) {
-  const hasEcs = mode !== 'keep' || detectECS(body);
+async function concurrentAll(body, clientIP) {
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
-  const protectEnd = hasEcs ? (mode === 'plus' ? deadline : started + ECS_PROTECT_MS) : 0;
+  const protectEnd = started + ECS_PROTECT_MS;
 
   // Fire all upstreams concurrently, each wrapped to capture result
   const pending = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
     name,
     ecs: cfg.ecs,
-    promise: queryUpstream(name, cfg.url, applyMode(body, clientIP, mode, name), started)
+    promise: queryUpstream(name, cfg.url, prepareQuery(body, clientIP), started)
       .then((r) => ({ ecs: cfg.ecs, result: r })),
   }));
 
@@ -279,13 +194,6 @@ async function queryUpstream(name, url, body, started) {
   } catch (_) {
     return { name, response: null, time: Date.now() - started, valid: false };
   }
-}
-
-function applyMode(body, clientIP, mode, provider) {
-  const caps = UPSTREAMS[provider] || {};
-  if (mode === 'plus' && caps.plus) return plusMode(body, clientIP);
-  if (mode === 'auto' && caps.ecs) return autoMode(body, clientIP);
-  return keepMode(body);
 }
 
 function answersPass(responseBody) {
