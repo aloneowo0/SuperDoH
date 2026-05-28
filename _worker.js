@@ -211,7 +211,7 @@ async function singleUpstream(provider, body, clientIP, mode) {
     const responseBody = await response.arrayBuffer();
     const elapsed = Date.now() - started;
     if (response.status === 200 && answersPass(responseBody)) return dnsResponse(responseBody, elapsed);
-    return dnsResponse(servfail(body), elapsed);
+    return dnsResponse(servfail(body, 17, 'Filtered'), elapsed);
   } catch (_) {}
   return dnsResponse(servfail(body));
 }
@@ -254,7 +254,7 @@ async function concurrentAll(body, clientIP, mode) {
     }
   }
 
-  return dnsResponse(servfail(body), Date.now() - started);
+  return dnsResponse(servfail(body, 22, 'No reachable upstream'), Date.now() - started);
 }
 
 async function queryUpstream(name, url, body, started) {
@@ -299,12 +299,55 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function servfail(originalBody) {
+function servfail(originalBody, edeCode = 0, edeText = '') {
   const id = originalBody && originalBody.byteLength >= 2 ? new DataView(originalBody).getUint16(0) : 0;
-  const buf = new ArrayBuffer(12);
+  const textBytes = new TextEncoder().encode(edeText);
+  const edeOptionLen = edeCode ? (4 + textBytes.length) : 0;
+
+  const headerLen = 12;
+  const qdEnd = skipQuestion(originalBody);
+  const qdBytes = qdEnd > headerLen ? new Uint8Array(originalBody.slice(headerLen, qdEnd)) : new Uint8Array(0);
+
+  const arcount = edeCode ? 1 : 0;
+  const optLen = edeCode ? (11 + edeOptionLen) : 0;
+  const total = headerLen + qdBytes.length + optLen;
+  const buf = new ArrayBuffer(total);
   const out = new DataView(buf);
+  const bytes = new Uint8Array(buf);
+
   out.setUint16(0, id);
   out.setUint16(2, 0x8182);
-  for (let offset = 4; offset < 12; offset += 2) out.setUint16(offset, 0);
+  out.setUint16(4, 1);
+  out.setUint16(6, 0);
+  out.setUint16(8, 0);
+  out.setUint16(10, arcount);
+  bytes.set(qdBytes, headerLen);
+
+  if (edeCode) {
+    const off = headerLen + qdBytes.length;
+    bytes[off] = 0;
+    out.setUint16(off + 1, 41);
+    out.setUint16(off + 3, 4096);
+    out.setUint32(off + 5, 0);
+    out.setUint16(off + 9, edeOptionLen);
+    out.setUint16(off + 11, 15);
+    out.setUint16(off + 13, 2 + textBytes.length);
+    out.setUint16(off + 15, edeCode);
+    if (textBytes.length) bytes.set(textBytes, off + 17);
+  }
+
   return buf;
+}
+
+function skipQuestion(body) {
+  if (!body || body.byteLength < 12) return 12;
+  let off = 12;
+  const bytes = new Uint8Array(body);
+  while (off < bytes.length) {
+    const len = bytes[off];
+    if (len === 0) return off + 1 + 4;
+    if (len & 0xC0) return off + 2 + 4;
+    off += 1 + len;
+  }
+  return 12;
 }
