@@ -114,7 +114,7 @@ function parseIPv6(ip) {
 function generateConfig(env, upstreams) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
-            return `    ${name}: { url: '${cfg.url}', ecs: ${cfg.ecs} },`;
+            return `    ${name}: { url: ${JSON.stringify(cfg.url)}, ecs: ${cfg.ecs} },`;
         })
         .join('\n');
 
@@ -130,6 +130,11 @@ function generateConfig(env, upstreams) {
         ? '[\n' + blockedLines.join('\n') + '\n];'
         : '[]';
 
+    const ecsProtectMs = parseInt(env.ECS_PROTECT_MS, 10);
+    const hardTimeoutMs = parseInt(env.HARD_TIMEOUT_MS, 10);
+    const ecsPrefix4 = parseInt(env.ECS_PREFIX4, 10);
+    const ecsPrefix6 = parseInt(env.ECS_PREFIX6, 10);
+
     return `/**
  * Workers-DoH — 配置文件（由 scripts/build-config.cjs 自动生成）
  * 不要手动编辑此文件，修改 .env 后重新运行构建脚本。
@@ -139,10 +144,10 @@ export const UPSTREAMS = {
 ${entries}
 };
 
-export const ECS_PROTECT_MS = ${env.ECS_PROTECT_MS || 20};
-export const HARD_TIMEOUT_MS = ${env.HARD_TIMEOUT_MS || 800};
-export const ECS_PREFIX4 = ${env.ECS_PREFIX4 || 24};
-export const ECS_PREFIX6 = ${env.ECS_PREFIX6 || 56};
+export const ECS_PROTECT_MS = ${isNaN(ecsProtectMs) ? 20 : ecsProtectMs};
+export const HARD_TIMEOUT_MS = ${isNaN(hardTimeoutMs) ? 800 : hardTimeoutMs};
+export const ECS_PREFIX4 = ${isNaN(ecsPrefix4) ? 24 : ecsPrefix4};
+export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 
 export const BLOCKED_RANGES = ${blockedStr};
 

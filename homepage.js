@@ -267,7 +267,7 @@ async function runLatencyTest(){
 
 // ── Shared helpers ─────────────────────────────────────────────────
 
-function buildUpstreamListWithMix(upstreams, names) {
+function buildUpstreamListWithMix(names) {
   const entries = names.map((n) => '<span class="endpoint">/' + n + '/query-dns</span>').join(' ');
   return entries || '<em>none</em>';
 }
@@ -285,7 +285,7 @@ function buildCheckboxes(names) {
 function inject(html, host, upstreams, names) {
   return html
     .replaceAll('__HOST__', host)
-    .replace('__UPSTREAM_LIST__', buildUpstreamListWithMix(upstreams, names))
+    .replace('__UPSTREAM_LIST__', buildUpstreamListWithMix(names))
     .replace('__UPSTREAM_CHECKBOXES__', buildCheckboxes(names))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams));
 }
@@ -298,7 +298,7 @@ function buildCapsTable(upstreams) {
     rows += `<tr><td><strong>${name}</strong></td><td>${ecs}</td></tr>`;
   }
   rows += '</tbody></table>';
-  rows += '<p style="font-size:.78em;color:#888;margin-top:6px">ECS = 支持 EDNS Client-Subnet（地理位置优化）</p>';
+  rows += '<p style="font-size:.78em;color:#888;margin-top:6px">ECS = EDNS Client-Subnet（地理位置优化 / geo-optimized resolution）</p>';
   return rows;
 }
 
