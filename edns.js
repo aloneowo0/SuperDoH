@@ -330,10 +330,6 @@ function parsePublicIPv6(value) {
 
 function extractClientIP(value) {
     if (typeof value === 'string') return value.trim();
-    if (value && typeof value.get === 'function') return (value.get('CF-Connecting-IP') || '').trim();
-    if (value && value.headers && typeof value.headers.get === 'function') {
-        return (value.headers.get('CF-Connecting-IP') || '').trim();
-    }
     return '';
 }
 

@@ -148,9 +148,8 @@ async function concurrentAll(body, clientIP) {
 
   // Fire all upstreams concurrently, each wrapped to capture result
   const pending = Object.entries(UPSTREAMS).map(([name, cfg]) => ({
-    name,
     ecs: cfg.ecs,
-    promise: queryUpstream(name, cfg.url, prepareQuery(body, clientIP), started)
+    promise: queryUpstream(cfg.url, prepareQuery(body, clientIP), started)
       .then((r) => ({ ecs: cfg.ecs, result: r })),
   }));
 
@@ -181,18 +180,17 @@ async function concurrentAll(body, clientIP) {
   return dnsResponse(servfail(body, 22, 'No reachable upstream'), Date.now() - started);
 }
 
-async function queryUpstream(name, url, body, started) {
+async function queryUpstream(url, body, started) {
   try {
     const response = await fetch(url, { method: 'POST', headers: DNS_HEADERS, body });
     const responseBody = await response.arrayBuffer();
     return {
-      name,
       response: responseBody,
       time: Date.now() - started,
       valid: response.status === 200 && answersPass(responseBody),
     };
   } catch (_) {
-    return { name, response: null, time: Date.now() - started, valid: false };
+    return { response: null, time: Date.now() - started, valid: false };
   }
 }
 

@@ -17,7 +17,7 @@ export function resolveRoute(request) {
 
   // Legacy v1 compat: bare /query-dns without a provider prefix
   if (pathname === '/query-dns') {
-    return { provider: MIX_PROVIDER, queryString: search, path: pathname };
+    return { provider: MIX_PROVIDER, queryString: search };
   }
 
   // /<provider>/query-dns pattern
@@ -30,6 +30,5 @@ export function resolveRoute(request) {
   return {
     provider,
     queryString: search,
-    path: pathname,
   };
 }
