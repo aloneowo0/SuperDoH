@@ -1,4 +1,4 @@
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS, ENABLE_ECH, REGION, REGION_CONFIG } from './config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS, ENABLE_ECH, REGION, REGION_CONFIG, ECH_FETCH_DOMAIN } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { resolveRoute } from './router.js';
@@ -41,8 +41,8 @@ export default {
       const queryMeta = parseQueryMeta(body);
       const clientCountry = request.cf && request.cf.country || '';
       const regionCfg = REGION_CONFIG && REGION_CONFIG[clientCountry];
-      const regionActive = !!regionCfg;
-      _regionActive = regionActive;
+      const regionActive = !!(regionCfg && regionCfg.preferred);
+      _regionActive = !!(regionCfg && regionCfg.ech);
       const activePref = regionCfg ? regionCfg.preferred : '';
 
       if (queryMeta && regionActive && shouldRemap(queryMeta.name)) {
