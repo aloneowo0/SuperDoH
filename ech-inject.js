@@ -103,14 +103,14 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           });
         }
 
-        const newRdatas = [];
+        const newRecords = [];
         let ttl = 3600;
 
         for (let i = 0; i < packet.answers.length; i++) {
             const answer = packet.answers[i];
             if (answer.type !== TYPE_HTTPS) {
                 const raw = packet.bytes.slice(answer.rdataOffset, answer.end);
-                newRdatas.push(new Uint8Array(raw));
+                newRecords.push({ type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
                 continue;
             }
 
@@ -119,7 +119,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             const httpsRdata = parseHttpsRdata(packet.view, answer.rdataOffset, answer.rdlength);
             if (!httpsRdata) {
                 const raw = packet.bytes.slice(answer.rdataOffset, answer.end);
-                newRdatas.push(new Uint8Array(raw));
+                newRecords.push({ type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
                 continue;
             }
 
@@ -147,12 +147,12 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             });
 
             const newRdata = buildHttpsRdata(httpsRdata.priority, httpsRdata.target, keptParams);
-            newRdatas.push(newRdata);
+            newRecords.push({ type: TYPE_HTTPS, rdata: newRdata, ttl: ttl });
         }
 
-        if (newRdatas.length === 0) return originalResponse;
+        if (newRecords.length === 0) return originalResponse;
 
-        const newBody = createDNSResponse(packet.header.id, queryName, TYPE_HTTPS, newRdatas, ttl);
+        const newBody = createDNSResponseEx(packet.header.id, queryName, newRecords);
 
         return new Response(newBody, {
             headers: {
@@ -316,6 +316,46 @@ function buildHttpsRdata(priority, target, paramBytes) {
         offset += paramBytes[i].length;
     }
     return res;
+}
+
+function createDNSResponseEx(id, qName, records) {
+    const encName = encodeDnsName(qName);
+
+    let totalLen = DNS_HEADER_LEN + encName.length + 4;
+    for (let i = 0; i < records.length; i++) {
+        const rd = records[i].rdata;
+        totalLen += 2 + 2 + 2 + 4 + 2 + (rd.byteLength || rd.length);
+    }
+
+    const buf = new Uint8Array(totalLen);
+    const v = new DataView(buf.buffer);
+
+    v.setUint16(0, id);
+    v.setUint16(2, 0x8180);
+    v.setUint16(4, 1);
+    v.setUint16(6, records.length);
+    v.setUint16(8, 0);
+    v.setUint16(10, 0);
+
+    let offset = DNS_HEADER_LEN;
+
+    buf.set(encName, offset); offset += encName.length;
+    v.setUint16(offset, records[0].type); offset += 2;
+    v.setUint16(offset, 1); offset += 2;
+
+    for (let i = 0; i < records.length; i++) {
+        const rec = records[i];
+        const rd = rec.rdata;
+        const rdLen = rd.byteLength || rd.length;
+
+        v.setUint16(offset, 0xC00C); offset += 2;
+        v.setUint16(offset, rec.type); offset += 2;
+        v.setUint16(offset, 1); offset += 2;
+        v.setUint32(offset, rec.ttl); offset += 4;
+        v.setUint16(offset, rdLen); offset += 2;
+        buf.set(rd, offset); offset += rdLen;
+    }
+    return buf.buffer;
 }
 
 function createDNSResponse(id, qName, qType, rdataList, ttl) {

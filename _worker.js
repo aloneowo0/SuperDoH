@@ -45,7 +45,8 @@ export default {
       _regionActive = !!(regionCfg && regionCfg.ech);
       const activePref = regionCfg ? regionCfg.preferred : '';
 
-      if (queryMeta && regionActive && shouldRemap(queryMeta.name)) {
+      const remapDomains = regionCfg ? regionCfg.remap.map(d => d.toLowerCase()) : [];
+      if (queryMeta && regionActive && remapDomains.some(d => queryMeta.name === d || queryMeta.name.endsWith('.' + d))) {
         let echRdata = null;
         if (queryMeta.type === 65) {
           const cfEch = await fetchCFEch(null, null);
@@ -140,7 +141,7 @@ function parseQueryMeta(body) {
       offset += len;
     }
     const qType = view.getUint16(offset);
-    return { id, name: labels.join('.'), type: qType };
+    return { id, name: labels.join('.').toLowerCase(), type: qType };
   } catch (_) {
     return null;
   }
@@ -391,7 +392,7 @@ function sleep(ms) {
 function servfail(originalBody, edeCode = 0, edeText = '') {
   const id = originalBody && originalBody.byteLength >= 2 ? new DataView(originalBody).getUint16(0) : 0;
   const textBytes = new TextEncoder().encode(edeText);
-  const edeOptionLen = edeCode ? (4 + textBytes.length) : 0;
+  const edeOptionLen = edeCode ? (6 + textBytes.length) : 0;
 
   const headerLen = 12;
   const qdEnd = skipQuestion(originalBody);
