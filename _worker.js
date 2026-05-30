@@ -9,6 +9,8 @@ import { probeOwner } from './cdn-detect.js';
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
 
+let _regionActive = false;
+
 export default {
   async fetch(request) {
     let body = null;
@@ -37,7 +39,10 @@ export default {
       }
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = parseQueryMeta(body);
-      if (queryMeta && shouldRemap(queryMeta.name)) {
+      const regionActive = REGION && request.cf && request.cf.country && REGION.split(/[\s,]+/).includes(request.cf.country);
+      _regionActive = regionActive;
+
+      if (queryMeta && regionActive && shouldRemap(queryMeta.name)) {
         let echRdata = null;
         if (queryMeta.type === 65 && ENABLE_ECH) {
           const cfEch = await fetchCFEch(null, null);
@@ -46,7 +51,7 @@ export default {
         const remapped = await remapResponse(body, queryMeta.name, queryMeta.type, PREFERRED_DOMAIN, echRdata);
         if (remapped !== null) return dnsResponse(remapped);
       }
-      if (queryMeta && queryMeta.type === 65 && ENABLE_ECH && isMetaDomain(queryMeta.name)) {
+      if (regionActive && queryMeta && queryMeta.type === 65 && ENABLE_ECH && isMetaDomain(queryMeta.name)) {
         const injected = await injectECH(body, queryMeta.name, 'META', null);
         if (injected) {
           const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
@@ -184,7 +189,7 @@ async function singleUpstream(provider, body, clientIP, queryMeta) {
     const responseBody = await response.arrayBuffer();
     const elapsed = Date.now() - started;
     let finalBody = responseBody;
-    if (ENABLE_ECH && queryMeta && queryMeta.type === 65) {
+    if (_regionActive && ENABLE_ECH && queryMeta && queryMeta.type === 65) {
       const ownerResult = await probeOwner(queryMeta.name);
       if (ownerResult && ownerResult.owner) {
         const cfEch = await fetchCFEch(null, null);
@@ -293,7 +298,7 @@ function answersPass(responseBody) {
 }
 
 async function postProcessBody(responseBody, queryMeta) {
-  if (!ENABLE_ECH || !queryMeta || queryMeta.type !== 65) return responseBody;
+  if (!_regionActive || !ENABLE_ECH || !queryMeta || queryMeta.type !== 65) return responseBody;
   try {
     const ownerResult = await probeOwner(queryMeta.name);
     if (!ownerResult || !ownerResult.owner) return responseBody;
