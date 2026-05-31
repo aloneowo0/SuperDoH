@@ -553,3 +553,63 @@ export function extractIPStrings(buf, type) {
     return [];
   }
 }
+
+export async function resolveDNSWireAll(domain, type) {
+  const query = buildWireQuery(domain, type);
+  const started = Date.now();
+  const deadline = started + HARD_TIMEOUT_MS;
+
+  const entries = Object.entries(UPSTREAMS);
+  if (entries.length === 0) return [];
+
+  const controllers = [];
+  const promises = entries.map(function ([_name, cfg]) {
+    const ctrl = new AbortController();
+    controllers.push(ctrl);
+    return fetch(cfg.url, {
+      method: 'POST',
+      headers: DNS_HEADERS,
+      body: query,
+      signal: ctrl.signal,
+    }).then(async function (res) {
+      if (res.status !== 200) return null;
+      return await res.arrayBuffer();
+    }).catch(function (_) {
+      return null;
+    });
+  });
+
+  const timeout = new Promise(function (resolve) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) { resolve(); return; }
+    setTimeout(function () { resolve(); }, remaining);
+  });
+
+  await Promise.race([Promise.allSettled(promises), timeout]);
+
+  for (const c of controllers) {
+    try { c.abort(); } catch (_) {}
+  }
+
+  const results = await Promise.allSettled(promises);
+  const ipSet = new Set();
+  const allIps = [];
+
+  for (const r of results) {
+    if (r.status !== 'fulfilled' || !r.value || r.value.byteLength < 12) continue;
+    try {
+      const answers = parseAnswers(r.value, type);
+      for (const a of answers) {
+        if (a.rdata.length === 4 || a.rdata.length === 16) {
+          const key = String.fromCharCode.apply(null, a.rdata);
+          if (!ipSet.has(key)) {
+            ipSet.add(key);
+            allIps.push(a.rdata);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  return allIps;
+}
