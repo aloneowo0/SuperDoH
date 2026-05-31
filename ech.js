@@ -1,5 +1,5 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
-import { resolveDNSWire } from './resolver.js';
+import { resolveDNSWire } from './special-domain.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
