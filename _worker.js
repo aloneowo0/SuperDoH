@@ -62,52 +62,60 @@ export default {
       if (route.health) return healthResponse(upstreamNames);
       if (route.error) return jsonError(route.error);
 
-      const acceptHeader = request.headers.get('Accept') || '';
-      if (acceptHeader.includes('application/dns-json')) {
-        return await rfc8484Passthrough(route, request);
-      }
-
-      // Global auto: build body, inject EDNS, forward
-      if (request.method === 'GET') {
-        body = buildQueryFromURL(new URL(request.url));
-        if (!body) return jsonError('missing_name_or_type');
-      } else {
-        body = await request.clone().arrayBuffer();
-      }
-      const clientIP = request.headers.get('CF-Connecting-IP');
-      const queryMeta = parseQueryMeta(body);
+      const url = new URL(request.url);
+      const qMeta = parseQueryMetaFromURL(url);
       const clientCountry = request.cf && request.cf.country || '';
       const regionCfg = REGION_CONFIG && REGION_CONFIG[clientCountry];
       const regionActive = !!(regionCfg && regionCfg.preferred);
       const activePref = regionCfg ? regionCfg.preferred : '';
       const echActive = !!(regionCfg && regionCfg.ech);
 
-      // ── Special domain: remap (Twitter/X etc.) ─────────────────
-      const remapDomains = regionCfg ? regionCfg.remap.map(d => d.toLowerCase()) : [];
-      if (queryMeta && regionActive && remapDomains.some(d => queryMeta.name === d || queryMeta.name.endsWith('.' + d))) {
-        let echRdata = null;
-        if (queryMeta.type === 65 && echActive) {
-          const cfEch = await fetchCFEch(null, null);
-          if (cfEch && cfEch.rdata) echRdata = cfEch.rdata;
+      if (qMeta) {
+        const remapDomains = regionCfg ? regionCfg.remap.map(d => d.toLowerCase()) : [];
+        const isRemap = regionActive && remapDomains.some(d => qMeta.name === d || qMeta.name.endsWith('.' + d));
+        const isMeta = isMetaDomain(qMeta.name);
+
+        if (isRemap || isMeta) {
+          body = buildQueryWire(qMeta.name, qMeta.type, qMeta.id);
         }
-        const remapped = await remapResponse(body, queryMeta.name, queryMeta.type, activePref, echRdata);
-        if (remapped !== null) return dnsResponse(remapped);
-      }
-      // ── Special domain: Meta ECH injection ─────────────────────
-      if (regionActive && queryMeta && queryMeta.type === 65 && isMetaDomain(queryMeta.name)) {
-        const injected = await injectECH(body, queryMeta.name, 'META', null);
-        if (injected) {
-          const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-          if (bytes) return dnsResponse(bytes);
+        if (isRemap) {
+          let echRdata = null;
+          if (qMeta.type === 65 && echActive) {
+            const cfEch = await fetchCFEch(null, null);
+            if (cfEch && cfEch.rdata) echRdata = cfEch.rdata;
+          }
+          const remapped = await remapResponse(body, qMeta.name, qMeta.type, activePref, echRdata);
+          if (remapped !== null) return dnsResponse(remapped);
+          return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
         }
-      }
-      // ── Special domain: Meta A/AAAA resolve ────────────────────
-      if (queryMeta && isMetaDomain(queryMeta.name) && (queryMeta.type === 1 || queryMeta.type === 28)) {
-        const ips = await resolvePreferredIPs(queryMeta.name, queryMeta.type);
-        if (ips && ips.length > 0) return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 300));
+        if (regionActive && qMeta.type === 65 && isMeta) {
+          const injected = await injectECH(body, qMeta.name, 'META', null);
+          if (injected) {
+            const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+            if (bytes) return dnsResponse(bytes);
+          }
+        }
+        if (isMeta && (qMeta.type === 1 || qMeta.type === 28)) {
+          const ips = await resolvePreferredIPs(qMeta.name, qMeta.type);
+          if (ips && ips.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, ips, 300));
+          return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
+        }
       }
 
-      // ── Upstream dispatch ──────────────────────────────────────
+      const acceptHeader = request.headers.get('Accept') || '';
+      if (acceptHeader.includes('application/dns-json')) {
+        return await rfc8484Passthrough(route, request);
+      }
+
+      if (request.method === 'GET') {
+        body = body || buildQueryFromURL(url);
+        if (!body) return jsonError('missing_name_or_type');
+      } else {
+        body = body || await request.clone().arrayBuffer();
+      }
+      const clientIP = request.headers.get('CF-Connecting-IP');
+      const queryMeta = parseQueryMeta(body);
+
       if (route.provider === MIX_PROVIDER) {
         return await concurrentAll(body, clientIP, queryMeta, echActive, activePref);
       }
@@ -164,6 +172,42 @@ function buildQueryFromURL(url) {
   out.set(new Uint8Array(buf), 0);
   out.set(nameBytes, 12);
   out.set(new Uint8Array(question), 12 + nameBytes.length);
+  return out.buffer;
+}
+
+function parseQueryMetaFromURL(url) {
+  const dnsParam = url.searchParams.get('dns');
+  const name = url.searchParams.get('name');
+  if (!dnsParam && !name) return null;
+  const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
+  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
+  const qtype = typeMap[typeStr] || parseInt(typeStr, 10) || 1;
+  const qname = name || 'unknown.';
+  return { id: Math.floor(Math.random() * 65536), name: qname.toLowerCase().replace(/\.+$/, ''), type: qtype };
+}
+
+function buildQueryWire(qname, qtype, id) {
+  const labels = qname.replace(/\.+$/, '').split('.');
+  const nameBytes = [];
+  for (const label of labels) {
+    if (label.length > 63) break;
+    nameBytes.push(label.length);
+    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
+  }
+  nameBytes.push(0);
+  const total = 12 + nameBytes.length + 4;
+  const out = new Uint8Array(total);
+  const view = new DataView(out.buffer);
+  view.setUint16(0, id);
+  view.setUint16(2, 0x0100);
+  view.setUint16(4, 1);
+  view.setUint16(6, 0);
+  view.setUint16(8, 0);
+  view.setUint16(10, 0);
+  let off = 12;
+  out.set(nameBytes, off); off += nameBytes.length;
+  view.setUint16(off, qtype); off += 2;
+  view.setUint16(off, 1);
   return out.buffer;
 }
 
