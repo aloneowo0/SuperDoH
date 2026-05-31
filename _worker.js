@@ -11,7 +11,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { remapResponse, resolvePreferredIPs, probeOwner, isMetaDomain } from './special-domain.js';
-import { dnsResponse, buildDNS, servfail } from './dns-utils.js';
+import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireGoogle, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -83,7 +83,7 @@ export default {
         const isMeta = isMetaDomain(qMeta.name);
 
         if (isRemap || isMeta) {
-          body = body || buildQueryWire(qMeta.name, qMeta.type, qMeta.id);
+          body = body || buildQueryWireId(qMeta.name, qMeta.type, qMeta.id);
         }
         if (isRemap) {
           let echRdata = null;
@@ -103,7 +103,11 @@ export default {
           }
         }
         if (isMeta && (qMeta.type === 1 || qMeta.type === 28)) {
-          const ips = await resolvePreferredIPs(qMeta.name, qMeta.type);
+          let ips = await resolvePreferredIPs(qMeta.name, qMeta.type);
+          if (!ips || ips.length === 0) {
+            const buf = await resolveDNSWireGoogle(body);
+            if (buf) ips = extractIPBytes(buf, qMeta.type);
+          }
           if (ips && ips.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, ips, 300));
           return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
         }
@@ -134,141 +138,6 @@ export default {
     }
   },
 };
-
-// ── DNS query construction ─────────────────────────────────────────
-
-function buildQueryFromURL(url) {
-  const dnsParam = url.searchParams.get('dns');
-  if (dnsParam) {
-    try {
-      const b64 = dnsParam.replace(/-/g, '+').replace(/_/g, '/');
-      const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-      return bin.buffer;
-    } catch (_) {}
-  }
-
-  const name = url.searchParams.get('name');
-  if (!name) return null;
-  const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
-  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
-  const qtype = typeMap[typeStr] || parseInt(typeStr, 10) || 1;
-
-  const buf = new ArrayBuffer(12);
-  const view = new DataView(buf);
-  view.setUint16(0, Math.floor(Math.random() * 65536));
-  view.setUint16(2, 0x0100);
-  view.setUint16(4, 1);
-  view.setUint16(6, 0);
-  view.setUint16(8, 0);
-  view.setUint16(10, 0);
-
-  const labels = name.replace(/\.+$/, '').split('.');
-  const nameBytes = [];
-  for (const label of labels) {
-    if (label.length > 63) return null;
-    nameBytes.push(label.length);
-    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
-  }
-  nameBytes.push(0);
-
-  const question = new ArrayBuffer(4);
-  const qv = new DataView(question);
-  qv.setUint16(0, qtype);
-  qv.setUint16(2, 1);
-
-  const total = 12 + nameBytes.length + 4;
-  const out = new Uint8Array(total);
-  out.set(new Uint8Array(buf), 0);
-  out.set(nameBytes, 12);
-  out.set(new Uint8Array(question), 12 + nameBytes.length);
-  return out.buffer;
-}
-
-function parseQueryMetaFromURL(url) {
-  const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
-  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
-  const qtype = typeMap[typeStr] || parseInt(typeStr, 10) || 1;
-
-  const name = url.searchParams.get('name');
-  if (name) {
-    return { id: Math.floor(Math.random() * 65536), name: name.toLowerCase().replace(/\.+$/, ''), type: qtype };
-  }
-
-  const dnsParam = url.searchParams.get('dns');
-  if (dnsParam) {
-    try {
-      const b64 = dnsParam.replace(/-/g, '+').replace(/_/g, '/');
-      const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-      if (bin.length < 12) return null;
-      const view = new DataView(bin.buffer);
-      const id = view.getUint16(0);
-      let off = 12;
-      const labels = [];
-      for (let jumps = 0; jumps < 128; jumps++) {
-        if (off >= bin.length) return null;
-        const len = bin[off];
-        if ((len & 0xC0) === 0xC0) { off += 2; break; }
-        if (len === 0) { off++; break; }
-        off++;
-        labels.push(new TextDecoder().decode(bin.subarray(off, off + len)));
-        off += len;
-      }
-      const qType = view.getUint16(off);
-      return { id, name: labels.join('.').toLowerCase(), type: qType };
-    } catch (_) {}
-  }
-
-  return null;
-}
-
-function buildQueryWire(qname, qtype, id) {
-  const labels = qname.replace(/\.+$/, '').split('.');
-  const nameBytes = [];
-  for (const label of labels) {
-    if (label.length > 63) break;
-    nameBytes.push(label.length);
-    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
-  }
-  nameBytes.push(0);
-  const total = 12 + nameBytes.length + 4;
-  const out = new Uint8Array(total);
-  const view = new DataView(out.buffer);
-  view.setUint16(0, id);
-  view.setUint16(2, 0x0100);
-  view.setUint16(4, 1);
-  view.setUint16(6, 0);
-  view.setUint16(8, 0);
-  view.setUint16(10, 0);
-  let off = 12;
-  out.set(nameBytes, off); off += nameBytes.length;
-  view.setUint16(off, qtype); off += 2;
-  view.setUint16(off, 1);
-  return out.buffer;
-}
-
-function parseQueryMeta(body) {
-  try {
-    const bytes = body instanceof ArrayBuffer ? new Uint8Array(body) : new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
-    if (bytes.length < 12) return null;
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const id = view.getUint16(0);
-    let offset = 12;
-    const labels = [];
-    for (let jumps = 0; jumps < 128; jumps++) {
-      if (offset >= bytes.length) return null;
-      const len = bytes[offset];
-      if ((len & 0xC0) === 0xC0) { offset += 2; break; }
-      if (len === 0) { offset++; break; }
-      offset++;
-      labels.push(new TextDecoder().decode(bytes.subarray(offset, offset + len)));
-      offset += len;
-    }
-    const qType = view.getUint16(offset);
-    return { id, name: labels.join('.').toLowerCase(), type: qType };
-  } catch (_) {
-    return null;
-  }
-}
 
 // ── RFC 8484 JSON passthrough ──────────────────────────────────────
 

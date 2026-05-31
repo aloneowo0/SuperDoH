@@ -1,5 +1,5 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
-import { resolveDNSWire } from './special-domain.js';
+import { resolveDNSWire, requireBytes, parseDns, encodeDnsName, buildDNS } from './dns-lib.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
@@ -112,7 +112,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
           params.push({ key: 'ech', val: echValue });
           const echRdata = packHttpsParams(1, '.', params);
-          const newBody = createDNSResponse(packet.header.id, queryName, TYPE_HTTPS, [echRdata], 300);
+          const newBody = buildDNS(packet.header.id, queryName, TYPE_HTTPS, [echRdata], 300);
           return new Response(newBody, {
             headers: {
               'Content-Type': 'application/dns-message',
@@ -181,24 +181,6 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
     } catch (_) {
         return originalResponse;
     }
-}
-
-function encodeDnsName(domain) {
-    const parts = domain.split('.');
-    const buf = new Uint8Array(domain.length + 2);
-    let offset = 0;
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        buf[offset] = part.length;
-        offset++;
-        for (let j = 0; j < part.length; j++) {
-            buf[offset] = part.charCodeAt(j);
-            offset++;
-        }
-    }
-    buf[offset] = 0;
-    offset++;
-    return buf.slice(0, offset);
 }
 
 function decodeDnsName(view, offset) {
@@ -376,46 +358,6 @@ function createDNSResponseEx(id, qName, records) {
     return buf.buffer;
 }
 
-function createDNSResponse(id, qName, qType, rdataList, ttl) {
-    const encName = encodeDnsName(qName);
-
-    let totalLen = DNS_HEADER_LEN + encName.length + 4;
-    for (let i = 0; i < rdataList.length; i++) {
-        const rd = rdataList[i];
-        totalLen += 2 + 2 + 2 + 4 + 2 + (rd.byteLength || rd.length);
-    }
-
-    const buf = new Uint8Array(totalLen);
-    const v = new DataView(buf.buffer);
-
-    v.setUint16(0, id);
-    v.setUint16(2, 0x8180);
-    v.setUint16(4, 1);
-    v.setUint16(6, rdataList.length);
-    v.setUint16(8, 0);
-    v.setUint16(10, 0);
-
-    let offset = DNS_HEADER_LEN;
-
-    buf.set(encName, offset); offset += encName.length;
-    v.setUint16(offset, qType); offset += 2;
-    v.setUint16(offset, 1); offset += 2;
-
-    for (let i = 0; i < rdataList.length; i++) {
-        const rd = rdataList[i];
-        const rdLen = rd.byteLength || rd.length;
-
-        v.setUint16(offset, 0xC00C); offset += 2;
-        v.setUint16(offset, qType); offset += 2;
-        v.setUint16(offset, 1); offset += 2;
-        v.setUint32(offset, ttl); offset += 4;
-        v.setUint16(offset, rdLen); offset += 2;
-        buf.set(rd, offset); offset += rdLen;
-    }
-
-    return buf.buffer;
-}
-
 function parseHttpsRdata(view, rdataOffset, rdlength) {
     try {
         const end = rdataOffset + rdlength;
@@ -447,89 +389,6 @@ function parseHttpsRdata(view, rdataOffset, rdlength) {
     }
 }
 
-function parseDns(body) {
-    try {
-        const bytes = toBytes(body);
-        if (bytes.length < DNS_HEADER_LEN) return null;
-
-        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        const header = {
-            id: view.getUint16(0),
-            flags: view.getUint16(2),
-            qdcount: view.getUint16(4),
-            ancount: view.getUint16(6),
-            nscount: view.getUint16(8),
-            arcount: view.getUint16(10)
-        };
-
-        let offset = DNS_HEADER_LEN;
-
-        for (let i = 0; i < header.qdcount; i++) {
-            offset = skipName(view, offset);
-            requireBytes(view, offset, 4);
-            offset += 4;
-        }
-
-        const answers = [];
-        for (let i = 0; i < header.ancount; i++) {
-            const record = readRecord(view, offset);
-            answers.push(record);
-            offset = record.end;
-        }
-
-        return { bytes: bytes, view: view, header: header, answers: answers };
-    } catch (_) {
-        return null;
-    }
-}
-
-function readRecord(view, offset) {
-    const headerOffset = skipName(view, offset);
-    requireBytes(view, headerOffset, 10);
-
-    const type = view.getUint16(headerOffset);
-    const cls = view.getUint16(headerOffset + 2);
-    const ttl = view.getUint32(headerOffset + 4);
-    const rdlength = view.getUint16(headerOffset + 8);
-    const rdataOffset = headerOffset + 10;
-    const end = rdataOffset + rdlength;
-    requireBytes(view, rdataOffset, rdlength);
-
-    return { offset: offset, type: type, cls: cls, ttl: ttl, rdlength: rdlength, rdataOffset: rdataOffset, end: end };
-}
-
-function skipName(view, start) {
-    let offset = start;
-    let end = start;
-    let jumped = false;
-    let jumps = 0;
-
-    while (true) {
-        requireBytes(view, offset, 1);
-        const len = view.getUint8(offset);
-
-        if ((len & 0xC0) === 0xC0) {
-            requireBytes(view, offset, 2);
-            const pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
-            if (pointer >= view.byteLength) throw new Error('bad pointer');
-            if (!jumped) end = offset + 2;
-            offset = pointer;
-            jumped = true;
-            jumps++;
-            if (jumps > MAX_NAME_JUMPS) throw new Error('loop');
-            continue;
-        }
-
-        if ((len & 0xC0) !== 0) throw new Error('bad label');
-        if (len === 0) return jumped ? end : offset + 1;
-
-        offset++;
-        requireBytes(view, offset, len);
-        if (!jumped) end = offset + len;
-        offset += len;
-    }
-}
-
 function readBody(input) {
     try {
         if (input instanceof Response) return input.clone().arrayBuffer();
@@ -541,14 +400,4 @@ function readBody(input) {
     }
 }
 
-function toBytes(body) {
-    if (body instanceof ArrayBuffer) return new Uint8Array(body);
-    if (ArrayBuffer.isView(body)) return new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
-    throw new Error('expected ArrayBuffer');
-}
 
-function requireBytes(view, offset, len) {
-    if (offset < 0 || len < 0 || offset + len > view.byteLength) {
-        throw new Error('out of bounds');
-    }
-}

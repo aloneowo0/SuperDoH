@@ -1,4 +1,5 @@
 import { BLOCKED_RANGES, ECS_PREFIX4, ECS_PREFIX6 } from './config.js';
+import { toBytes, requireBytes, skipName, readRecord, parseDns } from './dns-lib.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_A = 1;
@@ -68,98 +69,7 @@ export function filterAnswers(response) {
     return { passed: true, reason: null };
 }
 
-function parseDns(body) {
-    const bytes = toBytes(body);
-    if (bytes.length < DNS_HEADER_LEN) throw new Error('short DNS packet');
 
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const header = {
-        id: view.getUint16(0),
-        flags: view.getUint16(2),
-        qdcount: view.getUint16(4),
-        ancount: view.getUint16(6),
-        nscount: view.getUint16(8),
-        arcount: view.getUint16(10),
-    };
-
-    let offset = DNS_HEADER_LEN;
-    for (let i = 0; i < header.qdcount; i++) {
-        offset = skipName(view, offset);
-        requireBytes(view, offset, 4);
-        offset += 4;
-    }
-
-    const answers = [];
-    for (let i = 0; i < header.ancount; i++) {
-        const record = readRecord(view, offset);
-        answers.push(record);
-        offset = record.end;
-    }
-
-    for (let i = 0; i < header.nscount; i++) {
-        offset = readRecord(view, offset).end;
-    }
-
-    const additionals = [];
-    let opt = null;
-    for (let i = 0; i < header.arcount; i++) {
-        const record = readRecord(view, offset);
-        additionals.push(record);
-        if (record.type === TYPE_OPT && !opt) opt = record;
-        offset = record.end;
-    }
-
-    if (offset !== bytes.length) throw new Error('trailing DNS data');
-    return { bytes, view, header, answers, additionals, opt };
-}
-
-function readRecord(view, offset) {
-    const headerOffset = skipName(view, offset);
-    requireBytes(view, headerOffset, 10);
-
-    const type = view.getUint16(headerOffset);
-    const cls = view.getUint16(headerOffset + 2);
-    const ttl = view.getUint32(headerOffset + 4);
-    const rdlength = view.getUint16(headerOffset + 8);
-    const rdataOffset = headerOffset + 10;
-    const end = rdataOffset + rdlength;
-    requireBytes(view, rdataOffset, rdlength);
-
-    return { offset, headerOffset, type, cls, ttl, rdlength, rdataOffset, end };
-}
-
-function skipName(view, start) {
-    let offset = start;
-    let end = start;
-    let jumped = false;
-    let jumps = 0;
-    const seen = [];
-
-    for (;;) {
-        requireBytes(view, offset, 1);
-        const len = view.getUint8(offset);
-
-        if ((len & 0xC0) === 0xC0) {
-            requireBytes(view, offset, 2);
-            const pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
-            if (pointer >= view.byteLength || seen[pointer]) throw new Error('bad DNS compression pointer');
-            if (!jumped) end = offset + 2;
-            seen[pointer] = true;
-            offset = pointer;
-            jumped = true;
-            if (++jumps > MAX_NAME_JUMPS) throw new Error('DNS compression loop');
-            continue;
-        }
-
-        if ((len & 0xC0) !== 0) throw new Error('unsupported DNS label type');
-        if (len === 0) return jumped ? end : offset + 1;
-
-        offset += 1;
-        requireBytes(view, offset, len);
-        if (!jumped) end = offset + len;
-        offset += len;
-    }
-}
 
 function readOptions(view, opt) {
     let offset = opt.rdataOffset;
@@ -366,12 +276,3 @@ function joinBytes(...chunks) {
     return out;
 }
 
-function toBytes(body) {
-    if (body instanceof ArrayBuffer) return new Uint8Array(body);
-    if (ArrayBuffer.isView(body)) return new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
-    throw new Error('body must be ArrayBuffer');
-}
-
-function requireBytes(view, offset, len) {
-    if (offset < 0 || len < 0 || offset + len > view.byteLength) throw new Error('DNS packet out of bounds');
-}

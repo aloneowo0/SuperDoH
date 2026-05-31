@@ -3,7 +3,7 @@ import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, detectOwner, extractIps, resolvePreferredIPs } from './special-domain.js';
-import { dnsResponse, buildDNS, servfail } from './dns-utils.js';
+import { dnsResponse, buildDNS, servfail } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 
