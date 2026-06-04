@@ -10,7 +10,7 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { remapResponse, probeOwner, isMetaDomain, filterReachableMeta, resolveMetaFromMap } from './special-domain.js';
+import { remapResponse, probeOwner, isMetaDomain, filterReachableMeta } from './special-domain.js';
 import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireForeign, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -109,14 +109,7 @@ export default {
           if (qMeta.type === 28 && regionActive) {
             return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 300));
           }
-          // Static map lookup for A records — no upstream dependency, instant
-          if (qMeta.type === 1) {
-            const staticIPs = resolveMetaFromMap(qMeta.name);
-            if (staticIPs && staticIPs.length > 0) {
-              return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, staticIPs, 600));
-            }
-          }
-          // Fallback: concurrent foreign upstreams + reachability filter
+          // Concurrent foreign upstreams + reachability filter
           const buf = await resolveDNSWireForeign(body);
           if (buf) {
             const ips = extractIPBytes(buf, qMeta.type);
