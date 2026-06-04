@@ -64,19 +64,17 @@ function healthResponse(upstreamNames) {
 }
 
 async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
-  // DEBUG: add response header at each decision point
-  function debug(resp, tag, owner) {
-    return new Response(resp.body, {
-      status: resp.status,
-      headers: { ...Object.fromEntries(resp.headers), 'X-Dbg-Path': tag, 'X-Dbg-Owner': owner || '' }
-    });
+  function debug(resp, tag, owner, extra) {
+    var h = { ...Object.fromEntries(resp.headers), 'X-Dbg-Path': tag, 'X-Dbg-Owner': owner || '' };
+    if (extra) h['X-Dbg-Extra'] = extra;
+    return new Response(resp.body, { status: resp.status, headers: h });
   }
 
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
     return debug(await concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc), 'skip-type');
   }
 
-  // MIX 1: classify only — no filter, no post-processing
+  // MIX 1: classify only
   const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
 
   if (!regionActive) {
@@ -84,8 +82,23 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
   }
 
   const firstBuf = await firstResult.clone().arrayBuffer();
+  // DEBUG: check if buffer has answers
+  var debugExtra = '';
+  if (firstBuf.byteLength >= 12) {
+    var v = new DataView(firstBuf);
+    debugExtra = 'rc=' + (v.getUint16(2) & 0xF) + ' an=' + v.getUint16(6) + ' len=' + firstBuf.byteLength;
+    // Try extractIps
+    try {
+      var testIps = extractIps(firstBuf);
+      debugExtra += ' ips=' + testIps.length + '[' + testIps.slice(0,2).join(',') + ']';
+    } catch(e) { debugExtra += ' extractErr'; }
+  } else {
+    debugExtra = 'buf_short(' + firstBuf.byteLength + ')';
+  }
+  
   const owner = classifyResponse(firstBuf, queryMeta.type);
-  if (!owner) return debug(firstResult, 'no-owner');
+
+  if (!owner) return debug(firstResult, 'no-owner', '', debugExtra + ' owner::' + (owner||'null'));
 
   // MIX 2: optimize based on owner
   if (owner === 'META') {
