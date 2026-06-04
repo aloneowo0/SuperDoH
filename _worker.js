@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolveDNSWire } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolveDNSWireGoogle } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -199,7 +199,8 @@ export default {
           return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
         }
         if (queryMeta.type === 1 && activePref) {
-          const prefBuf = await resolveDNSWire(activePref, 1);
+          const prefBody = buildQueryWireId(activePref, 1, queryMeta.id);
+          const prefBuf = await resolveDNSWireGoogle(prefBody);
           if (prefBuf) {
             const ips = extractIPBytes(prefBuf, 1);
             if (ips && ips.length > 0) {
