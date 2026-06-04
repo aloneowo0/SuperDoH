@@ -2,6 +2,17 @@ import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
 
 const PROBE_CACHE_TTL = 3600 * 1000;
 
+export function isMetaDomain(name) {
+    var domains = ['facebook.com','fbcdn.net','instagram.com','cdninstagram.com','messenger.com','whatsapp.com','whatsapp.net','threads.net','meta.com','oculus.com','fbsbx.com','thefacebook.com','connect.facebook.net'];
+    try {
+        var n = name.toLowerCase().replace(/\.+$/, '');
+        for (var i = 0; i < domains.length; i++) {
+            if (n === domains[i] || n.endsWith('.' + domains[i])) return true;
+        }
+        return false;
+    } catch (_) { return false; }
+}
+
 // AS32934 scanned 2026-05-31 — only REACHABLE IPv4 + IPv6
 const RAW_META_CIDRS = [
     '31.13.24.0/21',

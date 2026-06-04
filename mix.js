@@ -2,12 +2,12 @@
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner } from './cdn.js';
+import { probeOwner, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 
-export async function concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc, options) {
+export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options) {
   var opts = options || {};
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
@@ -50,7 +50,7 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
         processed = bestHeld.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(bestHeld.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
       }
       return dnsResponse(processed, bestHeld.result.time);
     }
@@ -84,7 +84,7 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
           processed = settled.value.result.response;
         } else {
           abortPending();
-          processed = await postProcessBody(settled.value.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+          processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
         }
         return dnsResponse(processed, settled.value.result.time);
       }
@@ -104,7 +104,7 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
         processed = settled.value.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(settled.value.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
       }
       return dnsResponse(processed, settled.value.result.time);
     }
@@ -124,7 +124,7 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
         processed = bestHeld.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(bestHeld.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
       }
       return dnsResponse(processed, bestHeld.result.time);
     }
@@ -152,18 +152,24 @@ export function answersPass(responseBody) {
   return result !== false && result?.passed !== false;
 }
 
-export async function postProcessBody(responseBody, queryMeta, regionActive, activePref, preferredCft, preferredVrc) {
+export async function postProcessBody(responseBody, queryMeta, echActive, activePref, preferredCft, preferredVrc) {
   if (!queryMeta) return responseBody;
   void activePref;
   void preferredCft;
   void preferredVrc;
 
-  if (regionActive && queryMeta.type === 65) {
+  if (echActive && queryMeta.type === 65) {
     try {
-      const cfEch = await fetchCFEch(null, null);
-      const ownerResult = await probeOwner(queryMeta.name);
-      if (ownerResult && ownerResult.owner) {
-        const injected = await injectECH(responseBody, queryMeta.name, ownerResult.owner, cfEch);
+      var owner = null;
+      if (isMetaDomain(queryMeta.name)) {
+        owner = 'META';
+      } else {
+        const ownerResult = await probeOwner(queryMeta.name);
+        if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
+      }
+      if (owner) {
+        const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
+        const injected = await injectECH(responseBody, queryMeta.name, owner, cfEch);
         if (injected) {
           const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
           if (bytes) return bytes;

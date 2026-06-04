@@ -9,7 +9,7 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
+import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -65,7 +65,7 @@ function healthResponse(upstreamNames) {
 
 async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
-    return await concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
   }
 
   // MIX 1: classify only — no filter, no post-processing
@@ -247,10 +247,16 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
     const elapsed = Date.now() - started;
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
-      const ownerResult = await probeOwner(queryMeta.name);
-      if (ownerResult && ownerResult.owner) {
-        const cfEch = await fetchCFEch(null, null);
-        const injected = await injectECH(finalBody, queryMeta.name, ownerResult.owner, cfEch);
+      var owner = null;
+      if (isMetaDomain(queryMeta.name)) {
+        owner = 'META';
+      } else {
+        const ownerResult = await probeOwner(queryMeta.name);
+        if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
+      }
+      if (owner) {
+        const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
+        const injected = await injectECH(finalBody, queryMeta.name, owner, cfEch);
         if (injected) {
           const injectedBytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
           if (injectedBytes) finalBody = injectedBytes;
