@@ -1,8 +1,7 @@
 /**
  * Workers-DoH v2 — Entry point + orchestration
  *
- * Routes requests, handles special domains, dispatches to upstreams.
- * Imports clean modules for ECH, special-domain, multi-upstream racing.
+ * Routes requests and dispatches DNS queries through upstream flows.
  */
 
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG } from './config.js';
@@ -10,8 +9,8 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { remapResponse, probeOwner, isMetaDomain, filterReachableMeta } from './special-domain.js';
-import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireForeign, extractIPBytes } from './dns-lib.js';
+import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
+import { dnsResponse, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -44,6 +43,97 @@ function resolveRoute(request) {
   const provider = match[1];
   if (!validProviders().has(provider)) return { error: 'unknown_provider' };
   return { provider, queryString: search };
+}
+
+// ── Response helpers ───────────────────────────────────────────────
+
+function jsonError(error, status = 400) {
+  return new Response(JSON.stringify({ error }), { status, headers: JSON_HEADERS });
+}
+
+function healthResponse(upstreamNames) {
+  return new Response(JSON.stringify({
+    status: 'ok',
+    upstreams: upstreamNames,
+    hardTimeoutMs: HARD_TIMEOUT_MS,
+    ecsProtectMs: ECS_PROTECT_MS,
+    region: REGION || null,
+    regionConfig: REGION_CONFIG || null,
+    echEnabled: REGION_CONFIG ? Object.values(REGION_CONFIG).some(c => c.ech) : false,
+  }), { headers: JSON_HEADERS });
+}
+
+async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+  // MIX 1: classify only — no filter, no post-processing
+  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+
+  if (!regionActive || !queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
+    return firstResult;
+  }
+
+  const firstBuf = await firstResult.clone().arrayBuffer();
+  const owner = classifyResponse(firstBuf, queryMeta.type);
+  if (!owner) return firstResult;
+
+  // MIX 2: optimize based on owner
+  if (owner === 'META') {
+    const second = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', {
+      acceptFilter: function(resp) {
+        const ips = extractIPBytes(resp, queryMeta.type);
+        const filtered = filterReachableMeta(ips);
+        return filtered.length > 0;
+      }
+    });
+    if (echActive && queryMeta.type === 65) {
+      const injected = await injectECH(await second.clone().arrayBuffer(), queryMeta.name, 'META', null);
+      if (injected) {
+        const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+        if (bytes) return dnsResponse(bytes);
+      }
+    }
+    return second;
+  }
+
+  if (owner === 'CF') {
+    if (!activePref) return firstResult;
+    const cfBody = buildQueryWireId(activePref, queryMeta.type, queryMeta.id);
+    const second = await concurrentAll(cfBody, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+    if (echActive && queryMeta.type === 65) {
+      const cfEch = await fetchCFEch(null, null);
+      const injected = await injectECH(await second.clone().arrayBuffer(), queryMeta.name, 'CF', cfEch);
+      if (injected) {
+        const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+        if (bytes) return dnsResponse(bytes);
+      }
+    }
+    return second;
+  }
+
+  if (owner === 'CFT') {
+    if (!preferredCft) return firstResult;
+    const cftBody = buildQueryWireId(preferredCft, queryMeta.type, queryMeta.id);
+    return await concurrentAll(cftBody, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+  }
+
+  if (owner === 'VRC') {
+    if (!preferredVrc) return firstResult;
+    const vrcBody = buildQueryWireId(preferredVrc, queryMeta.type, queryMeta.id);
+    return await concurrentAll(vrcBody, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+  }
+
+  return firstResult;
+}
+
+function classifyResponse(buffer, type) {
+  try {
+    if (type !== 1 && type !== 28) return null;
+    const ips = extractIps(buffer);
+    for (const ip of ips) {
+      const owner = detectOwner(ip);
+      if (owner) return owner;
+    }
+  } catch (_) {}
+  return null;
 }
 
 // ── Main handler ───────────────────────────────────────────────────
@@ -79,49 +169,6 @@ export default {
       const preferredCft = regionCfg ? (regionCfg.preferredCft || '') : '';
       const preferredVrc = regionCfg ? (regionCfg.preferredVrc || '') : '';
 
-      if (qMeta) {
-        const remapDomains = regionCfg ? regionCfg.remap.map(d => d.toLowerCase()) : [];
-        const isRemap = regionActive && remapDomains.some(d => qMeta.name === d || qMeta.name.endsWith('.' + d));
-        const isMeta = isMetaDomain(qMeta.name);
-
-        if (isRemap || isMeta) {
-          body = body || buildQueryWireId(qMeta.name, qMeta.type, qMeta.id);
-        }
-        if (isRemap) {
-          let echRdata = null;
-          if (qMeta.type === 65 && echActive) {
-            const cfEch = await fetchCFEch(null, null);
-            if (cfEch && cfEch.rdata) echRdata = cfEch.rdata;
-          }
-          const remapped = await remapResponse(body, qMeta.name, qMeta.type, activePref, echRdata);
-          if (remapped !== null) return dnsResponse(remapped);
-          return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
-        }
-        if (qMeta.type === 65 && isMeta) {
-          const injected = await injectECH(body, qMeta.name, 'META', null);
-          if (injected) {
-            const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-            if (bytes) return dnsResponse(bytes);
-          }
-        }
-        if (isMeta && (qMeta.type === 1 || qMeta.type === 28)) {
-          // CN region: suppress AAAA to avoid IPv6 Happy Eyeballs adding parallel connections
-          if (qMeta.type === 28 && regionActive) {
-            return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 300));
-          }
-          // Concurrent foreign upstreams + reachability filter
-          const buf = await resolveDNSWireForeign(body);
-          if (buf) {
-            const ips = extractIPBytes(buf, qMeta.type);
-            if (ips && ips.length > 0) {
-              const filtered = regionActive ? filterReachableMeta(ips) : ips;
-              if (filtered.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, filtered, 300));
-            }
-          }
-          return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
-        }
-      }
-
       const acceptHeader = request.headers.get('Accept') || '';
       if (acceptHeader.includes('application/dns-json')) {
         return await rfc8484Passthrough(route, request);
@@ -139,7 +186,7 @@ export default {
       const queryMeta = qMeta || parseQueryMeta(body);
 
       if (route.provider === MIX_PROVIDER) {
-        return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+        return await twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
       }
       return await singleUpstream(route.provider, body, clientIP, queryMeta, echActive);
     } catch (_) {
@@ -211,22 +258,4 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
     return dnsResponse(servfail(body, 17, 'Filtered'), elapsed);
   } catch (_) {}
   return dnsResponse(servfail(body));
-}
-
-// ── Response helpers ───────────────────────────────────────────────
-
-function jsonError(error, status = 400) {
-  return new Response(JSON.stringify({ error }), { status, headers: JSON_HEADERS });
-}
-
-function healthResponse(upstreamNames) {
-  return new Response(JSON.stringify({
-    status: 'ok',
-    upstreams: upstreamNames,
-    hardTimeoutMs: HARD_TIMEOUT_MS,
-    ecsProtectMs: ECS_PROTECT_MS,
-    region: REGION || null,
-    regionConfig: REGION_CONFIG || null,
-    echEnabled: REGION_CONFIG ? Object.values(REGION_CONFIG).some(c => c.ech) : false,
-  }), { headers: JSON_HEADERS });
 }

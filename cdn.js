@@ -1,7 +1,5 @@
 import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
 
-const TYPE_A = 1;
-const TYPE_AAAA = 28;
 const PROBE_CACHE_TTL = 3600 * 1000;
 
 // AS32934 scanned 2026-05-31 — only REACHABLE IPv4 + IPv6
@@ -418,7 +416,6 @@ const RAW_VERCEL_CIDRS = [
     '76.76.21.0/24',
 ];
 
-const ipCache = new Map();
 const probeCache = new Map();
 
 const COMPILED_META = compileCidrs(RAW_META_CIDRS);
@@ -636,4 +633,57 @@ function ipv6ToBigInt(ip) {
         result = (result << 16n) + BigInt(val);
     }
     return result;
+}
+
+/**
+ * Filter Meta IP bytes to only return those from known-reachable CIDR ranges.
+ * GFW blocks specific Meta subnets at TCP level; ECH hides SNI but can't fix IP drops.
+ * 57.144.0.0/14 (Meta HK edge) is consistently reachable from China.
+ * @param {Uint8Array[]} ipBytesArr - IP rdata bytes from extractIPBytes()
+ * @param {number} maxCount - Maximum IPs to return (default 2)
+ * @returns {Uint8Array[]} reachable IP bytes, sorted best-first
+ */
+export function filterReachableMeta(ipBytesArr, maxCount) {
+  if (!ipBytesArr || !ipBytesArr.length) return [];
+  const limit = typeof maxCount === 'number' && maxCount > 0 ? maxCount : 2;
+  const reachable = [];
+  for (let i = 0; i < ipBytesArr.length; i++) {
+    if (isReachableMetaIP(ipBytesArr[i])) {
+      reachable.push(ipBytesArr[i]);
+      if (reachable.length >= limit) break;
+    }
+  }
+  return reachable;
+}
+
+/** Check if a 4-byte Meta IP falls in a known-reachable CIDR range */
+function isReachableMetaIP(ipBytes) {
+  if (!ipBytes || ipBytes.length !== 4) return false;
+  var a = ipBytes[0], b = ipBytes[1], c = ipBytes[2];
+  // 57.144.0.0/14 — Meta HK edge, consistently reachable
+  if (a === 57 && b >= 144 && b <= 147) return true;
+  // 157.240.x — explicit /24 allowlist from live China testing
+  if (a === 157 && b === 240) {
+    var allowed = [3, 8, 12, 24, 31, 196, 200, 208];
+    for (var i = 0; i < allowed.length; i++) {
+      if (c === allowed[i]) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Classify a DNS response buffer by detecting the CDN owner of resolved IPs.
+ * Returns 'META', 'CF', 'CFT', 'VRC', or null.
+ */
+export function classifyResponse(responseBuf, queryType) {
+  try {
+    if (queryType !== 1 && queryType !== 28) return null;
+    const ips = extractIps(responseBuf);
+    for (var i = 0; i < ips.length; i++) {
+      const owner = detectOwner(ips[i]);
+      if (owner) return owner;
+    }
+    return null;
+  } catch (_) { return null; }
 }
