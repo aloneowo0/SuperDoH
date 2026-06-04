@@ -10,8 +10,8 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { remapResponse, resolvePreferredIPs, probeOwner, isMetaDomain } from './special-domain.js';
-import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireGoogle, extractIPBytes, resolveDNSWireAll } from './dns-lib.js';
+import { remapResponse, probeOwner, isMetaDomain } from './special-domain.js';
+import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireGoogle, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -105,21 +105,11 @@ export default {
           }
         }
         if (isMeta && (qMeta.type === 1 || qMeta.type === 28)) {
-          let ips = await resolveDNSWireAll(qMeta.name, qMeta.type);
-          if (!ips || ips.length < 5) {
-            const buf = await resolveDNSWireGoogle(body);
-            if (buf) {
-              const moreIps = extractIPBytes(buf, qMeta.type);
-              if (moreIps && moreIps.length > 0) {
-                const seen = new Set(ips ? ips.map(b => String.fromCharCode.apply(null, b)) : []);
-                for (const ip of moreIps) {
-                  const key = String.fromCharCode.apply(null, ip);
-                  if (!seen.has(key)) { seen.add(key); ips.push(ip); }
-                }
-              }
-            }
+          const buf = await resolveDNSWireGoogle(body);
+          if (buf) {
+            const ips = extractIPBytes(buf, qMeta.type);
+            if (ips && ips.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, ips, 300));
           }
-          if (ips && ips.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, ips, 300));
           return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
         }
       }
