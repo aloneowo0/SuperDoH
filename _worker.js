@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolveDNSWire } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -199,12 +199,12 @@ export default {
           return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
         }
         if (queryMeta.type === 1 && activePref) {
-          const prefBody = buildQueryWireId(activePref, 1, queryMeta.id);
-          const prefRes = await concurrentAll(prefBody, clientIP, { name: activePref, type: 1, id: queryMeta.id }, false, '', '', '', { skipPostProcess: true });
-          const prefBuf = await prefRes.arrayBuffer();
-          const ips = extractIPBytes(prefBuf, 1);
-          if (ips && ips.length > 0) {
-            return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 1, ips, 60));
+          const prefBuf = await resolveDNSWire(activePref, 1);
+          if (prefBuf) {
+            const ips = extractIPBytes(prefBuf, 1);
+            if (ips && ips.length > 0) {
+              return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 1, ips, 60));
+            }
           }
         }
         if (queryMeta.type === 65 && echActive) {
