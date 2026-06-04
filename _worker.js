@@ -10,10 +10,11 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
-import { dnsResponse, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
+const X_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co', 'twttr.com'];
 
 // ── Router (inlined) ───────────────────────────────────────────────
 
@@ -133,6 +134,15 @@ function classifyResponse(buffer, type) {
   return null;
 }
 
+function isXDomain(name) {
+  if (!name) return false;
+  var n = name.toLowerCase().replace(/\.+$/, '');
+  for (var i = 0; i < X_DOMAINS.length; i++) {
+    if (n === X_DOMAINS[i] || n.endsWith('.' + X_DOMAINS[i])) return true;
+  }
+  return false;
+}
+
 // ── Main handler ───────────────────────────────────────────────────
 
 export default {
@@ -181,6 +191,30 @@ export default {
       }
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta || parseQueryMeta(body);
+
+      // X/Twitter shortcut: skip two-mix, resolve preferred CF domain directly
+      if (queryMeta && regionActive && isXDomain(queryMeta.name)) {
+        body = body || buildQueryWireId(queryMeta.name, queryMeta.type, queryMeta.id);
+        if (queryMeta.type === 28) {
+          return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
+        }
+        if (queryMeta.type === 1 && activePref) {
+          const prefBody = buildQueryWireId(activePref, 1, queryMeta.id);
+          const prefRes = await concurrentAll(prefBody, clientIP, { name: activePref, type: 1, id: queryMeta.id }, false, '', '', '', { skipPostProcess: true });
+          const prefBuf = await prefRes.arrayBuffer();
+          const ips = extractIPBytes(prefBuf, 1);
+          if (ips && ips.length > 0) {
+            return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 1, ips, 60));
+          }
+        }
+        if (queryMeta.type === 65 && echActive) {
+          const cfEch = await fetchCFEch(null, null);
+          if (cfEch && cfEch.rdata) {
+            return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 65, [cfEch.rdata], 3600));
+          }
+        }
+        // Fall through to twoMixFlow if preferred domain resolution fails
+      }
 
       if (route.provider === MIX_PROVIDER) {
         return await twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
