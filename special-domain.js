@@ -592,6 +592,36 @@ export function isMetaDomain(name) {
   } catch (_) { return false; }
 }
 
+/**
+ * Filter Meta IP bytes to only return those from known-reachable CIDR ranges.
+ * GFW blocks specific Meta subnets at TCP level; ECH hides SNI but can't fix IP drops.
+ * 57.144.0.0/14 (Meta HK edge) is consistently reachable from China.
+ * @param {Uint8Array[]} ipBytesArr - IP rdata bytes from extractIPBytes()
+ * @param {number} maxCount - Maximum IPs to return (default 2)
+ * @returns {Uint8Array[]} reachable IP bytes, sorted best-first
+ */
+export function filterReachableMeta(ipBytesArr, maxCount) {
+  if (!ipBytesArr || !ipBytesArr.length) return [];
+  const limit = typeof maxCount === 'number' && maxCount > 0 ? maxCount : 2;
+  const reachable = [];
+  for (let i = 0; i < ipBytesArr.length; i++) {
+    if (isReachableMetaIP(ipBytesArr[i])) {
+      reachable.push(ipBytesArr[i]);
+      if (reachable.length >= limit) break;
+    }
+  }
+  return reachable;
+}
+
+/** Check if a 4-byte Meta IP falls in a known-reachable CIDR range */
+function isReachableMetaIP(ipBytes) {
+  if (!ipBytes || ipBytes.length !== 4) return false;
+  var a = ipBytes[0], b = ipBytes[1];
+  // 57.144.0.0/14 — Meta HK edge, consistently reachable
+  if (a === 57 && b >= 144 && b <= 147) return true;
+  return false;
+}
+
 async function resolveA(domain) {
     try {
         const buf = await resolveDNSWire(domain, 1);

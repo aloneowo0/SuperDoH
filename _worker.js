@@ -10,7 +10,7 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { remapResponse, probeOwner, isMetaDomain } from './special-domain.js';
+import { remapResponse, probeOwner, isMetaDomain, filterReachableMeta } from './special-domain.js';
 import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireGoogle, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -105,10 +105,17 @@ export default {
           }
         }
         if (isMeta && (qMeta.type === 1 || qMeta.type === 28)) {
+          // CN region: suppress AAAA to avoid IPv6 Happy Eyeballs adding parallel connections
+          if (qMeta.type === 28 && regionActive) {
+            return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 300));
+          }
           const buf = await resolveDNSWireGoogle(body);
           if (buf) {
             const ips = extractIPBytes(buf, qMeta.type);
-            if (ips && ips.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, ips, 300));
+            if (ips && ips.length > 0) {
+              const filtered = regionActive ? filterReachableMeta(ips) : ips;
+              if (filtered.length > 0) return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, filtered, 300));
+            }
           }
           return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, [], 60));
         }
