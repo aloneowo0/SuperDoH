@@ -64,20 +64,28 @@ function healthResponse(upstreamNames) {
 }
 
 async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+  // DEBUG: add response header at each decision point
+  function debug(resp, tag, owner) {
+    return new Response(resp.body, {
+      status: resp.status,
+      headers: { ...Object.fromEntries(resp.headers), 'X-Dbg-Path': tag, 'X-Dbg-Owner': owner || '' }
+    });
+  }
+
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
-    return await concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+    return debug(await concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc), 'skip-type');
   }
 
   // MIX 1: classify only — no filter, no post-processing
   const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
 
   if (!regionActive) {
-    return firstResult;
+    return debug(firstResult, 'no-region');
   }
 
   const firstBuf = await firstResult.clone().arrayBuffer();
   const owner = classifyResponse(firstBuf, queryMeta.type);
-  if (!owner) return firstResult;
+  if (!owner) return debug(firstResult, 'no-owner');
 
   // MIX 2: optimize based on owner
   if (owner === 'META') {
@@ -100,25 +108,25 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
             if (bytes) return dnsResponse(bytes);
           }
         }
-        return second;
+        return debug(second, 'meta-ok', owner);
       }
     }
-    return firstResult;
+    return debug(firstResult, 'meta-fb', owner);
   }
 
   if (owner === 'CF') {
-    return firstResult;
+    return debug(firstResult, 'cf-pass', owner);
   }
 
   if (owner === 'CFT') {
-    return firstResult;
+    return debug(firstResult, 'cft-pass', owner);
   }
 
   if (owner === 'VRC') {
-    return firstResult;
+    return debug(firstResult, 'vrc-pass', owner);
   }
 
-  return firstResult;
+  return debug(firstResult, 'unknown', owner);
 }
 
 function classifyResponse(buffer, type) {
