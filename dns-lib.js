@@ -500,22 +500,6 @@ export async function resolveDNSWire(domain, type) {
   return result;
 }
 
-export async function resolveDNSWireGoogle(body) {
-  try {
-    const res = await fetch('https://dns.google/dns-query', {
-      method: 'POST',
-      headers: DNS_HEADERS,
-      body,
-    });
-    if (res.status !== 200) return null;
-    const buf = await res.arrayBuffer();
-    if (buf.byteLength < 12) return null;
-    return buf;
-  } catch (_) {
-    return null;
-  }
-}
-
 export async function resolveDNSWireForeign(body, timeoutMs) {
   var t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
   var started = Date.now();
@@ -668,5 +652,75 @@ export async function resolveDNSWireAll(domain, type) {
     } catch (_) {}
   }
 
+  return allIps;
+}
+
+export async function resolvePreferredIPs(domain, type) {
+  var query = buildWireQuery(domain, type);
+  var started = Date.now();
+  var deadline = started + 300;
+
+  var foreignUrls = [];
+  for (var n in UPSTREAMS) {
+    if (n === 'dnspod' || n === 'alidns') continue;
+    foreignUrls.push(UPSTREAMS[n].url);
+  }
+  if (foreignUrls.length === 0) return [];
+
+  var controllers = [];
+  var collected = [];
+
+  function abortAll() {
+    for (var i = 0; i < controllers.length; i++) {
+      try { controllers[i].abort(); } catch (_) {}
+    }
+  }
+
+  var promises = foreignUrls.map(function (url) {
+    var ctrl = new AbortController();
+    controllers.push(ctrl);
+    return fetch(url, {
+      method: 'POST',
+      headers: DNS_HEADERS,
+      body: query,
+      signal: ctrl.signal,
+    }).then(async function (res) {
+      if (res.status !== 200) return null;
+      var buf = await res.arrayBuffer();
+      if (buf.byteLength < 12) return null;
+      if (new DataView(buf).getUint16(6) === 0) return null;
+      return buf;
+    }).then(function (buf) {
+      if (!buf) return null;
+      try {
+        var ips = extractIPBytes(buf, type);
+        for (var i = 0; i < ips.length; i++) {
+          collected.push(ips[i]);
+        }
+      } catch (_) {}
+      return null;
+    }).catch(function (_) {
+      return null;
+    });
+  });
+
+  var timeout = new Promise(function (resolve) {
+    var remaining = deadline - Date.now();
+    if (remaining <= 0) { resolve(); return; }
+    setTimeout(function () { abortAll(); resolve(); }, remaining);
+  });
+
+  await Promise.race([Promise.all(promises), timeout]);
+  abortAll();
+
+  var ipSet = new Set();
+  var allIps = [];
+  for (var i = 0; i < collected.length; i++) {
+    var key = Array.from(collected[i]).join(',');
+    if (!ipSet.has(key)) {
+      ipSet.add(key);
+      allIps.push(collected[i]);
+    }
+  }
   return allIps;
 }

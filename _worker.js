@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolveDNSWireGoogle } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolvePreferredIPs } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -73,9 +73,24 @@ function healthResponse(upstreamNames) {
   }), { headers: JSON_HEADERS });
 }
 
+async function preferredAnswer(queryMeta, prefDomain, ttl) {
+  const ips = await resolvePreferredIPs(prefDomain, queryMeta.type);
+  if (ips && ips.length > 0) {
+    return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, ttl));
+  }
+  return null;
+}
+
 async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
     return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+  }
+
+  // Known CF: skip Mix 1, resolve preferred directly, bypass on failure
+  if (queryMeta._knownCF && regionActive && activePref) {
+    const answer = await preferredAnswer(queryMeta, activePref, 60);
+    if (answer) return answer;
+    return await concurrentAll(body, clientIP, queryMeta, false, '', '', '');
   }
 
   // MIX 1: classify only — no filter, no post-processing
@@ -125,21 +140,22 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
 
   if (owner === 'CF') {
     if (!activePref) return firstResult;
-    const prefBody = buildQueryWireId(activePref, queryMeta.type, queryMeta.id);
-    const prefBuf = await resolveDNSWireGoogle(prefBody);
-    if (!prefBuf) return firstResult;
-    const ips = extractIPBytes(prefBuf, queryMeta.type);
-    if (ips && ips.length > 0) {
-      return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 60));
-    }
+    const answer = await preferredAnswer(queryMeta, activePref, 60);
+    if (answer) return answer;
     return firstResult;
   }
 
   if (owner === 'CFT') {
+    if (!preferredCft) return firstResult;
+    const answer = await preferredAnswer(queryMeta, preferredCft, 60);
+    if (answer) return answer;
     return firstResult;
   }
 
   if (owner === 'VRC') {
+    if (!preferredVrc) return firstResult;
+    const answer = await preferredAnswer(queryMeta, preferredVrc, 60);
+    if (answer) return answer;
     return firstResult;
   }
 
@@ -216,22 +232,12 @@ export default {
         }
       }
 
-      // CF-forced domains: route through preferred CF domain directly
+      // CF force domains: mark for twoMixFlow CF shunt (AAAA returns empty)
       if (queryMeta && regionActive && isCFDomain(queryMeta.name) && activePref) {
-        body = body || buildQueryWireId(queryMeta.name, queryMeta.type, queryMeta.id);
         if (queryMeta.type === 28) {
           return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
         }
-        if (queryMeta.type === 1) {
-          const prefBody = buildQueryWireId(activePref, 1, queryMeta.id);
-          const prefBuf = await resolveDNSWireGoogle(prefBody);
-          if (prefBuf) {
-            const ips = extractIPBytes(prefBuf, 1);
-            if (ips && ips.length > 0) {
-              return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 1, ips, 60));
-            }
-          }
-        }
+        queryMeta._knownCF = true;
       }
 
       if (route.provider === MIX_PROVIDER) {
