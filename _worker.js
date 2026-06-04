@@ -11,7 +11,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { remapResponse, probeOwner, isMetaDomain, filterReachableMeta, resolveMetaFromMap } from './special-domain.js';
-import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireGoogle, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, buildDNS, servfail, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, resolveDNSWireForeign, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -116,8 +116,8 @@ export default {
               return dnsResponse(buildDNS(qMeta.id, qMeta.name, qMeta.type, staticIPs, 600));
             }
           }
-          // Fallback: Google DoH + reachability filter
-          const buf = await resolveDNSWireGoogle(body);
+          // Fallback: concurrent foreign upstreams + reachability filter
+          const buf = await resolveDNSWireForeign(body);
           if (buf) {
             const ips = extractIPBytes(buf, qMeta.type);
             if (ips && ips.length > 0) {

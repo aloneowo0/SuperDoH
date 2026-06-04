@@ -616,9 +616,11 @@ export function filterReachableMeta(ipBytesArr, maxCount) {
 /** Check if a 4-byte Meta IP falls in a known-reachable CIDR range */
 function isReachableMetaIP(ipBytes) {
   if (!ipBytes || ipBytes.length !== 4) return false;
-  var a = ipBytes[0], b = ipBytes[1];
+  var a = ipBytes[0], b = ipBytes[1], c = ipBytes[2];
   // 57.144.0.0/14 — Meta HK edge, consistently reachable
   if (a === 57 && b >= 144 && b <= 147) return true;
+  // 157.240.0.0/17 — Facebook CDN (low-numbered /24s, verified reachable)
+  if (a === 157 && b === 240 && c < 128) return true;
   return false;
 }
 

@@ -516,6 +516,57 @@ export async function resolveDNSWireGoogle(body) {
   }
 }
 
+export async function resolveDNSWireForeign(body, timeoutMs) {
+  var t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
+  var started = Date.now();
+  var deadline = started + t;
+
+  var foreignUrls = [];
+  for (var n in UPSTREAMS) {
+    if (n === 'dnspod' || n === 'alidns') continue;
+    foreignUrls.push(UPSTREAMS[n].url);
+  }
+  if (foreignUrls.length === 0) return null;
+
+  var controllers = [];
+  function abortAll() {
+    for (var i = 0; i < controllers.length; i++) {
+      try { controllers[i].abort(); } catch (_) {}
+    }
+  }
+
+  var promises = foreignUrls.map(function (url) {
+    var ctrl = new AbortController();
+    controllers.push(ctrl);
+    return fetch(url, {
+      method: 'POST',
+      headers: DNS_HEADERS,
+      body: body,
+      signal: ctrl.signal,
+    }).then(async function (res) {
+      if (res.status !== 200) return null;
+      var buf = await res.arrayBuffer();
+      if (buf.byteLength < 12) return null;
+      if (new DataView(buf).getUint16(6) === 0) return null;
+      return buf;
+    }).catch(function (_) {
+      return null;
+    });
+  });
+
+  var timeoutPromise = new Promise(function (resolve) {
+    var remaining = deadline - Date.now();
+    if (remaining <= 0) { resolve(null); return; }
+    setTimeout(function () { resolve(null); }, remaining);
+  });
+
+  var result = await Promise.race([].concat(promises, [timeoutPromise]));
+
+  abortAll();
+
+  return result;
+}
+
 export function extractIPBytes(buf, type) {
   try {
     const answers = parseAnswers(buf, type);
