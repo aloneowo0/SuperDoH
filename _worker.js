@@ -189,6 +189,15 @@ export default {
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta || parseQueryMeta(body);
 
+      // Chrome DoH canary: must return NXDOMAIN, or Chrome disables DoH
+      if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
+        if (queryMeta.type === 1) {
+          var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
+          new DataView(nx).setUint16(2, 0x8183); // NOERROR → NXDOMAIN
+          return dnsResponse(nx);
+        }
+      }
+
       if (route.provider === MIX_PROVIDER) {
         return await twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
       }
