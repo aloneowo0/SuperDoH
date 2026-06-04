@@ -14,6 +14,16 @@ import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, p
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
+const CF_FORCE_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co'];
+
+function isCFDomain(name) {
+  if (!name) return false;
+  var n = name.toLowerCase().replace(/\.+$/, '');
+  for (var i = 0; i < CF_FORCE_DOMAINS.length; i++) {
+    if (n === CF_FORCE_DOMAINS[i] || n.endsWith('.' + CF_FORCE_DOMAINS[i])) return true;
+  }
+  return false;
+}
 
 // ── Router (inlined) ───────────────────────────────────────────────
 
@@ -203,6 +213,24 @@ export default {
           var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
           new DataView(nx).setUint16(2, 0x8183); // NOERROR → NXDOMAIN
           return dnsResponse(nx);
+        }
+      }
+
+      // CF-forced domains: route through preferred CF domain directly
+      if (queryMeta && regionActive && isCFDomain(queryMeta.name) && activePref) {
+        body = body || buildQueryWireId(queryMeta.name, queryMeta.type, queryMeta.id);
+        if (queryMeta.type === 28) {
+          return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
+        }
+        if (queryMeta.type === 1) {
+          const prefBody = buildQueryWireId(activePref, 1, queryMeta.id);
+          const prefBuf = await resolveDNSWireGoogle(prefBody);
+          if (prefBuf) {
+            const ips = extractIPBytes(prefBuf, 1);
+            if (ips && ips.length > 0) {
+              return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, 1, ips, 60));
+            }
+          }
         }
       }
 
