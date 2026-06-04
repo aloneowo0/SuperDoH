@@ -619,8 +619,13 @@ function isReachableMetaIP(ipBytes) {
   var a = ipBytes[0], b = ipBytes[1], c = ipBytes[2];
   // 57.144.0.0/14 — Meta HK edge, consistently reachable
   if (a === 57 && b >= 144 && b <= 147) return true;
-  // 157.240.0.0/17 — Facebook CDN (low-numbered /24s, verified reachable)
-  if (a === 157 && b === 240 && c < 128) return true;
+  // 157.240.x — explicit /24 allowlist from live China testing
+  if (a === 157 && b === 240) {
+    var allowed = [3, 8, 12, 24, 31, 196, 200, 208];
+    for (var i = 0; i < allowed.length; i++) {
+      if (c === allowed[i]) return true;
+    }
+  }
   return false;
 }
 

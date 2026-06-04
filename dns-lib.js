@@ -529,7 +529,11 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   if (foreignUrls.length === 0) return null;
 
   var controllers = [];
+  var result = null;
+  var done = false;
+
   function abortAll() {
+    done = true;
     for (var i = 0; i < controllers.length; i++) {
       try { controllers[i].abort(); } catch (_) {}
     }
@@ -544,10 +548,14 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
       body: body,
       signal: ctrl.signal,
     }).then(async function (res) {
+      if (done) return null;
       if (res.status !== 200) return null;
       var buf = await res.arrayBuffer();
+      if (done) return null;
       if (buf.byteLength < 12) return null;
       if (new DataView(buf).getUint16(6) === 0) return null;
+      result = buf;
+      abortAll();
       return buf;
     }).catch(function (_) {
       return null;
@@ -556,13 +564,11 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
 
   var timeoutPromise = new Promise(function (resolve) {
     var remaining = deadline - Date.now();
-    if (remaining <= 0) { resolve(null); return; }
-    setTimeout(function () { resolve(null); }, remaining);
+    if (remaining <= 0) { resolve(); return; }
+    setTimeout(function () { if (!done) abortAll(); resolve(); }, remaining);
   });
 
-  var result = await Promise.race([].concat(promises, [timeoutPromise]));
-
-  abortAll();
+  await Promise.race([Promise.all(promises), timeoutPromise]);
 
   return result;
 }
