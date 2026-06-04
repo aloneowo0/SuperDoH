@@ -92,7 +92,14 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
     const secondBuf = await second.clone().arrayBuffer();
     if (secondBuf.byteLength >= 12) {
       const rcode = new DataView(secondBuf).getUint16(2) & 0xF;
-      if (rcode === 0) {
+        if (rcode === 0) {
+        if (queryMeta.type === 1 || queryMeta.type === 28) {
+          const allIps = extractIPBytes(secondBuf, queryMeta.type);
+          const reachable = filterReachableMeta(allIps);
+          if (reachable.length > 0) {
+            return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, reachable, 300));
+          }
+        }
         if (echActive && queryMeta.type === 65) {
           const injected = await injectECH(secondBuf, queryMeta.name, 'META', null);
           if (injected) {

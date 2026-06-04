@@ -52,7 +52,7 @@ export function prepareQuery(body, clientIP) {
 export function filterAnswers(response) {
     try {
         const packet = parseDns(response);
-        if ((packet.header.flags & 0xF) !== 0) return { passed: false, reason: 'error_rcode' };
+        if ((packet.header.flags & 0xF) === 2) return { passed: false, reason: 'servfail' };
         for (const answer of packet.answers) {
             if (answer.type === TYPE_A && answer.rdlength === 4) {
                 const addr = packet.bytes.subarray(answer.rdataOffset, answer.end);

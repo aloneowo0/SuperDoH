@@ -49,9 +49,9 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
       if (opts.skipPostProcess) {
         processed = bestHeld.result.response;
       } else {
+        abortPending();
         processed = await postProcessBody(bestHeld.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
       }
-      abortPending();
       return dnsResponse(processed, bestHeld.result.time);
     }
 
@@ -83,9 +83,9 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
         if (opts.skipPostProcess) {
           processed = settled.value.result.response;
         } else {
+          abortPending();
           processed = await postProcessBody(settled.value.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
         }
-        abortPending();
         return dnsResponse(processed, settled.value.result.time);
       }
       if (settled.value.result.valid) {
@@ -103,9 +103,9 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
       if (opts.skipPostProcess) {
         processed = settled.value.result.response;
       } else {
+        abortPending();
         processed = await postProcessBody(settled.value.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
       }
-      abortPending();
       return dnsResponse(processed, settled.value.result.time);
     }
   }
@@ -123,9 +123,9 @@ export async function concurrentAll(body, clientIP, queryMeta, regionActive, act
       if (opts.skipPostProcess) {
         processed = bestHeld.result.response;
       } else {
+        abortPending();
         processed = await postProcessBody(bestHeld.result.response, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
       }
-      abortPending();
       return dnsResponse(processed, bestHeld.result.time);
     }
   }

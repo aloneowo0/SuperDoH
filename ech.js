@@ -340,7 +340,7 @@ function createDNSResponseEx(id, qName, records) {
     let offset = DNS_HEADER_LEN;
 
     buf.set(encName, offset); offset += encName.length;
-    v.setUint16(offset, records[0].type); offset += 2;
+    v.setUint16(offset, TYPE_HTTPS); offset += 2;
     v.setUint16(offset, 1); offset += 2;
 
     for (let i = 0; i < records.length; i++) {
