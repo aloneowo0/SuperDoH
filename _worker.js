@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps } from './cdn.js';
-import { dnsResponse, servfail, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
