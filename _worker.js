@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, buildQueryWireId, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolveDNSWireGoogle } from './dns-lib.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -114,6 +114,14 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
   }
 
   if (owner === 'CF') {
+    if (!activePref) return firstResult;
+    const prefBody = buildQueryWireId(activePref, queryMeta.type, queryMeta.id);
+    const prefBuf = await resolveDNSWireGoogle(prefBody);
+    if (!prefBuf) return firstResult;
+    const ips = extractIPBytes(prefBuf, queryMeta.type);
+    if (ips && ips.length > 0) {
+      return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 60));
+    }
     return firstResult;
   }
 
