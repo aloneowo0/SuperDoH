@@ -64,10 +64,14 @@ function healthResponse(upstreamNames) {
 }
 
 async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+  if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
+    return await concurrentAll(body, clientIP, queryMeta, regionActive, activePref, preferredCft, preferredVrc);
+  }
+
   // MIX 1: classify only — no filter, no post-processing
   const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
 
-  if (!regionActive || !queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
+  if (!regionActive) {
     return firstResult;
   }
 
