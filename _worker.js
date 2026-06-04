@@ -95,51 +95,18 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
   }
 
   if (owner === 'CF') {
-    if (!activePref) return firstResult;
-    const cfBody = buildQueryWireId(activePref, queryMeta.type, queryMeta.id);
-    const secondBuf = await resolveBufForDomain(cfBody, clientIP, queryMeta);
-    if (!secondBuf) return firstResult;
-    if (echActive && queryMeta.type === 65) {
-      const cfEch = await fetchCFEch(null, null);
-      const injected = await injectECH(secondBuf, queryMeta.name, 'CF', cfEch);
-      if (injected) {
-        const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-        if (bytes) return dnsResponse(bytes);
-      }
-    }
-    const ips = extractIPBytes(secondBuf, queryMeta.type);
-    if (ips && ips.length > 0) return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 300));
     return firstResult;
   }
 
   if (owner === 'CFT') {
-    if (!preferredCft) return firstResult;
-    const cftBody = buildQueryWireId(preferredCft, queryMeta.type, queryMeta.id);
-    const cftBuf = await resolveBufForDomain(cftBody, clientIP, queryMeta);
-    if (!cftBuf) return firstResult;
-    const ips = extractIPBytes(cftBuf, queryMeta.type);
-    if (ips && ips.length > 0) return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 300));
     return firstResult;
   }
 
   if (owner === 'VRC') {
-    if (!preferredVrc) return firstResult;
-    const vrcBody = buildQueryWireId(preferredVrc, queryMeta.type, queryMeta.id);
-    const vrcBuf = await resolveBufForDomain(vrcBody, clientIP, queryMeta);
-    if (!vrcBuf) return firstResult;
-    const ips = extractIPBytes(vrcBuf, queryMeta.type);
-    if (ips && ips.length > 0) return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, 300));
     return firstResult;
   }
 
   return firstResult;
-}
-
-async function resolveBufForDomain(queryBody, clientIP, queryMeta) {
-  try {
-    const res = await concurrentAll(queryBody, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
-    return await res.arrayBuffer();
-  } catch (_) { return null; }
 }
 
 function classifyResponse(buffer, type) {
