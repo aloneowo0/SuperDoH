@@ -84,14 +84,22 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
         return filtered.length > 0;
       }
     });
-    if (echActive && queryMeta.type === 65) {
-      const injected = await injectECH(await second.clone().arrayBuffer(), queryMeta.name, 'META', null);
-      if (injected) {
-        const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-        if (bytes) return dnsResponse(bytes);
+    // Fail-open: if second mix failed, fall back to first result
+    const secondBuf = await second.clone().arrayBuffer();
+    if (secondBuf.byteLength >= 12) {
+      const rcode = new DataView(secondBuf).getUint16(2) & 0xF;
+      if (rcode === 0) {
+        if (echActive && queryMeta.type === 65) {
+          const injected = await injectECH(secondBuf, queryMeta.name, 'META', null);
+          if (injected) {
+            const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+            if (bytes) return dnsResponse(bytes);
+          }
+        }
+        return second;
       }
     }
-    return second;
+    return firstResult;
   }
 
   if (owner === 'CF') {
