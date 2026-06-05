@@ -161,7 +161,9 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
   if (echActive && queryMeta.type === 65) {
     try {
       var owner = null;
-      if (isMetaDomain(queryMeta.name)) {
+      if (queryMeta._knownCF) {
+        owner = 'CF';
+      } else if (isMetaDomain(queryMeta.name)) {
         owner = 'META';
       } else {
         const ownerResult = await probeOwner(queryMeta.name);

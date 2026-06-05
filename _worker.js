@@ -299,7 +299,9 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
       var owner = null;
-      if (isMetaDomain(queryMeta.name)) {
+      if (queryMeta._knownCF) {
+        owner = 'CF';
+      } else if (isMetaDomain(queryMeta.name)) {
         owner = 'META';
       } else {
         const ownerResult = await probeOwner(queryMeta.name);
