@@ -100,8 +100,9 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
     return firstResult;
   }
 
+  // Force known Meta domains to META filter path
   const firstBuf = await firstResult.clone().arrayBuffer();
-  const owner = classifyResponse(firstBuf, queryMeta.type);
+  var owner = isMetaDomain(queryMeta.name) ? 'META' : classifyResponse(firstBuf, queryMeta.type);
   if (!owner) return firstResult;
 
   // MIX 2: optimize based on owner
