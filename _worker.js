@@ -86,29 +86,11 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
     return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
   }
 
-  // Known CF: combine preferred IPs + original domain IPs in parallel
+  // Known CF: resolve preferred domain directly, bypass on failure
   if (queryMeta._knownCF && regionActive && activePref) {
-    const [prefIps, firstResult] = await Promise.all([
-      resolvePreferredIPs(activePref, queryMeta.type),
-      concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true }),
-    ]);
-    const firstBuf = await firstResult.clone().arrayBuffer();
-    const origIps = extractIPBytes(firstBuf, queryMeta.type);
-
-    var seen = new Set();
-    var allIps = [];
-    for (var i = 0; i < prefIps.length; i++) {
-      var key = Array.from(prefIps[i]).join(',');
-      if (!seen.has(key)) { seen.add(key); allIps.push(prefIps[i]); }
-    }
-    for (var i = 0; i < origIps.length; i++) {
-      var key = Array.from(origIps[i]).join(',');
-      if (!seen.has(key)) { seen.add(key); allIps.push(origIps[i]); }
-    }
-    if (allIps.length > 0) {
-      return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, allIps, 60));
-    }
-    return firstResult;
+    const answer = await preferredAnswer(queryMeta, activePref, 60);
+    if (answer) return answer;
+    return await concurrentAll(body, clientIP, queryMeta, false, '', '', '');
   }
 
   // MIX 1: classify only — no filter, no post-processing
