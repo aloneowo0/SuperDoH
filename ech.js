@@ -129,6 +129,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
         }
 
         const newRecords = [];
+        var httpsWritten = false;
         let ttl = 3600;
 
         for (let i = 0; i < packet.answers.length; i++) {
@@ -173,9 +174,10 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
             const newRdata = buildHttpsRdata(httpsRdata.priority, httpsRdata.target, keptParams);
             newRecords.push({ type: TYPE_HTTPS, rdata: newRdata, ttl: ttl });
+            httpsWritten = true;
         }
 
-        if (newRecords.length === 0) return { body: originalResponse, changed: false, status: 'failed' };
+        if (!httpsWritten) return { body: originalResponse, changed: false, status: 'failed' };
 
         const newBody = createDNSResponseEx(packet.header.id, queryName, newRecords);
 
