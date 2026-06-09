@@ -7,10 +7,11 @@
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
-import { concurrentAll } from './mix.js';
+import { concurrentAll, queryUpstream } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolvePreferredIPs } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolvePreferredIPs, resolveDNSWireAll } from './dns-lib.js';
+import { resolveMetaFromMap } from './meta-route.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -36,18 +37,15 @@ function validProviders() {
 function resolveRoute(request) {
   const url = new URL(request.url);
   const { pathname, search } = url;
-  // Homepage routes
   if (pathname === '/' || pathname === '/index.html' || pathname === '/en') {
     return { home: true };
   }
   if (pathname === '/health') {
     return { health: true };
   }
-  // RFC 8484: bare /dns-query without a provider prefix → mix
   if (pathname === '/dns-query') {
     return { provider: MIX_PROVIDER, queryString: search };
   }
-  // /<provider>/dns-query pattern
   const match = pathname.match(/^\/([^/]+)\/dns-query$/);
   if (!match) return { error: 'not_found' };
   const provider = match[1];
@@ -73,6 +71,8 @@ function healthResponse(upstreamNames) {
   }), { headers: JSON_HEADERS });
 }
 
+// ── Preferred answer helper ────────────────────────────────────────
+
 async function preferredAnswer(queryMeta, prefDomain, ttl) {
   const ips = await resolvePreferredIPs(prefDomain, queryMeta.type);
   if (ips && ips.length > 0) {
@@ -81,87 +81,7 @@ async function preferredAnswer(queryMeta, prefDomain, ttl) {
   return null;
 }
 
-async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
-  if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
-    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
-  }
-
-  // Known CF: resolve preferred domain directly, bypass on failure
-  if (queryMeta._knownCF && regionActive && activePref) {
-    const answer = await preferredAnswer(queryMeta, activePref, 60);
-    if (answer) return answer;
-    return await concurrentAll(body, clientIP, queryMeta, false, '', '', '');
-  }
-
-  // MIX 1: classify only — no filter, no post-processing
-  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
-
-  if (!regionActive) {
-    return firstResult;
-  }
-
-  // Force known Meta domains to META filter path
-  const firstBuf = await firstResult.clone().arrayBuffer();
-  var owner = isMetaDomain(queryMeta.name) ? 'META' : classifyResponse(firstBuf, queryMeta.type);
-  if (!owner) return firstResult;
-
-  // MIX 2: optimize based on owner
-  if (owner === 'META') {
-    const second = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', {
-      acceptFilter: function(resp) {
-        const ips = extractIPBytes(resp, queryMeta.type);
-        const filtered = filterReachableMeta(ips);
-        return filtered.length > 0;
-      }
-    });
-    // Fail-open: if second mix failed, fall back to first result
-    const secondBuf = await second.clone().arrayBuffer();
-    if (secondBuf.byteLength >= 12) {
-      const rcode = new DataView(secondBuf).getUint16(2) & 0xF;
-        if (rcode === 0) {
-        if (queryMeta.type === 1 || queryMeta.type === 28) {
-          const allIps = extractIPBytes(secondBuf, queryMeta.type);
-          const reachable = filterReachableMeta(allIps);
-          if (reachable.length > 0) {
-            return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, reachable, 300));
-          }
-        }
-        if (echActive && queryMeta.type === 65) {
-          const injected = await injectECH(secondBuf, queryMeta.name, 'META', null);
-          if (injected) {
-            const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-            if (bytes) return dnsResponse(bytes);
-          }
-        }
-        return second;
-      }
-    }
-    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
-  }
-
-  if (owner === 'CF') {
-    if (!activePref) return firstResult;
-    const answer = await preferredAnswer(queryMeta, activePref, 60);
-    if (answer) return answer;
-    return firstResult;
-  }
-
-  if (owner === 'CFT') {
-    if (!preferredCft) return firstResult;
-    const answer = await preferredAnswer(queryMeta, preferredCft, 60);
-    if (answer) return answer;
-    return firstResult;
-  }
-
-  if (owner === 'VRC') {
-    if (!preferredVrc) return firstResult;
-    const answer = await preferredAnswer(queryMeta, preferredVrc, 60);
-    if (answer) return answer;
-    return firstResult;
-  }
-
-  return firstResult;
-}
+// ── classifyResponse ───────────────────────────────────────────────
 
 function classifyResponse(buffer, type) {
   try {
@@ -173,6 +93,197 @@ function classifyResponse(buffer, type) {
     }
   } catch (_) {}
   return null;
+}
+
+// ── Meta resolve: 800ms + 50ms collect ─────────────────────────────
+//
+// Tagged-promise + mask pattern:
+//   Each upstream promise is wrapped at creation time to resolve as
+//   { idx, result }.  A done[] mask tracks which indices have already
+//   been consumed, so Promise.race always competes only on unresolved
+//   promises.  No splice → no index-shifting bugs.
+
+async function metaResolve(body, clientIP, queryMeta, echActive) {
+  var startedAt = Date.now();
+  var hardDeadline = startedAt + 800;
+  var candidates = [];
+
+  // Static route / cache hit
+  var routeIPs = resolveMetaFromMap(queryMeta.name);
+  if (routeIPs && routeIPs.length > 0) {
+    for (var i = 0; i < routeIPs.length; i++) candidates.push(routeIPs[i]);
+  }
+
+  // Fire all upstreams — each tagged with its index
+  var controllers = [];
+  var tagged = [];
+  var done = [];
+  var upstreamKeys = Object.keys(UPSTREAMS);
+  for (var i = 0; i < upstreamKeys.length; i++) {
+    var ctrl = new AbortController();
+    controllers.push(ctrl);
+    done.push(false);
+    (function (idx) {
+      tagged.push(
+        queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, body, startedAt, controllers[idx].signal)
+          .then(function (r) { return { idx: idx, result: r }; })
+      );
+    })(i);
+  }
+
+  function abortAll() {
+    for (var i = 0; i < controllers.length; i++) {
+      try { controllers[i].abort(); } catch (_) {}
+    }
+  }
+
+  // Build a race list from unresolved tagged promises + timeout promise
+  function raceList(deadline) {
+    var list = [];
+    for (var i = 0; i < tagged.length; i++) {
+      if (!done[i]) list.push(tagged[i]);
+    }
+    var remaining = deadline - Date.now();
+    if (remaining <= 0) return [];
+    list.push(new Promise(function (resolve) { setTimeout(function () { resolve(null); }, remaining); }));
+    return list;
+  }
+
+  // ── Phase 1: wait for first valid response within 800ms ──────────
+
+  var firstValid = null;
+  while (Date.now() < hardDeadline) {
+    var racers = raceList(hardDeadline);
+    if (racers.length <= 1) break; // nothing left except the timeout (or nothing at all)
+
+    var winner = await Promise.race(racers);
+    if (!winner) break; // timeout
+    done[winner.idx] = true;
+
+    if (winner.result.valid) {
+      firstValid = winner.result;
+      try {
+        var ips = extractIPBytes(firstValid.response, queryMeta.type);
+        for (var j = 0; j < ips.length; j++) candidates.push(ips[j]);
+      } catch (_) {}
+      break;
+    }
+  }
+
+  // ── Phase 2: 50ms collect window after first valid ───────────────
+
+  if (firstValid) {
+    var collectDeadline = Math.min(Date.now() + 50, hardDeadline);
+    while (Date.now() < collectDeadline) {
+      var racers = raceList(collectDeadline);
+      if (racers.length <= 1) break;
+
+      var winner = await Promise.race(racers);
+      if (!winner) break;
+      done[winner.idx] = true;
+
+      if (winner.result.valid) {
+        try {
+          var ips = extractIPBytes(winner.result.response, queryMeta.type);
+          for (var j = 0; j < ips.length; j++) candidates.push(ips[j]);
+        } catch (_) {}
+      }
+    }
+  }
+
+  abortAll();
+
+  if (candidates.length === 0) {
+    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+  }
+
+  // ── Dedup + Meta CIDR + max 4 ────────────────────────────────────
+
+  var seen = new Set();
+  var filtered = [];
+  for (var i = 0; i < candidates.length; i++) {
+    var key = Array.from(candidates[i]).join(',');
+    if (!seen.has(key)) {
+      seen.add(key);
+      if (filterReachableMeta([candidates[i]], 1).length > 0) {
+        filtered.push(candidates[i]);
+      }
+      if (filtered.length >= 4) break;
+    }
+  }
+
+  if (filtered.length === 0) {
+    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+  }
+
+  // ── ECH for type 65 ──────────────────────────────────────────────
+
+  if (echActive && queryMeta.type === 65) {
+    try {
+      var echBody = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300);
+      var injected = await injectECH(echBody, queryMeta.name, 'META', null);
+      if (injected) {
+        var bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+        if (bytes) return dnsResponse(bytes);
+      }
+    } catch (_) {}
+  }
+
+  return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300));
+}
+
+// ── twoMixFlow ─────────────────────────────────────────────────────
+
+async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+  // Non-A/AAAA → concurrentAll with post-processing (ECH)
+  if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
+    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+  }
+
+  // MIX 1: classify — only used for owner detection
+  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+
+  if (!regionActive) {
+    return firstResult;
+  }
+
+  const firstBuf = await firstResult.clone().arrayBuffer();
+  var owner = classifyResponse(firstBuf, queryMeta.type);
+
+  // X/Twitter: force CF
+  if (!owner && isCFDomain(queryMeta.name)) {
+    owner = 'CF';
+  }
+
+  if (!owner) return firstResult;
+
+  // MIX 2: optimize based on owner
+  if (owner === 'META') {
+    return await metaResolve(body, clientIP, queryMeta, echActive);
+  }
+
+  if (owner === 'CF') {
+    if (!activePref) return firstResult;
+    var answer = await preferredAnswer(queryMeta, activePref, 60);
+    if (answer) return answer;
+    return firstResult;
+  }
+
+  if (owner === 'CFT') {
+    if (!preferredCft) return firstResult;
+    var answer = await preferredAnswer(queryMeta, preferredCft, 60);
+    if (answer) return answer;
+    return firstResult;
+  }
+
+  if (owner === 'VRC') {
+    if (!preferredVrc) return firstResult;
+    var answer = await preferredAnswer(queryMeta, preferredVrc, 60);
+    if (answer) return answer;
+    return firstResult;
+  }
+
+  return firstResult;
 }
 
 // ── Main handler ───────────────────────────────────────────────────
@@ -191,7 +302,6 @@ export default {
       if (route.health) return healthResponse(upstreamNames);
       if (route.error) return jsonError(route.error);
 
-      // Parse query metadata from URL (GET) or body (POST)
       const url = new URL(request.url);
       let qMeta = parseQueryMetaFromURL(url);
       if (request.method === 'POST') {
@@ -224,21 +334,13 @@ export default {
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta || parseQueryMeta(body);
 
-      // Chrome DoH canary: must return NXDOMAIN, or Chrome disables DoH
+      // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
         if (queryMeta.type === 1) {
           var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
-          new DataView(nx).setUint16(2, 0x8183); // NOERROR → NXDOMAIN
+          new DataView(nx).setUint16(2, 0x8183);
           return dnsResponse(nx);
         }
-      }
-
-      // CF force domains: mark for twoMixFlow CF shunt (AAAA returns empty)
-      if (queryMeta && regionActive && isCFDomain(queryMeta.name) && activePref) {
-        if (queryMeta.type === 28) {
-          return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
-        }
-        queryMeta._knownCF = true;
       }
 
       if (route.provider === MIX_PROVIDER) {
@@ -283,7 +385,6 @@ async function rfc8484Passthrough(route, request) {
 
 // ── Single upstream query ──────────────────────────────────────────
 
-/** @param {string} echActive — whether ECH injection is enabled for this region */
 async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
   const upstream = UPSTREAMS[provider];
   if (!upstream) return dnsResponse(servfail(body));
@@ -300,9 +401,7 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
       var owner = null;
-      if (queryMeta._knownCF) {
-        owner = 'CF';
-      } else if (isMetaDomain(queryMeta.name)) {
+      if (isMetaDomain(queryMeta.name)) {
         owner = 'META';
       } else {
         const ownerResult = await probeOwner(queryMeta.name);
