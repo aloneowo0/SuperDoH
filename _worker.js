@@ -415,17 +415,23 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
   const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(function() { try { ctrl.abort(); } catch (_) {} }, HARD_TIMEOUT_MS);
     const response = await fetch(upstream.url, {
       method: 'POST',
       headers: DNS_HEADERS,
       body: queryBody,
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     const responseBody = await response.arrayBuffer();
     const elapsed = Date.now() - started;
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
       var owner = null;
-      if (isMetaDomain(queryMeta.name)) {
+      if (queryMeta.forcedOwner) {
+        owner = queryMeta.forcedOwner;
+      } else if (isMetaDomain(queryMeta.name)) {
         owner = 'META';
       } else {
         const ownerResult = await probeOwner(queryMeta.name);

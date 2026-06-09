@@ -47,6 +47,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
       }
       var processed;
       if (opts.skipPostProcess) {
+        abortPending();
         processed = bestHeld.result.response;
       } else {
         abortPending();
@@ -81,6 +82,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
         }
         var processed;
         if (opts.skipPostProcess) {
+          abortPending();
           processed = settled.value.result.response;
         } else {
           abortPending();
@@ -101,6 +103,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
       }
       var processed;
       if (opts.skipPostProcess) {
+        abortPending();
         processed = settled.value.result.response;
       } else {
         abortPending();
@@ -121,6 +124,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
       }
       var processed;
       if (opts.skipPostProcess) {
+        abortPending();
         processed = bestHeld.result.response;
       } else {
         abortPending();
