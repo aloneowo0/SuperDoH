@@ -746,8 +746,7 @@ export async function resolvePreferredIPs(domain, type, expectedOwner) {
         if (ipStr && detectOwner(ipStr) === expectedOwner) ownerFiltered.push(ipBytes);
       }
       return ownerFiltered;
-    } catch (_) {}
+    } catch (_) { return []; }
   }
-
   return allIps;
 }

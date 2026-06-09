@@ -104,6 +104,12 @@ function classifyResponse(buffer, type) {
 //   promises.  No splice → no index-shifting bugs.
 
 async function metaResolve(body, clientIP, queryMeta, echActive) {
+  void echActive; // Meta type 65 ECH handled by postProcessBody()
+  // Meta AAAA: no IPv6 reachability data, return NODATA immediately
+  if (queryMeta.type === 28) {
+    return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
+  }
+
   var startedAt = Date.now();
   var hardDeadline = startedAt + META_HARD_TIMEOUT_MS;
   var candidates = [];
@@ -235,6 +241,9 @@ async function metaResolve(body, clientIP, queryMeta, echActive) {
       if (filtered[fi].length === rdataLen) validFiltered.push(filtered[fi]);
     }
     filtered = validFiltered;
+    if (filtered.length === 0) {
+      return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+    }
   }
 
   return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300));
@@ -345,6 +354,9 @@ export default {
       }
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta || parseQueryMeta(body);
+      if (queryMeta && queryMeta.name) {
+        queryMeta.forcedOwner = isCFDomain(queryMeta.name) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
+      }
 
       // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {

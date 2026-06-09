@@ -163,6 +163,8 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
       var owner = null;
       if (queryMeta._knownCF) {
         owner = 'CF';
+      } else if (queryMeta.forcedOwner) {
+        owner = queryMeta.forcedOwner;
       } else if (isMetaDomain(queryMeta.name)) {
         owner = 'META';
       } else {

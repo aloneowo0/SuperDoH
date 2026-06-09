@@ -589,6 +589,9 @@ export async function probeOwner(domain) {
 
         const cached = probeCache.get(key);
         if (cached && cached.expire > Date.now()) {
+            // Refresh LRU: delete and re-insert to move to end
+            probeCache.delete(key);
+            probeCache.set(key, cached);
             return { owner: cached.owner, ips: cached.ips };
         }
 
