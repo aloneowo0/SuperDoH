@@ -1,6 +1,7 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
 import { UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const DNS_HEADER_LEN = 12;
@@ -283,7 +284,9 @@ export function buildQueryFromURL(url) {
       const b64 = dnsParam.replace(/-/g, '+').replace(/_/g, '/');
       const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
       return bin.buffer;
-    } catch (_) {}
+    } catch (err) {
+      logEvent('error', 'dns_error', { stage: 'buildQueryFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    }
   }
 
   const name = url.searchParams.get('name');
@@ -328,7 +331,9 @@ export function parseQueryMetaFromURL(url) {
       }
       const qType = view.getUint16(off);
       return { id, name: labels.join('.').toLowerCase(), type: qType };
-    } catch (_) {}
+    } catch (err) {
+      logEvent('error', 'dns_error', { stage: 'parseQueryMetaFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    }
   }
 
   return null;
@@ -353,7 +358,8 @@ export function parseQueryMeta(body) {
     }
     const qType = view.getUint16(offset);
     return { id, name: labels.join('.').toLowerCase(), type: qType };
-  } catch (_) {
+  } catch (err) {
+    logEvent('error', 'dns_error', { stage: 'parseQueryMeta', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return null;
   }
 }
@@ -479,7 +485,8 @@ export async function resolveDNSWire(domain, type) {
       if (buf.byteLength < 12) return null;
       if (new DataView(buf).getUint16(6) === 0) return null;
       return buf;
-    }).catch(function (_) {
+    }).catch(function (err) {
+      logEvent('error', 'dns_error', { stage: 'resolveDNSWire', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
   });
@@ -494,7 +501,10 @@ export async function resolveDNSWire(domain, type) {
   const validPromises = promises.map(function (p) {
     return p.then(function (r) { if (!r) throw new Error('invalid'); return r; });
   });
-  const firstValid = Promise.any(validPromises).catch(function () { return null; });
+  const firstValid = Promise.any(validPromises).catch(function (err) {
+    logEvent('error', 'dns_error', { stage: 'resolveDNSWire_any', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    return null;
+  });
   const result = await Promise.race([firstValid, timeout]);
 
   // Clean up: abort any still-pending fetches
@@ -544,7 +554,8 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
       result = buf;
       abortAll();
       return buf;
-    }).catch(function (_) {
+    }).catch(function (err) {
+      logEvent('error', 'dns_error', { stage: 'resolveDNSWireForeign', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
   });
@@ -566,7 +577,8 @@ export function extractIPBytes(buf, type) {
     return answers.filter(function (a) {
       return a.type === type && (a.rdata.length === 4 || a.rdata.length === 16);
     }).map(function (a) { return a.rdata; });
-  } catch (_) {
+  } catch (err) {
+    logEvent('error', 'dns_error', { stage: 'extractIPBytes', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return [];
   }
 }
@@ -593,7 +605,8 @@ export function extractIPStrings(buf, type) {
       });
     }
     return [];
-  } catch (_) {
+  } catch (err) {
+    logEvent('error', 'dns_error', { stage: 'extractIPStrings', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return [];
   }
 }
@@ -618,7 +631,8 @@ export async function resolveDNSWireAll(domain, type) {
     }).then(async function (res) {
       if (res.status !== 200) return null;
       return await res.arrayBuffer();
-    }).catch(function (_) {
+    }).catch(function (err) {
+      logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
   });
@@ -652,16 +666,19 @@ export async function resolveDNSWireAll(domain, type) {
           }
         }
       }
-    } catch (_) {}
+    } catch (err) {
+      logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll_parse', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    }
   }
 
   return allIps;
 }
 
-export async function resolvePreferredIPs(domain, type, expectedOwner) {
+export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
   var query = buildWireQuery(domain, type);
   var started = Date.now();
   var deadline = started + PREFERRED_TIMEOUT_MS;
+  var requestId = ctx && ctx.requestId;
 
   var foreignUrls = [];
   for (var n in UPSTREAMS) {
@@ -700,9 +717,12 @@ export async function resolvePreferredIPs(domain, type, expectedOwner) {
         for (var i = 0; i < ips.length; i++) {
           collected.push(ips[i]);
         }
-      } catch (_) {}
+      } catch (err) {
+        logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      }
       return null;
-    }).catch(function (_) {
+    }).catch(function (err) {
+      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
   });
@@ -746,7 +766,10 @@ export async function resolvePreferredIPs(domain, type, expectedOwner) {
         if (ipStr && detectOwner(ipStr) === expectedOwner) ownerFiltered.push(ipBytes);
       }
       return ownerFiltered;
-    } catch (_) { return []; }
+    } catch (err) {
+      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_owner_filter', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      return [];
+    }
   }
   return allIps;
 }

@@ -1,5 +1,6 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
 import { resolveDNSWire, requireBytes, parseDns, encodeDnsName, buildDNS } from './dns-lib.js';
+import { logEvent } from './logger.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
@@ -53,7 +54,8 @@ export async function fetchCFEch(_env, _ctx) {
         const result = { rdata: rdata, params: params };
         echCache.set(CF_ECH_DOMAIN, { ts: Date.now(), data: result });
         return result;
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'ech_error', { stage: 'fetchCFEch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return null;
     }
 }
@@ -84,7 +86,7 @@ function encodeBase64Url(bytes) {
     return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export async function injectECH(originalResponse, queryName, ownerType, echConfig) {
+export async function injectECH(originalResponse, queryName, ownerType, echConfig, ctx) {
     try {
         let echValue = null;
         let echAlpn = null;
@@ -178,7 +180,8 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
                 'Access-Control-Allow-Origin': '*'
             }
         });
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'ech_error', { requestId: ctx && ctx.requestId, stage: 'injectECH', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
         return originalResponse;
     }
 }
@@ -384,7 +387,8 @@ function parseHttpsRdata(view, rdataOffset, rdlength) {
         }
 
         return { priority: priority, target: target, paramBytes: paramBytes };
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'ech_error', { stage: 'parseHttpsRdata', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return null;
     }
 }
@@ -395,7 +399,8 @@ function readBody(input) {
         if (input instanceof ArrayBuffer) return input;
         if (ArrayBuffer.isView(input)) return input.buffer;
         return null;
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'ech_error', { stage: 'readBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return null;
     }
 }

@@ -12,10 +12,19 @@ import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolvePreferredIPs, resolveDNSWireAll } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
+import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
 const CF_FORCE_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co'];
+
+// ── Response helper with requestId ──────────────────────────────────
+
+function respond(body, ctx, upstreamTime) {
+  var r = dnsResponse(body, upstreamTime);
+  r.headers.set('X-DoH-Request-ID', ctx.requestId);
+  return r;
+}
 
 function isCFDomain(name) {
   if (!name) return false;
@@ -73,17 +82,22 @@ function healthResponse(upstreamNames) {
 
 // ── Preferred answer helper ────────────────────────────────────────
 
-async function preferredAnswer(queryMeta, prefDomain, ttl, expectedOwner) {
-  const ips = await resolvePreferredIPs(prefDomain, queryMeta.type, expectedOwner);
+async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
+  var startedAt = Date.now();
+  const ips = await resolvePreferredIPs(prefDomain, queryMeta.type, expectedOwner, ctx);
+  logEvent('info', 'preferred_result', { requestId: ctx.requestId, owner: expectedOwner, candidateCount: ips ? ips.length : 0, fallback: !ips || ips.length === 0 });
   if (ips && ips.length > 0) {
-    return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, ttl));
+    return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, ttl), ctx);
+  }
+  if (!ips || ips.length === 0) {
+    logEvent('warn', 'fallback', { requestId: ctx.requestId, stage: 'preferred_answer', owner: expectedOwner, reason: 'no_reachable_ips', from: 'preferred', to: 'first_result' });
   }
   return null;
 }
 
 // ── classifyResponse ───────────────────────────────────────────────
 
-function classifyResponse(buffer, type) {
+function classifyResponse(buffer, type, ctx) {
   try {
     if (type !== 1 && type !== 28) return null;
     const ips = extractIps(buffer);
@@ -91,7 +105,9 @@ function classifyResponse(buffer, type) {
       const owner = detectOwner(ip);
       if (owner) return owner;
     }
-  } catch (_) {}
+  } catch (err) {
+    logEvent('error', 'classify_error', { requestId: ctx && ctx.requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+  }
   return null;
 }
 
@@ -103,11 +119,11 @@ function classifyResponse(buffer, type) {
 //   been consumed, so Promise.race always competes only on unresolved
 //   promises.  No splice → no index-shifting bugs.
 
-async function metaResolve(body, clientIP, queryMeta, echActive) {
+async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   void echActive; // Meta type 65 ECH handled by postProcessBody()
   // Meta AAAA: no IPv6 reachability data, return NODATA immediately
   if (queryMeta.type === 28) {
-    return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60));
+    return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60), ctx);
   }
 
   var startedAt = Date.now();
@@ -181,7 +197,9 @@ async function metaResolve(body, clientIP, queryMeta, echActive) {
           for (var j = 0; j < reachable.length; j++) candidates.push(reachable[j]);
           break;
         }
-      } catch (_) {}
+      } catch (err) {
+        logEvent('error', 'meta_error', { requestId: ctx.requestId, stage: 'metaResolve_phase1_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      }
     }
   }
 
@@ -201,15 +219,19 @@ async function metaResolve(body, clientIP, queryMeta, echActive) {
         try {
           var ips = extractIPBytes(winner.result.response, queryMeta.type);
           for (var j = 0; j < ips.length; j++) candidates.push(ips[j]);
-        } catch (_) {}
+        } catch (err) {
+          logEvent('error', 'meta_error', { requestId: ctx.requestId, stage: 'metaResolve_phase2_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        }
       }
     }
   }
 
   abortAll();
 
+  logEvent('info', 'meta_collect', { requestId: ctx.requestId, firstValidMs: firstValid ? firstValid.time : 800, candidateCount: candidates.length, reachableCount: 0, staticCandidateCount: allRouteIPs ? allRouteIPs.length : 0 });
+
   if (candidates.length === 0) {
-    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+    return respond(servfail(body, 22, 'No reachable Meta IP'), ctx);
   }
 
   // ── Dedup + Meta CIDR + max 4 ────────────────────────────────────
@@ -228,7 +250,7 @@ async function metaResolve(body, clientIP, queryMeta, echActive) {
   }
 
   if (filtered.length === 0) {
-    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+    return respond(servfail(body, 22, 'No reachable Meta IP'), ctx);
   }
 
   // Meta type 65 ECH: handled by postProcessBody() in mix.js (twoMixFlow
@@ -242,25 +264,34 @@ async function metaResolve(body, clientIP, queryMeta, echActive) {
     }
     filtered = validFiltered;
     if (filtered.length === 0) {
-      return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
+      return respond(servfail(body, 22, 'No reachable Meta IP'), ctx);
     }
   }
 
-  return dnsResponse(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300));
+  logEvent('info', 'meta_collect', { requestId: ctx.requestId, firstValidMs: firstValid ? firstValid.time : 800, candidateCount: candidates.length, reachableCount: filtered.length, staticCandidateCount: allRouteIPs ? allRouteIPs.length : 0 });
+
+  return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300), ctx);
 }
 
 // ── twoMixFlow ─────────────────────────────────────────────────────
 
-async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
-    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, {}, ctx);
   }
 
   // MIX 1: classify — only used for owner detection
-  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true });
+  var startedAt = Date.now();
+  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true }, ctx);
+  var mix1Buf = await firstResult.clone().arrayBuffer();
+  var mix1AnswerCount = mix1Buf && mix1Buf.byteLength >= 12 ? new DataView(mix1Buf).getUint16(6) : 0;
+  var mix1Rcode = mix1Buf && mix1Buf.byteLength >= 3 ? (new DataView(mix1Buf).getUint8(3) & 0x0F) : -1;
+  logEvent('info', 'mix1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: mix1Rcode, answerCount: mix1AnswerCount });
 
   if (!regionActive) {
+    // Add header to non-region response
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
 
@@ -268,42 +299,74 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
 
   // Domain rules take priority over IP classification
   var owner;
+  var classifySource = '';
   if (isCFDomain(queryMeta.name)) {
     owner = 'CF';
+    classifySource = 'domain_rule';
   } else if (isMetaDomain(queryMeta.name)) {
     owner = 'META';
+    classifySource = 'domain_rule';
   } else {
-    owner = classifyResponse(firstBuf, queryMeta.type);
+    owner = classifyResponse(firstBuf, queryMeta.type, ctx);
+    classifySource = 'response_ip';
   }
+  logEvent('info', 'route_classified', { requestId: ctx.requestId, owner: owner, classifySource: classifySource });
 
-  if (!owner) return firstResult;
+  if (!owner) {
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+    return firstResult;
+  }
 
   // MIX 2: optimize based on owner
   if (owner === 'META') {
-    return await metaResolve(body, clientIP, queryMeta, echActive);
+    return await metaResolve(ctx, body, clientIP, queryMeta, echActive);
   }
 
+  logEvent('info', 'mix2_start', { requestId: ctx.requestId, owner: owner, target: owner === 'CF' ? 'cf_preferred' : owner === 'CFT' ? 'cft_preferred' : owner === 'VRC' ? 'vrc_preferred' : 'meta_original' });
+
   if (owner === 'CF') {
-    if (!activePref) return firstResult;
-    var answer = await preferredAnswer(queryMeta, activePref, 60, 'CF');
-    if (answer) return answer;
+    if (!activePref) {
+      firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+      return firstResult;
+    }
+    var answer = await preferredAnswer(ctx, queryMeta, activePref, 60, 'CF');
+    if (answer) {
+      logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
+      return answer;
+    }
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
 
   if (owner === 'CFT') {
-    if (!preferredCft) return firstResult;
-    var answer = await preferredAnswer(queryMeta, preferredCft, 60, 'CFT');
-    if (answer) return answer;
+    if (!preferredCft) {
+      firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+      return firstResult;
+    }
+    var answer = await preferredAnswer(ctx, queryMeta, preferredCft, 60, 'CFT');
+    if (answer) {
+      logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
+      return answer;
+    }
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
 
   if (owner === 'VRC') {
-    if (!preferredVrc) return firstResult;
-    var answer = await preferredAnswer(queryMeta, preferredVrc, 60, 'VRC');
-    if (answer) return answer;
+    if (!preferredVrc) {
+      firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+      return firstResult;
+    }
+    var answer = await preferredAnswer(ctx, queryMeta, preferredVrc, 60, 'VRC');
+    if (answer) {
+      logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
+      return answer;
+    }
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
 
+  firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
   return firstResult;
 }
 
@@ -311,17 +374,29 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
 
 export default {
   async fetch(request) {
+    var requestId = crypto.randomUUID().slice(0, 8);
+    var startedAt = Date.now();
     let body = null;
     try {
       const route = resolveRoute(request);
       const upstreamNames = [MIX_PROVIDER, ...Object.keys(UPSTREAMS)];
       if (route.home) {
-        return new URL(request.url).pathname === '/en'
+        var homeResp = new URL(request.url).pathname === '/en'
           ? serveHomepageEn(request, UPSTREAMS, upstreamNames)
           : serveHomepage(request, UPSTREAMS, upstreamNames);
+        homeResp.headers.set('X-DoH-Request-ID', requestId);
+        return homeResp;
       }
-      if (route.health) return healthResponse(upstreamNames);
-      if (route.error) return jsonError(route.error);
+      if (route.health) {
+        var hResp = healthResponse(upstreamNames);
+        hResp.headers.set('X-DoH-Request-ID', requestId);
+        return hResp;
+      }
+      if (route.error) {
+        var errResp = jsonError(route.error);
+        errResp.headers.set('X-DoH-Request-ID', requestId);
+        return errResp;
+      }
 
       const url = new URL(request.url);
       let qMeta = parseQueryMetaFromURL(url);
@@ -341,13 +416,19 @@ export default {
 
       const acceptHeader = request.headers.get('Accept') || '';
       if (acceptHeader.includes('application/dns-json')) {
-        return await rfc8484Passthrough(route, request);
+        var rfcResp = await rfc8484Passthrough(route, request);
+        rfcResp.headers.set('X-DoH-Request-ID', requestId);
+        return rfcResp;
       }
 
       if (!body) {
         if (request.method === 'GET') {
           body = buildQueryFromURL(url);
-          if (!body) return jsonError('missing_name_or_type');
+          if (!body) {
+            var errR = jsonError('missing_name_or_type');
+            errR.headers.set('X-DoH-Request-ID', requestId);
+            return errR;
+          }
         } else {
           body = await request.clone().arrayBuffer();
         }
@@ -358,21 +439,38 @@ export default {
         queryMeta.forcedOwner = isCFDomain(queryMeta.name) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
       }
 
+      var ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0 };
+      logEvent('info', 'request_start', { requestId: requestId, qname: ctx.qname, qtype: ctx.qtype, region: clientCountry });
+
       // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
         if (queryMeta.type === 1) {
           var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
           new DataView(nx).setUint16(2, 0x8183);
-          return dnsResponse(nx);
+          var r = respond(nx, ctx);
+          logEvent('info', 'request_end', { requestId: requestId, result: 'canary_nxdomain', owner: null, answerCount: 0 });
+          return r;
         }
       }
 
       if (route.provider === MIX_PROVIDER) {
-        return await twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
+        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
+        logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: queryMeta && queryMeta.forcedOwner || null, answerCount: -1 });
+        return result;
       }
-      return await singleUpstream(route.provider, body, clientIP, queryMeta, echActive);
-    } catch (_) {
-      return body ? dnsResponse(servfail(body)) : jsonError('internal_error', 500);
+      var sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);
+      logEvent('info', 'request_end', { requestId: requestId, result: 'single_upstream', owner: null, answerCount: -1 });
+      return sResult;
+    } catch (err) {
+      logEvent('error', 'request_error', { requestId: requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), elapsedMs: Date.now() - startedAt });
+      if (body) {
+        var sfResp = dnsResponse(servfail(body));
+        sfResp.headers.set('X-DoH-Request-ID', requestId);
+        return sfResp;
+      }
+      var errResp = jsonError('internal_error', 500);
+      errResp.headers.set('X-DoH-Request-ID', requestId);
+      return errResp;
     }
   },
 };
@@ -409,9 +507,9 @@ async function rfc8484Passthrough(route, request) {
 
 // ── Single upstream query ──────────────────────────────────────────
 
-async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
+async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActive) {
   const upstream = UPSTREAMS[provider];
-  if (!upstream) return dnsResponse(servfail(body));
+  if (!upstream) return respond(servfail(body), ctx);
   const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
   try {
@@ -439,7 +537,7 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
       }
       if (owner) {
         const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
-        const injected = await injectECH(finalBody, queryMeta.name, owner, cfEch);
+        const injected = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
         if (injected) {
           const injectedBytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
           if (injectedBytes) finalBody = injectedBytes;
@@ -447,8 +545,10 @@ async function singleUpstream(provider, body, clientIP, queryMeta, echActive) {
       }
     }
     const fResult = filterAnswers(finalBody);
-    if (response.status === 200 && fResult !== false && fResult?.passed !== false) return dnsResponse(finalBody, elapsed);
-    return dnsResponse(servfail(body, 17, 'Filtered'), elapsed);
-  } catch (_) {}
-  return dnsResponse(servfail(body));
+    if (response.status === 200 && fResult !== false && fResult?.passed !== false) return respond(finalBody, ctx, elapsed);
+    return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
+  } catch (err) {
+    logEvent('error', 'single_upstream_error', { requestId: ctx.requestId, stage: 'singleUpstream', provider: provider, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+  }
+  return respond(servfail(body), ctx);
 }

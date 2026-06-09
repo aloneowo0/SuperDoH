@@ -1,4 +1,5 @@
 import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
+import { logEvent } from './logger.js';
 
 const PROBE_CACHE_TTL = 3600 * 1000;
 const MAX_PROBE_CACHE = 256;
@@ -11,7 +12,10 @@ export function isMetaDomain(name) {
             if (n === domains[i] || n.endsWith('.' + domains[i])) return true;
         }
         return false;
-    } catch (_) { return false; }
+    } catch (err) {
+    logEvent('error', 'cdn_error', { stage: 'isMetaDomain', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    return false;
+  }
 }
 
 // AS32934 scanned 2026-05-31 — only REACHABLE IPv4 + IPv6
@@ -608,7 +612,8 @@ export async function probeOwner(domain) {
         }
         probeCache.set(key, { owner, ips, expire: Date.now() + PROBE_CACHE_TTL });
         return { owner, ips };
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'cdn_error', { stage: 'probeOwner', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_null_owner' });
         return { owner: null, ips: [] };
     }
 }
@@ -653,7 +658,9 @@ export function extractIps(buffer) {
       }
       offset += rdlen;
     }
-  } catch (_) {}
+  } catch (err) {
+    logEvent('error', 'cdn_error', { stage: 'extractIps', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+  }
   return ips;
 }
 
@@ -662,7 +669,8 @@ async function resolveA(domain) {
         const buf = await resolveDNSWire(domain, 1);
         if (!buf) return [];
         return extractIPStrings(buf, 1);
-    } catch (_) {
+    } catch (err) {
+        logEvent('error', 'cdn_error', { stage: 'resolveA', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return [];
     }
 }
@@ -817,5 +825,8 @@ export function classifyResponse(responseBuf, queryType) {
       if (owner) return owner;
     }
     return null;
-  } catch (_) { return null; }
+  } catch (err) {
+    logEvent('error', 'cdn_error', { stage: 'classifyResponse', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    return null;
+  }
 }

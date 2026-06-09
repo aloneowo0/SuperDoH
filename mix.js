@@ -4,10 +4,12 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail } from './dns-lib.js';
+import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
+var _lastKnownCfEch = null;
 
-export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options) {
+export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options, ctx) {
   var opts = options || {};
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
@@ -51,7 +53,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
         processed = bestHeld.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx);
       }
       return dnsResponse(processed, bestHeld.result.time);
     }
@@ -86,7 +88,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
           processed = settled.value.result.response;
         } else {
           abortPending();
-          processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+          processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx);
         }
         return dnsResponse(processed, settled.value.result.time);
       }
@@ -107,7 +109,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
         processed = settled.value.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(settled.value.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx);
       }
       return dnsResponse(processed, settled.value.result.time);
     }
@@ -128,7 +130,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
         processed = bestHeld.result.response;
       } else {
         abortPending();
-        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc);
+        processed = await postProcessBody(bestHeld.result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx);
       }
       return dnsResponse(processed, bestHeld.result.time);
     }
@@ -146,7 +148,8 @@ export async function queryUpstream(url, body, started, signal) {
       time: Date.now() - started,
       valid: response.status === 200 && answersPass(responseBody),
     };
-  } catch (_) {
+  } catch (err) {
+    logEvent('error', 'mix_error', { stage: 'queryUpstream', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return { response: null, time: Date.now() - started, valid: false };
   }
 }
@@ -156,7 +159,7 @@ export function answersPass(responseBody) {
   return result !== false && result?.passed !== false;
 }
 
-export async function postProcessBody(responseBody, queryMeta, echActive, activePref, preferredCft, preferredVrc) {
+export async function postProcessBody(responseBody, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx) {
   if (!queryMeta) return responseBody;
   void activePref;
   void preferredCft;
@@ -176,24 +179,39 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
         if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
       }
       if (owner) {
-        const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
-        // CF ECH fetch failure: injectECH with null echValue returns
-        // originalResponse — the original type 65 response is returned
-        // without ECH injection. This is intentional: CF ECH is best-effort.
-        if (owner === 'CF' && !cfEch) {
-          // ECH not available; fall through to return original response
+        var cfEch = null;
+        var echStale = false;
+        if (owner === 'CF') {
+          cfEch = await fetchCFEch(null, null);
+          if (!cfEch && _lastKnownCfEch && _lastKnownCfEch.expires > Date.now()) {
+            cfEch = _lastKnownCfEch.data;
+            echStale = true;
+            logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'stale', reason: 'using_last_known_good' });
+          }
+          if (!cfEch) {
+            logEvent('warn', 'fallback', { requestId: ctx && ctx.requestId, stage: 'cf_ech', owner: 'CF', reason: 'fresh_and_stale_unavailable', from: 'ech_optimized', to: 'original_https_response' });
+            logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'degraded', reason: 'ech_fetch_failed' });
+            return responseBody;
+          }
+          _lastKnownCfEch = { data: cfEch, expires: Date.now() + 3600000 };
         }
         if (owner === 'META' && !cfEch) {
           // META uses static ECH (META_ECH_B64) inside injectECH, so cfEch
           // is expected to be null here — this is the normal Meta ECH path.
         }
-        const injected = await injectECH(responseBody, queryMeta.name, owner, cfEch);
+        var injected = await injectECH(responseBody, queryMeta.name, owner, cfEch, ctx);
         if (injected) {
-          const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
-          if (bytes) return bytes;
+          var bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+          if (bytes) {
+            var echStatus = echStale ? 'stale' : (cfEch ? 'fresh' : 'built');
+            logEvent(echStatus === 'degraded' ? 'warn' : 'info', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: echStatus, reason: echStatus === 'degraded' ? 'ech_fetch_failed' : '' });
+            return bytes;
+          }
         }
       }
-    } catch (_) {}
+    } catch (err) {
+      logEvent('error', 'mix_error', { requestId: ctx && ctx.requestId, stage: 'postProcessBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
+    }
   }
 
   return responseBody;
