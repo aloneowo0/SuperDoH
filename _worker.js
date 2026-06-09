@@ -136,7 +136,7 @@ async function twoMixFlow(body, clientIP, queryMeta, regionActive, echActive, ac
         return second;
       }
     }
-    return firstResult;
+    return dnsResponse(servfail(body, 22, 'No reachable Meta IP'));
   }
 
   if (owner === 'CF') {
