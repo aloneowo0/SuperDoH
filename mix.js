@@ -171,6 +171,16 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
       }
       if (owner) {
         const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
+        // CF ECH fetch failure: injectECH with null echValue returns
+        // originalResponse — the original type 65 response is returned
+        // without ECH injection. This is intentional: CF ECH is best-effort.
+        if (owner === 'CF' && !cfEch) {
+          // ECH not available; fall through to return original response
+        }
+        if (owner === 'META' && !cfEch) {
+          // META uses static ECH (META_ECH_B64) inside injectECH, so cfEch
+          // is expected to be null here — this is the normal Meta ECH path.
+        }
         const injected = await injectECH(responseBody, queryMeta.name, owner, cfEch);
         if (injected) {
           const bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;

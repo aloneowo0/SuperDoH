@@ -1,6 +1,6 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
-import { UPSTREAMS, HARD_TIMEOUT_MS } from './config.js';
+import { UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const DNS_HEADER_LEN = 12;
@@ -490,12 +490,15 @@ export async function resolveDNSWire(domain, type) {
     setTimeout(function () { resolve(null); }, remaining);
   });
 
-  const result = await Promise.race([...promises, timeout]);
+  // Only valid (non-null) results compete; failures are ignored until timeout
+  const validPromises = promises.map(function (p) {
+    return p.then(function (r) { if (!r) throw new Error('invalid'); return r; });
+  });
+  const firstValid = Promise.any(validPromises).catch(function () { return null; });
+  const result = await Promise.race([firstValid, timeout]);
 
   // Clean up: abort any still-pending fetches
-  for (const c of controllers) {
-    try { c.abort(); } catch (_) {}
-  }
+  abortAll();
 
   return result;
 }
@@ -655,10 +658,10 @@ export async function resolveDNSWireAll(domain, type) {
   return allIps;
 }
 
-export async function resolvePreferredIPs(domain, type) {
+export async function resolvePreferredIPs(domain, type, expectedOwner) {
   var query = buildWireQuery(domain, type);
   var started = Date.now();
-  var deadline = started + 300;
+  var deadline = started + PREFERRED_TIMEOUT_MS;
 
   var foreignUrls = [];
   for (var n in UPSTREAMS) {
@@ -722,5 +725,29 @@ export async function resolvePreferredIPs(domain, type) {
       allIps.push(collected[i]);
     }
   }
+
+  // Validate IPs belong to expected CDN owner
+  if (expectedOwner) {
+    try {
+      var { detectOwner } = await import('./cdn.js');
+      var ownerFiltered = [];
+      for (var oi = 0; oi < allIps.length; oi++) {
+        var ipBytes = allIps[oi];
+        var ipStr;
+        if (ipBytes.length === 4) {
+          ipStr = ipBytes[0] + '.' + ipBytes[1] + '.' + ipBytes[2] + '.' + ipBytes[3];
+        } else if (ipBytes.length === 16) {
+          var parts = [];
+          for (var pi = 0; pi < 16; pi += 2) {
+            parts.push(((ipBytes[pi] << 8) | ipBytes[pi + 1]).toString(16));
+          }
+          ipStr = parts.join(':');
+        }
+        if (ipStr && detectOwner(ipStr) === expectedOwner) ownerFiltered.push(ipBytes);
+      }
+      return ownerFiltered;
+    } catch (_) {}
+  }
+
   return allIps;
 }

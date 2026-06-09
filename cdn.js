@@ -1,6 +1,7 @@
 import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
 
 const PROBE_CACHE_TTL = 3600 * 1000;
+const MAX_PROBE_CACHE = 256;
 
 export function isMetaDomain(name) {
     var domains = ['facebook.com','fbcdn.net','instagram.com','cdninstagram.com','messenger.com','whatsapp.com','whatsapp.net','threads.net','meta.com','oculus.com','fbsbx.com','thefacebook.com','connect.facebook.net'];
@@ -598,6 +599,10 @@ export async function probeOwner(domain) {
             if (isIpInCompiled(ip, COMPILED_META)) { owner = 'META'; break; }
         }
 
+        if (probeCache.size >= MAX_PROBE_CACHE) {
+          var firstKey = probeCache.keys().next().value;
+          if (firstKey !== undefined) probeCache.delete(firstKey);
+        }
         probeCache.set(key, { owner, ips, expire: Date.now() + PROBE_CACHE_TTL });
         return { owner, ips };
     } catch (_) {

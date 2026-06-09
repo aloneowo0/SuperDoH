@@ -138,6 +138,10 @@ function generateConfig(env, upstreams) {
     const hardTimeoutMs = parseInt(env.HARD_TIMEOUT_MS, 10);
     const ecsPrefix4 = parseInt(env.ECS_PREFIX4, 10);
     const ecsPrefix6 = parseInt(env.ECS_PREFIX6, 10);
+    const metaHardTimeoutMs = parseInt(env.META_HARD_TIMEOUT_MS, 10);
+    const metaCollectWindowMs = parseInt(env.META_COLLECT_WINDOW_MS, 10);
+    const metaMaxIps = parseInt(env.META_MAX_IPS, 10);
+    const preferredTimeoutMs = parseInt(env.PREFERRED_TIMEOUT_MS, 10);
 
     // 地区优化解析（从 REGION_XX_* 块自动发现地区）
     const regionSet = new Set();
@@ -179,6 +183,10 @@ ${entries}
 
 export const ECS_PROTECT_MS = ${isNaN(ecsProtectMs) ? 20 : ecsProtectMs};
 export const HARD_TIMEOUT_MS = ${isNaN(hardTimeoutMs) ? 800 : hardTimeoutMs};
+export const META_HARD_TIMEOUT_MS = ${isNaN(metaHardTimeoutMs) ? 800 : metaHardTimeoutMs};
+export const META_COLLECT_WINDOW_MS = ${isNaN(metaCollectWindowMs) ? 50 : metaCollectWindowMs};
+export const META_MAX_IPS = ${isNaN(metaMaxIps) ? 4 : metaMaxIps};
+export const PREFERRED_TIMEOUT_MS = ${isNaN(preferredTimeoutMs) ? 300 : preferredTimeoutMs};
 export const ECS_PREFIX4 = ${isNaN(ecsPrefix4) ? 24 : ecsPrefix4};
 export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 
