@@ -153,7 +153,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     done.push(false);
     (function (idx) {
       tagged.push(
-        queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal)
+        queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal, upstreamKeys[idx])
           .then(function (r) { return { idx: idx, result: r }; })
       );
     })(i);
@@ -228,8 +228,6 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
   abortAll();
 
-  logEvent('info', 'meta_collect', { requestId: ctx.requestId, firstValidMs: firstValid ? firstValid.time : 800, candidateCount: candidates.length, reachableCount: 0, staticCandidateCount: allRouteIPs ? allRouteIPs.length : 0 });
-
   if (candidates.length === 0) {
     return respond(servfail(body, 22, 'No reachable Meta IP'), ctx);
   }
@@ -268,7 +266,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     }
   }
 
-  logEvent('info', 'meta_collect', { requestId: ctx.requestId, firstValidMs: firstValid ? firstValid.time : 800, candidateCount: candidates.length, reachableCount: filtered.length, staticCandidateCount: allRouteIPs ? allRouteIPs.length : 0 });
+  logEvent('info', 'meta_collect', { requestId: ctx.requestId, firstValidMs: firstValid ? firstValid.time : META_HARD_TIMEOUT_MS, candidateCount: candidates.length, reachableCount: filtered.length, staticCandidateCount: allRouteIPs ? allRouteIPs.length : 0 });
 
   return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, filtered, 300), ctx);
 }
@@ -455,10 +453,12 @@ export default {
 
       if (route.provider === MIX_PROVIDER) {
         var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
+        result.headers.set('X-DoH-Request-ID', requestId);
         logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: queryMeta && queryMeta.forcedOwner || null, answerCount: -1 });
         return result;
       }
       var sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);
+      sResult.headers.set('X-DoH-Request-ID', requestId);
       logEvent('info', 'request_end', { requestId: requestId, result: 'single_upstream', owner: null, answerCount: -1 });
       return sResult;
     } catch (err) {
@@ -537,10 +537,12 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
       }
       if (owner) {
         const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
-        const injected = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
-        if (injected) {
-          const injectedBytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+        var echResult = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
+        if (echResult.changed) {
+          var injectedBytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
           if (injectedBytes) finalBody = injectedBytes;
+        } else {
+          logEvent('warn', 'ech_result', { requestId: ctx.requestId, owner: owner, status: 'degraded', reason: 'ech_not_applied_' + echResult.status });
         }
       }
     }

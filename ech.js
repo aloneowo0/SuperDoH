@@ -47,7 +47,8 @@ export async function fetchCFEch(_env, _ctx) {
             params.push({ key: key, val: val });
         }
 
-        if (params.length === 0) return null;
+        var hasEch = params.some(function(p) { return p.key === 'ech' && p.val; });
+        if (!hasEch) return null;
 
         const rdata = packHttpsParams(httpsRdata.priority, httpsRdata.target, params);
 
@@ -102,25 +103,29 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             echAlpn = 'h2,h3';
         }
 
-        if (!echValue) return originalResponse;
+        if (!echValue) return { body: originalResponse, changed: false, status: 'unchanged' };
 
         const body = await readBody(originalResponse);
-        if (!body) return originalResponse;
+        if (!body) return { body: originalResponse, changed: false, status: 'unchanged' };
 
         const packet = parseDns(body);
-        if (!packet) return originalResponse;
+        if (!packet) return { body: originalResponse, changed: false, status: 'failed' };
         if (packet.header.ancount === 0) {
           const params = [];
           if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
           params.push({ key: 'ech', val: echValue });
           const echRdata = packHttpsParams(1, '.', params);
           const newBody = buildDNS(packet.header.id, queryName, TYPE_HTTPS, [echRdata], 300);
-          return new Response(newBody, {
-            headers: {
-              'Content-Type': 'application/dns-message',
-              'Access-Control-Allow-Origin': '*'
-            }
-          });
+          return {
+            body: new Response(newBody, {
+              headers: {
+                'Content-Type': 'application/dns-message',
+                'Access-Control-Allow-Origin': '*'
+              }
+            }),
+            changed: true,
+            status: 'built'
+          };
         }
 
         const newRecords = [];
@@ -170,19 +175,23 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             newRecords.push({ type: TYPE_HTTPS, rdata: newRdata, ttl: ttl });
         }
 
-        if (newRecords.length === 0) return originalResponse;
+        if (newRecords.length === 0) return { body: originalResponse, changed: false, status: 'failed' };
 
         const newBody = createDNSResponseEx(packet.header.id, queryName, newRecords);
 
-        return new Response(newBody, {
+        return {
+          body: new Response(newBody, {
             headers: {
-                'Content-Type': 'application/dns-message',
-                'Access-Control-Allow-Origin': '*'
+              'Content-Type': 'application/dns-message',
+              'Access-Control-Allow-Origin': '*'
             }
-        });
+          }),
+          changed: true,
+          status: 'injected'
+        };
     } catch (err) {
         logEvent('error', 'ech_error', { requestId: ctx && ctx.requestId, stage: 'injectECH', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
-        return originalResponse;
+        return { body: originalResponse, changed: false, status: 'failed' };
     }
 }
 

@@ -486,6 +486,7 @@ export async function resolveDNSWire(domain, type) {
       if (new DataView(buf).getUint16(6) === 0) return null;
       return buf;
     }).catch(function (err) {
+      if (err && err.name === 'AbortError') return null;
       logEvent('error', 'dns_error', { stage: 'resolveDNSWire', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
@@ -555,6 +556,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
       abortAll();
       return buf;
     }).catch(function (err) {
+      if (err && err.name === 'AbortError') return null;
       logEvent('error', 'dns_error', { stage: 'resolveDNSWireForeign', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
@@ -632,6 +634,7 @@ export async function resolveDNSWireAll(domain, type) {
       if (res.status !== 200) return null;
       return await res.arrayBuffer();
     }).catch(function (err) {
+      if (err && err.name === 'AbortError') return null;
       logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
@@ -722,6 +725,7 @@ export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
       }
       return null;
     }).catch(function (err) {
+      if (err && err.name === 'AbortError') return null;
       logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });

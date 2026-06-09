@@ -18,12 +18,12 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   const effectiveBody = opts.overrideBody || body;
   const preparedBody = prepareQuery(effectiveBody, clientIP);
 
-  const pending = Object.entries(UPSTREAMS).map(([, cfg]) => {
+  const pending = Object.entries(UPSTREAMS).map(([name, cfg]) => {
     const ctrl = new AbortController();
     return {
       ecs: cfg.ecs,
       ctrl,
-      promise: queryUpstream(cfg.url, preparedBody, started, ctrl.signal)
+      promise: queryUpstream(cfg.url, preparedBody, started, ctrl.signal, name)
         .then((r) => ({ ecs: cfg.ecs, result: r })),
     };
   });
@@ -139,7 +139,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   return dnsResponse(servfail(body, 22, 'No reachable upstream'), Date.now() - started);
 }
 
-export async function queryUpstream(url, body, started, signal) {
+export async function queryUpstream(url, body, started, signal, upstreamName) {
   try {
     const response = await fetch(url, { method: 'POST', headers: DNS_HEADERS, body, signal });
     const responseBody = await response.arrayBuffer();
@@ -149,7 +149,8 @@ export async function queryUpstream(url, body, started, signal) {
       valid: response.status === 200 && answersPass(responseBody),
     };
   } catch (err) {
-    logEvent('error', 'mix_error', { stage: 'queryUpstream', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    if (err && err.name === 'AbortError') return { response: null, time: Date.now() - started, valid: false };
+    logEvent('error', 'mix_error', { stage: 'queryUpstream', upstream: upstreamName || 'unknown', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return { response: null, time: Date.now() - started, valid: false };
   }
 }
@@ -193,20 +194,25 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
             logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'degraded', reason: 'ech_fetch_failed' });
             return responseBody;
           }
-          _lastKnownCfEch = { data: cfEch, expires: Date.now() + 3600000 };
+          if (!echStale) {
+            _lastKnownCfEch = { data: cfEch, expires: Date.now() + 3600000 };
+          }
         }
         if (owner === 'META' && !cfEch) {
           // META uses static ECH (META_ECH_B64) inside injectECH, so cfEch
           // is expected to be null here — this is the normal Meta ECH path.
         }
-        var injected = await injectECH(responseBody, queryMeta.name, owner, cfEch, ctx);
-        if (injected) {
-          var bytes = injected instanceof Response ? await injected.arrayBuffer() : injected;
+        var echResult = await injectECH(responseBody, queryMeta.name, owner, cfEch, ctx);
+        if (echResult.changed) {
+          var bytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
           if (bytes) {
             var echStatus = echStale ? 'stale' : (cfEch ? 'fresh' : 'built');
             logEvent(echStatus === 'degraded' ? 'warn' : 'info', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: echStatus, reason: echStatus === 'degraded' ? 'ech_fetch_failed' : '' });
             return bytes;
           }
+        } else {
+          logEvent('warn', 'fallback', { requestId: ctx && ctx.requestId, stage: 'ech_injection', owner: owner, reason: 'ech_not_applied_' + echResult.status, from: 'ech_optimized', to: 'original_https_response' });
+          logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: 'degraded', reason: 'ech_not_applied_' + echResult.status });
         }
       }
     } catch (err) {
