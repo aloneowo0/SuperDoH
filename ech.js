@@ -177,7 +177,24 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             httpsWritten = true;
         }
 
-        if (!httpsWritten) return { body: originalResponse, changed: false, status: 'failed' };
+        if (!httpsWritten) {
+          // Build new HTTPS RR from scratch when no valid one to inject into
+          const params = [];
+          if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
+          params.push({ key: 'ech', val: echValue });
+          const echRdata = packHttpsParams(1, '.', params);
+          const newBody = buildDNS(packet.header.id, queryName, TYPE_HTTPS, [echRdata], 300);
+          return {
+            body: new Response(newBody, {
+              headers: {
+                'Content-Type': 'application/dns-message',
+                'Access-Control-Allow-Origin': '*'
+              }
+            }),
+            changed: true,
+            status: 'built'
+          };
+        }
 
         const newBody = createDNSResponseEx(packet.header.id, queryName, newRecords);
 
