@@ -16,7 +16,7 @@ import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
-const CF_FORCE_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co'];
+const CF_FORCE_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co', 'pixiv.net', 'www.pixiv.net', 'imp.pixiv.net'];
 
 // ── Response helper with requestId ──────────────────────────────────
 
