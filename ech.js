@@ -101,6 +101,24 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
         } else if (ownerType === 'META') {
             echValue = META_ECH_B64;
             echAlpn = 'h2,h3';
+
+            // Build fresh HTTPS RR from scratch — discarding CNAME chain
+            // avoids DNS CNAME conflict that causes Chromium to discard ECH
+            const body = await readBody(originalResponse);
+            if (!body || body.byteLength < 2) return { body: originalResponse, changed: false, status: 'failed' };
+            var id = new DataView(body).getUint16(0);
+            const params = [];
+            if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
+            params.push({ key: 'ech', val: echValue });
+            const echRdata = packHttpsParams(1, '.', params);
+            const newBody = buildDNS(id, queryName, TYPE_HTTPS, [echRdata], 300);
+            return {
+                body: new Response(newBody, {
+                    headers: { 'Content-Type': 'application/dns-message', 'Access-Control-Allow-Origin': '*' }
+                }),
+                changed: true,
+                status: 'built'
+            };
         }
 
         if (!echValue) return { body: originalResponse, changed: false, status: 'unchanged' };
