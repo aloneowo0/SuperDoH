@@ -223,7 +223,17 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           };
         }
 
-        const newBody = createDNSResponseEx(packet.header.id, queryName, newRecords);
+        const lastAnswerEnd = packet.answers.length > 0 ? packet.answers[packet.answers.length - 1].end : 0;
+        const nsArBytes = lastAnswerEnd > 0 ? packet.bytes.slice(lastAnswerEnd) : new Uint8Array(0);
+        const newBody = createDNSResponseEx(
+            packet.header.id,
+            queryName,
+            newRecords,
+            nsArBytes,
+            packet.header.flags,
+            packet.header.nscount,
+            packet.header.arcount
+        );
 
         return {
           body: new Response(newBody, {
@@ -376,10 +386,11 @@ function buildHttpsRdata(priority, target, paramBytes) {
     return res;
 }
 
-function createDNSResponseEx(id, qName, records) {
+function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCount) {
     const encName = encodeDnsName(qName);
+    const tailBytes = nsArBytes || new Uint8Array(0);
 
-    let totalLen = DNS_HEADER_LEN + encName.length + 4;
+    let totalLen = DNS_HEADER_LEN + encName.length + 4 + tailBytes.length;
     for (let i = 0; i < records.length; i++) {
         const rd = records[i].rdata;
         totalLen += 2 + 2 + 2 + 4 + 2 + (rd.byteLength || rd.length);
@@ -387,13 +398,18 @@ function createDNSResponseEx(id, qName, records) {
 
     const buf = new Uint8Array(totalLen);
     const v = new DataView(buf.buffer);
+    var newFlags = (flags || 0x8180) & ~0x0020;
+    newFlags = newFlags & ~0x000F;
+    newFlags |= 0x8000;
+    const tailNsCount = tailBytes.length ? (nsCount || 0) : 0;
+    const tailArCount = tailBytes.length ? (arCount || 0) : 0;
 
     v.setUint16(0, id);
-    v.setUint16(2, 0x8180);
+    v.setUint16(2, newFlags);
     v.setUint16(4, 1);
     v.setUint16(6, records.length);
-    v.setUint16(8, 0);
-    v.setUint16(10, 0);
+    v.setUint16(8, tailNsCount);
+    v.setUint16(10, tailArCount);
 
     let offset = DNS_HEADER_LEN;
 
@@ -413,6 +429,7 @@ function createDNSResponseEx(id, qName, records) {
         v.setUint16(offset, rdLen); offset += 2;
         buf.set(rd, offset); offset += rdLen;
     }
+    buf.set(tailBytes, offset);
     return buf.buffer;
 }
 
@@ -459,4 +476,3 @@ function readBody(input) {
         return null;
     }
 }
-
