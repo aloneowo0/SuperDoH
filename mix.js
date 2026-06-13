@@ -128,6 +128,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
     }
   }
 
+  abortPending();
   return dnsResponse(servfail(body, 22, 'No reachable upstream'), Date.now() - started);
 }
 

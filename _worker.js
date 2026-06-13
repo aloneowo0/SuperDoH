@@ -412,6 +412,7 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
     classifySource = 'response_ip';
   }
   logEvent('info', 'route_classified', { requestId: ctx.requestId, owner: owner, classifySource: classifySource });
+  ctx.owner = owner;
 
   if (!owner) {
     firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
@@ -555,7 +556,7 @@ export default {
         var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null);
         if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
-        logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: queryMeta && queryMeta.forcedOwner || null });
+        logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: ctx.owner || null });
         return result;
       }
       var sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);

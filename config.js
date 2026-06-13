@@ -35,7 +35,7 @@ export const BLOCKED_RANGES = [
 export const MIX_PROVIDER = 'mix';
 
 // ── 日志级别 ────────────────────────────────────────
-export const LOG_LEVEL = "info";
+export const LOG_LEVEL = "warn";
 
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
