@@ -4,7 +4,7 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG } from './config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll, queryUpstream } from './mix.js';
@@ -12,7 +12,8 @@ import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes, resolvePreferredIPs } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
-import { logEvent } from './logger.js';
+import { logEvent, setLogLevel } from './logger.js';
+setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
@@ -575,38 +576,6 @@ export default {
     }
   },
 };
-
-// ── RFC 8484 JSON passthrough ──────────────────────────────────────
-
-async function rfc8484Passthrough(route, request) {
-  let target = route.provider === MIX_PROVIDER
-    ? Object.values(UPSTREAMS)[0]
-    : UPSTREAMS[route.provider];
-  if (!target) return jsonError('unknown_provider');
-
-  const query = route.queryString;
-  const upstreamReq = new Request(target.url + query, {
-    method: request.method,
-    headers: {
-      'Accept': 'application/dns-json',
-      ...(request.method !== 'GET' ? { 'Content-Type': request.headers.get('Content-Type') || 'application/dns-json' } : {}),
-    },
-    body: request.method !== 'GET' ? await request.clone().arrayBuffer() : null,
-  });
-
-  try {
-    const response = await fetch(upstreamReq);
-    const body = await response.arrayBuffer();
-    return new Response(body, {
-      status: response.status,
-      headers: { 'Content-Type': 'application/dns-json' },
-    });
-  } catch (_) {
-    return jsonError('upstream_error', 502);
-  }
-}
-
-void rfc8484Passthrough;
 
 // ── Single upstream query ──────────────────────────────────────────
 

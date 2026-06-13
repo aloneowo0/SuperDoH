@@ -34,6 +34,9 @@ export const BLOCKED_RANGES = [
 
 export const MIX_PROVIDER = 'mix';
 
+// ── 日志级别 ────────────────────────────────────────
+export const LOG_LEVEL = "info";
+
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
 export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co"],"ech":true}};

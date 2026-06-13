@@ -196,6 +196,9 @@ export const BLOCKED_RANGES = ${blockedStr};
 
 export const MIX_PROVIDER = 'mix';
 
+// ── 日志级别 ────────────────────────────────────────
+export const LOG_LEVEL = ${JSON.stringify(env.LOG_LEVEL || 'info')};
+
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = ${JSON.stringify(region)};
 export const REGION_CONFIG = ${regionConfigStr};
