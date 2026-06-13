@@ -161,9 +161,9 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
         for (let i = 0; i < packet.answers.length; i++) {
             const answer = packet.answers[i];
+            const ownerName = decodeDnsName(packet.view, answer.offset).name;
             if (answer.type !== TYPE_HTTPS) {
-                const raw = packet.bytes.slice(answer.rdataOffset, answer.end);
-                newRecords.push({ type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
+                newRecords.push({ name: ownerName, type: answer.type, rdata: expandRdataNames(packet.view, answer.rdataOffset, answer.rdlength, answer.type), ttl: answer.ttl });
                 continue;
             }
 
@@ -172,7 +172,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             const httpsRdata = parseHttpsRdata(packet.view, answer.rdataOffset, answer.rdlength);
             if (!httpsRdata) {
                 const raw = packet.bytes.slice(answer.rdataOffset, answer.end);
-                newRecords.push({ type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
+                newRecords.push({ name: ownerName, type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
                 continue;
             }
 
@@ -200,7 +200,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             });
 
             const newRdata = buildHttpsRdata(httpsRdata.priority, httpsRdata.target, keptParams);
-            newRecords.push({ type: TYPE_HTTPS, rdata: newRdata, ttl: ttl });
+            newRecords.push({ name: ownerName, type: TYPE_HTTPS, rdata: newRdata, ttl: ttl });
             httpsWritten = true;
         }
 
@@ -392,8 +392,10 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
 
     let totalLen = DNS_HEADER_LEN + encName.length + 4 + tailBytes.length;
     for (let i = 0; i < records.length; i++) {
-        const rd = records[i].rdata;
-        totalLen += 2 + 2 + 2 + 4 + 2 + (rd.byteLength || rd.length);
+        const rec = records[i];
+        const rd = rec.rdata;
+        const ownerLen = rec.name && rec.name !== qName ? encodeDnsName(rec.name).length : 2;
+        totalLen += ownerLen + 2 + 2 + 4 + 2 + (rd.byteLength || rd.length);
     }
 
     const buf = new Uint8Array(totalLen);
@@ -422,7 +424,12 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
         const rd = rec.rdata;
         const rdLen = rd.byteLength || rd.length;
 
-        v.setUint16(offset, 0xC00C); offset += 2;
+        if (rec.name && rec.name !== qName) {
+            var encOwner = encodeDnsName(rec.name);
+            buf.set(encOwner, offset); offset += encOwner.length;
+        } else {
+            v.setUint16(offset, 0xC00C); offset += 2;
+        }
         v.setUint16(offset, rec.type); offset += 2;
         v.setUint16(offset, 1); offset += 2;
         v.setUint32(offset, rec.ttl); offset += 4;
@@ -431,6 +438,59 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
     }
     buf.set(tailBytes, offset);
     return buf.buffer;
+}
+
+function copyRdata(view, rdataOffset, rdlength) {
+    return new Uint8Array(view.buffer.slice(view.byteOffset + rdataOffset, view.byteOffset + rdataOffset + rdlength));
+}
+
+function expandRdataNames(view, rdataOffset, rdlength, rrType) {
+    if (rrType !== 5 && rrType !== 2 && rrType !== 12 && rrType !== 15 && rrType !== 33 && rrType !== 6) {
+        return copyRdata(view, rdataOffset, rdlength);
+    }
+
+    if (rrType === 5 || rrType === 2 || rrType === 12) {
+        var name = decodeDnsName(view, rdataOffset);
+        return encodeDnsName(name.name);
+    }
+
+    if (rrType === 15) {
+        requireBytes(view, rdataOffset, 2);
+        var pref = view.getUint16(rdataOffset);
+        var mxName = decodeDnsName(view, rdataOffset + 2);
+        var encodedMx = encodeDnsName(mxName.name);
+        var mxResult = new Uint8Array(2 + encodedMx.length);
+        new DataView(mxResult.buffer).setUint16(0, pref);
+        mxResult.set(encodedMx, 2);
+        return mxResult;
+    }
+
+    if (rrType === 33) {
+        requireBytes(view, rdataOffset, 6);
+        var srvName = decodeDnsName(view, rdataOffset + 6);
+        var encodedSrv = encodeDnsName(srvName.name);
+        var srvResult = new Uint8Array(6 + encodedSrv.length);
+        srvResult.set(copyRdata(view, rdataOffset, 6), 0);
+        srvResult.set(encodedSrv, 6);
+        return srvResult;
+    }
+
+    if (rrType === 6) {
+        var mname = decodeDnsName(view, rdataOffset);
+        var rname = decodeDnsName(view, mname.end);
+        var encodedMname = encodeDnsName(mname.name);
+        var encodedRname = encodeDnsName(rname.name);
+        var fixedOffset = rname.end;
+        requireBytes(view, fixedOffset, 20);
+        var soaResult = new Uint8Array(encodedMname.length + encodedRname.length + 20);
+        var soaOffset = 0;
+        soaResult.set(encodedMname, soaOffset); soaOffset += encodedMname.length;
+        soaResult.set(encodedRname, soaOffset); soaOffset += encodedRname.length;
+        soaResult.set(copyRdata(view, fixedOffset, 20), soaOffset);
+        return soaResult;
+    }
+
+    return copyRdata(view, rdataOffset, rdlength);
 }
 
 function parseHttpsRdata(view, rdataOffset, rdlength) {
