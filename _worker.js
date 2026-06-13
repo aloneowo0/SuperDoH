@@ -504,10 +504,10 @@ export default {
       const acceptHeader = request.headers.get('Accept') || '';
       const wantsJson = acceptHeader.includes('application/dns-json');
       let qMeta = parseQueryMetaFromURL(url);
-      if (request.method === 'POST' && !wantsJson) {
+      if (request.method === 'POST') {
         const rawBody = await request.clone().arrayBuffer();
-        qMeta = parseQueryMeta(rawBody);
         body = rawBody;
+        if (!qMeta) qMeta = parseQueryMeta(body);
       }
 
       const clientCountry = request.cf && request.cf.country || '';

@@ -3,7 +3,7 @@ import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail } from './dns-lib.js';
+import { dnsResponse, parseQueryMeta, servfail } from './dns-lib.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -135,9 +135,10 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
 export async function queryUpstream(url, body, started, signal, upstreamName, queryId) {
   try {
     if (queryId === undefined || queryId === null) queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
+    const queryMeta = parseQueryMeta(body);
     const response = await fetch(url, { method: 'POST', headers: DNS_HEADERS, body, signal });
     const responseBody = await response.arrayBuffer();
-    const pass = response.status === 200 ? answersPass(responseBody, queryId) : { passed: false, classification: 'invalid', rcode: -1, answerCount: 0 };
+    const pass = response.status === 200 ? answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type) : { passed: false, classification: 'invalid', rcode: -1, answerCount: 0 };
     return {
       response: responseBody,
       time: Date.now() - started,
@@ -153,8 +154,8 @@ export async function queryUpstream(url, body, started, signal, upstreamName, qu
   }
 }
 
-export function answersPass(responseBody, queryId) {
-  const validation = validateResponse(responseBody, queryId);
+export function answersPass(responseBody, queryId, qname, qtype) {
+  const validation = validateResponse(responseBody, queryId, qname, qtype);
   if (validation.classification === 'invalid') return { passed: false, reason: 'invalid_response', ...validation };
   const result = filterAnswers(responseBody, queryId);
   return { passed: result !== false && result?.passed !== false, reason: result?.reason || null, ...validation };

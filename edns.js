@@ -1,5 +1,5 @@
 import { BLOCKED_RANGES, ECS_PREFIX4, ECS_PREFIX6 } from './config.js';
-import { toBytes, requireBytes, skipName, readRecord, parseDns } from './dns-lib.js';
+import { requireBytes, parseDns } from './dns-lib.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_A = 1;
@@ -72,11 +72,22 @@ export function filterAnswers(response, queryId) {
     return { passed: true, reason: null };
 }
 
-export function validateResponse(response, queryId) {
+export function validateResponse(response, queryId, expectedQname, expectedQtype) {
     try {
         const packet = parseDns(response);
         if (queryId !== undefined && queryId !== null && packet.header.id !== queryId) {
             return { classification: 'invalid', rcode: -1, answerCount: 0 };
+        }
+
+        if (expectedQname || expectedQtype !== undefined && expectedQtype !== null) {
+            const question = readQuestion(packet);
+            if (!question) return { classification: 'invalid', rcode: -1, answerCount: 0 };
+            if (expectedQname && question.name !== normalizeName(expectedQname)) {
+                return { classification: 'invalid', rcode: -1, answerCount: 0 };
+            }
+            if (expectedQtype !== undefined && expectedQtype !== null && question.type !== expectedQtype) {
+                return { classification: 'invalid', rcode: -1, answerCount: 0 };
+            }
         }
 
         const rcode = packet.header.flags & 0xF;
@@ -88,6 +99,52 @@ export function validateResponse(response, queryId) {
     } catch (_) {
         return { classification: 'invalid', rcode: -1, answerCount: 0 };
     }
+}
+
+function readQuestion(packet) {
+    if (packet.header.qdcount < 1) return null;
+    const name = readName(packet.view, packet.bytes, DNS_HEADER_LEN);
+    if (!name || name.offset + 4 > packet.bytes.length) return null;
+    return { name: name.name, type: packet.view.getUint16(name.offset) };
+}
+
+function readName(view, bytes, start) {
+    const labels = [];
+    let offset = start;
+    let end = start;
+    let jumped = false;
+    let jumps = 0;
+
+    while (jumps < MAX_NAME_JUMPS) {
+        requireBytes(view, offset, 1);
+        const len = view.getUint8(offset);
+
+        if ((len & 0xC0) === 0xC0) {
+            requireBytes(view, offset, 2);
+            const pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
+            if (pointer >= view.byteLength) return null;
+            if (!jumped) end = offset + 2;
+            offset = pointer;
+            jumped = true;
+            jumps++;
+            continue;
+        }
+
+        if ((len & 0xC0) !== 0) return null;
+        if (len === 0) return { name: labels.join('.').toLowerCase(), offset: jumped ? end : offset + 1 };
+
+        offset++;
+        requireBytes(view, offset, len);
+        labels.push(new TextDecoder().decode(bytes.subarray(offset, offset + len)));
+        offset += len;
+        if (!jumped) end = offset;
+    }
+
+    return null;
+}
+
+function normalizeName(name) {
+    return String(name).toLowerCase().replace(/\.+$/, '');
 }
 
 
