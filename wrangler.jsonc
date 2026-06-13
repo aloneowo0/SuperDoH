@@ -7,6 +7,6 @@
     "command": "npm run build"
   },
   "observability": {
-    "enabled": true
+    "enabled": false
   }
 }

@@ -14,6 +14,8 @@ export const UPSTREAMS = {
     nextdns: { url: "https://dns.nextdns.io", ecs: true },
 };
 
+export const FOREIGN_UPSTREAMS = Object.keys(UPSTREAMS).filter(function(n) { return n !== 'dnspod' && n !== 'alidns'; });
+
 export const ECS_PROTECT_MS = 20;
 export const HARD_TIMEOUT_MS = 800;
 export const META_HARD_TIMEOUT_MS = 800;
@@ -32,6 +34,9 @@ export const BLOCKED_RANGES = [
 
 export const MIX_PROVIDER = 'mix';
 
+// ── 日志级别 ────────────────────────────────────────
+export const LOG_LEVEL = "warn";
+
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
-export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co"],"ech":true}};
+export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co"],"ech":true,"front":false}};

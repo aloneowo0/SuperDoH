@@ -1,6 +1,6 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
-import { UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
 import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -217,6 +217,41 @@ function skipNameRaw(bytes, start) {
   return end || offset;
 }
 
+function readNameRaw(bytes, start) {
+  const labels = [];
+  let offset = start;
+  let end = start;
+  let jumped = false;
+  let jumps = 0;
+
+  while (jumps < 128) {
+    if (offset >= bytes.length) return null;
+    const len = bytes[offset];
+
+    if ((len & 0xC0) === 0xC0) {
+      if (offset + 1 >= bytes.length) return null;
+      const pointer = ((len & 0x3F) << 8) | bytes[offset + 1];
+      if (pointer >= bytes.length) return null;
+      if (!jumped) end = offset + 2;
+      offset = pointer;
+      jumped = true;
+      jumps++;
+      continue;
+    }
+
+    if ((len & 0xC0) !== 0) return null;
+    if (len === 0) return { name: labels.join('.').toLowerCase(), offset: jumped ? end : offset + 1 };
+
+    offset++;
+    if (offset + len > bytes.length) return null;
+    labels.push(new TextDecoder().decode(bytes.subarray(offset, offset + len)));
+    offset += len;
+    if (!jumped) end = offset;
+  }
+
+  return null;
+}
+
 // ── Wire-format query builders ──────────────────────────────────────
 
 export function buildWireQuery(domain, type) {
@@ -318,19 +353,10 @@ export function parseQueryMetaFromURL(url) {
       if (bin.length < 12) return null;
       const view = new DataView(bin.buffer);
       const id = view.getUint16(0);
-      let off = 12;
-      const labels = [];
-      for (let jumps = 0; jumps < 128; jumps++) {
-        if (off >= bin.length) return null;
-        const len = bin[off];
-        if ((len & 0xC0) === 0xC0) { off += 2; break; }
-        if (len === 0) { off++; break; }
-        off++;
-        labels.push(new TextDecoder().decode(bin.subarray(off, off + len)));
-        off += len;
-      }
-      const qType = view.getUint16(off);
-      return { id, name: labels.join('.').toLowerCase(), type: qType };
+      const qname = readNameRaw(bin, 12);
+      if (!qname || qname.offset + 4 > bin.length) return null;
+      const qType = view.getUint16(qname.offset);
+      return { id, name: qname.name, type: qType };
     } catch (err) {
       logEvent('error', 'dns_error', { stage: 'parseQueryMetaFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     }
@@ -345,19 +371,10 @@ export function parseQueryMeta(body) {
     if (bytes.length < 12) return null;
     const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     const id = view.getUint16(0);
-    let offset = 12;
-    const labels = [];
-    for (let jumps = 0; jumps < 128; jumps++) {
-      if (offset >= bytes.length) return null;
-      const len = bytes[offset];
-      if ((len & 0xC0) === 0xC0) { offset += 2; break; }
-      if (len === 0) { offset++; break; }
-      offset++;
-      labels.push(new TextDecoder().decode(bytes.subarray(offset, offset + len)));
-      offset += len;
-    }
-    const qType = view.getUint16(offset);
-    return { id, name: labels.join('.').toLowerCase(), type: qType };
+    const qname = readNameRaw(bytes, 12);
+    if (!qname || qname.offset + 4 > bytes.length) return null;
+    const qType = view.getUint16(qname.offset);
+    return { id, name: qname.name, type: qType };
   } catch (err) {
     logEvent('error', 'dns_error', { stage: 'parseQueryMeta', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return null;
@@ -377,7 +394,7 @@ export function buildDNS(id, qName, qType, rdataList, ttl) {
   const labels = qName.replace(/\.+$/, '').split('.');
   const nameBytes = [];
   for (const label of labels) {
-    if (label.length > 63) break;
+    if (label.length > 63) throw new Error('DNS label exceeds 63 octets');
     nameBytes.push(label.length);
     for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
   }
@@ -413,16 +430,19 @@ export function buildDNS(id, qName, qType, rdataList, ttl) {
 }
 
 export function servfail(originalBody, edeCode = 0, edeText = '') {
-  const id = originalBody && originalBody.byteLength >= 2 ? new DataView(originalBody).getUint16(0) : 0;
+  const originalBytes = originalBody ? toBytes(originalBody) : null;
+  const originalView = originalBytes ? new DataView(originalBytes.buffer, originalBytes.byteOffset, originalBytes.byteLength) : null;
+  const id = originalView && originalView.byteLength >= 2 ? originalView.getUint16(0) : 0;
   const textBytes = new TextEncoder().encode(edeText);
-  const edeOptionLen = edeCode ? (6 + textBytes.length) : 0;
+  const includeEde = edeCode > 0 && queryHadOpt(originalBytes);
+  const edeOptionLen = includeEde ? (6 + textBytes.length) : 0;
 
   const headerLen = 12;
-  const qdEnd = skipQuestion(originalBody);
-  const qdBytes = qdEnd > headerLen ? new Uint8Array(originalBody.slice(headerLen, qdEnd)) : new Uint8Array(0);
+  const qdEnd = originalBytes ? skipQuestion(originalBytes) : headerLen;
+  const qdBytes = originalBytes && qdEnd > headerLen ? originalBytes.slice(headerLen, qdEnd) : new Uint8Array(0);
 
-  const arcount = edeCode ? 1 : 0;
-  const optLen = edeCode ? (11 + edeOptionLen) : 0;
+  const arcount = includeEde ? 1 : 0;
+  const optLen = includeEde ? (11 + edeOptionLen) : 0;
   const total = headerLen + qdBytes.length + optLen;
   const buf = new ArrayBuffer(total);
   const out = new DataView(buf);
@@ -437,7 +457,7 @@ export function servfail(originalBody, edeCode = 0, edeText = '') {
   out.setUint16(10, arcount);
   bytes.set(qdBytes, headerLen);
 
-  if (edeCode) {
+  if (includeEde) {
     const off = headerLen + qdBytes.length;
     bytes[off] = 0;
     out.setUint16(off + 1, 41);
@@ -451,6 +471,27 @@ export function servfail(originalBody, edeCode = 0, edeText = '') {
   }
 
   return buf;
+}
+
+function queryHadOpt(bytes) {
+  if (!bytes || bytes.length < DNS_HEADER_LEN) return false;
+  try {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    let offset = skipQuestion(bytes);
+    const ancount = view.getUint16(6);
+    const nscount = view.getUint16(8);
+    const arcount = view.getUint16(10);
+
+    for (let i = 0; i < ancount + nscount; i++) offset = readRecord(view, offset).end;
+    for (let i = 0; i < arcount; i++) {
+      const record = readRecord(view, offset);
+      if (record.type === TYPE_OPT) return true;
+      offset = record.end;
+    }
+  } catch (_) {
+    return false;
+  }
+  return false;
 }
 
 // ── Internal DNS resolution ─────────────────────────────────────────
@@ -519,11 +560,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   var started = Date.now();
   var deadline = started + t;
 
-  var foreignUrls = [];
-  for (var n in UPSTREAMS) {
-    if (n === 'dnspod' || n === 'alidns') continue;
-    foreignUrls.push(UPSTREAMS[n].url);
-  }
+  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
   if (foreignUrls.length === 0) return null;
 
   var controllers = [];
@@ -683,11 +720,7 @@ export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
   var deadline = started + PREFERRED_TIMEOUT_MS;
   var requestId = ctx && ctx.requestId;
 
-  var foreignUrls = [];
-  for (var n in UPSTREAMS) {
-    if (n === 'dnspod' || n === 'alidns') continue;
-    foreignUrls.push(UPSTREAMS[n].url);
-  }
+  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
   if (foreignUrls.length === 0) return [];
 
   var controllers = [];

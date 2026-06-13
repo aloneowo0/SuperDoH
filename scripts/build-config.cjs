@@ -168,6 +168,7 @@ function generateConfig(env, upstreams) {
                 ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
                 : defaultRemap,
             ech: env['REGION_' + r + '_ECH'] === 'true',
+            front: env['REGION_' + r + '_FRONT'] === 'true',
         };
     }
     const regionConfigStr = JSON.stringify(regionConfig);
@@ -181,6 +182,8 @@ export const UPSTREAMS = {
 ${entries}
 };
 
+export const FOREIGN_UPSTREAMS = Object.keys(UPSTREAMS).filter(function(n) { return n !== 'dnspod' && n !== 'alidns'; });
+
 export const ECS_PROTECT_MS = ${isNaN(ecsProtectMs) ? 20 : ecsProtectMs};
 export const HARD_TIMEOUT_MS = ${isNaN(hardTimeoutMs) ? 800 : hardTimeoutMs};
 export const META_HARD_TIMEOUT_MS = ${isNaN(metaHardTimeoutMs) ? 800 : metaHardTimeoutMs};
@@ -193,6 +196,9 @@ export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 export const BLOCKED_RANGES = ${blockedStr};
 
 export const MIX_PROVIDER = 'mix';
+
+// ── 日志级别 ────────────────────────────────────────
+export const LOG_LEVEL = ${JSON.stringify(env.LOG_LEVEL || 'info')};
 
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = ${JSON.stringify(region)};

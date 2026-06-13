@@ -610,7 +610,8 @@ export async function probeOwner(domain) {
           var firstKey = probeCache.keys().next().value;
           if (firstKey !== undefined) probeCache.delete(firstKey);
         }
-        probeCache.set(key, { owner, ips, expire: Date.now() + PROBE_CACHE_TTL });
+        var ttl = owner ? PROBE_CACHE_TTL : 15000;
+        probeCache.set(key, { owner, ips, expire: Date.now() + ttl });
         return { owner, ips };
     } catch (err) {
         logEvent('error', 'cdn_error', { stage: 'probeOwner', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_null_owner' });
