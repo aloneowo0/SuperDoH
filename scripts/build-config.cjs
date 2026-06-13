@@ -168,6 +168,7 @@ function generateConfig(env, upstreams) {
                 ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
                 : defaultRemap,
             ech: env['REGION_' + r + '_ECH'] === 'true',
+            front: env['REGION_' + r + '_FRONT'] === 'true',
         };
     }
     const regionConfigStr = JSON.stringify(regionConfig);
