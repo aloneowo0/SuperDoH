@@ -7,7 +7,6 @@ import { dnsResponse, servfail } from './dns-lib.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
-var _lastKnownCfEch = null;
 
 export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options, ctx) {
   var opts = options || {};
@@ -184,19 +183,12 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
         var echStale = false;
         if (owner === 'CF') {
           cfEch = await fetchCFEch(null, null);
-          if (!cfEch && _lastKnownCfEch && _lastKnownCfEch.expires > Date.now()) {
-            cfEch = _lastKnownCfEch.data;
-            echStale = true;
-            logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'stale', reason: 'using_last_known_good' });
-          }
           if (!cfEch) {
             logEvent('warn', 'fallback', { requestId: ctx && ctx.requestId, stage: 'cf_ech', owner: 'CF', reason: 'fresh_and_stale_unavailable', from: 'ech_optimized', to: 'original_https_response' });
             logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'degraded', reason: 'ech_fetch_failed' });
             return responseBody;
           }
-          if (!echStale) {
-            _lastKnownCfEch = { data: cfEch, expires: Date.now() + 3600000 };
-          }
+          echStale = !!cfEch.stale;
         }
         if (owner === 'META' && !cfEch) {
           // META uses static ECH (META_ECH_B64) inside injectECH, so cfEch

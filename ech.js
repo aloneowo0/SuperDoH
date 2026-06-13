@@ -8,9 +8,12 @@ const MAX_NAME_JUMPS = 128;
 const SVC_KEY_ALPN = 1;
 const SVC_KEY_ECH = 5;
 const CACHE_TTL_MS = 600000;
+const STALE_TTL_MS = 3600000;
 const CF_ECH_DOMAIN = 'cloudflare-ech.com';
 
 export const META_ECH_B64 = 'AsH+DQBECAAgACBoagCiXnMAHTpss2UZ+fW/N/wRflRdwnBsica6bun8NgAEAAEAATIVc2NvbnRlbnQueHguZmJjZG4ubmV0AAD+DQBBBQAgACCEpikd9ey1gwO/XpN3lcToJ/wzH7QlYfY3DZVicyiPAgAEAAEAATISZ3JhcGguZmFjZWJvb2suY29tAAD+DQBBCQAgACDP0okJjRYtkh5AWEPcjqA1Z9xWn2JkE49qj7n+gwY3GgAEAAEAATISdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBEAQAgACAdd+scUi0IYFsXnUIU7ko2Nd9+F8M26pAGZVpz/KrWPgAEAAEAAWQVZWNoLXB1YmxpYy5hdG1ldGEuY29tAAD+DQBBAwAgACC2SuomaKhQlkusWMQiUkCjuz8+0WR6jyC0DIsANT6gAQAEAAEAAWQSdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBIBwAgACBH8Vs19gc3DIDfTChp3+G6H71KivZY4dtweKazCugIQgAEAAEAATIZdmlkZW8tbGF4My0yLnh4LmZiY2RuLm5ldAAA/g0ASwYAIAAgti54XaD8VhwGEmxjGpaxUkuAz3VmpQSMOFSRgSPchR0ABAABAAEyHHNjb250ZW50LWxheDMtMi54eC5mYmNkbi5uZXQAAP4NAEgEACAAINQS+ceVTWrz9nffBM163+nvpZ9k5F5WK51t4DAGG3ReAAQAAQABZBl2aWRlby1sYXgzLTIueHguZmJjZG4ubmV0AAD+DQA7AAAgACBKTLEeFRxf7iC7wIdiRa2umX+yPtIeglGqBP7tfrgFdwAEAAEAAWQMZmFjZWJvb2suY29tAAD+DQA4AgAgACD+3t6VFcOw4TgdcWhjku+MWmbhq5VMyaPg3THh0iZNSAAEAAEAAWQJZmJjZG4ubmV0AAA=';
+var META_ECH_DATE = '2026-05-30';
+console.log('[ECH] Meta ECH config date: ' + META_ECH_DATE);
 
 const echCache = new Map();
 
@@ -22,16 +25,16 @@ export async function fetchCFEch(_env, _ctx) {
         }
 
         const buf = await resolveDNSWire(CF_ECH_DOMAIN, TYPE_HTTPS);
-        if (!buf) return null;
+        if (!buf) return getStaleCFEch(cached);
 
         const packet = parseDns(buf);
-        if (!packet || packet.header.ancount === 0) return null;
+        if (!packet || packet.header.ancount === 0) return getStaleCFEch(cached);
 
         const ans = findHttpsAnswer(packet);
-        if (!ans) return null;
+        if (!ans) return getStaleCFEch(cached);
 
         const httpsRdata = parseHttpsRdata(packet.view, ans.rdataOffset, ans.rdlength);
-        if (!httpsRdata) return null;
+        if (!httpsRdata) return getStaleCFEch(cached);
 
         const params = [];
         for (let i = 0; i < httpsRdata.paramBytes.length; i++) {
@@ -48,7 +51,7 @@ export async function fetchCFEch(_env, _ctx) {
         }
 
         var hasEch = params.some(function(p) { return p.key === 'ech' && p.val; });
-        if (!hasEch) return null;
+        if (!hasEch) return getStaleCFEch(cached);
 
         const rdata = packHttpsParams(httpsRdata.priority, httpsRdata.target, params);
 
@@ -57,8 +60,14 @@ export async function fetchCFEch(_env, _ctx) {
         return result;
     } catch (err) {
         logEvent('error', 'ech_error', { stage: 'fetchCFEch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-        return null;
+        return getStaleCFEch(echCache.get(CF_ECH_DOMAIN));
     }
+}
+
+function getStaleCFEch(cached) {
+    if (!cached || !cached.data || (Date.now() - cached.ts) >= STALE_TTL_MS) return null;
+    logEvent('warn', 'ech_result', { owner: 'CF', status: 'stale', reason: 'using_last_known_good' });
+    return Object.assign({}, cached.data, { stale: true });
 }
 
 function findHttpsAnswer(packet) {
@@ -450,5 +459,4 @@ function readBody(input) {
         return null;
     }
 }
-
 

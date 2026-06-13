@@ -84,6 +84,8 @@ curl "https://h-demo.mk01.top/health"
 | META | `META_ECH_B64` 静态硬编码 (TLS retry-config) | 内置 → 主动构建 HTTPS RR |
 | CFT/VRC | 无独立 ECH | 不注入 |
 
+**已知限制**：ECH 注入时重建 HTTPS RR 响应，仅保留问题段和回答段，不保留原响应的 NS/AR/OPT/DNSSEC 等信息。对普通浏览器 DoH 无影响，依赖 DNSSEC 的客户端可能拿到不完整响应。
+
 ## 配置
 
 编辑 `.env`，执行 `npm run build` 生成 `config.js`。
@@ -130,6 +132,8 @@ cd cloudflare-doh-v2
 npm run build    # .env → config.js
 npm run deploy   # → Cloudflare Workers
 ```
+
+**本地开发注意**：`wrangler dev` 或非 Cloudflare 环境下，`request.cf.country` 可能为空，地区优化路径不会触发。稳定前须通过 staging/线上 Worker 验证地区优化行为。
 
 ## 项目结构
 

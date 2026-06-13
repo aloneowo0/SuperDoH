@@ -10,13 +10,14 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll, queryUpstream } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, extractIPBytes, resolvePreferredIPs, resolveDNSWireAll } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes, resolvePreferredIPs } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
-const CF_FORCE_DOMAINS = ['twimg.com', 'twitter.com', 'x.com', 't.co', 'pixiv.net', 'www.pixiv.net', 'imp.pixiv.net'];
+// Pixiv domains are always force-CF regardless of region config.
+var _pixivForceDomains = ['pixiv.net', 'www.pixiv.net', 'imp.pixiv.net'];
 
 // ── Response helper with requestId ──────────────────────────────────
 
@@ -26,11 +27,20 @@ function respond(body, ctx, upstreamTime) {
   return r;
 }
 
-function isCFDomain(name) {
+/** Check if domain should be force-routed to CF (Pixiv + region remap). */
+function isCFDomain(name, remapList) {
   if (!name) return false;
   var n = name.toLowerCase().replace(/\.+$/, '');
-  for (var i = 0; i < CF_FORCE_DOMAINS.length; i++) {
-    if (n === CF_FORCE_DOMAINS[i] || n.endsWith('.' + CF_FORCE_DOMAINS[i])) return true;
+  // Pixiv domains always forced
+  for (var i = 0; i < _pixivForceDomains.length; i++) {
+    if (n === _pixivForceDomains[i] || n.endsWith('.' + _pixivForceDomains[i])) return true;
+  }
+  // Region remap (e.g. twimg.com, twitter.com, x.com from REGION_CN_REMAP)
+  if (remapList && remapList.length) {
+    for (var j = 0; j < remapList.length; j++) {
+      var rd = remapList[j].toLowerCase().replace(/\.+$/, '');
+      if (n === rd || n.endsWith('.' + rd)) return true;
+    }
   }
   return false;
 }
@@ -68,6 +78,99 @@ function jsonError(error, status = 400) {
   return new Response(JSON.stringify({ error }), { status, headers: JSON_HEADERS });
 }
 
+function bytesToBase64(bytes) {
+  var s = '';
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+function readDnsName(view, start) {
+  var offset = start;
+  var end = start;
+  var jumped = false;
+  var jumps = 0;
+  var labels = [];
+  for (;;) {
+    if (offset >= view.byteLength) throw new Error('DNS name out of bounds');
+    var len = view.getUint8(offset);
+    if ((len & 0xC0) === 0xC0) {
+      if (offset + 1 >= view.byteLength) throw new Error('DNS pointer out of bounds');
+      var pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
+      if (!jumped) end = offset + 2;
+      offset = pointer;
+      jumped = true;
+      if (++jumps > 128) throw new Error('DNS compression loop');
+      continue;
+    }
+    if ((len & 0xC0) !== 0) throw new Error('unsupported DNS label type');
+    if (len === 0) return { name: labels.join('.'), offset: jumped ? end : offset + 1 };
+    offset += 1;
+    if (offset + len > view.byteLength) throw new Error('DNS label out of bounds');
+    var labelBytes = new Uint8Array(view.buffer, view.byteOffset + offset, len);
+    labels.push(new TextDecoder().decode(labelBytes));
+    if (!jumped) end = offset + len;
+    offset += len;
+  }
+}
+
+function rdataToJsonData(view, record) {
+  var rdata = new Uint8Array(view.buffer, view.byteOffset + record.rdataOffset, record.rdlength);
+  if (record.type === 1 && rdata.length === 4) {
+    return rdata[0] + '.' + rdata[1] + '.' + rdata[2] + '.' + rdata[3];
+  }
+  if (record.type === 28 && rdata.length === 16) {
+    var parts = [];
+    for (var i = 0; i < 16; i += 2) parts.push(((rdata[i] << 8) | rdata[i + 1]).toString(16));
+    return parts.join(':');
+  }
+  return bytesToBase64(rdata);
+}
+
+async function dnsWireToJsonResponse(response) {
+  try {
+    var buf = await response.arrayBuffer();
+    var packet = parseDns(buf);
+    var view = packet.view;
+    var flags = packet.header.flags;
+    var offset = 12;
+    var questions = [];
+    for (var i = 0; i < packet.header.qdcount; i++) {
+      var qName = readDnsName(view, offset);
+      offset = qName.offset;
+      if (offset + 4 > view.byteLength) throw new Error('DNS question out of bounds');
+      questions.push({ name: qName.name, type: view.getUint16(offset) });
+      offset += 4;
+    }
+    var answers = [];
+    for (var j = 0; j < packet.answers.length; j++) {
+      var rec = packet.answers[j];
+      var rrName = readDnsName(view, rec.offset);
+      answers.push({
+        name: rrName.name,
+        type: rec.type,
+        TTL: rec.ttl,
+        data: rdataToJsonData(view, rec),
+      });
+    }
+    var json = {
+      Status: flags & 0x000F,
+      TC: !!(flags & 0x0200),
+      RD: !!(flags & 0x0100),
+      RA: !!(flags & 0x0080),
+      AD: !!(flags & 0x0020),
+      CD: !!(flags & 0x0010),
+      Question: questions,
+    };
+    if (answers.length) json.Answer = answers;
+    var out = new Response(JSON.stringify(json), { status: response.status, headers: JSON_HEADERS });
+    var upstreamTime = response.headers.get('X-Upstream-Time');
+    if (upstreamTime) out.headers.set('X-Upstream-Time', upstreamTime);
+    return out;
+  } catch (err) {
+    return jsonError('invalid_dns_response', 502);
+  }
+}
+
 function healthResponse(upstreamNames) {
   return new Response(JSON.stringify({
     status: 'ok',
@@ -83,7 +186,6 @@ function healthResponse(upstreamNames) {
 // ── Preferred answer helper ────────────────────────────────────────
 
 async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
-  var startedAt = Date.now();
   const ips = await resolvePreferredIPs(prefDomain, queryMeta.type, expectedOwner, ctx);
   logEvent('info', 'preferred_result', { requestId: ctx.requestId, owner: expectedOwner, candidateCount: ips ? ips.length : 0, fallback: !ips || ips.length === 0 });
   if (ips && ips.length > 0) {
@@ -273,7 +375,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
 // ── twoMixFlow ─────────────────────────────────────────────────────
 
-async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc) {
+async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, remapList) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
     return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, {}, ctx);
@@ -298,7 +400,7 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   // Domain rules take priority over IP classification
   var owner;
   var classifySource = '';
-  if (isCFDomain(queryMeta.name)) {
+    if (isCFDomain(queryMeta.name, remapList)) {
     owner = 'CF';
     classifySource = 'domain_rule';
   } else if (isMetaDomain(queryMeta.name)) {
@@ -397,8 +499,10 @@ export default {
       }
 
       const url = new URL(request.url);
+      const acceptHeader = request.headers.get('Accept') || '';
+      const wantsJson = acceptHeader.includes('application/dns-json');
       let qMeta = parseQueryMetaFromURL(url);
-      if (request.method === 'POST') {
+      if (request.method === 'POST' && !wantsJson) {
         const rawBody = await request.clone().arrayBuffer();
         qMeta = parseQueryMeta(rawBody);
         body = rawBody;
@@ -412,21 +516,15 @@ export default {
       const preferredCft = regionCfg ? (regionCfg.preferredCft || '') : '';
       const preferredVrc = regionCfg ? (regionCfg.preferredVrc || '') : '';
 
-      const acceptHeader = request.headers.get('Accept') || '';
-      if (acceptHeader.includes('application/dns-json')) {
-        var rfcResp = await rfc8484Passthrough(route, request);
-        rfcResp.headers.set('X-DoH-Request-ID', requestId);
-        return rfcResp;
-      }
-
       if (!body) {
-        if (request.method === 'GET') {
+        if (request.method === 'GET' || wantsJson) {
           body = buildQueryFromURL(url);
           if (!body) {
             var errR = jsonError('missing_name_or_type');
             errR.headers.set('X-DoH-Request-ID', requestId);
             return errR;
           }
+          qMeta = parseQueryMeta(body);
         } else {
           body = await request.clone().arrayBuffer();
         }
@@ -434,7 +532,8 @@ export default {
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta || parseQueryMeta(body);
       if (queryMeta && queryMeta.name) {
-        queryMeta.forcedOwner = isCFDomain(queryMeta.name) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
+        var remapForOwner = regionCfg ? regionCfg.remap : null;
+        queryMeta.forcedOwner = isCFDomain(queryMeta.name, remapForOwner) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
       }
 
       var ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0 };
@@ -442,7 +541,7 @@ export default {
 
       // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
-        if (queryMeta.type === 1) {
+        if (queryMeta.type === 1 || queryMeta.type === 28) {
           var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
           new DataView(nx).setUint16(2, 0x8183);
           var r = respond(nx, ctx);
@@ -452,14 +551,16 @@ export default {
       }
 
       if (route.provider === MIX_PROVIDER) {
-        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc);
+        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null);
+        if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
-        logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: queryMeta && queryMeta.forcedOwner || null, answerCount: -1 });
+        logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: queryMeta && queryMeta.forcedOwner || null });
         return result;
       }
       var sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);
+      if (wantsJson) sResult = await dnsWireToJsonResponse(sResult);
       sResult.headers.set('X-DoH-Request-ID', requestId);
-      logEvent('info', 'request_end', { requestId: requestId, result: 'single_upstream', owner: null, answerCount: -1 });
+      logEvent('info', 'request_end', { requestId: requestId, result: 'single_upstream', owner: null });
       return sResult;
     } catch (err) {
       logEvent('error', 'request_error', { requestId: requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), elapsedMs: Date.now() - startedAt });
@@ -504,6 +605,8 @@ async function rfc8484Passthrough(route, request) {
     return jsonError('upstream_error', 502);
   }
 }
+
+void rfc8484Passthrough;
 
 // ── Single upstream query ──────────────────────────────────────────
 
