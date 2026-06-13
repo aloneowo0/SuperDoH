@@ -181,6 +181,8 @@ export const UPSTREAMS = {
 ${entries}
 };
 
+export const FOREIGN_UPSTREAMS = Object.keys(UPSTREAMS).filter(function(n) { return n !== 'dnspod' && n !== 'alidns'; });
+
 export const ECS_PROTECT_MS = ${isNaN(ecsProtectMs) ? 20 : ecsProtectMs};
 export const HARD_TIMEOUT_MS = ${isNaN(hardTimeoutMs) ? 800 : hardTimeoutMs};
 export const META_HARD_TIMEOUT_MS = ${isNaN(metaHardTimeoutMs) ? 800 : metaHardTimeoutMs};

@@ -14,6 +14,8 @@ export const UPSTREAMS = {
     nextdns: { url: "https://dns.nextdns.io", ecs: true },
 };
 
+export const FOREIGN_UPSTREAMS = Object.keys(UPSTREAMS).filter(function(n) { return n !== 'dnspod' && n !== 'alidns'; });
+
 export const ECS_PROTECT_MS = 20;
 export const HARD_TIMEOUT_MS = 800;
 export const META_HARD_TIMEOUT_MS = 800;
