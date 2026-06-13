@@ -39,4 +39,4 @@ export const LOG_LEVEL = "warn";
 
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
-export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co"],"ech":true,"front":false}};
+export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co","pixiv.net","www.pixiv.net","imp.pixiv.net"],"ech":true,"front":false}};

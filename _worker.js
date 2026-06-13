@@ -17,9 +17,6 @@ setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
-// Pixiv domains are always force-CF regardless of region config.
-var _pixivForceDomains = ['pixiv.net', 'www.pixiv.net', 'imp.pixiv.net'];
-
 // ── Response helper with requestId ──────────────────────────────────
 
 function respond(body, ctx, upstreamTime) {
@@ -28,20 +25,13 @@ function respond(body, ctx, upstreamTime) {
   return r;
 }
 
-/** Check if domain should be force-routed to CF (Pixiv + region remap). */
+/** Check if domain should be force-routed to CF via region remap. */
 function isCFDomain(name, remapList) {
-  if (!name) return false;
+  if (!name || !remapList || !remapList.length) return false;
   var n = name.toLowerCase().replace(/\.+$/, '');
-  // Pixiv domains always forced
-  for (var i = 0; i < _pixivForceDomains.length; i++) {
-    if (n === _pixivForceDomains[i] || n.endsWith('.' + _pixivForceDomains[i])) return true;
-  }
-  // Region remap (e.g. twimg.com, twitter.com, x.com from REGION_CN_REMAP)
-  if (remapList && remapList.length) {
-    for (var j = 0; j < remapList.length; j++) {
-      var rd = remapList[j].toLowerCase().replace(/\.+$/, '');
-      if (n === rd || n.endsWith('.' + rd)) return true;
-    }
+  for (var i = 0; i < remapList.length; i++) {
+    var rd = remapList[i].toLowerCase().replace(/\.+$/, '');
+    if (n === rd || n.endsWith('.' + rd)) return true;
   }
   return false;
 }
