@@ -582,6 +582,7 @@ export default {
 async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActive) {
   const upstream = UPSTREAMS[provider];
   if (!upstream) return respond(servfail(body), ctx);
+  const queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
   const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
   try {
@@ -618,7 +619,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
         }
       }
     }
-    const fResult = filterAnswers(finalBody);
+    const fResult = filterAnswers(finalBody, queryId);
     if (response.status === 200 && fResult !== false && fResult?.passed !== false) return respond(finalBody, ctx, elapsed);
     return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
   } catch (err) {

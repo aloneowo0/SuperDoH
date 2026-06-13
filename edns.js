@@ -49,10 +49,12 @@ export function prepareQuery(body, clientIP) {
     }
 }
 
-export function filterAnswers(response) {
+export function filterAnswers(response, queryId) {
     try {
         const packet = parseDns(response);
-        if ((packet.header.flags & 0xF) === 2 || (packet.header.flags & 0xF) === 5) return { passed: false, reason: 'error_rcode' };
+        if (queryId !== undefined && queryId !== null && packet.header.id !== queryId) return { passed: false, reason: 'id_mismatch' };
+        const rcode = packet.header.flags & 0xF;
+        if (rcode === 1 || rcode === 2 || rcode === 4 || rcode === 5) return { passed: false, reason: 'error_rcode' };
         for (const answer of packet.answers) {
             if (answer.type === TYPE_A && answer.rdlength === 4) {
                 const addr = packet.bytes.subarray(answer.rdataOffset, answer.end);
@@ -68,6 +70,24 @@ export function filterAnswers(response) {
     }
 
     return { passed: true, reason: null };
+}
+
+export function validateResponse(response, queryId) {
+    try {
+        const packet = parseDns(response);
+        if (queryId !== undefined && queryId !== null && packet.header.id !== queryId) {
+            return { classification: 'invalid', rcode: -1, answerCount: 0 };
+        }
+
+        const rcode = packet.header.flags & 0xF;
+        const answerCount = packet.header.ancount;
+        if (rcode === 0 && answerCount > 0) return { classification: 'positive', rcode, answerCount };
+        if (rcode === 3 || (rcode === 0 && answerCount === 0)) return { classification: 'negative', rcode, answerCount };
+        if (rcode === 1 || rcode === 2 || rcode === 4 || rcode === 5) return { classification: 'invalid', rcode, answerCount };
+        return { classification: 'invalid', rcode, answerCount };
+    } catch (_) {
+        return { classification: 'invalid', rcode: -1, answerCount: 0 };
+    }
 }
 
 
@@ -276,4 +296,3 @@ function joinBytes(...chunks) {
     }
     return out;
 }
-
