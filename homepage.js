@@ -58,7 +58,7 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/en" class="lang-switch">EN</a>
-    <h1>Workers-DoH</h1>
+    <h1>SuperDoH</h1>
     <p class="subtitle">轻量级 DNS over HTTPS 代理</p>
   </div>
 </header>
@@ -189,7 +189,7 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/" class="lang-switch">中文</a>
-    <h1>Workers-DoH</h1>
+    <h1>SuperDoH</h1>
     <p class="subtitle">DNS over HTTPS on Cloudflare Workers</p>
   </div>
 </header>

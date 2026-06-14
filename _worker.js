@@ -1,5 +1,5 @@
 /**
- * Workers-DoH v2 — Entry point + orchestration
+ * SuperDoH — Entry point + orchestration
  *
  * Routes requests and dispatches DNS queries through upstream flows.
  */

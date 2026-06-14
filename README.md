@@ -1,4 +1,4 @@
-# Workers-DoH v2 — Cloudflare Workers DNS-over-HTTPS 代理
+# SuperDoH — Cloudflare Workers DNS-over-HTTPS 代理
 
 基于 Cloudflare Workers 的 DoH 代理，支持两次 MIX 竞速、CDN 归属分流、优选域名解析、ECH 自动降级注入、Meta 静态 IP 路由、结构化日志。
 
@@ -128,7 +128,7 @@ REGION_CN_ECH=true
 ## 部署
 
 ```bash
-cd cloudflare-doh-v2
+cd superdoh
 npm run build    # .env → config.js
 npm run deploy   # → Cloudflare Workers
 ```
@@ -138,7 +138,7 @@ npm run deploy   # → Cloudflare Workers
 ## 项目结构
 
 ```
-cloudflare-doh-v2/
+superdoh/
 ├── .env                     # 用户配置
 ├── scripts/build-config.cjs # .env → config.js 构建脚本
 ├── config.js                # 运行时配置（自动生成）

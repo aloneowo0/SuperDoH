@@ -1,7 +1,7 @@
 # Meta CDN ECH 交接报告
 
 最后重写时间：2026-05-30，Asia/Shanghai  
-项目目录：`/home/aloneowo/DoH/cloudflare-doh-v2`  
+项目目录：`/home/aloneowo/DoH/superdoh`  
 支持 ECH 的 OpenSSL 源码树：`/tmp/opencode/openssl-ech`  
 支持 ECH 的 OpenSSL 可执行文件：`/tmp/opencode/openssl-ech/apps/openssl`
 

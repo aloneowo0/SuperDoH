@@ -1,6 +1,7 @@
 /**
- * Workers-DoH — 配置文件（由 scripts/build-config.cjs 自动生成）
- * 不要手动编辑此文件，修改 .env 后重新运行构建脚本。
+ * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
+ * 如果 USE_CONFIG_JS=true 则可以手写 REGION_CONFIG 域规则，
+ * UPSTREAMS / 超时 / LOG_LEVEL 始终从 .env 构建。
  */
 
 export const UPSTREAMS = {
@@ -39,4 +40,21 @@ export const LOG_LEVEL = "warn";
 
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
-export const REGION_CONFIG = {"CN":{"preferred":"cf.090227.xyz","preferredCft":"worker.cloudfront.182682.xyz","preferredVrc":"worker.vercel.182682.xyz","remap":["twimg.com","twitter.com","x.com","t.co","pixiv.net","www.pixiv.net","imp.pixiv.net"],"ech":true,"front":false}};
+export const REGION_CONFIG = {
+    "CN": {
+      "preferred": "cf.090227.xyz",
+      "preferredCft": "worker.cloudfront.182682.xyz",
+      "preferredVrc": "worker.vercel.182682.xyz",
+      "remap": [
+        "twimg.com",
+        "twitter.com",
+        "x.com",
+        "t.co",
+        "pixiv.net",
+        "www.pixiv.net",
+        "imp.pixiv.net"
+      ],
+      "ech": true,
+      "front": false
+    }
+  };

@@ -157,25 +157,64 @@ function generateConfig(env, upstreams) {
     const defaultRemap = (env.FORCE_REMAP_DOMAINS || '')
         .split(/[\s,]+/).filter(d => d.length > 0);
 
-    // 按地区块解析 REGION_<XX>_PREFERRED / REGION_<XX>_REMAP / REGION_<XX>_ECH
-    const regionConfig = {};
-    for (const r of regions) {
-        regionConfig[r] = {
-            preferred: env['REGION_' + r + '_PREFERRED'] || defaultPrefDomain,
-            preferredCft: env['REGION_' + r + '_PREFERRED_CFT'] || '',
-            preferredVrc: env['REGION_' + r + '_PREFERRED_VRC'] || '',
-            remap: env['REGION_' + r + '_REMAP']
-                ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
-                : defaultRemap,
-            ech: env['REGION_' + r + '_ECH'] === 'true',
-            front: env['REGION_' + r + '_FRONT'] === 'true',
-        };
+    let regionConfigStr;
+    const useConfigJs = env.USE_CONFIG_JS === 'true';
+    let preservedRegionConfig = null;
+
+    if (useConfigJs) {
+        // 从 config.js 原样保留手写的 REGION_CONFIG（含注释、格式、自定义结构）
+        const configJsPath = path.resolve(rootDir, 'config.js');
+        if (fs.existsSync(configJsPath)) {
+            const content = fs.readFileSync(configJsPath, 'utf-8');
+            // 匹配从 "export const REGION_CONFIG" 到下一个 "export const" 或文件末尾
+            const startIdx = content.indexOf('export const REGION_CONFIG');
+            if (startIdx >= 0) {
+                const afterStart = content.slice(startIdx + 'export const REGION_CONFIG'.length);
+                const eqIdx = afterStart.indexOf('=');
+                if (eqIdx >= 0) {
+                    const valueStart = afterStart.slice(eqIdx + 1).trimStart();
+                    // 找下一个顶层 export const
+                    const nextExport = valueStart.search(/\nexport const\s/);
+                    const endIdx = nextExport >= 0 ? nextExport : valueStart.length;
+                    let value = valueStart.slice(0, endIdx).trimEnd();
+                    // 去掉末尾分号
+                    if (value.endsWith(';')) value = value.slice(0, -1).trimEnd();
+                    preservedRegionConfig = value;
+                    console.log('Using REGION_CONFIG from config.js');
+                }
+            }
+        }
+        if (!preservedRegionConfig) {
+            console.warn('USE_CONFIG_JS=true but no REGION_CONFIG found in config.js, building from .env');
+        }
     }
-    const regionConfigStr = JSON.stringify(regionConfig);
+
+    if (preservedRegionConfig) {
+        regionConfigStr = preservedRegionConfig;
+    } else {
+        // 按 .env 构建 REGION_CONFIG
+        const regionConfig = {};
+        for (const r of regions) {
+            regionConfig[r] = {
+                preferred: env['REGION_' + r + '_PREFERRED'] || defaultPrefDomain,
+                preferredCft: env['REGION_' + r + '_PREFERRED_CFT'] || '',
+                preferredVrc: env['REGION_' + r + '_PREFERRED_VRC'] || '',
+                remap: env['REGION_' + r + '_REMAP']
+                    ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
+                    : defaultRemap,
+                ech: env['REGION_' + r + '_ECH'] === 'true',
+                front: env['REGION_' + r + '_FRONT'] === 'true',
+            };
+        }
+        regionConfigStr = JSON.stringify(regionConfig, null, 2)
+            .replace(/^/gm, '  ')  // indent 2 spaces
+            .replace(/^\s{2}/, ''); // remove first line indent
+    }
 
     return `/**
- * Workers-DoH — 配置文件（由 scripts/build-config.cjs 自动生成）
- * 不要手动编辑此文件，修改 .env 后重新运行构建脚本。
+ * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
+ * 如果 USE_CONFIG_JS=true 则可以手写 REGION_CONFIG 域规则，
+ * UPSTREAMS / 超时 / LOG_LEVEL 始终从 .env 构建。
  */
 
 export const UPSTREAMS = {
