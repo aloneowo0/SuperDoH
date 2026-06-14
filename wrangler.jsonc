@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "SuperDoH",
+  "name": "super-doh",
   "main": "_worker.js",
   "compatibility_date": "2025-05-27",
   "build": {
