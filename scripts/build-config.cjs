@@ -220,11 +220,12 @@ function generateConfig(env, upstreams, fetchedGoogleProxy) {
                     : defaultRemap,
                 ech: env['REGION_' + r + '_ECH'] === 'true',
                 front: env['REGION_' + r + '_FRONT'] === 'true',
+                google: env['REGION_' + r + '_GOOGLE'] === 'true' ? (fetchedGoogleProxy || []) : undefined,
             };
         }
         regionConfigStr = JSON.stringify(regionConfig, null, 2)
-            .replace(/^/gm, '  ')  // indent 2 spaces
-            .replace(/^\s{2}/, ''); // remove first line indent
+            .replace(/^/gm, '  ')
+            .replace(/^\s{2}/, '');
     }
 
     return `/**

@@ -55,6 +55,35 @@ export const REGION_CONFIG = {
         "imp.pixiv.net"
       ],
       "ech": true,
-      "front": false
+      "front": false,
+      "google": [
+        {
+          "ips": [
+            "47.102.115.14"
+          ],
+          "sni": null,
+          "match": [
+            "gemini.google.com"
+          ]
+        },
+        {
+          "ips": [
+            "183.56.143.147"
+          ],
+          "sni": "g.cn",
+          "match": [
+            "google",
+            "google.com",
+            "gstatic.com",
+            "youtube.com",
+            "youtu.be",
+            ".ggpht.com",
+            "i.ytimg.com",
+            "youtube-nocookie.com",
+            "blogger.com",
+            "android.com"
+          ]
+        }
+      ]
     }
   };
