@@ -90,7 +90,15 @@ export const REGION_CONFIG = {
             "gvt1.com",
             "gvt2.com",
             "gvt3.com",
-            "video.google.com"
+            "video.google.com",
+            "doubleclick.net",
+            "googleadservices.com",
+            "googlesyndication.com",
+            "google.com.hk",
+            "google.cn",
+            "google.co.jp",
+            "googleusercontent.com",
+            "gmail.com"
           ]
         }
       ]
