@@ -36,6 +36,36 @@ function isCFDomain(name, remapList) {
   return false;
 }
 
+function ipToBytes(ip) {
+  if (!ip) return null;
+  if (ip.indexOf(':') >= 0) {
+    // IPv6 parsing deferred — no Google proxy uses IPv6
+    return null;
+  }
+  var parts = ip.split('.');
+  if (parts.length !== 4) return null;
+  return new Uint8Array(parts.map(function(p) { return parseInt(p, 10); }));
+}
+
+function matchGoogleProxy(name, googleConf) {
+  if (!name || !googleConf || !googleConf.length) return null;
+  for (var i = 0; i < googleConf.length; i++) {
+    var entry = googleConf[i];
+    var patterns = entry.match || [];
+    for (var j = 0; j < patterns.length; j++) {
+      var p = patterns[j];
+      if (p instanceof RegExp) {
+        if (p.test(name)) return entry;
+      } else if (typeof p === 'string') {
+        var n = name.toLowerCase().replace(/\.+$/, '');
+        var rd = p.toLowerCase().replace(/\.+$/, '');
+        if (n === rd || n.endsWith('.' + rd)) return entry;
+      }
+    }
+  }
+  return null;
+}
+
 // ── Router (inlined) ───────────────────────────────────────────────
 
 let _validProviders = null;
@@ -539,6 +569,22 @@ export default {
           var r = respond(nx, ctx);
           logEvent('info', 'request_end', { requestId: requestId, result: 'canary_nxdomain', owner: null, answerCount: 0 });
           return r;
+        }
+      }
+
+      // Google proxy static routing
+      if (queryMeta && regionCfg && regionCfg.google && (queryMeta.type === 1 || queryMeta.type === 28)) {
+        var googleMatch = matchGoogleProxy(queryMeta.name, regionCfg.google);
+        if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
+          var proxyIps = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
+          if (proxyIps.length > 0) {
+            var staticDns = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, proxyIps, 300);
+            var staticResp = respond(staticDns, ctx);
+            logEvent('info', 'request_end', { requestId: requestId, result: 'google_proxy', qname: queryMeta.name, answerCount: proxyIps.length });
+            if (wantsJson) staticResp = await dnsWireToJsonResponse(staticResp);
+            staticResp.headers.set('X-DoH-Request-ID', requestId);
+            return staticResp;
+          }
         }
       }
 

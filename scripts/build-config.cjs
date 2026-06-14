@@ -115,7 +115,7 @@ function parseIPv6(ip) {
 }
 
 // ── 生成 config.js ─────────────────────────────────────────────────
-function generateConfig(env, upstreams) {
+function generateConfig(env, upstreams, fetchedGoogleProxy) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
             return `    ${name}: { url: ${JSON.stringify(cfg.url)}, ecs: ${cfg.ecs} },`;
@@ -189,6 +189,22 @@ function generateConfig(env, upstreams) {
         }
     }
 
+    // 注入从 Cealing-Host 拉取的 Google 代理配置
+    if (fetchedGoogleProxy && preservedRegionConfig) {
+        if (!preservedRegionConfig.match(/\bgoogle\s*:/) && !preservedRegionConfig.match(/"google"\s*:/)) {
+            var gLines = [];
+            for (var gi = 0; gi < fetchedGoogleProxy.length; gi++) {
+                var ge = fetchedGoogleProxy[gi];
+                var ips = JSON.stringify(ge.ips).replace(/"/g, '\'');
+                var match = JSON.stringify(ge.match);
+                var sni = ge.sni ? ', sni: \'' + ge.sni + '\'' : '';
+                gLines.push('        { ips: ' + ips + sni + ', match: ' + match + ' }');
+            }
+            var googleBlock = '    google: [\n' + gLines.join(',\n') + '\n    ]';
+            preservedRegionConfig = preservedRegionConfig.replace(/\n  \},?\n\};?\s*$/, '\n' + googleBlock + ',\n  },\n};');
+        }
+    }
+
     if (preservedRegionConfig) {
         regionConfigStr = preservedRegionConfig;
     } else {
@@ -250,18 +266,101 @@ const rootDir = path.resolve(__dirname, '..');
 const envPath = path.join(rootDir, '.env');
 const configPath = path.join(rootDir, 'config.js');
 
-console.log(`Reading ${envPath} ...`);
-const env = parseEnv(envPath);
+async function main() {
+  console.log(`Reading ${envPath} ...`);
+  const env = parseEnv(envPath);
 
-console.log('Building upstreams ...');
-const upstreams = buildUpstreams(env);
+  console.log('Building upstreams ...');
+  const upstreams = buildUpstreams(env);
 
-if (Object.keys(upstreams).length === 0) {
+  if (Object.keys(upstreams).length === 0) {
     console.error('No upstreams enabled! Set at least one to true in .env');
     process.exit(1);
+  }
+
+  // 从 Cealing-Host 拉取 Google 代理配置
+  let fetchedGoogleProxy = null;
+  if (env.FETCH_GOOGLE_PROXY !== 'false') {
+    try {
+      const url = env.CEALING_HOST_URL || 'https://gitlab.com/SpaceTimee/Cealing-Host/raw/main/Cealing-Host.json';
+      console.log(`Fetching Cealing-Host from ${url} ...`);
+      const https = require('https');
+      const http = require('http');
+      const fetcher = url.startsWith('https') ? https : http;
+      const cealingData = await new Promise(function(resolve, reject) {
+        fetcher.get(url, function(res) {
+          var body = '';
+          res.on('data', function(chunk) { body += chunk; });
+          res.on('end', function() {
+            try { resolve(JSON.parse(body)); }
+            catch(e) { reject(e); }
+          });
+        }).on('error', reject);
+      });
+
+      if (cealingData && Array.isArray(cealingData)) {
+        var googleEntries = [];
+        var googleKeys = ['google', 'youtube', 'gstatic', 'youtu.be', 'ggpht',
+                          'blogger', 'blogspot', 'googleapis', 'googlevideo',
+                          'android.com', 'googleadservices', 'gemini'];
+        
+        for (var i = 0; i < cealingData.length; i++) {
+          var r = cealingData[i];
+          var domains = r[0];
+          var sni = (r[1] || '').trim();
+          var ip = (r[2] || '').trim();
+          if (!ip || ip.startsWith('[')) continue;
+
+          var isGoogle = false;
+          for (var j = 0; j < domains.length; j++) {
+            var d = domains[j].replace(/[#$^*]/g, '').toLowerCase();
+            for (var k = 0; k < googleKeys.length; k++) {
+              if (d.indexOf(googleKeys[k]) >= 0) { isGoogle = true; break; }
+            }
+            if (isGoogle) break;
+          }
+          if (!isGoogle) continue;
+
+          var matchPatterns = [];
+          for (var j = 0; j < domains.length; j++) {
+            var d = domains[j];
+            if (d.startsWith('^')) continue;
+            var clean = d.replace(/[#$]/g, '').replace(/\*/g, '').trim();
+            if (!clean) continue;
+            matchPatterns.push(clean);
+          }
+
+          if (matchPatterns.length > 0) {
+            googleEntries.push({ ips: [ip], sni: sni || null, match: matchPatterns });
+          }
+        }
+
+        if (googleEntries.length > 0) {
+          var merged = [];
+          var seenMap = {};
+          for (var k = 0; k < googleEntries.length; k++) {
+            var e = googleEntries[k];
+            var key = JSON.stringify(e.ips) + '|' + (e.sni || '');
+            if (seenMap[key] !== undefined) {
+              merged[seenMap[key]].match = merged[seenMap[key]].match.concat(e.match);
+            } else {
+              seenMap[key] = merged.length;
+              merged.push(e);
+            }
+          }
+          fetchedGoogleProxy = merged;
+          console.log(`Extracted ${fetchedGoogleProxy.length} Google proxy entries from Cealing-Host`);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch Cealing-Host for Google proxy:', e.message);
+    }
+  }
+
+  console.log(`Generating ${configPath} ...`);
+  fs.writeFileSync(configPath, generateConfig(env, upstreams, fetchedGoogleProxy));
+
+  console.log(`Done — ${Object.keys(upstreams).length} upstreams configured.`);
 }
 
-console.log(`Generating ${configPath} ...`);
-fs.writeFileSync(configPath, generateConfig(env, upstreams));
-
-console.log(`Done — ${Object.keys(upstreams).length} upstreams configured.`);
+main().catch(function(err) { console.error(err); process.exit(1); });

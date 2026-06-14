@@ -135,6 +135,13 @@ npm run deploy   # → Cloudflare Workers
 
 **本地开发注意**：`wrangler dev` 或非 Cloudflare 环境下，`request.cf.country` 可能为空，地区优化路径不会触发。稳定前须通过 staging/线上 Worker 验证地区优化行为。
 
+## 致谢
+
+特别感谢以下项目提供的思路、数据和参考实现：
+
+- **[Total-ECH](https://github.com/Total-ECH)** — ECH 配置获取与 HTTPS RR 注入方案的核心参考
+- **[Sheas Cealer](https://github.com/SpaceTimee/Sheas-Cealer)** — 域前置实践与 Cealing-Host 规则维护，本项目 Google 代理配置的自动拉取来源
+
 ## 项目结构
 
 ```
