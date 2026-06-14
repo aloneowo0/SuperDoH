@@ -351,6 +351,19 @@ async function main() {
           }
           fetchedGoogleProxy = merged;
           console.log(`Extracted ${fetchedGoogleProxy.length} Google proxy entries from Cealing-Host`);
+
+          // 补充 YouTube CDN 域名（Cealing-Host 规则未覆盖的视频流/缩略图域）
+          var youtubeSupplements = [
+            'googlevideo.com', 'yt3.ggpht.com', 'ytimg.com',
+            'gvt1.com', 'gvt2.com', 'gvt3.com',
+            'video.google.com',
+          ];
+          for (var k = 0; k < fetchedGoogleProxy.length; k++) {
+            if (fetchedGoogleProxy[k].sni === 'g.cn') {
+              fetchedGoogleProxy[k].match = fetchedGoogleProxy[k].match.concat(youtubeSupplements);
+              break;
+            }
+          }
         }
       }
     } catch (e) {

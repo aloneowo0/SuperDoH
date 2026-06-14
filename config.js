@@ -55,7 +55,7 @@ export const REGION_CONFIG = {
         "imp.pixiv.net"
       ],
       "ech": true,
-      "front": false,
+      "front": true,
       "google": [
         {
           "ips": [
@@ -81,7 +81,14 @@ export const REGION_CONFIG = {
             "i.ytimg.com",
             "youtube-nocookie.com",
             "blogger.com",
-            "android.com"
+            "android.com",
+            "googlevideo.com",
+            "yt3.ggpht.com",
+            "ytimg.com",
+            "gvt1.com",
+            "gvt2.com",
+            "gvt3.com",
+            "video.google.com"
           ]
         }
       ]
