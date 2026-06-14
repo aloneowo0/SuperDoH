@@ -572,8 +572,8 @@ export default {
         }
       }
 
-      // Google proxy static routing
-      if (queryMeta && regionCfg && regionCfg.google && (queryMeta.type === 1 || queryMeta.type === 28)) {
+      // Google proxy static routing — A (IPv4) only
+      if (queryMeta && regionCfg && regionCfg.google && queryMeta.type === 1) {
         var googleMatch = matchGoogleProxy(queryMeta.name, regionCfg.google);
         if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
           var proxyIps = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
