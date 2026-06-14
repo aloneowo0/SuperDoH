@@ -352,15 +352,21 @@ async function main() {
           fetchedGoogleProxy = merged;
           console.log(`Extracted ${fetchedGoogleProxy.length} Google proxy entries from Cealing-Host`);
 
-          // 补充 YouTube CDN 域名（Cealing-Host 规则未覆盖的视频流/缩略图域）
+          // 补充 YouTube CDN 域名
           var youtubeSupplements = [
             'googlevideo.com', 'yt3.ggpht.com', 'ytimg.com',
             'gvt1.com', 'gvt2.com', 'gvt3.com',
             'video.google.com',
           ];
+          // 补充更多代理 IP（测速排序: ChinaNet > CMCC .150 > CMCC .160）
+          // CMCC .145 速度太差排除
+          var supplementaryIps = ['120.25.173.150', '120.25.173.160'];
+
           for (var k = 0; k < fetchedGoogleProxy.length; k++) {
             if (fetchedGoogleProxy[k].sni === 'g.cn') {
               fetchedGoogleProxy[k].match = fetchedGoogleProxy[k].match.concat(youtubeSupplements);
+              // IP 顺序即推荐优先级: ChinaNet 主力，CMCC 备用
+              fetchedGoogleProxy[k].ips = fetchedGoogleProxy[k].ips.concat(supplementaryIps);
               break;
             }
           }
