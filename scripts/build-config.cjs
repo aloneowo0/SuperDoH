@@ -363,14 +363,11 @@ async function main() {
             'google.com.hk', 'google.cn', 'google.co.jp',
             'googleusercontent.com', 'gmail.com',
           ];
-          // 补充更多代理 IP（测速排序: ChinaNet > Alibaba，CMCC 视频全废已移除）
-          var supplementaryIps = ['47.102.115.14'];
+          // 补充更多代理 IP
 
           for (var k = 0; k < fetchedGoogleProxy.length; k++) {
             if (fetchedGoogleProxy[k].sni === 'g.cn') {
               fetchedGoogleProxy[k].match = fetchedGoogleProxy[k].match.concat(youtubeSupplements, googleSupplements);
-              // IP 顺序即推荐优先级: ChinaNet 主力，CMCC 备用
-              fetchedGoogleProxy[k].ips = fetchedGoogleProxy[k].ips.concat(supplementaryIps);
               break;
             }
           }
