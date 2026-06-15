@@ -363,9 +363,8 @@ async function main() {
             'google.com.hk', 'google.cn', 'google.co.jp',
             'googleusercontent.com', 'gmail.com',
           ];
-          // 补充更多代理 IP（测速排序: ChinaNet > CMCC .150 > CMCC .160）
-          // CMCC .145 速度太差排除
-          var supplementaryIps = ['120.25.173.150', '120.25.173.160'];
+          // 补充更多代理 IP（测速排序: ChinaNet > Alibaba，CMCC 视频全废已移除）
+          var supplementaryIps = ['47.102.115.14'];
 
           for (var k = 0; k < fetchedGoogleProxy.length; k++) {
             if (fetchedGoogleProxy[k].sni === 'g.cn') {
