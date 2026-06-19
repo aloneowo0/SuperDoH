@@ -410,32 +410,6 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   var mix1Rcode = mix1Buf && mix1Buf.byteLength >= 3 ? (new DataView(mix1Buf).getUint8(3) & 0x0F) : -1;
   logEvent('info', 'mix1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: mix1Rcode, answerCount: mix1AnswerCount });
 
-  // Google proxy: append proxy IPs to MIX 1 result for A queries
-  if (googleConf && queryMeta.type === 1) {
-    var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
-    if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
-      var proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
-      if (proxyBytes.length > 0) {
-        var existingIps = mix1Buf && mix1Buf.byteLength >= 12 ? extractIPBytes(mix1Buf, 1) : [];
-        // Deduplicate: skip proxy IPs already in MIX 1 result
-        var seen = {};
-        var combined = [];
-        for (var ei = 0; ei < existingIps.length; ei++) {
-          var key = Array.prototype.join.call(existingIps[ei], '.');
-          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
-        }
-        for (var pi = 0; pi < proxyBytes.length; pi++) {
-          var key = Array.prototype.join.call(proxyBytes[pi], '.');
-          if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
-        }
-        var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
-        ctx.googleProxy = true;
-        logEvent('info', 'google_proxy_appended', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
-        return respond(mergedBuf, ctx);
-      }
-    }
-  }
-
   if (!regionActive) {
     // Add header to non-region response
     firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
@@ -453,6 +427,13 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   } else if (isMetaDomain(queryMeta.name)) {
     owner = 'META';
     classifySource = 'domain_rule';
+  } else if (googleConf && queryMeta.type === 1) {
+    var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
+    if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
+      owner = 'GOOGLE';
+      classifySource = 'domain_rule';
+      ctx._googleMatch = googleMatch;
+    }
   } else {
     owner = classifyResponse(firstBuf, queryMeta.type, ctx);
     classifySource = 'response_ip';
@@ -509,6 +490,31 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
     if (answer) {
       logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
       return answer;
+    }
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+    return firstResult;
+  }
+
+  if (owner === 'GOOGLE') {
+    var googleMatch = ctx._googleMatch;
+    if (googleMatch && googleMatch.ips) {
+      var proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
+      if (proxyBytes.length > 0) {
+        var existingIps = mix1Buf && mix1Buf.byteLength >= 12 ? extractIPBytes(mix1Buf, 1) : [];
+        var seen = {};
+        var combined = [];
+        for (var ei = 0; ei < existingIps.length; ei++) {
+          var key = Array.prototype.join.call(existingIps[ei], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
+        }
+        for (var pi = 0; pi < proxyBytes.length; pi++) {
+          var key = Array.prototype.join.call(proxyBytes[pi], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
+        }
+        var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
+        logEvent('info', 'google_proxy', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
+        return respond(mergedBuf, ctx);
+      }
     }
     firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
