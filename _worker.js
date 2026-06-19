@@ -398,14 +398,16 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   } else if (isMetaDomain(queryMeta.name)) {
     owner = 'META';
     classifySource = 'domain_rule';
-  } else if (googleConf && queryMeta.type === 1) {
+  }
+  if (!owner && googleConf && queryMeta.type === 1) {
     var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
     if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
       owner = 'GOOGLE';
       classifySource = 'domain_rule';
       ctx._googleMatch = googleMatch;
     }
-  } else {
+  }
+  if (!owner) {
     owner = classifyResponse(firstBuf, queryMeta.type, ctx);
     classifySource = 'response_ip';
   }
