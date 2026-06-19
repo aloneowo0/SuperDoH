@@ -1,7 +1,7 @@
 /**
  * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
- * 如果 USE_CONFIG_JS=true 则可以手写 REGION_CONFIG 域规则，
- * UPSTREAMS / 超时 / LOG_LEVEL 始终从 .env 构建。
+ * USE_CONFIG_JS=true 时 scripts/build-config.cjs 不会重写本文件，
+ * Worker 会直接读取现有 config.js。
  */
 
 export const UPSTREAMS = {
@@ -31,7 +31,7 @@ export const BLOCKED_RANGES = [
     { family: 4, addr: [0, 0, 0, 0], mask: 32 },
     { family: 6, mask: 128 },
     { family: 6, addr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], mask: 128 }
-];;
+];
 
 export const MIX_PROVIDER = 'mix';
 
@@ -42,7 +42,7 @@ export const LOG_LEVEL = "warn";
 export const REGION = "CN";
 export const REGION_CONFIG = {
     "CN": {
-      "preferred": "cf.090227.xyz",
+      "preferredCf": "cf.090227.xyz",
       "preferredCft": "worker.cloudfront.182682.xyz",
       "preferredVrc": "worker.vercel.182682.xyz",
       "remap": [

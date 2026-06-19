@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// build-config.js — 从 .env 生成 config.js
+// build-config.js — 从 .env 生成 config.js，或在 USE_CONFIG_JS=true 时直接使用现有 config.js
 
 const fs = require('fs');
 const path = require('path');
@@ -131,7 +131,7 @@ function generateConfig(env, upstreams, fetchedGoogleProxy) {
         return line;
     });
     const blockedStr = blockedLines.length > 0
-        ? '[\n' + blockedLines.join('\n') + '\n];'
+        ? '[\n' + blockedLines.join('\n') + '\n]'
         : '[]';
 
     const ecsProtectMs = 20;
@@ -153,84 +153,31 @@ function generateConfig(env, upstreams, fetchedGoogleProxy) {
     const region = regions.join(',');
 
     // 全局默认值
-    const defaultPrefDomain = env.PREFERRED_DOMAIN || '';
+    const defaultPreferredCfDomain = env.PREFERRED_CF_DOMAIN || '';
     const defaultRemap = (env.FORCE_REMAP_DOMAINS || '')
         .split(/[\s,]+/).filter(d => d.length > 0);
 
-    let regionConfigStr;
-    const useConfigJs = env.USE_CONFIG_JS === 'true';
-    let preservedRegionConfig = null;
-
-    if (useConfigJs) {
-        // 从 config.js 原样保留手写的 REGION_CONFIG（含注释、格式、自定义结构）
-        const configJsPath = path.resolve(rootDir, 'config.js');
-        if (fs.existsSync(configJsPath)) {
-            const content = fs.readFileSync(configJsPath, 'utf-8');
-            // 匹配从 "export const REGION_CONFIG" 到下一个 "export const" 或文件末尾
-            const startIdx = content.indexOf('export const REGION_CONFIG');
-            if (startIdx >= 0) {
-                const afterStart = content.slice(startIdx + 'export const REGION_CONFIG'.length);
-                const eqIdx = afterStart.indexOf('=');
-                if (eqIdx >= 0) {
-                    const valueStart = afterStart.slice(eqIdx + 1).trimStart();
-                    // 找下一个顶层 export const
-                    const nextExport = valueStart.search(/\nexport const\s/);
-                    const endIdx = nextExport >= 0 ? nextExport : valueStart.length;
-                    let value = valueStart.slice(0, endIdx).trimEnd();
-                    // 去掉末尾分号
-                    if (value.endsWith(';')) value = value.slice(0, -1).trimEnd();
-                    preservedRegionConfig = value;
-                    console.log('Using REGION_CONFIG from config.js');
-                }
-            }
-        }
-        if (!preservedRegionConfig) {
-            console.warn('USE_CONFIG_JS=true but no REGION_CONFIG found in config.js, building from .env');
-        }
+    const regionConfig = {};
+    for (const r of regions) {
+        regionConfig[r] = {
+            preferredCf: env['REGION_' + r + '_PREFERRED_CF'] || defaultPreferredCfDomain,
+            preferredCft: env['REGION_' + r + '_PREFERRED_CFT'] || '',
+            preferredVrc: env['REGION_' + r + '_PREFERRED_VRC'] || '',
+            remap: env['REGION_' + r + '_REMAP']
+                ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
+                : defaultRemap,
+            ech: env['REGION_' + r + '_ECH'] === 'true',
+            google: env['REGION_' + r + '_GOOGLE'] === 'true' ? (fetchedGoogleProxy || []) : undefined,
+        };
     }
-
-    // 注入从 Cealing-Host 拉取的 Google 代理配置
-    if (fetchedGoogleProxy && preservedRegionConfig) {
-        if (!preservedRegionConfig.match(/\bgoogle\s*:/) && !preservedRegionConfig.match(/"google"\s*:/)) {
-            var gLines = [];
-            for (var gi = 0; gi < fetchedGoogleProxy.length; gi++) {
-                var ge = fetchedGoogleProxy[gi];
-                var ips = JSON.stringify(ge.ips).replace(/"/g, '\'');
-                var match = JSON.stringify(ge.match);
-                var sni = ge.sni ? ', sni: \'' + ge.sni + '\'' : '';
-                gLines.push('        { ips: ' + ips + sni + ', match: ' + match + ' }');
-            }
-            var googleBlock = '    google: [\n' + gLines.join(',\n') + '\n    ]';
-            preservedRegionConfig = preservedRegionConfig.replace(/\n  \},?\n\};?\s*$/, '\n' + googleBlock + ',\n  },\n};');
-        }
-    }
-
-    if (preservedRegionConfig) {
-        regionConfigStr = preservedRegionConfig;
-    } else {
-        // 按 .env 构建 REGION_CONFIG
-        const regionConfig = {};
-        for (const r of regions) {
-            regionConfig[r] = {
-                preferred: env['REGION_' + r + '_PREFERRED'] || defaultPrefDomain,
-                preferredCft: env['REGION_' + r + '_PREFERRED_CFT'] || '',
-                preferredVrc: env['REGION_' + r + '_PREFERRED_VRC'] || '',
-                remap: env['REGION_' + r + '_REMAP']
-                    ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
-                    : defaultRemap,
-                ech: env['REGION_' + r + '_ECH'] === 'true',
-                google: env['REGION_' + r + '_GOOGLE'] === 'true' ? (fetchedGoogleProxy || []) : undefined,
-            };
-        }
-        regionConfigStr = JSON.stringify(regionConfig, null, 2)
-            .replace(/^/gm, '  ')
-            .replace(/^\s{2}/, '');
-    }
+    const regionConfigStr = JSON.stringify(regionConfig, null, 2)
+        .replace(/^/gm, '  ')
+        .replace(/^\s{2}/, '');
 
     return `/**
  * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
- * 如果 USE_CONFIG_JS=true 则可以手写 REGION_CONFIG 域规则，
- * UPSTREAMS / 超时 / LOG_LEVEL 始终从 .env 构建。
+ * USE_CONFIG_JS=true 时 scripts/build-config.cjs 不会重写本文件，
+ * Worker 会直接读取现有 config.js。
  */
 
 export const UPSTREAMS = {
@@ -269,6 +216,15 @@ const configPath = path.join(rootDir, 'config.js');
 async function main() {
   console.log(`Reading ${envPath} ...`);
   const env = parseEnv(envPath);
+
+  if (env.USE_CONFIG_JS === 'true') {
+    if (!fs.existsSync(configPath)) {
+      console.error('USE_CONFIG_JS=true but config.js does not exist. Copy config.example.js to config.js first.');
+      process.exit(1);
+    }
+    console.log(`USE_CONFIG_JS=true — using existing ${configPath}; no config generated.`);
+    return;
+  }
 
   console.log('Building upstreams ...');
   const upstreams = buildUpstreams(env);

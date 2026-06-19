@@ -70,7 +70,7 @@ curl "https://h-demo.mk01.top/health"
 
 | CDN | 触发方式 | MIX 2 行为 |
 |-----|---------|-----------|
-| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredDomain`，替换原域名 IP。X/Twitter/Pixiv 强制走此分支 |
+| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredCf`，替换原域名 IP。X/Twitter/Pixiv 强制走此分支 |
 | **CFT** (CloudFront) | IP 归属 | 并发解析 `preferredCft` |
 | **VRC** (Vercel) | IP 归属 | 并发解析 `preferredVrc` |
 | **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 + LPM 可达性过滤 |
@@ -88,7 +88,8 @@ curl "https://h-demo.mk01.top/health"
 
 ## 配置
 
-编辑 `.env`，执行 `npm run build` 生成 `config.js`。
+默认模式下编辑 `.env`，执行 `npm run build` 生成 `config.js`。
+如果设置 `USE_CONFIG_JS=true`，构建脚本不会生成或覆盖 `config.js`，Worker 会直接读取现有 `config.js`。
 
 ```env
 # 上游
@@ -118,7 +119,8 @@ BLOCKED_CIDRS=127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128
 
 # 区域优化
 REGION=CN
-REGION_CN_PREFERRED=cf.090227.xyz
+PREFERRED_CF_DOMAIN=cf.example.com
+REGION_CN_PREFERRED_CF=cf.090227.xyz
 REGION_CN_PREFERRED_CFT=worker.cloudfront.182682.xyz
 REGION_CN_PREFERRED_VRC=worker.vercel.182682.xyz
 REGION_CN_REMAP=twimg.com twitter.com x.com t.co
@@ -129,7 +131,7 @@ REGION_CN_ECH=true
 
 ```bash
 cd superdoh
-npm run build    # .env → config.js
+npm run build    # USE_CONFIG_JS=false: .env → config.js；USE_CONFIG_JS=true: 直接使用现有 config.js
 npm run deploy   # → Cloudflare Workers
 ```
 
@@ -147,8 +149,8 @@ npm run deploy   # → Cloudflare Workers
 ```
 superdoh/
 ├── .env                     # 用户配置
-├── scripts/build-config.cjs # .env → config.js 构建脚本
-├── config.js                # 运行时配置（自动生成）
+├── scripts/build-config.cjs # .env → config.js，或 USE_CONFIG_JS=true 时跳过生成
+├── config.js                # 运行时配置（自动生成或手写）
 ├── _worker.js               # 入口、路由、两次 MIX
 ├── mix.js                   # 竞速引擎
 ├── edns.js                  # ECS/EDNS
