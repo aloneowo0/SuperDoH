@@ -219,7 +219,6 @@ function generateConfig(env, upstreams, fetchedGoogleProxy) {
                     ? env['REGION_' + r + '_REMAP'].split(/[\s,]+/).filter(d => d.length > 0)
                     : defaultRemap,
                 ech: env['REGION_' + r + '_ECH'] === 'true',
-                front: env['REGION_' + r + '_FRONT'] === 'true',
                 google: env['REGION_' + r + '_GOOGLE'] === 'true' ? (fetchedGoogleProxy || []) : undefined,
             };
         }

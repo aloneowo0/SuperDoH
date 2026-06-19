@@ -55,7 +55,6 @@ export const REGION_CONFIG = {
         "imp.pixiv.net"
       ],
       "ech": true,
-      "front": true,
       "google": [
         {
           "ips": [

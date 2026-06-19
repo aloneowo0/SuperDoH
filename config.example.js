@@ -23,7 +23,6 @@ export const REGION_CONFIG = {
     ],
 
     ech: true,
-    front: true,
 
     google: [
       {
