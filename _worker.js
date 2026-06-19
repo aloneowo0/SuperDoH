@@ -59,7 +59,8 @@ function matchGoogleProxy(name, googleConf) {
       } else if (typeof p === 'string') {
         var n = name.toLowerCase().replace(/\.+$/, '');
         var rd = p.toLowerCase().replace(/\.+$/, '');
-        if (n === rd || n.endsWith('.' + rd)) return entry;
+        var suffix = rd.startsWith('.') ? rd : '.' + rd;
+        if (n === rd || n.endsWith(suffix)) return entry;
       }
     }
   }
