@@ -1,6 +1,7 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
-import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { prepareQuery } from './edns.js';
 import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -555,61 +556,6 @@ export async function resolveDNSWire(domain, type) {
   return result;
 }
 
-export async function resolveDNSWireForeign(body, timeoutMs) {
-  var t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
-  var started = Date.now();
-  var deadline = started + t;
-
-  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
-  if (foreignUrls.length === 0) return null;
-
-  var controllers = [];
-  var result = null;
-  var done = false;
-
-  function abortAll() {
-    done = true;
-    for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
-    }
-  }
-
-  var promises = foreignUrls.map(function (url) {
-    var ctrl = new AbortController();
-    controllers.push(ctrl);
-    return fetch(url, {
-      method: 'POST',
-      headers: DNS_HEADERS,
-      body: body,
-      signal: ctrl.signal,
-    }).then(async function (res) {
-      if (done) return null;
-      if (res.status !== 200) return null;
-      var buf = await res.arrayBuffer();
-      if (done) return null;
-      if (buf.byteLength < 12) return null;
-      if (new DataView(buf).getUint16(6) === 0) return null;
-      result = buf;
-      abortAll();
-      return buf;
-    }).catch(function (err) {
-      if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { stage: 'resolveDNSWireForeign', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-      return null;
-    });
-  });
-
-  var timeoutPromise = new Promise(function (resolve) {
-    var remaining = deadline - Date.now();
-    if (remaining <= 0) { resolve(); return; }
-    setTimeout(function () { if (!done) abortAll(); resolve(); }, remaining);
-  });
-
-  await Promise.race([Promise.all(promises), timeoutPromise]);
-
-  return result;
-}
-
 export function extractIPBytes(buf, type) {
   try {
     const answers = parseAnswers(buf, type);
@@ -714,28 +660,20 @@ export async function resolveDNSWireAll(domain, type) {
   return allIps;
 }
 
-export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
-  var query = buildWireQuery(domain, type);
+export async function resolvePreferredIPs(domain, type, expectedOwner, ctx, clientIP) {
+  var wireQuery = buildWireQuery(domain, type);
+  var query = prepareQuery(wireQuery, clientIP);
   var started = Date.now();
   var deadline = started + PREFERRED_TIMEOUT_MS;
   var requestId = ctx && ctx.requestId;
 
-  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
-  if (foreignUrls.length === 0) return [];
+  var google = UPSTREAMS['google'];
+  if (!google || !google.url) return [];
 
-  var controllers = [];
+  var ctrl = new AbortController();
   var collected = [];
 
-  function abortAll() {
-    for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
-    }
-  }
-
-  var promises = foreignUrls.map(function (url) {
-    var ctrl = new AbortController();
-    controllers.push(ctrl);
-    return fetch(url, {
+  var promise = fetch(google.url, {
       method: 'POST',
       headers: DNS_HEADERS,
       body: query,
@@ -762,16 +700,15 @@ export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
       logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
-  });
 
   var timeout = new Promise(function (resolve) {
     var remaining = deadline - Date.now();
     if (remaining <= 0) { resolve(); return; }
-    setTimeout(function () { abortAll(); resolve(); }, remaining);
+    setTimeout(function () { try { ctrl.abort(); } catch (_) {} resolve(); }, remaining);
   });
 
-  await Promise.race([Promise.all(promises), timeout]);
-  abortAll();
+  await Promise.race([promise, timeout]);
+  try { ctrl.abort(); } catch (_) {}
 
   var ipSet = new Set();
   var allIps = [];

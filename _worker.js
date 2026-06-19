@@ -207,7 +207,7 @@ function healthResponse(upstreamNames) {
 // ── Preferred answer helper ────────────────────────────────────────
 
 async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
-  const ips = await resolvePreferredIPs(prefDomain, queryMeta.type, expectedOwner, ctx);
+  const ips = await resolvePreferredIPs(prefDomain, queryMeta.type, expectedOwner, ctx, ctx.clientIP);
   logEvent('info', 'preferred_result', { requestId: ctx.requestId, owner: expectedOwner, candidateCount: ips ? ips.length : 0, fallback: !ips || ips.length === 0 });
   if (ips && ips.length > 0) {
     return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, ttl), ctx);
@@ -593,7 +593,7 @@ export default {
         queryMeta.forcedOwner = isCFDomain(queryMeta.name, remapForOwner) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
       }
 
-      var ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0 };
+      var ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0, clientIP: clientIP };
       logEvent('info', 'request_start', { requestId: requestId, qname: ctx.qname, qtype: ctx.qtype, region: clientCountry });
 
       // Chrome DoH canary
