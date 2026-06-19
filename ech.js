@@ -1,5 +1,6 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
-import { resolveDNSWire, requireBytes, parseDns, encodeDnsName, buildDNS } from './dns-lib.js';
+import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS } from './dns-lib.js';
+import { UPSTREAMS } from './config.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADER_LEN = 12;
@@ -24,7 +25,18 @@ export async function fetchCFEch(_env, _ctx) {
             return cached.data;
         }
 
-        const buf = await resolveDNSWire(CF_ECH_DOMAIN, TYPE_HTTPS);
+        var query = buildWireQuery(CF_ECH_DOMAIN, TYPE_HTTPS);
+        var googleUrl = UPSTREAMS['google'] ? UPSTREAMS['google'].url : null;
+        if (!googleUrl) return getStaleCFEch(cached);
+
+        var buf = null;
+        try {
+          var res = await fetch(googleUrl, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query });
+          if (res.status === 200) {
+            var ab = await res.arrayBuffer();
+            if (ab.byteLength >= 12 && new DataView(ab).getUint16(6) > 0) buf = ab;
+          }
+        } catch (_) {}
         if (!buf) return getStaleCFEch(cached);
 
         const packet = parseDns(buf);
