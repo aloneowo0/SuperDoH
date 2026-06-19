@@ -10,7 +10,7 @@ import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll, queryUpstream, resolvePreferred } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
 import { logEvent, setLogLevel } from './logger.js';
 setLogLevel(LOG_LEVEL);
@@ -105,35 +105,6 @@ function bytesToBase64(bytes) {
   return btoa(s);
 }
 
-function readDnsName(view, start) {
-  var offset = start;
-  var end = start;
-  var jumped = false;
-  var jumps = 0;
-  var labels = [];
-  for (;;) {
-    if (offset >= view.byteLength) throw new Error('DNS name out of bounds');
-    var len = view.getUint8(offset);
-    if ((len & 0xC0) === 0xC0) {
-      if (offset + 1 >= view.byteLength) throw new Error('DNS pointer out of bounds');
-      var pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
-      if (!jumped) end = offset + 2;
-      offset = pointer;
-      jumped = true;
-      if (++jumps > 128) throw new Error('DNS compression loop');
-      continue;
-    }
-    if ((len & 0xC0) !== 0) throw new Error('unsupported DNS label type');
-    if (len === 0) return { name: labels.join('.'), offset: jumped ? end : offset + 1 };
-    offset += 1;
-    if (offset + len > view.byteLength) throw new Error('DNS label out of bounds');
-    var labelBytes = new Uint8Array(view.buffer, view.byteOffset + offset, len);
-    labels.push(new TextDecoder().decode(labelBytes));
-    if (!jumped) end = offset + len;
-    offset += len;
-  }
-}
-
 function rdataToJsonData(view, record) {
   var rdata = new Uint8Array(view.buffer, view.byteOffset + record.rdataOffset, record.rdlength);
   if (record.type === 1 && rdata.length === 4) {
@@ -156,8 +127,8 @@ async function dnsWireToJsonResponse(response) {
     var offset = 12;
     var questions = [];
     for (var i = 0; i < packet.header.qdcount; i++) {
-      var qName = readDnsName(view, offset);
-      offset = qName.offset;
+      var qName = decodeName(view, offset);
+      offset = qName.end;
       if (offset + 4 > view.byteLength) throw new Error('DNS question out of bounds');
       questions.push({ name: qName.name, type: view.getUint16(offset) });
       offset += 4;
@@ -165,7 +136,7 @@ async function dnsWireToJsonResponse(response) {
     var answers = [];
     for (var j = 0; j < packet.answers.length; j++) {
       var rec = packet.answers[j];
-      var rrName = readDnsName(view, rec.offset);
+      var rrName = decodeName(view, rec.offset);
       answers.push({
         name: rrName.name,
         type: rec.type,

@@ -37,12 +37,14 @@ export function encodeDnsName(domain) {
 
 // ── DNS packet parsing (canonical: edns.js version with cycle detection) ──
 
-export function skipName(view, start) {
+export function decodeName(view, start) {
   let offset = start;
   let end = start;
   let jumped = false;
   let jumps = 0;
   const seen = [];
+  const labels = [];
+  const decoder = new TextDecoder();
 
   for (;;) {
     requireBytes(view, offset, 1);
@@ -61,13 +63,18 @@ export function skipName(view, start) {
     }
 
     if ((len & 0xC0) !== 0) throw new Error('unsupported DNS label type');
-    if (len === 0) return jumped ? end : offset + 1;
+    if (len === 0) return { name: labels.join('.'), end: jumped ? end : offset + 1 };
 
     offset += 1;
     requireBytes(view, offset, len);
+    labels.push(decoder.decode(new Uint8Array(view.buffer, view.byteOffset + offset, len)));
     if (!jumped) end = offset + len;
     offset += len;
   }
+}
+
+export function skipName(view, start) {
+  return decodeName(view, start).end;
 }
 
 export function readRecord(view, offset) {

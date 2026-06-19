@@ -1,11 +1,10 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
-import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS } from './dns-lib.js';
+import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS, decodeName } from './dns-lib.js';
 import { UPSTREAMS } from './config.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
-const MAX_NAME_JUMPS = 128;
 const SVC_KEY_ALPN = 1;
 const SVC_KEY_ECH = 5;
 const CACHE_TTL_MS = 600000;
@@ -129,7 +128,7 @@ function rebuildTail(packet, startOffset) {
   var fullView = packet.view;
   var offset = startOffset;
   while (offset < end) {
-    var nameResult = decodeDnsName(fullView, offset);
+    var nameResult = decodeName(fullView, offset);
     requireBytes(fullView, nameResult.end, 10);
     var type = fullView.getUint16(nameResult.end);
     var ttl = fullView.getUint32(nameResult.end + 4);
@@ -221,7 +220,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
         for (let i = 0; i < packet.answers.length; i++) {
             const answer = packet.answers[i];
-            const ownerName = decodeDnsName(packet.view, answer.offset).name;
+            const ownerName = decodeName(packet.view, answer.offset).name;
             if (answer.type !== TYPE_HTTPS) {
                 newRecords.push({ name: ownerName, type: answer.type, rdata: expandRdataNames(packet.view, answer.rdataOffset, answer.rdlength, answer.type), ttl: answer.ttl });
                 continue;
@@ -313,53 +312,6 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
         logEvent('error', 'ech_error', { requestId: ctx && ctx.requestId, stage: 'injectECH', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
         return { body: originalResponse, changed: false, status: 'failed' };
     }
-}
-
-function decodeDnsName(view, offset) {
-    const parts = [];
-    let jumped = false;
-    let end = offset;
-    let jumps = 0;
-
-    while (true) {
-        requireBytes(view, offset, 1);
-        const len = view.getUint8(offset);
-
-        if ((len & 0xC0) === 0xC0) {
-            requireBytes(view, offset, 2);
-            const pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
-            if (pointer >= view.byteLength) throw new Error('bad compression pointer');
-            if (!jumped) end = offset + 2;
-            offset = pointer;
-            jumped = true;
-            jumps++;
-            if (jumps > MAX_NAME_JUMPS) throw new Error('compression loop');
-            continue;
-        }
-
-        if ((len & 0xC0) !== 0) {
-            throw new Error('unsupported label type');
-        }
-
-        if (len === 0) {
-            if (!jumped) end = offset + 1;
-            offset++;
-            break;
-        }
-
-        offset++;
-        requireBytes(view, offset, len);
-        let label = '';
-        for (let i = 0; i < len; i++) {
-            label += String.fromCharCode(view.getUint8(offset + i));
-        }
-        parts.push(label);
-
-        if (!jumped) end = offset + len;
-        offset += len;
-    }
-
-    return { name: parts.join('.'), end: end };
 }
 
 function encodeSvcParam(key, value) {
@@ -514,14 +466,14 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
     }
 
     if (rrType === 5 || rrType === 2 || rrType === 12) {
-        var name = decodeDnsName(view, rdataOffset);
+        var name = decodeName(view, rdataOffset);
         return encodeDnsName(name.name);
     }
 
     if (rrType === 15) {
         requireBytes(view, rdataOffset, 2);
         var pref = view.getUint16(rdataOffset);
-        var mxName = decodeDnsName(view, rdataOffset + 2);
+        var mxName = decodeName(view, rdataOffset + 2);
         var encodedMx = encodeDnsName(mxName.name);
         var mxResult = new Uint8Array(2 + encodedMx.length);
         new DataView(mxResult.buffer).setUint16(0, pref);
@@ -531,7 +483,7 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
 
     if (rrType === 33) {
         requireBytes(view, rdataOffset, 6);
-        var srvName = decodeDnsName(view, rdataOffset + 6);
+        var srvName = decodeName(view, rdataOffset + 6);
         var encodedSrv = encodeDnsName(srvName.name);
         var srvResult = new Uint8Array(6 + encodedSrv.length);
         srvResult.set(copyRdata(view, rdataOffset, 6), 0);
@@ -540,8 +492,8 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
     }
 
     if (rrType === 6) {
-        var mname = decodeDnsName(view, rdataOffset);
-        var rname = decodeDnsName(view, mname.end);
+        var mname = decodeName(view, rdataOffset);
+        var rname = decodeName(view, mname.end);
         var encodedMname = encodeDnsName(mname.name);
         var encodedRname = encodeDnsName(rname.name);
         var fixedOffset = rname.end;
@@ -566,7 +518,7 @@ function parseHttpsRdata(view, rdataOffset, rdlength) {
         const priority = view.getUint16(offset);
         offset += 2;
 
-        const decoded = decodeDnsName(view, offset);
+        const decoded = decodeName(view, offset);
         const target = decoded.name || '.';
         offset = decoded.end;
 
