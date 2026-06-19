@@ -396,7 +396,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
 // ── twoMixFlow ─────────────────────────────────────────────────────
 
-async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, remapList) {
+async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, remapList, googleConf) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
     return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, {}, ctx);
@@ -409,6 +409,32 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   var mix1AnswerCount = mix1Buf && mix1Buf.byteLength >= 12 ? new DataView(mix1Buf).getUint16(6) : 0;
   var mix1Rcode = mix1Buf && mix1Buf.byteLength >= 3 ? (new DataView(mix1Buf).getUint8(3) & 0x0F) : -1;
   logEvent('info', 'mix1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: mix1Rcode, answerCount: mix1AnswerCount });
+
+  // Google proxy: append proxy IPs to MIX 1 result for A queries
+  if (googleConf && queryMeta.type === 1) {
+    var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
+    if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
+      var proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
+      if (proxyBytes.length > 0) {
+        var existingIps = mix1Buf && mix1Buf.byteLength >= 12 ? extractIPBytes(mix1Buf, 1) : [];
+        // Deduplicate: skip proxy IPs already in MIX 1 result
+        var seen = {};
+        var combined = [];
+        for (var ei = 0; ei < existingIps.length; ei++) {
+          var key = Array.prototype.join.call(existingIps[ei], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
+        }
+        for (var pi = 0; pi < proxyBytes.length; pi++) {
+          var key = Array.prototype.join.call(proxyBytes[pi], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
+        }
+        var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
+        ctx.googleProxy = true;
+        logEvent('info', 'google_proxy_appended', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
+        return respond(mergedBuf, ctx);
+      }
+    }
+  }
 
   if (!regionActive) {
     // Add header to non-region response
@@ -572,24 +598,8 @@ export default {
         }
       }
 
-      // Google proxy static routing — A (IPv4) only
-      if (queryMeta && regionCfg && regionCfg.google && queryMeta.type === 1) {
-        var googleMatch = matchGoogleProxy(queryMeta.name, regionCfg.google);
-        if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
-          var proxyIps = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
-          if (proxyIps.length > 0) {
-            var staticDns = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, proxyIps, 300);
-            var staticResp = respond(staticDns, ctx);
-            logEvent('info', 'request_end', { requestId: requestId, result: 'google_proxy', qname: queryMeta.name, answerCount: proxyIps.length });
-            if (wantsJson) staticResp = await dnsWireToJsonResponse(staticResp);
-            staticResp.headers.set('X-DoH-Request-ID', requestId);
-            return staticResp;
-          }
-        }
-      }
-
       if (route.provider === MIX_PROVIDER) {
-        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null);
+        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
         if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
         logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: ctx.owner || null });
