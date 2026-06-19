@@ -52,8 +52,7 @@ export const REGION_CONFIG = {
         "t.co",
         "pixiv.net",
         "www.pixiv.net",
-        "imp.pixiv.net",
-        "anyrouter.top"
+        "imp.pixiv.net"
       ],
       "ech": true,
       "front": true,
