@@ -9,7 +9,7 @@ import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll, queryUpstream, resolvePreferred } from './mix.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner, filterReachableMeta, detectOwner, extractIps, isMetaDomain } from './cdn.js';
+import { probeOwner, detectOwner, extractIps, isMetaDomain } from './cdn.js';
 import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
 import { logEvent, setLogLevel } from './logger.js';
@@ -288,10 +288,9 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     if (winner.result.valid) {
       try {
         var rawIps = extractIPBytes(winner.result.response, queryMeta.type);
-        var reachable = filterReachableMeta(rawIps, META_MAX_IPS);
-        if (reachable.length > 0) {
+        if (rawIps.length > 0) {
           firstValid = winner.result;
-          for (var j = 0; j < reachable.length; j++) candidates.push(reachable[j]);
+          for (var j = 0; j < rawIps.length; j++) candidates.push(rawIps[j]);
           break;
         }
       } catch (err) {
@@ -337,9 +336,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     var key = Array.from(candidates[i]).join(',');
     if (!seen.has(key)) {
       seen.add(key);
-      if (filterReachableMeta([candidates[i]], 1).length > 0) {
-        filtered.push(candidates[i]);
-      }
+      filtered.push(candidates[i]);
       if (filtered.length >= META_MAX_IPS) break;
     }
   }
