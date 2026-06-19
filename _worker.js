@@ -410,14 +410,28 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   var mix1Rcode = mix1Buf && mix1Buf.byteLength >= 3 ? (new DataView(mix1Buf).getUint8(3) & 0x0F) : -1;
   logEvent('info', 'mix1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: mix1Rcode, answerCount: mix1AnswerCount });
 
-  // Google proxy: detect match, save for later append
+  // Google proxy: append proxy IPs to MIX 1 result for A queries
   if (googleConf && queryMeta.type === 1) {
     var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
     if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
       var proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
       if (proxyBytes.length > 0) {
-        ctx._googleProxyBytes = proxyBytes;
-        ctx._googleQname = queryMeta.name;
+        var existingIps = mix1Buf && mix1Buf.byteLength >= 12 ? extractIPBytes(mix1Buf, 1) : [];
+        // Deduplicate: skip proxy IPs already in MIX 1 result
+        var seen = {};
+        var combined = [];
+        for (var ei = 0; ei < existingIps.length; ei++) {
+          var key = Array.prototype.join.call(existingIps[ei], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
+        }
+        for (var pi = 0; pi < proxyBytes.length; pi++) {
+          var key = Array.prototype.join.call(proxyBytes[pi], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
+        }
+        var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
+        ctx.googleProxy = true;
+        logEvent('info', 'google_proxy_appended', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
+        return respond(mergedBuf, ctx);
       }
     }
   }
@@ -586,25 +600,6 @@ export default {
 
       if (route.provider === MIX_PROVIDER) {
         var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
-        // Append Google proxy IPs to the routed result
-        if (ctx._googleProxyBytes && ctx._googleQname && queryMeta && queryMeta.type === 1) {
-          var existingIps = extractIPBytes(await result.clone().arrayBuffer(), 1);
-          var seen = {};
-          var combined = [];
-          for (var ei = 0; ei < existingIps.length; ei++) {
-            var key = Array.prototype.join.call(existingIps[ei], '.');
-            if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
-          }
-          for (var pi = 0; pi < ctx._googleProxyBytes.length; pi++) {
-            var key = Array.prototype.join.call(ctx._googleProxyBytes[pi], '.');
-            if (!seen[key]) { seen[key] = true; combined.push(ctx._googleProxyBytes[pi]); }
-          }
-          if (combined.length > existingIps.length) {
-            var mergedBuf = buildDNS(queryMeta.id, ctx._googleQname, 1, combined, 300);
-            result = respond(mergedBuf, ctx);
-            logEvent('info', 'google_proxy_appended', { requestId: requestId, qname: ctx._googleQname, mixed: existingIps.length, proxy: ctx._googleProxyBytes.length, total: combined.length });
-          }
-        }
         if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
         logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: ctx.owner || null });
