@@ -144,7 +144,8 @@ function generateConfig(env, upstreams, fetchedGoogleProxy) {
     const preferredTimeoutMs = 300;
     // MIX 竞速并发上游数。0 = 全部上游（默认）。
     // Cloudflare Workers Free 计划只有 6 个同时出站连接，设为 4 可避免挤占其他子请求的槽位。
-    const mixConcurrency = 0;
+    var mixConcurrency = parseInt(env.MIX_CONCURRENCY, 10);
+    if (isNaN(mixConcurrency) || mixConcurrency < 0) mixConcurrency = 0;
 
     // 地区优化解析（从 REGION_XX_* 块自动发现地区）
     const regionSet = new Set();
