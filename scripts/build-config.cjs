@@ -160,7 +160,7 @@ function geoipExportLines(geoipCidrs) {
     }).join('\n');
 }
 
-function generateConfig(env, upstreams, fetchedGoogleProxy, useGeoip, geoipCidrs) {
+function generateConfig(env, upstreams, fetchedGoogleProxy, geoipCidrs) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
             return `    ${name}: { url: ${JSON.stringify(cfg.url)}, ecs: ${cfg.ecs} },`;
@@ -247,7 +247,6 @@ export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 
 export const BLOCKED_RANGES = ${blockedStr};
 
-export const USE_GEOIP = ${useGeoip};
 ${geoipExportLines(geoipCidrs)}
 
 export const MIX_PROVIDER = 'mix';
@@ -287,23 +286,20 @@ async function main() {
     process.exit(1);
   }
 
-  var useGeoip = env.USE_GEOIP === 'true';
   var geoipCidrs = {};
   for (var geoipKey of Object.keys(GEOIP_CATEGORIES)) geoipCidrs[geoipKey] = [];
-  if (useGeoip) {
-    console.log('Fetching GeoIP CIDR lists ...');
-    var results = await Promise.allSettled(Object.keys(GEOIP_CATEGORIES).map(async function(key) {
-      var category = GEOIP_CATEGORIES[key];
-      return { key: key, cidrs: await fetchGeoipCidrs(category) };
-    }));
-    for (var ri = 0; ri < results.length; ri++) {
-      if (results[ri].status === 'fulfilled') {
-        var rr = results[ri].value;
-        geoipCidrs[rr.key] = rr.cidrs;
-        console.log(`Fetched ${rr.cidrs.length} ${GEOIP_CATEGORIES[rr.key]} CIDRs`);
-      } else {
-        console.warn('Failed to fetch ' + Object.keys(GEOIP_CATEGORIES)[ri] + ': ' + results[ri].reason.message);
-      }
+  console.log('Fetching GeoIP CIDR lists ...');
+  var geoipResults = await Promise.allSettled(Object.keys(GEOIP_CATEGORIES).map(async function(key) {
+    var category = GEOIP_CATEGORIES[key];
+    return { key: key, cidrs: await fetchGeoipCidrs(category) };
+  }));
+  for (var ri = 0; ri < geoipResults.length; ri++) {
+    if (geoipResults[ri].status === 'fulfilled') {
+      var rr = geoipResults[ri].value;
+      geoipCidrs[rr.key] = rr.cidrs;
+      console.log(`Fetched ${rr.cidrs.length} ${GEOIP_CATEGORIES[rr.key]} CIDRs`);
+    } else {
+      console.warn('Failed to fetch ' + Object.keys(GEOIP_CATEGORIES)[ri] + ': ' + geoipResults[ri].reason.message);
     }
   }
 
@@ -407,7 +403,7 @@ async function main() {
   }
 
   console.log(`Generating ${configPath} ...`);
-  fs.writeFileSync(configPath, generateConfig(env, upstreams, fetchedGoogleProxy, useGeoip, geoipCidrs));
+  fs.writeFileSync(configPath, generateConfig(env, upstreams, fetchedGoogleProxy, geoipCidrs));
 
   console.log(`Done — ${Object.keys(upstreams).length} upstreams configured.`);
 }

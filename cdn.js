@@ -1,6 +1,6 @@
 import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
 import { logEvent } from './logger.js';
-import { USE_GEOIP, GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY, GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR } from './config.js';
+import { GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY, GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR } from './config.js';
 
 const PROBE_CACHE_TTL = 3600 * 1000;
 const MAX_PROBE_CACHE = 256;
@@ -38,15 +38,15 @@ const RAW_VERCEL_CIDRS = [
 
 const probeCache = new Map();
 
-const COMPILED_META = compileCidrs(USE_GEOIP ? GEOIP_META : []);
-const COMPILED_CF = compileCidrs(USE_GEOIP ? GEOIP_CF : []);
-const COMPILED_CFT = compileCidrs(USE_GEOIP ? GEOIP_CFT : []);
+const COMPILED_META = compileCidrs(GEOIP_META);
+const COMPILED_CF = compileCidrs(GEOIP_CF);
+const COMPILED_CFT = compileCidrs(GEOIP_CFT);
 const COMPILED_VRC = compileCidrs(RAW_VERCEL_CIDRS);
-const COMPILED_FASTLY = compileCidrs(USE_GEOIP ? GEOIP_FASTLY : []);
-const COMPILED_NETFLIX = compileCidrs(USE_GEOIP ? GEOIP_NETFLIX : []);
-const COMPILED_TELEGRAM = compileCidrs(USE_GEOIP ? GEOIP_TELEGRAM : []);
-const COMPILED_TWITTER = compileCidrs(USE_GEOIP ? GEOIP_TWITTER : []);
-const COMPILED_TOR = compileCidrs(USE_GEOIP ? GEOIP_TOR : []);
+const COMPILED_FASTLY = compileCidrs(GEOIP_FASTLY);
+const COMPILED_NETFLIX = compileCidrs(GEOIP_NETFLIX);
+const COMPILED_TELEGRAM = compileCidrs(GEOIP_TELEGRAM);
+const COMPILED_TWITTER = compileCidrs(GEOIP_TWITTER);
+const COMPILED_TOR = compileCidrs(GEOIP_TOR);
 
 /**
  * Synchronously detect the CDN owner of an IP address.
