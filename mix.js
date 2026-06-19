@@ -1,9 +1,9 @@
 /** Multi-upstream racing module — ECS protect window + post-processing */
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_CONCURRENCY, UPSTREAMS } from './config.js';
+import { ECS_PROTECT_MS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, MIX_CONCURRENCY, PREFERRED_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain } from './cdn.js';
-import { dnsResponse, parseQueryMeta, servfail } from './dns-lib.js';
+import { buildWireQuery, dnsResponse, extractIPBytes, parseQueryMeta, servfail } from './dns-lib.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -163,6 +163,106 @@ export function answersPass(responseBody, queryId, qname, qtype) {
   if (validation.classification === 'invalid') return { passed: false, reason: 'invalid_response', ...validation };
   const result = filterAnswers(responseBody, queryId);
   return { passed: result !== false && result?.passed !== false, reason: result?.reason || null, ...validation };
+}
+
+export async function resolvePreferred(domain, type, expectedOwner, ctx, clientIP) {
+  var wireQuery = buildWireQuery(domain, type);
+  var query = prepareQuery(wireQuery, clientIP);
+  var started = Date.now();
+  var deadline = started + PREFERRED_TIMEOUT_MS;
+  var requestId = ctx && ctx.requestId;
+
+  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < foreignUrls.length) {
+    foreignUrls = foreignUrls.slice(0, MIX_CONCURRENCY);
+  }
+  if (foreignUrls.length === 0) return [];
+
+  var controllers = [];
+  var collected = [];
+
+  function abortAll() {
+    for (var i = 0; i < controllers.length; i++) {
+      try { controllers[i].abort(); } catch (_) {}
+    }
+  }
+
+  var promises = foreignUrls.map(function (url) {
+    var ctrl = new AbortController();
+    controllers.push(ctrl);
+    return fetch(url, {
+      method: 'POST',
+      headers: DNS_HEADERS,
+      body: query,
+      signal: ctrl.signal,
+    }).then(async function (res) {
+      if (res.status !== 200) return null;
+      var buf = await res.arrayBuffer();
+      if (buf.byteLength < 12) return null;
+      if (new DataView(buf).getUint16(6) === 0) return null;
+      return buf;
+    }).then(function (buf) {
+      if (!buf) return null;
+      try {
+        var ips = extractIPBytes(buf, type);
+        for (var i = 0; i < ips.length; i++) {
+          collected.push(ips[i]);
+        }
+      } catch (err) {
+        logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      }
+      return null;
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return null;
+      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      return null;
+    });
+  });
+
+  var timeout = new Promise(function (resolve) {
+    var remaining = deadline - Date.now();
+    if (remaining <= 0) { resolve(); return; }
+    setTimeout(function () { abortAll(); resolve(); }, remaining);
+  });
+
+  await Promise.race([Promise.all(promises), timeout]);
+  abortAll();
+
+  var ipSet = new Set();
+  var allIps = [];
+  for (var i = 0; i < collected.length; i++) {
+    var key = Array.from(collected[i]).join(',');
+    if (!ipSet.has(key)) {
+      ipSet.add(key);
+      allIps.push(collected[i]);
+    }
+  }
+
+  if (expectedOwner) {
+    try {
+      var { detectOwner } = await import('./cdn.js');
+      var ownerFiltered = [];
+      for (var oi = 0; oi < allIps.length; oi++) {
+        var ipBytes = allIps[oi];
+        var ipStr;
+        if (ipBytes.length === 4) {
+          ipStr = ipBytes[0] + '.' + ipBytes[1] + '.' + ipBytes[2] + '.' + ipBytes[3];
+        } else if (ipBytes.length === 16) {
+          var parts = [];
+          for (var pi = 0; pi < 16; pi += 2) {
+            parts.push(((ipBytes[pi] << 8) | ipBytes[pi + 1]).toString(16));
+          }
+          ipStr = parts.join(':');
+        }
+        if (ipStr && detectOwner(ipStr) === expectedOwner) ownerFiltered.push(ipBytes);
+      }
+      return ownerFiltered;
+    } catch (err) {
+      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_owner_filter', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      return [];
+    }
+  }
+  return allIps;
 }
 
 export async function postProcessBody(responseBody, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx) {
