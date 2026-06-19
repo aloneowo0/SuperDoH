@@ -14,6 +14,8 @@
  *   UPSTREAMS, FOREIGN_UPSTREAMS, ECS_PROTECT_MS, HARD_TIMEOUT_MS,
  *   META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS,
  *   PREFERRED_TIMEOUT_MS, ECS_PREFIX4, ECS_PREFIX6, BLOCKED_RANGES,
+ *   USE_GEOIP, GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY,
+ *   GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR,
  *   MIX_PROVIDER, LOG_LEVEL, REGION, REGION_CONFIG
  */
 
@@ -79,6 +81,18 @@ export const BLOCKED_RANGES = [
   { family: 6, mask: 128 },
   { family: 6, addr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], mask: 128 },
 ];
+
+// ── GeoIP CIDR 列表 ───────────────────────────────────
+// USE_CONFIG_JS=true 时不会自动抓取 Loyalsoldier/geoip；需要手写或保持空数组。
+export const USE_GEOIP = false;
+export const GEOIP_CF = [];
+export const GEOIP_CFT = [];
+export const GEOIP_META = [];
+export const GEOIP_FASTLY = [];
+export const GEOIP_NETFLIX = [];
+export const GEOIP_TELEGRAM = [];
+export const GEOIP_TWITTER = [];
+export const GEOIP_TOR = [];
 
 // ── 路由与日志 ───────────────────────────────────────
 // /dns-query 默认使用 MIX_PROVIDER。

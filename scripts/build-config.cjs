@@ -3,6 +3,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 // ── 预设上游的 URL 和 EDNS 能力 ──────────────────────────────────
 const PRESETS = {
@@ -17,6 +19,43 @@ const PRESETS = {
     360:        { url: 'https://doh.360.cn/dns-query',        ecs: true  },
     nextdns:    { url: 'https://dns.nextdns.io',              ecs: true  },
 };
+
+const GEOIP_BASE_URL = 'https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/';
+const GEOIP_CATEGORIES = {
+    CF: 'cloudflare',
+    CFT: 'cloudfront',
+    META: 'facebook',
+    FASTLY: 'fastly',
+    NETFLIX: 'netflix',
+    TELEGRAM: 'telegram',
+    TWITTER: 'twitter',
+    TOR: 'tor',
+};
+
+async function fetchGeoipCidrs(category) {
+    const url = GEOIP_BASE_URL + category + '.txt';
+    const fetcher = url.startsWith('https') ? https : http;
+    const body = await new Promise(function(resolve, reject) {
+        const req = fetcher.get(url, function(res) {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                res.resume();
+                reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+                return;
+            }
+            var data = '';
+            res.setEncoding('utf8');
+            res.on('data', function(chunk) { data += chunk; });
+            res.on('end', function() { resolve(data); });
+        });
+        req.setTimeout(15000, function() {
+            req.destroy(new Error('Timeout fetching ' + url));
+        });
+        req.on('error', reject);
+    });
+    return body.split(/\r?\n/).map(function(line) { return line.trim(); }).filter(function(line) {
+        return line && !line.startsWith('#');
+    });
+}
 
 // ── 解析 .env ─────────────────────────────────────────────────────
 function parseEnv(filepath) {
@@ -115,7 +154,13 @@ function parseIPv6(ip) {
 }
 
 // ── 生成 config.js ─────────────────────────────────────────────────
-function generateConfig(env, upstreams, fetchedGoogleProxy) {
+function geoipExportLines(geoipCidrs) {
+    return Object.keys(GEOIP_CATEGORIES).map(function(key) {
+        return 'export const GEOIP_' + key + ' = ' + JSON.stringify(geoipCidrs[key] || []) + ';';
+    }).join('\n');
+}
+
+function generateConfig(env, upstreams, fetchedGoogleProxy, useGeoip, geoipCidrs) {
     const entries = Object.entries(upstreams)
         .map(([name, cfg]) => {
             return `    ${name}: { url: ${JSON.stringify(cfg.url)}, ecs: ${cfg.ecs} },`;
@@ -202,6 +247,9 @@ export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 
 export const BLOCKED_RANGES = ${blockedStr};
 
+export const USE_GEOIP = ${useGeoip};
+${geoipExportLines(geoipCidrs)}
+
 export const MIX_PROVIDER = 'mix';
 
 // ── 日志级别 ────────────────────────────────────────
@@ -237,6 +285,26 @@ async function main() {
   if (Object.keys(upstreams).length === 0) {
     console.error('No upstreams enabled! Set at least one to true in .env');
     process.exit(1);
+  }
+
+  var useGeoip = env.USE_GEOIP === 'true';
+  var geoipCidrs = {};
+  for (var geoipKey of Object.keys(GEOIP_CATEGORIES)) geoipCidrs[geoipKey] = [];
+  if (useGeoip) {
+    console.log('Fetching GeoIP CIDR lists ...');
+    var results = await Promise.allSettled(Object.keys(GEOIP_CATEGORIES).map(async function(key) {
+      var category = GEOIP_CATEGORIES[key];
+      return { key: key, cidrs: await fetchGeoipCidrs(category) };
+    }));
+    for (var ri = 0; ri < results.length; ri++) {
+      if (results[ri].status === 'fulfilled') {
+        var rr = results[ri].value;
+        geoipCidrs[rr.key] = rr.cidrs;
+        console.log(`Fetched ${rr.cidrs.length} ${GEOIP_CATEGORIES[rr.key]} CIDRs`);
+      } else {
+        console.warn('Failed to fetch ' + Object.keys(GEOIP_CATEGORIES)[ri] + ': ' + results[ri].reason.message);
+      }
+    }
   }
 
   // 从 Cealing-Host 拉取 Google 代理配置
@@ -339,7 +407,7 @@ async function main() {
   }
 
   console.log(`Generating ${configPath} ...`);
-  fs.writeFileSync(configPath, generateConfig(env, upstreams, fetchedGoogleProxy));
+  fs.writeFileSync(configPath, generateConfig(env, upstreams, fetchedGoogleProxy, useGeoip, geoipCidrs));
 
   console.log(`Done — ${Object.keys(upstreams).length} upstreams configured.`);
 }

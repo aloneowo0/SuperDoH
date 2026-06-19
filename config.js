@@ -34,6 +34,16 @@ export const BLOCKED_RANGES = [
     { family: 6, addr: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], mask: 128 }
 ];
 
+export const USE_GEOIP = false;
+export const GEOIP_CF = [];
+export const GEOIP_CFT = [];
+export const GEOIP_META = [];
+export const GEOIP_FASTLY = [];
+export const GEOIP_NETFLIX = [];
+export const GEOIP_TELEGRAM = [];
+export const GEOIP_TWITTER = [];
+export const GEOIP_TOR = [];
+
 export const MIX_PROVIDER = 'mix';
 
 // ── 日志级别 ────────────────────────────────────────
