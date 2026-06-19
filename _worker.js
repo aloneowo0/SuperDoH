@@ -396,10 +396,10 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
 // ── twoMixFlow ─────────────────────────────────────────────────────
 
-async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, remapList, googleConf) {
+async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, remapList, googleConf) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
   if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
-    return await concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, {}, ctx);
+    return await concurrentAll(body, clientIP, queryMeta, echActive, preferredCf, preferredCft, preferredVrc, {}, ctx);
   }
 
   // MIX 1: classify — only used for owner detection
@@ -454,11 +454,11 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
   logEvent('info', 'mix2_start', { requestId: ctx.requestId, owner: owner, target: owner === 'CF' ? 'cf_preferred' : owner === 'CFT' ? 'cft_preferred' : owner === 'VRC' ? 'vrc_preferred' : 'meta_original' });
 
   if (owner === 'CF') {
-    if (!activePref) {
+    if (!preferredCf) {
       firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
       return firstResult;
     }
-    var answer = await preferredAnswer(ctx, queryMeta, activePref, 60, 'CF');
+    var answer = await preferredAnswer(ctx, queryMeta, preferredCf, 60, 'CF');
     if (answer) {
       logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
       return answer;
@@ -503,13 +503,16 @@ async function twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActiv
         var existingIps = mix1Buf && mix1Buf.byteLength >= 12 ? extractIPBytes(mix1Buf, 1) : [];
         var seen = {};
         var combined = [];
-        for (var ei = 0; ei < existingIps.length; ei++) {
-          var key = Array.prototype.join.call(existingIps[ei], '.');
-          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
-        }
+        // Proxy IPs first — GFW blackholes real Google IPv4, so browser
+        // Happy Eyeballs must try the tunnel proxy before timing out on
+        // blocked direct IPs.
         for (var pi = 0; pi < proxyBytes.length; pi++) {
           var key = Array.prototype.join.call(proxyBytes[pi], '.');
           if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
+        }
+        for (var ei = 0; ei < existingIps.length; ei++) {
+          var key = Array.prototype.join.call(existingIps[ei], '.');
+          if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
         }
         var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
         logEvent('info', 'google_proxy', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
@@ -564,8 +567,8 @@ export default {
 
       const clientCountry = request.cf && request.cf.country || '';
       const regionCfg = REGION_CONFIG && REGION_CONFIG[clientCountry];
-      const regionActive = !!(regionCfg && (regionCfg.preferred || regionCfg.preferredCft || regionCfg.preferredVrc || regionCfg.ech || (regionCfg.remap && regionCfg.remap.length)));
-      const activePref = regionCfg ? regionCfg.preferred : '';
+      const regionActive = !!(regionCfg && (regionCfg.preferredCf || regionCfg.preferredCft || regionCfg.preferredVrc || regionCfg.ech || (regionCfg.remap && regionCfg.remap.length) || (regionCfg.google && regionCfg.google.length)));
+      const preferredCf = regionCfg ? (regionCfg.preferredCf || '') : '';
       const echActive = !!(regionCfg && regionCfg.ech);
       const preferredCft = regionCfg ? (regionCfg.preferredCft || '') : '';
       const preferredVrc = regionCfg ? (regionCfg.preferredVrc || '') : '';
@@ -605,7 +608,7 @@ export default {
       }
 
       if (route.provider === MIX_PROVIDER) {
-        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, activePref, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
+        var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
         if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
         logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: ctx.owner || null });
