@@ -235,16 +235,14 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           };
         }
 
-        const lastAnswerEnd = packet.answers.length > 0 ? packet.answers[packet.answers.length - 1].end : 0;
-        const nsArBytes = lastAnswerEnd > 0 ? packet.bytes.slice(lastAnswerEnd) : new Uint8Array(0);
         const newBody = createDNSResponseEx(
             packet.header.id,
             queryName,
             newRecords,
-            nsArBytes,
+            new Uint8Array(0),
             packet.header.flags,
-            packet.header.nscount,
-            packet.header.arcount
+            0,
+            0
         );
 
         return {
