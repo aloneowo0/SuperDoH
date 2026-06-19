@@ -108,6 +108,54 @@ function encodeBase64Url(bytes) {
     return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+function rebuildTail(packet, startOffset) {
+  var parts = [];
+  var end = packet.view.byteLength;
+
+  function adjoin() {
+    var total = 0;
+    for (var i = 0; i < parts.length; i++) total += parts[i].length;
+    var out = new Uint8Array(total);
+    var pos = 0;
+    for (var i = 0; i < parts.length; i++) {
+      out.set(parts[i], pos);
+      pos += parts[i].length;
+    }
+    return out;
+  }
+
+  // Use the ORIGINAL packet view for name decoding — compression pointers
+  // reference absolute offsets in the full packet, not the tail slice.
+  var fullView = packet.view;
+  var offset = startOffset;
+  while (offset < end) {
+    var nameResult = decodeDnsName(fullView, offset);
+    requireBytes(fullView, nameResult.end, 10);
+    var type = fullView.getUint16(nameResult.end);
+    var ttl = fullView.getUint32(nameResult.end + 4);
+    var rdlength = fullView.getUint16(nameResult.end + 8);
+    var rdataOffset = nameResult.end + 10;
+    requireBytes(fullView, rdataOffset, rdlength);
+
+    var expandedRdata = expandRdataNames(fullView, rdataOffset, rdlength, type);
+    var ownerBytes = encodeDnsName(nameResult.name);
+
+    var rr = new Uint8Array(ownerBytes.length + 10 + expandedRdata.length);
+    rr.set(ownerBytes, 0);
+    var dv = new DataView(rr.buffer);
+    dv.setUint16(ownerBytes.length, type);
+    dv.setUint16(ownerBytes.length + 2, fullView.getUint16(nameResult.end + 2));
+    dv.setUint32(ownerBytes.length + 4, ttl);
+    dv.setUint16(ownerBytes.length + 8, expandedRdata.length);
+    rr.set(expandedRdata, ownerBytes.length + 10);
+
+    parts.push(rr);
+    offset = rdataOffset + rdlength;
+  }
+
+  return adjoin();
+}
+
 export async function injectECH(originalResponse, queryName, ownerType, echConfig, ctx) {
     try {
         let echValue = null;
@@ -235,14 +283,20 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           };
         }
 
+        var lastAnswerEnd = packet.answers.length > 0 ? packet.answers[packet.answers.length - 1].end : 0;
+        var rebuiltTail = lastAnswerEnd > 0 && packet.view.byteLength > lastAnswerEnd
+          ? rebuildTail(packet, lastAnswerEnd)
+          : new Uint8Array(0);
+        var tailNsCount = rebuiltTail.length > 0 ? (packet.header.nscount || 0) : 0;
+        var tailArCount = rebuiltTail.length > 0 ? (packet.header.arcount || 0) : 0;
         const newBody = createDNSResponseEx(
             packet.header.id,
             queryName,
             newRecords,
-            new Uint8Array(0),
+            rebuiltTail,
             packet.header.flags,
-            0,
-            0
+            tailNsCount,
+            tailArCount
         );
 
         return {
