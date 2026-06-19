@@ -1,6 +1,6 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
-import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS, MIX_CONCURRENCY } from './config.js';
 import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -721,6 +721,9 @@ export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
   var requestId = ctx && ctx.requestId;
 
   var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < foreignUrls.length) {
+    foreignUrls = foreignUrls.slice(0, MIX_CONCURRENCY);
+  }
   if (foreignUrls.length === 0) return [];
 
   var controllers = [];

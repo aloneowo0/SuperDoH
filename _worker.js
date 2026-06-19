@@ -4,7 +4,7 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, MIX_CONCURRENCY, MIX_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './config.js';
 import { prepareQuery, filterAnswers } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { concurrentAll, queryUpstream } from './mix.js';
@@ -270,6 +270,9 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   var tagged = [];
   var done = [];
   var upstreamKeys = Object.keys(UPSTREAMS);
+  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < upstreamKeys.length) {
+    upstreamKeys = upstreamKeys.slice(0, MIX_CONCURRENCY);
+  }
   for (var i = 0; i < upstreamKeys.length; i++) {
     var ctrl = new AbortController();
     controllers.push(ctrl);
