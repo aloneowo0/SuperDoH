@@ -23,6 +23,7 @@ export const META_HARD_TIMEOUT_MS = 800;
 export const META_COLLECT_WINDOW_MS = 50;
 export const META_MAX_IPS = 4;
 export const PREFERRED_TIMEOUT_MS = 300;
+export const MIX_CONCURRENCY = 0;
 export const ECS_PREFIX4 = 24;
 export const ECS_PREFIX6 = 56;
 

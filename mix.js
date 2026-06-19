@@ -1,5 +1,5 @@
 /** Multi-upstream racing module — ECS protect window + post-processing */
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, MIX_CONCURRENCY, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain } from './cdn.js';
@@ -18,7 +18,11 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   const queryId = effectiveBody && effectiveBody.byteLength >= 2 ? new DataView(effectiveBody).getUint16(0) : 0;
   const preparedBody = prepareQuery(effectiveBody, clientIP);
 
-  const pending = Object.entries(UPSTREAMS).map(([name, cfg]) => {
+  var entries = Object.entries(UPSTREAMS);
+  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < entries.length) {
+    entries = entries.slice(0, MIX_CONCURRENCY);
+  }
+  const pending = entries.map(([name, cfg]) => {
     const ctrl = new AbortController();
     return {
       ecs: cfg.ecs,

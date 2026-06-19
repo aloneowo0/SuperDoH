@@ -58,6 +58,12 @@ export const META_COLLECT_WINDOW_MS = 50;
 export const META_MAX_IPS = 4;
 export const PREFERRED_TIMEOUT_MS = 300;
 
+// MIX 竞速并发上游数。
+// 0 = 全部上游（默认）。设为正整数则只从 UPSTREAMS 中取前 N 个参与竞速。
+// Cloudflare Workers Free 计划只有 6 个同时出站 TCP 连接，建议设为 4，
+// 留出 2 个槽位给 MIX 2 的外国上游解析和 ECH 获取。
+export const MIX_CONCURRENCY = 0;
+
 // ── ECS 与响应过滤 ───────────────────────────────────
 // ECS_PREFIX4 / ECS_PREFIX6 控制注入 EDNS Client Subnet 时暴露的前缀长度。
 // 数值越大定位越精确，数值越小隐私性越高。
