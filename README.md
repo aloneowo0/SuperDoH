@@ -85,7 +85,7 @@ curl "https://h.mk01.top/health"
 
 ### Remap 域名 AAAA 屏蔽
 
-CN 地区 `REGION_CN_REMAP` 中的域名，AAAA (type=28) 查询直接返回 NODATA。浏览器拿到空 AAAA 后不会尝试 v6 连接，避免 CF v6 地址被 GFW RST 导致 Happy Eyeballs 超时。
+CN 地区 `REGION_CN_REMAP` 中的域名，AAAA (type=28) 查询直接返回 NODATA。部分网站（如 Pixiv）会主动屏蔽 v6 连接，返回 NODATA 后浏览器只走 v4，避免 Happy Eyeballs 被 v6 超时拖慢。
 
 不影响 A (type=1)、HTTPS (type=65) 及其他类型。
 
