@@ -581,6 +581,14 @@ export default {
         }
       }
 
+      // AAAA block for remap domains
+      if (queryMeta && queryMeta.name && queryMeta.type === 28 && regionCfg && regionCfg.remap && isCFDomain(queryMeta.name, regionCfg.remap)) {
+        var no6 = buildDNS(queryMeta.id, queryMeta.name, 28, [], 300);
+        var r6 = respond(no6, ctx);
+        logEvent('info', 'request_end', { requestId: requestId, result: 'remap_no_aaaa', owner: null, answerCount: 0 });
+        return r6;
+      }
+
       if (route.provider === MIX_PROVIDER) {
         var result = await twoMixFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
         if (wantsJson) result = await dnsWireToJsonResponse(result);
