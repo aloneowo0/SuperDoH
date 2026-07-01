@@ -1,11 +1,13 @@
 # SuperDoH — Cloudflare Workers DNS-over-HTTPS 代理
 
-基于 Cloudflare Workers 的 DoH 代理，支持两次 MIX 竞速、CDN 归属分流、优选域名解析、ECH 自动降级注入、Meta 静态 IP 路由、结构化日志。
+基于 Cloudflare Workers 的 DoH 代理，支持两次 MIX 竞速、CDN 归属分流、优选域名解析、ECH 外置 SNI 注入、Meta 静态 IP 路由、remap 域名 AAAA 屏蔽、结构化日志。
 
 ## 架构
 
 ```
 DNS 请求
+  │
+  ├─ AAAA + remap 域名 → 直接返回 NODATA (避免 v6 被 GFW RST 拖慢 Happy Eyeballs)
   │
   ▼
 MIX 1 — 8 上游并发查询原始域名
@@ -15,14 +17,18 @@ MIX 1 — 8 上游并发查询原始域名
        │
        ├─ CF/CFT/VRC → MIX 2 解析各自优选域名
        ├─ META → MIX 2 (800ms+50ms 收集 + 静态路由)
+       ├─ GOOGLE → 代理 IP 注入
        └─ UNKNOWN → 返回 MIX 1 结果
+
+非 A/AAAA 查询 (type=65 HTTPS 等):
+  → MIX 竞速 + postProcessBody ECH 注入
 ```
 
 ## 模块
 
 | 模块 | 职责 |
 |------|------|
-| `_worker.js` | 入口、路由、两次 MIX 调度、CF/Meta/Pixiv 分流 |
+| `_worker.js` | 入口、路由、两次 MIX 调度、remap AAAA 屏蔽、CF/Meta/Pixiv/Google 分流 |
 | `mix.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
 | `edns.js` | DNS 包解析、ECS 注入、IP 黑名单过滤 |
 | `ech.js` | CF ECH 动态获取 + Meta ECH 静态构建 + HTTPS RR 注入 |
@@ -53,28 +59,35 @@ MIX 1 — 8 上游并发查询原始域名
 
 ```bash
 # GET
-curl "https://h-demo.mk01.top/dns-query?name=x.com&type=A"
+curl "https://h.mk01.top/dns-query?name=x.com&type=A"
 
 # POST wire format
 curl -X POST -H "Content-Type: application/dns-message" \
-  --data-binary @query.bin "https://h-demo.mk01.top/dns-query"
+  --data-binary @query.bin "https://h.mk01.top/dns-query"
 
 # Firefox DoH
-curl "https://h-demo.mk01.top/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
+curl "https://h.mk01.top/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
 
 # 健康检查
-curl "https://h-demo.mk01.top/health"
+curl "https://h.mk01.top/health"
 ```
 
 ## 分流策略
 
 | CDN | 触发方式 | MIX 2 行为 |
 |-----|---------|-----------|
-| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredCf`，替换原域名 IP。X/Twitter/Pixiv 强制走此分支 |
+| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredCf`，替换原域名 IP |
 | **CFT** (CloudFront) | IP 归属 | 并发解析 `preferredCft` |
 | **VRC** (Vercel) | IP 归属 | 并发解析 `preferredVrc` |
-| **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 + LPM 可达性过滤 |
+| **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 |
+| **GOOGLE** | `matchGoogleProxy` 域名匹配 (仅 A) | 代理 IP 优先注入，后附真实 IP 兜底 |
 | **UNKNOWN** | 无匹配 | 直接返回 MIX 1 结果 |
+
+### Remap 域名 AAAA 屏蔽
+
+CN 地区 `REGION_CN_REMAP` 中的域名，AAAA (type=28) 查询直接返回 NODATA。浏览器拿到空 AAAA 后不会尝试 v6 连接，避免 CF v6 地址被 GFW RST 导致 Happy Eyeballs 超时。
+
+不影响 A (type=1)、HTTPS (type=65) 及其他类型。
 
 ### ECH 策略
 
@@ -83,6 +96,10 @@ curl "https://h-demo.mk01.top/health"
 | CF | `fetchCFEch()` 动态获取 (10min 缓存) | fresh → stale(last-known-good) → degraded(原响应) |
 | META | `META_ECH_B64` 静态硬编码 (TLS retry-config) | 内置 → 主动构建 HTTPS RR |
 | CFT/VRC | 无独立 ECH | 不注入 |
+
+CF 的 ECH 通过 `cloudflare-ech.com` 的 HTTPS RR 动态获取公钥，注入到 remap 域名的 type=65 响应中。浏览器使用 ECH 后，外层 SNI 为 `cloudflare-ech.com`（GFW 不拦截），内层真实 SNI（如 `x.com`）被加密，绕过 GFW 的 SNI DPI 阻断。
+
+外置 SNI 域名可通过 `ech.js` 中的 `CF_ECH_DOMAIN` 更换。
 
 **已知限制**：ECH 注入时重建 HTTPS RR 响应，仅保留问题段和回答段，不保留原响应的 NS/AR/OPT/DNSSEC 等信息。对普通浏览器 DoH 无影响，依赖 DNSSEC 的客户端可能拿到不完整响应。
 
@@ -123,7 +140,7 @@ PREFERRED_CF_DOMAIN=cf.example.com
 REGION_CN_PREFERRED_CF=cf.090227.xyz
 REGION_CN_PREFERRED_CFT=worker.cloudfront.182682.xyz
 REGION_CN_PREFERRED_VRC=worker.vercel.182682.xyz
-REGION_CN_REMAP=twimg.com twitter.com x.com t.co
+REGION_CN_REMAP=twimg.com twitter.com x.com t.co pixiv.net www.pixiv.net imp.pixiv.net
 REGION_CN_ECH=true
 ```
 
