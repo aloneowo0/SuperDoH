@@ -23,6 +23,7 @@ export function requireBytes(view, offset, len) {
 // ── DNS name encoding/decoding ──────────────────────────────────────
 
 export function encodeDnsName(domain) {
+  if (!domain || domain === '.') return new Uint8Array([0]);
   const parts = domain.split('.');
   const buf = new Uint8Array(domain.length + 2);
   let offset = 0;
