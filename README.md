@@ -7,7 +7,7 @@
 ```
 DNS 请求
   │
-  ├─ AAAA + remap 域名 → 直接返回 NODATA (避免 v6 被 GFW RST 拖慢 Happy Eyeballs)
+  ├─ AAAA + remap 域名 → 直接返回 NODATA (部分网站屏蔽 v6, 避免 Happy Eyeballs 超时)
   │
   ▼
 MIX 1 — 8 上游并发查询原始域名
