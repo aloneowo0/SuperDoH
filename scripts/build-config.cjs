@@ -187,10 +187,10 @@ function generateConfig(env, upstreams, fetchedGoogleProxy, geoipCidrs) {
     const metaCollectWindowMs = 50;
     const metaMaxIps = 4;
     const preferredTimeoutMs = 300;
-    // MIX 竞速并发上游数。0 = 全部上游（默认）。
+    // AUTO 竞速并发上游数。0 = 全部上游（默认）。
     // Cloudflare Workers Free 计划只有 6 个同时出站连接，设为 4 可避免挤占其他子请求的槽位。
-    var mixConcurrency = parseInt(env.MIX_CONCURRENCY, 10);
-    if (isNaN(mixConcurrency) || mixConcurrency < 0) mixConcurrency = 0;
+    var autoConcurrency = parseInt(env.AUTO_CONCURRENCY || env.MIX_CONCURRENCY, 10);
+    if (isNaN(autoConcurrency) || autoConcurrency < 0) autoConcurrency = 0;
 
     // 地区优化解析（从 REGION_XX_* 块自动发现地区）
     const regionSet = new Set();
@@ -241,7 +241,7 @@ export const META_HARD_TIMEOUT_MS = ${metaHardTimeoutMs};
 export const META_COLLECT_WINDOW_MS = ${metaCollectWindowMs};
 export const META_MAX_IPS = ${metaMaxIps};
 export const PREFERRED_TIMEOUT_MS = ${preferredTimeoutMs};
-export const MIX_CONCURRENCY = ${mixConcurrency};
+export const AUTO_CONCURRENCY = ${autoConcurrency};
 export const ECS_PREFIX4 = ${isNaN(ecsPrefix4) ? 24 : ecsPrefix4};
 export const ECS_PREFIX6 = ${isNaN(ecsPrefix6) ? 56 : ecsPrefix6};
 
@@ -249,7 +249,7 @@ export const BLOCKED_RANGES = ${blockedStr};
 
 ${geoipExportLines(geoipCidrs)}
 
-export const MIX_PROVIDER = 'auto';
+export const AUTO_PROVIDER = 'auto';
 
 // ── 日志级别 ────────────────────────────────────────
 export const LOG_LEVEL = ${JSON.stringify(env.LOG_LEVEL || 'info')};

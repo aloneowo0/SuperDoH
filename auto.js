@@ -1,5 +1,5 @@
 /** Multi-upstream racing module — ECS protect window + post-processing */
-import { ECS_PROTECT_MS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, MIX_CONCURRENCY, PREFERRED_TIMEOUT_MS, UPSTREAMS } from './config.js';
+import { ECS_PROTECT_MS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, AUTO_CONCURRENCY, PREFERRED_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain } from './cdn.js';
@@ -19,8 +19,8 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   const preparedBody = prepareQuery(effectiveBody, clientIP);
 
   var entries = Object.entries(UPSTREAMS);
-  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < entries.length) {
-    entries = entries.slice(0, MIX_CONCURRENCY);
+  if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < entries.length) {
+    entries = entries.slice(0, AUTO_CONCURRENCY);
   }
   const pending = entries.map(([name, cfg]) => {
     const ctrl = new AbortController();
@@ -153,7 +153,7 @@ export async function queryUpstream(url, body, started, signal, upstreamName, qu
     };
   } catch (err) {
     if (err && err.name === 'AbortError') return { response: null, time: Date.now() - started, valid: false, classification: 'invalid' };
-    logEvent('error', 'mix_error', { stage: 'queryUpstream', upstream: upstreamName || 'unknown', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'auto_error', { stage: 'queryUpstream', upstream: upstreamName || 'unknown', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return { response: null, time: Date.now() - started, valid: false, classification: 'invalid' };
   }
 }
@@ -173,8 +173,8 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
   var requestId = ctx && ctx.requestId;
 
   var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
-  if (MIX_CONCURRENCY > 0 && MIX_CONCURRENCY < foreignUrls.length) {
-    foreignUrls = foreignUrls.slice(0, MIX_CONCURRENCY);
+  if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < foreignUrls.length) {
+    foreignUrls = foreignUrls.slice(0, AUTO_CONCURRENCY);
   }
   if (foreignUrls.length === 0) return [];
 
@@ -314,7 +314,7 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
         }
       }
     } catch (err) {
-      logEvent('error', 'mix_error', { requestId: ctx && ctx.requestId, stage: 'postProcessBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
+      logEvent('error', 'auto_error', { requestId: ctx && ctx.requestId, stage: 'postProcessBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
     }
   }
 

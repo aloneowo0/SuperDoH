@@ -16,12 +16,12 @@
  *   PREFERRED_TIMEOUT_MS, ECS_PREFIX4, ECS_PREFIX6, BLOCKED_RANGES,
  *   GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY,
  *   GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR,
- *   MIX_PROVIDER, LOG_LEVEL, REGION, REGION_CONFIG
+ *   AUTO_PROVIDER, LOG_LEVEL, REGION, REGION_CONFIG
  */
 
 // ── 上游配置 ─────────────────────────────────────────
 // key 会成为访问路径：/<key>/dns-query。
-// 例如 google 可通过 /google/dns-query 访问；MIX_PROVIDER 则走默认混合竞速。
+// 例如 google 可通过 /google/dns-query 访问；AUTO_PROVIDER 则走默认并发竞速。
 // url 必须是 DoH endpoint；ecs 表示发送到该上游前是否保留/注入 ECS。
 export const UPSTREAMS = {
   google: { url: 'https://dns.google/dns-query', ecs: true },
@@ -60,11 +60,11 @@ export const META_COLLECT_WINDOW_MS = 50;
 export const META_MAX_IPS = 4;
 export const PREFERRED_TIMEOUT_MS = 300;
 
-// MIX 竞速并发上游数。
+// AUTO 竞速并发上游数。
 // 0 = 全部上游（默认）。设为正整数则只从 UPSTREAMS 中取前 N 个参与竞速。
 // Cloudflare Workers Free 计划只有 6 个同时出站 TCP 连接，建议设为 4，
-// 留出 2 个槽位给 MIX 2 的外国上游解析和 ECH 获取。
-export const MIX_CONCURRENCY = 0;
+// 留出 2 个槽位给 AUTO 2 的外国上游解析和 ECH 获取。
+export const AUTO_CONCURRENCY = 0;
 
 // ── ECS 与响应过滤 ───────────────────────────────────
 // ECS_PREFIX4 / ECS_PREFIX6 控制注入 EDNS Client Subnet 时暴露的前缀长度。
@@ -94,9 +94,9 @@ export const GEOIP_TWITTER = [];
 export const GEOIP_TOR = [];
 
 // ── 路由与日志 ───────────────────────────────────────
-// /dns-query 默认使用 MIX_PROVIDER。
-// MIX_PROVIDER 必须和 UPSTREAMS 的 key 不冲突。
-export const MIX_PROVIDER = 'auto';
+// /dns-query 默认使用 AUTO_PROVIDER。
+// AUTO_PROVIDER 必须和 UPSTREAMS 的 key 不冲突。
+export const AUTO_PROVIDER = 'auto';
 
 // 支持：debug / info / warn / error / none。
 export const LOG_LEVEL = 'warn';
@@ -110,12 +110,12 @@ export const REGION = 'CN,RU,US';
 export const REGION_CONFIG = {
   CN: {
     // Cloudflare 优选域名。
-    // 触发条件：remap 命中，或 MIX1 响应 IP 被识别为 Cloudflare。
+    // 触发条件：remap 命中，或 AUTO1 响应 IP 被识别为 Cloudflare。
     // 禁用写法：preferredCf: ''。
     preferredCf: 'cf-preferred.example.com',
 
     // CloudFront / Vercel 优选域名。
-    // 只有 MIX1 响应 IP 分别被识别为 CFT / VRC 时才使用。
+    // 只有 AUTO1 响应 IP 分别被识别为 CFT / VRC 时才使用。
     // 禁用写法：preferredCft: '' / preferredVrc: ''。
     preferredCft: 'cloudfront-preferred.example.com',
     preferredVrc: 'vercel-preferred.example.com',

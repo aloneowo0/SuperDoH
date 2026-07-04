@@ -68,7 +68,7 @@ footer a{color:var(--primary-color)}
     <p>基于 Cloudflare Workers 的 DoH 代理，支持多上游并发查询和 EDNS 客户端子网注入。请求路径决定路由目标，完整保留原始查询参数。</p>
     <h3>主要功能</h3>
     <ul>
-      <li><strong>多上游并发</strong>：/mix 端点同时查询所有上游，返回最快响应</li>
+      <li><strong>多上游并发</strong>：/dns-query 端点同时查询所有上游，返回最快响应</li>
        <li><strong>EDNS 支持</strong>：自动智能补全 ECS 客户端子网</li>
       <li><strong>灵活路由</strong>：每个上游独立路径，可单独使用</li>
       <li><strong>零配置部署</strong>：基于 Cloudflare Worker/Pages，无需服务器</li>
@@ -99,7 +99,7 @@ footer a{color:var(--primary-color)}
     <h2>使用方法</h2>
     <p>支持 POST application/dns-message、GET ?name=&type= 和 Accept: application/dns-json（RFC 8484 透传）。</p>
     <h3>并发模式</h3>
-    <pre><code>curl "https://__HOST__/mix/dns-query?name=example.com&type=A"
+    <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
 # 全部上游并发，返回最快有效响应</code></pre>
     <h3>单上游查询</h3>
     <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
@@ -199,7 +199,7 @@ footer a{color:var(--primary-color)}
     <p>A Cloudflare Worker based DoH proxy supporting multi-upstream concurrent queries and EDNS client-subnet injection. Request path determines the upstream target, preserving all original query parameters.</p>
     <h3>Key Features</h3>
     <ul>
-      <li><strong>Multi-upstream race</strong>: /mix endpoint queries all upstreams concurrently, returns the fastest valid response</li>
+      <li><strong>Multi-upstream race</strong>: /dns-query endpoint queries all upstreams concurrently, returns the fastest valid response</li>
       <li><strong>EDNS control</strong>: automatically injects ECS client-subnet for geo-optimized resolution</li>
       <li><strong>Flexible routing</strong>: Each upstream at its own dedicated path</li>
       <li><strong>Zero-config deploy</strong>: Cloudflare Worker/Pages, no server maintenance</li>
@@ -230,7 +230,7 @@ footer a{color:var(--primary-color)}
     <h2>Usage</h2>
     <p>Supports POST application/dns-message, GET ?name=&type=, and Accept: application/dns-json (RFC 8484 passthrough).</p>
     <h3>Concurrent mode</h3>
-    <pre><code>curl "https://__HOST__/mix/dns-query?name=example.com&type=A"
+    <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
 # Queries all upstreams, returns fastest response</code></pre>
     <h3>Single upstream</h3>
     <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
@@ -267,7 +267,7 @@ async function runLatencyTest(){
 
 // ── Shared helpers ─────────────────────────────────────────────────
 
-function buildUpstreamListWithMix(names) {
+function buildUpstreamList(names) {
   const entries = names.map((n) => '<span class="endpoint">/' + n + '/dns-query</span>').join(' ');
   return entries || '<em>none</em>';
 }
@@ -285,7 +285,7 @@ function buildCheckboxes(names) {
 function inject(html, host, upstreams, names) {
   return html
     .replaceAll('__HOST__', host)
-    .replace('__UPSTREAM_LIST__', buildUpstreamListWithMix(names))
+    .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
     .replace('__UPSTREAM_CHECKBOXES__', buildCheckboxes(names))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams));
 }

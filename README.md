@@ -1,6 +1,6 @@
 # SuperDoH — Cloudflare Workers DNS-over-HTTPS 代理
 
-基于 Cloudflare Workers 的 DoH 代理，支持两次 MIX 竞速、CDN 归属分流、优选域名解析、ECH 外置 SNI 注入、Meta 静态 IP 路由、remap 域名 AAAA 屏蔽、结构化日志。
+基于 Cloudflare Workers 的 DoH 代理，支持两次 AUTO 竞速、CDN 归属分流、优选域名解析、ECH 外置 SNI 注入、Meta 静态 IP 路由、remap 域名 AAAA 屏蔽、结构化日志。
 
 ## 架构
 
@@ -10,26 +10,26 @@ DNS 请求
   ├─ AAAA + remap 域名 → 直接返回 NODATA (部分网站屏蔽 v6, 避免 Happy Eyeballs 超时)
   │
   ▼
-MIX 1 — 8 上游并发查询原始域名
+AUTO 1 — 8 上游并发查询原始域名
   │
   ├─ 未命中地区分流 → 直接返回
   └─ 命中地区分流 → classifyOwner
        │
-       ├─ CF/CFT/VRC → MIX 2 解析各自优选域名
-       ├─ META → MIX 2 (800ms+50ms 收集 + 静态路由)
+       ├─ CF/CFT/VRC → AUTO 2 解析各自优选域名
+       ├─ META → AUTO 2 (800ms+50ms 收集 + 静态路由)
        ├─ GOOGLE → 代理 IP 注入
-       └─ UNKNOWN → 返回 MIX 1 结果
+       └─ UNKNOWN → 返回 AUTO 1 结果
 
 非 A/AAAA 查询 (type=65 HTTPS 等):
-  → MIX 竞速 + postProcessBody ECH 注入
+  → AUTO 竞速 + postProcessBody ECH 注入
 ```
 
 ## 模块
 
 | 模块 | 职责 |
 |------|------|
-| `_worker.js` | 入口、路由、两次 MIX 调度、remap AAAA 屏蔽、CF/Meta/Pixiv/Google 分流 |
-| `mix.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
+| `_worker.js` | 入口、路由、两次 AUTO 调度、remap AAAA 屏蔽、CF/Meta/Pixiv/Google 分流 |
+| `auto.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
 | `edns.js` | DNS 包解析、ECS 注入、IP 黑名单过滤 |
 | `ech.js` | CF ECH 动态获取 + Meta ECH 静态构建 + HTTPS RR 注入 |
 | `dns-lib.js` | DNS 线格式、响应构建、内部解析、IP 聚合 |
@@ -46,7 +46,7 @@ MIX 1 — 8 上游并发查询原始域名
 | `/` | GET | 中文首页 |
 | `/en` | GET | 英文首页 |
 | `/health` | GET | JSON 健康检查 |
-| `/dns-query` | GET/POST | 多上游并发竞速（mix） |
+| `/dns-query` | GET/POST | 多上游并发竞速（auto） |
 | `/:provider/dns-query` | GET/POST | 单上游查询 |
 
 ### 响应头
@@ -74,14 +74,14 @@ curl "https://example.com/health"
 
 ## 分流策略
 
-| CDN | 触发方式 | MIX 2 行为 |
+| CDN | 触发方式 | AUTO 2 行为 |
 |-----|---------|-----------|
 | **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredCf`，替换原域名 IP |
 | **CFT** (CloudFront) | IP 归属 | 并发解析 `preferredCft` |
 | **VRC** (Vercel) | IP 归属 | 并发解析 `preferredVrc` |
 | **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 |
 | **GOOGLE** | `matchGoogleProxy` 域名匹配 (仅 A) | 代理 IP 优先注入，后附真实 IP 兜底 |
-| **UNKNOWN** | 无匹配 | 直接返回 MIX 1 结果 |
+| **UNKNOWN** | 无匹配 | 直接返回 AUTO 1 结果 |
 
 ### Remap 域名 AAAA 屏蔽
 
@@ -168,8 +168,8 @@ superdoh/
 ├── .env                     # 用户配置
 ├── scripts/build-config.cjs # .env → config.js，或 USE_CONFIG_JS=true 时跳过生成
 ├── config.js                # 运行时配置（自动生成或手写）
-├── _worker.js               # 入口、路由、两次 MIX
-├── mix.js                   # 竞速引擎
+├── _worker.js               # 入口、路由、两次 AUTO
+├── auto.js                   # 竞速引擎
 ├── edns.js                  # ECS/EDNS
 ├── ech.js                   # ECH 注入
 ├── dns-lib.js               # DNS 线格式库
