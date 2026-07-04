@@ -59,17 +59,17 @@ MIX 1 — 8 上游并发查询原始域名
 
 ```bash
 # GET
-curl "https://h.mk01.top/dns-query?name=x.com&type=A"
+curl "https://example.com/dns-query?name=x.com&type=A"
 
 # POST wire format
 curl -X POST -H "Content-Type: application/dns-message" \
-  --data-binary @query.bin "https://h.mk01.top/dns-query"
+  --data-binary @query.bin "https://example.com/dns-query"
 
 # Firefox DoH
-curl "https://h.mk01.top/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
+curl "https://example.com/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
 
 # 健康检查
-curl "https://h.mk01.top/health"
+curl "https://example.com/health"
 ```
 
 ## 分流策略

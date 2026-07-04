@@ -96,7 +96,7 @@ export const GEOIP_TOR = [];
 // ── 路由与日志 ───────────────────────────────────────
 // /dns-query 默认使用 MIX_PROVIDER。
 // MIX_PROVIDER 必须和 UPSTREAMS 的 key 不冲突。
-export const MIX_PROVIDER = 'mix';
+export const MIX_PROVIDER = 'auto';
 
 // 支持：debug / info / warn / error / none。
 export const LOG_LEVEL = 'warn';

@@ -249,7 +249,7 @@ export const BLOCKED_RANGES = ${blockedStr};
 
 ${geoipExportLines(geoipCidrs)}
 
-export const MIX_PROVIDER = 'mix';
+export const MIX_PROVIDER = 'auto';
 
 // ── 日志级别 ────────────────────────────────────────
 export const LOG_LEVEL = ${JSON.stringify(env.LOG_LEVEL || 'info')};
