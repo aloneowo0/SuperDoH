@@ -1,0 +1,7 @@
+{
+  "name": "superdoh-snippets",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  }
+}
