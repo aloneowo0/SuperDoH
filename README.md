@@ -154,6 +154,8 @@ npm run deploy   # → Cloudflare Workers
 
 **本地开发注意**：`wrangler dev` 或非 Cloudflare 环境下，`request.cf.country` 可能为空，地区优化路径不会触发。稳定前须通过 staging/线上 Worker 验证地区优化行为。
 
+**Cloudflare Workers Free 计划连接限制**：Free 计划仅有 6 个同时出站 TCP 连接。如果启用超过 6 个上游，超出部分会排队等待，导致整个 DNS 响应被拖慢甚至超时（表现为间歇性解析失败）。建议启用上游数 ≤ 6，并为 AUTO 2 优选解析和 ECH 获取预留槽位（`AUTO_CONCURRENCY` 设为 4）。
+
 ## 致谢
 
 特别感谢以下项目提供的思路、数据和参考实现：
