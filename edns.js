@@ -1,5 +1,5 @@
 import { BLOCKED_RANGES, ECS_PREFIX4, ECS_PREFIX6 } from './config.js';
-import { requireBytes, parseDns } from './dns-lib.js';
+import { requireBytes, parseDns, decodeName } from './dns-lib.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_A = 1;
@@ -8,7 +8,6 @@ const TYPE_AAAA = 28;
 const OPT_ECS = 8;
 const UDP_PAYLOAD_SIZE = 4096;
 const DO_BIT = 0x8000;
-const MAX_NAME_JUMPS = 128;
 
 function autoMode(body, clientIP) {
     try {
@@ -103,44 +102,14 @@ export function validateResponse(response, queryId, expectedQname, expectedQtype
 
 function readQuestion(packet) {
     if (packet.header.qdcount < 1) return null;
-    const name = readName(packet.view, packet.bytes, DNS_HEADER_LEN);
-    if (!name || name.offset + 4 > packet.bytes.length) return null;
-    return { name: name.name, type: packet.view.getUint16(name.offset) };
-}
-
-function readName(view, bytes, start) {
-    const labels = [];
-    let offset = start;
-    let end = start;
-    let jumped = false;
-    let jumps = 0;
-
-    while (jumps < MAX_NAME_JUMPS) {
-        requireBytes(view, offset, 1);
-        const len = view.getUint8(offset);
-
-        if ((len & 0xC0) === 0xC0) {
-            requireBytes(view, offset, 2);
-            const pointer = ((len & 0x3F) << 8) | view.getUint8(offset + 1);
-            if (pointer >= view.byteLength) return null;
-            if (!jumped) end = offset + 2;
-            offset = pointer;
-            jumped = true;
-            jumps++;
-            continue;
-        }
-
-        if ((len & 0xC0) !== 0) return null;
-        if (len === 0) return { name: labels.join('.').toLowerCase(), offset: jumped ? end : offset + 1 };
-
-        offset++;
-        requireBytes(view, offset, len);
-        labels.push(new TextDecoder().decode(bytes.subarray(offset, offset + len)));
-        offset += len;
-        if (!jumped) end = offset;
+    try {
+        var result = decodeName(packet.view, DNS_HEADER_LEN);
+        var name = result ? result.name.toLowerCase() : null;
+        if (!result || result.end + 4 > packet.bytes.length) return null;
+        return { name: name, type: packet.view.getUint16(result.end) };
+    } catch (_) {
+        return null;
     }
-
-    return null;
 }
 
 function normalizeName(name) {

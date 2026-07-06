@@ -1,29 +1,35 @@
-# Workers-DoH v2 — Cloudflare Workers DNS-over-HTTPS 代理
+# SuperDoH — Cloudflare Workers DNS-over-HTTPS 代理
 
-基于 Cloudflare Workers 的 DoH 代理，支持两次 MIX 竞速、CDN 归属分流、优选域名解析、ECH 自动降级注入、Meta 静态 IP 路由、结构化日志。
+基于 Cloudflare Workers 的 DoH 代理，支持两次 AUTO 竞速、CDN 归属分流、优选域名解析、ECH 外置 SNI 注入、Meta 静态 IP 路由、remap 域名 AAAA 屏蔽、结构化日志。
 
 ## 架构
 
 ```
 DNS 请求
   │
+  ├─ AAAA + remap 域名 → 直接返回 NODATA (部分网站屏蔽 v6, 避免 Happy Eyeballs 超时)
+  │
   ▼
-MIX 1 — 8 上游并发查询原始域名
+AUTO 1 — 8 上游并发查询原始域名
   │
   ├─ 未命中地区分流 → 直接返回
   └─ 命中地区分流 → classifyOwner
        │
-       ├─ CF/CFT/VRC → MIX 2 解析各自优选域名
-       ├─ META → MIX 2 (800ms+50ms 收集 + 静态路由)
-       └─ UNKNOWN → 返回 MIX 1 结果
+       ├─ CF/CFT/VRC → AUTO 2 解析各自优选域名
+       ├─ META → AUTO 2 (800ms+50ms 收集 + 静态路由)
+       ├─ GOOGLE → 代理 IP 注入
+       └─ UNKNOWN → 返回 AUTO 1 结果
+
+非 A/AAAA 查询 (type=65 HTTPS 等):
+  → AUTO 竞速 + postProcessBody ECH 注入
 ```
 
 ## 模块
 
 | 模块 | 职责 |
 |------|------|
-| `_worker.js` | 入口、路由、两次 MIX 调度、CF/Meta/Pixiv 分流 |
-| `mix.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
+| `_worker.js` | 入口、路由、两次 AUTO 调度、remap AAAA 屏蔽、CF/Meta/Pixiv/Google 分流 |
+| `auto.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
 | `edns.js` | DNS 包解析、ECS 注入、IP 黑名单过滤 |
 | `ech.js` | CF ECH 动态获取 + Meta ECH 静态构建 + HTTPS RR 注入 |
 | `dns-lib.js` | DNS 线格式、响应构建、内部解析、IP 聚合 |
@@ -40,7 +46,7 @@ MIX 1 — 8 上游并发查询原始域名
 | `/` | GET | 中文首页 |
 | `/en` | GET | 英文首页 |
 | `/health` | GET | JSON 健康检查 |
-| `/dns-query` | GET/POST | 多上游并发竞速（mix） |
+| `/dns-query` | GET/POST | 多上游并发竞速（auto） |
 | `/:provider/dns-query` | GET/POST | 单上游查询 |
 
 ### 响应头
@@ -53,28 +59,35 @@ MIX 1 — 8 上游并发查询原始域名
 
 ```bash
 # GET
-curl "https://h-demo.mk01.top/dns-query?name=x.com&type=A"
+curl "https://example.com/dns-query?name=x.com&type=A"
 
 # POST wire format
 curl -X POST -H "Content-Type: application/dns-message" \
-  --data-binary @query.bin "https://h-demo.mk01.top/dns-query"
+  --data-binary @query.bin "https://example.com/dns-query"
 
 # Firefox DoH
-curl "https://h-demo.mk01.top/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
+curl "https://example.com/dns-query?dns=AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE"
 
 # 健康检查
-curl "https://h-demo.mk01.top/health"
+curl "https://example.com/health"
 ```
 
 ## 分流策略
 
-| CDN | 触发方式 | MIX 2 行为 |
+| CDN | 触发方式 | AUTO 2 行为 |
 |-----|---------|-----------|
-| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredDomain`，替换原域名 IP。X/Twitter/Pixiv 强制走此分支 |
+| **CF** (Cloudflare) | `isCFDomain` 域名匹配 或 IP 归属 | 并发解析 `preferredCf`，替换原域名 IP |
 | **CFT** (CloudFront) | IP 归属 | 并发解析 `preferredCft` |
 | **VRC** (Vercel) | IP 归属 | 并发解析 `preferredVrc` |
-| **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 + LPM 可达性过滤 |
-| **UNKNOWN** | 无匹配 | 直接返回 MIX 1 结果 |
+| **META** | `isMetaDomain` 域名匹配 或 IP 归属 | 800ms 硬超时 + 首个有效响应后 50ms 收集窗口 + 静态 IP 路由 |
+| **GOOGLE** | `matchGoogleProxy` 域名匹配 (仅 A) | 代理 IP 优先注入，后附真实 IP 兜底 |
+| **UNKNOWN** | 无匹配 | 直接返回 AUTO 1 结果 |
+
+### Remap 域名 AAAA 屏蔽
+
+CN 地区 `REGION_CN_REMAP` 中的域名，AAAA (type=28) 查询直接返回 NODATA。部分网站（如 Pixiv）会主动屏蔽 v6 连接，返回 NODATA 后浏览器只走 v4，避免 Happy Eyeballs 被 v6 超时拖慢。
+
+不影响 A (type=1)、HTTPS (type=65) 及其他类型。
 
 ### ECH 策略
 
@@ -84,11 +97,16 @@ curl "https://h-demo.mk01.top/health"
 | META | `META_ECH_B64` 静态硬编码 (TLS retry-config) | 内置 → 主动构建 HTTPS RR |
 | CFT/VRC | 无独立 ECH | 不注入 |
 
+CF 的 ECH 通过 `cloudflare-ech.com` 的 HTTPS RR 动态获取公钥，注入到 remap 域名的 type=65 响应中。浏览器使用 ECH 后，外层 SNI 为 `cloudflare-ech.com`（GFW 不拦截），内层真实 SNI（如 `x.com`）被加密，绕过 GFW 的 SNI DPI 阻断。
+
+外置 SNI 域名可通过 `ech.js` 中的 `CF_ECH_DOMAIN` 更换。
+
 **已知限制**：ECH 注入时重建 HTTPS RR 响应，仅保留问题段和回答段，不保留原响应的 NS/AR/OPT/DNSSEC 等信息。对普通浏览器 DoH 无影响，依赖 DNSSEC 的客户端可能拿到不完整响应。
 
 ## 配置
 
-编辑 `.env`，执行 `npm run build` 生成 `config.js`。
+默认模式下编辑 `.env`，执行 `npm run build` 生成 `config.js`。
+如果设置 `USE_CONFIG_JS=true`，构建脚本不会生成或覆盖 `config.js`，Worker 会直接读取现有 `config.js`。
 
 ```env
 # 上游
@@ -118,32 +136,42 @@ BLOCKED_CIDRS=127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128
 
 # 区域优化
 REGION=CN
-REGION_CN_PREFERRED=cf.090227.xyz
+PREFERRED_CF_DOMAIN=cf.example.com
+REGION_CN_PREFERRED_CF=cf.090227.xyz
 REGION_CN_PREFERRED_CFT=worker.cloudfront.182682.xyz
 REGION_CN_PREFERRED_VRC=worker.vercel.182682.xyz
-REGION_CN_REMAP=twimg.com twitter.com x.com t.co
+REGION_CN_REMAP=twimg.com twitter.com x.com t.co pixiv.net www.pixiv.net imp.pixiv.net
 REGION_CN_ECH=true
 ```
 
 ## 部署
 
 ```bash
-cd cloudflare-doh-v2
-npm run build    # .env → config.js
+cd superdoh
+npm run build    # USE_CONFIG_JS=false: .env → config.js；USE_CONFIG_JS=true: 直接使用现有 config.js
 npm run deploy   # → Cloudflare Workers
 ```
 
 **本地开发注意**：`wrangler dev` 或非 Cloudflare 环境下，`request.cf.country` 可能为空，地区优化路径不会触发。稳定前须通过 staging/线上 Worker 验证地区优化行为。
 
+**Cloudflare Workers Free 计划连接限制**：Free 计划仅有 6 个同时出站 TCP 连接。如果启用超过 6 个上游，超出部分会排队等待，导致整个 DNS 响应被拖慢甚至超时（表现为间歇性解析失败）。建议启用上游数 ≤ 6，并为 AUTO 2 优选解析和 ECH 获取预留槽位（`AUTO_CONCURRENCY` 设为 4）。
+
+## 致谢
+
+特别感谢以下项目提供的思路、数据和参考实现：
+
+- **[Total-ECH](https://github.com/Total-ECH)** — ECH 配置获取与 HTTPS RR 注入方案的核心参考
+- **[Sheas Cealer](https://github.com/SpaceTimee/Sheas-Cealer)** — 域前置实践与 Cealing-Host 规则维护，本项目 Google 代理配置的自动拉取来源
+
 ## 项目结构
 
 ```
-cloudflare-doh-v2/
+superdoh/
 ├── .env                     # 用户配置
-├── scripts/build-config.cjs # .env → config.js 构建脚本
-├── config.js                # 运行时配置（自动生成）
-├── _worker.js               # 入口、路由、两次 MIX
-├── mix.js                   # 竞速引擎
+├── scripts/build-config.cjs # .env → config.js，或 USE_CONFIG_JS=true 时跳过生成
+├── config.js                # 运行时配置（自动生成或手写）
+├── _worker.js               # 入口、路由、两次 AUTO
+├── auto.js                   # 竞速引擎
 ├── edns.js                  # ECS/EDNS
 ├── ech.js                   # ECH 注入
 ├── dns-lib.js               # DNS 线格式库

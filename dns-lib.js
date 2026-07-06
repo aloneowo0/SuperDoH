@@ -1,6 +1,6 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
-import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, PREFERRED_TIMEOUT_MS } from './config.js';
+import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS } from './config.js';
 import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -23,6 +23,7 @@ export function requireBytes(view, offset, len) {
 // ── DNS name encoding/decoding ──────────────────────────────────────
 
 export function encodeDnsName(domain) {
+  if (!domain || domain === '.') return new Uint8Array([0]);
   const parts = domain.split('.');
   const buf = new Uint8Array(domain.length + 2);
   let offset = 0;
@@ -37,12 +38,14 @@ export function encodeDnsName(domain) {
 
 // ── DNS packet parsing (canonical: edns.js version with cycle detection) ──
 
-export function skipName(view, start) {
+export function decodeName(view, start) {
   let offset = start;
   let end = start;
   let jumped = false;
   let jumps = 0;
   const seen = [];
+  const labels = [];
+  const decoder = new TextDecoder();
 
   for (;;) {
     requireBytes(view, offset, 1);
@@ -61,13 +64,18 @@ export function skipName(view, start) {
     }
 
     if ((len & 0xC0) !== 0) throw new Error('unsupported DNS label type');
-    if (len === 0) return jumped ? end : offset + 1;
+    if (len === 0) return { name: labels.join('.'), end: jumped ? end : offset + 1 };
 
     offset += 1;
     requireBytes(view, offset, len);
+    labels.push(decoder.decode(new Uint8Array(view.buffer, view.byteOffset + offset, len)));
     if (!jumped) end = offset + len;
     offset += len;
   }
+}
+
+export function skipName(view, start) {
+  return decodeName(view, start).end;
 }
 
 export function readRecord(view, offset) {
@@ -711,102 +719,5 @@ export async function resolveDNSWireAll(domain, type) {
     }
   }
 
-  return allIps;
-}
-
-export async function resolvePreferredIPs(domain, type, expectedOwner, ctx) {
-  var query = buildWireQuery(domain, type);
-  var started = Date.now();
-  var deadline = started + PREFERRED_TIMEOUT_MS;
-  var requestId = ctx && ctx.requestId;
-
-  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
-  if (foreignUrls.length === 0) return [];
-
-  var controllers = [];
-  var collected = [];
-
-  function abortAll() {
-    for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
-    }
-  }
-
-  var promises = foreignUrls.map(function (url) {
-    var ctrl = new AbortController();
-    controllers.push(ctrl);
-    return fetch(url, {
-      method: 'POST',
-      headers: DNS_HEADERS,
-      body: query,
-      signal: ctrl.signal,
-    }).then(async function (res) {
-      if (res.status !== 200) return null;
-      var buf = await res.arrayBuffer();
-      if (buf.byteLength < 12) return null;
-      if (new DataView(buf).getUint16(6) === 0) return null;
-      return buf;
-    }).then(function (buf) {
-      if (!buf) return null;
-      try {
-        var ips = extractIPBytes(buf, type);
-        for (var i = 0; i < ips.length; i++) {
-          collected.push(ips[i]);
-        }
-      } catch (err) {
-        logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-      }
-      return null;
-    }).catch(function (err) {
-      if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-      return null;
-    });
-  });
-
-  var timeout = new Promise(function (resolve) {
-    var remaining = deadline - Date.now();
-    if (remaining <= 0) { resolve(); return; }
-    setTimeout(function () { abortAll(); resolve(); }, remaining);
-  });
-
-  await Promise.race([Promise.all(promises), timeout]);
-  abortAll();
-
-  var ipSet = new Set();
-  var allIps = [];
-  for (var i = 0; i < collected.length; i++) {
-    var key = Array.from(collected[i]).join(',');
-    if (!ipSet.has(key)) {
-      ipSet.add(key);
-      allIps.push(collected[i]);
-    }
-  }
-
-  // Validate IPs belong to expected CDN owner
-  if (expectedOwner) {
-    try {
-      var { detectOwner } = await import('./cdn.js');
-      var ownerFiltered = [];
-      for (var oi = 0; oi < allIps.length; oi++) {
-        var ipBytes = allIps[oi];
-        var ipStr;
-        if (ipBytes.length === 4) {
-          ipStr = ipBytes[0] + '.' + ipBytes[1] + '.' + ipBytes[2] + '.' + ipBytes[3];
-        } else if (ipBytes.length === 16) {
-          var parts = [];
-          for (var pi = 0; pi < 16; pi += 2) {
-            parts.push(((ipBytes[pi] << 8) | ipBytes[pi + 1]).toString(16));
-          }
-          ipStr = parts.join(':');
-        }
-        if (ipStr && detectOwner(ipStr) === expectedOwner) ownerFiltered.push(ipBytes);
-      }
-      return ownerFiltered;
-    } catch (err) {
-      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_owner_filter', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-      return [];
-    }
-  }
   return allIps;
 }

@@ -35,12 +35,12 @@ pre code{font-size:.82em;line-height:1.5}
 .btn:hover{background:#e67e22}
 footer{text-align:center;padding:1.5rem 0;background:var(--dark-color);color:#fff;margin-top:1.5rem;font-size:.88rem}
 footer a{color:var(--primary-color)}
-#targets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-#targets label{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:.88rem;transition:all .15s}
-#targets label:hover{border-color:var(--primary-color);background:#fff8f0}
-#targets label.checked{background:var(--primary-color);color:#fff;border-color:var(--primary-color)}
-#results{margin-top:12px;display:none}
-#results table{width:100%;max-width:420px;border-collapse:collapse}
+.resolver-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.resolver-form input{flex:1;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-size:.9rem}
+.resolver-form select{padding:8px;border:1px solid #ddd;border-radius:4px;font-size:.9rem;background:#fff}
+.resolver-form input:focus,.resolver-form select:focus{outline:none;border-color:var(--primary-color)}
+#results{margin-top:12px}
+#results table{width:100%;border-collapse:collapse}
 #results th{border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
 #results td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
 #results tr:hover td{background:#fafafa}
@@ -58,7 +58,7 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/en" class="lang-switch">EN</a>
-    <h1>Workers-DoH</h1>
+    <h1>SuperDoH</h1>
     <p class="subtitle">轻量级 DNS over HTTPS 代理</p>
   </div>
 </header>
@@ -68,7 +68,7 @@ footer a{color:var(--primary-color)}
     <p>基于 Cloudflare Workers 的 DoH 代理，支持多上游并发查询和 EDNS 客户端子网注入。请求路径决定路由目标，完整保留原始查询参数。</p>
     <h3>主要功能</h3>
     <ul>
-      <li><strong>多上游并发</strong>：/mix 端点同时查询所有上游，返回最快响应</li>
+      <li><strong>多上游并发</strong>：/dns-query 端点同时查询所有上游，返回最快响应</li>
        <li><strong>EDNS 支持</strong>：自动智能补全 ECS 客户端子网</li>
       <li><strong>灵活路由</strong>：每个上游独立路径，可单独使用</li>
       <li><strong>零配置部署</strong>：基于 Cloudflare Worker/Pages，无需服务器</li>
@@ -87,11 +87,21 @@ footer a{color:var(--primary-color)}
     __EDNS_CAPS_TABLE__
   </section>
   <section>
-    <h2>延迟检测</h2>
-    <p style="font-size:.85em;color:#666;margin-bottom:8px">选择端点，测试完整往返延迟</p>
-    <div id="targets">__UPSTREAM_CHECKBOXES__</div>
-    <p style="margin-top:8px"><button class="btn" onclick="runLatencyTest()">开始检测</button></p>
-    <div id="results"><table><thead><tr><th>端点</th><th>完整延迟</th><th>W→U→W</th><th>状态</th></tr></thead><tbody></tbody></table></div>
+    <h2>域名解析</h2>
+    <div class="resolver-form">
+      <input id="dns-name" type="text" placeholder="输入域名，如 example.com">
+      <select id="dns-type">
+        <option value="1">A (IPv4)</option>
+        <option value="28">AAAA (IPv6)</option>
+        <option value="15">MX</option>
+        <option value="16">TXT</option>
+        <option value="5">CNAME</option>
+        <option value="2">NS</option>
+        <option value="65">HTTPS</option>
+      </select>
+      <button class="btn" onclick="resolveDomain()">解析</button>
+    </div>
+    <div id="results"><table><thead><tr><th>名称</th><th>类型</th><th>TTL</th><th>数据</th></tr></thead><tbody></tbody></table></div>
   </section>
 </div>
 
@@ -99,7 +109,7 @@ footer a{color:var(--primary-color)}
     <h2>使用方法</h2>
     <p>支持 POST application/dns-message、GET ?name=&type= 和 Accept: application/dns-json（RFC 8484 透传）。</p>
     <h3>并发模式</h3>
-    <pre><code>curl "https://__HOST__/mix/dns-query?name=example.com&type=A"
+    <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
 # 全部上游并发，返回最快有效响应</code></pre>
     <h3>单上游查询</h3>
     <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
@@ -113,23 +123,31 @@ curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre
   </div>
 </footer>
 <script>
-const FIXED_QUERY='AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE=';
-function b64toBytes(b64){const b=atob(b64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
-document.querySelectorAll('#targets input').forEach(cb=>{cb.addEventListener('change',e=>e.target.parentElement.classList.toggle('checked',e.target.checked));cb.parentElement.classList.add('checked')});
-async function runLatencyTest(){
+async function resolveDomain(){
+  const name=document.getElementById('dns-name').value.trim();
+  const type=parseInt(document.getElementById('dns-type').value);
+  if(!name){return}
   const r=document.getElementById('results'),t=r.querySelector('tbody');
-  r.style.display='block';t.innerHTML='';
-  const cs=document.querySelectorAll('#targets input:checked');
-  if(!cs.length){t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">未选择端点</td></tr>';return}
-  const tasks=[...cs].map(async cb=>{
-     const n=cb.value,row=t.insertRow();
-     row.innerHTML='<td><strong>'+n+'</strong></td><td style="color:#999">...</td><td style="color:#999">...</td><td style="color:#999">...</td>';
-     const s=performance.now();
-     try{const res=await fetch('/'+n+'/dns-query',{method:'POST',headers:{'Content-Type':'application/dns-message'},body:b64toBytes(FIXED_QUERY)});row.cells[1].textContent=(performance.now()-s).toFixed(0)+'ms';const xt=res.headers.get('X-Upstream-Time');row.cells[2].textContent=xt?xt+'ms':'-';row.cells[3].textContent=res.ok?'\u2705':'\u274C '+res.status}
-     catch(e){row.cells[1].textContent='-';row.cells[2].textContent='-';row.cells[3].textContent='\u274C'}
-   });
-   await Promise.all(tasks);
- }
+  t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">查询中...</td></tr>';
+  try{
+    const res=await fetch('/dns-query?name='+encodeURIComponent(name)+'&type='+type,{headers:{'Accept':'application/dns-json'}});
+    const data=await res.json();
+    t.innerHTML='';
+    if(data.Answer){
+      data.Answer.forEach(function(a){
+        var row=t.insertRow();
+        var typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
+        row.innerHTML='<td>'+a.name+'</td><td>'+(typeNames[a.type]||a.type)+'</td><td>'+a.TTL+'</td><td style="word-break:break-all"><code>'+a.data+'</code></td>';
+      });
+    }else{
+      var rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
+      t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">'+((data.Status in rcodes)?rcodes[data.Status]:'状态码 '+data.Status)+'</td></tr>';
+    }
+  }catch(e){
+    t.innerHTML='<tr><td colspan=4 style="color:#e74c3c;text-align:center;padding:16px">请求失败</td></tr>';
+  }
+}
+document.getElementById('dns-name').addEventListener('keydown',function(e){if(e.key==='Enter')resolveDomain()});
 </script>
 </body>
 </html>`;
@@ -166,12 +184,12 @@ pre code{font-size:.82em;line-height:1.5}
 .btn:hover{background:#e67e22}
 footer{text-align:center;padding:1.5rem 0;background:var(--dark-color);color:#fff;margin-top:1.5rem;font-size:.88rem}
 footer a{color:var(--primary-color)}
-#targets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-#targets label{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;font-size:.88rem;transition:all .15s}
-#targets label:hover{border-color:var(--primary-color);background:#fff8f0}
-#targets label.checked{background:var(--primary-color);color:#fff;border-color:var(--primary-color)}
-#results{margin-top:12px;display:none}
-#results table{width:100%;max-width:420px;border-collapse:collapse}
+.resolver-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.resolver-form input{flex:1;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:4px;font-size:.9rem}
+.resolver-form select{padding:8px;border:1px solid #ddd;border-radius:4px;font-size:.9rem;background:#fff}
+.resolver-form input:focus,.resolver-form select:focus{outline:none;border-color:var(--primary-color)}
+#results{margin-top:12px}
+#results table{width:100%;border-collapse:collapse}
 #results th{border-bottom:2px solid var(--primary-color);padding:6px 10px;text-align:left;font-size:.85em}
 #results td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
 #results tr:hover td{background:#fafafa}
@@ -189,7 +207,7 @@ footer a{color:var(--primary-color)}
 <header>
   <div class="container">
     <a href="/" class="lang-switch">中文</a>
-    <h1>Workers-DoH</h1>
+    <h1>SuperDoH</h1>
     <p class="subtitle">DNS over HTTPS on Cloudflare Workers</p>
   </div>
 </header>
@@ -199,7 +217,7 @@ footer a{color:var(--primary-color)}
     <p>A Cloudflare Worker based DoH proxy supporting multi-upstream concurrent queries and EDNS client-subnet injection. Request path determines the upstream target, preserving all original query parameters.</p>
     <h3>Key Features</h3>
     <ul>
-      <li><strong>Multi-upstream race</strong>: /mix endpoint queries all upstreams concurrently, returns the fastest valid response</li>
+      <li><strong>Multi-upstream race</strong>: /dns-query endpoint queries all upstreams concurrently, returns the fastest valid response</li>
       <li><strong>EDNS control</strong>: automatically injects ECS client-subnet for geo-optimized resolution</li>
       <li><strong>Flexible routing</strong>: Each upstream at its own dedicated path</li>
       <li><strong>Zero-config deploy</strong>: Cloudflare Worker/Pages, no server maintenance</li>
@@ -218,11 +236,21 @@ footer a{color:var(--primary-color)}
     __EDNS_CAPS_TABLE__
   </section>
   <section>
-    <h2>Latency Test</h2>
-    <p style="font-size:.85em;color:#666;margin-bottom:8px">Select endpoints to measure full round-trip</p>
-    <div id="targets">__UPSTREAM_CHECKBOXES__</div>
-    <p style="margin-top:8px"><button class="btn" onclick="runLatencyTest()">Start Test</button></p>
-    <div id="results"><table><thead><tr><th>Endpoint</th><th>Total</th><th>W→U→W</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    <h2>DNS Lookup</h2>
+    <div class="resolver-form">
+      <input id="dns-name" type="text" placeholder="Enter domain, e.g. example.com">
+      <select id="dns-type">
+        <option value="1">A (IPv4)</option>
+        <option value="28">AAAA (IPv6)</option>
+        <option value="15">MX</option>
+        <option value="16">TXT</option>
+        <option value="5">CNAME</option>
+        <option value="2">NS</option>
+        <option value="65">HTTPS</option>
+      </select>
+      <button class="btn" onclick="resolveDomain()">Lookup</button>
+    </div>
+    <div id="results"><table><thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Data</th></tr></thead><tbody></tbody></table></div>
   </section>
 </div>
 
@@ -230,7 +258,7 @@ footer a{color:var(--primary-color)}
     <h2>Usage</h2>
     <p>Supports POST application/dns-message, GET ?name=&type=, and Accept: application/dns-json (RFC 8484 passthrough).</p>
     <h3>Concurrent mode</h3>
-    <pre><code>curl "https://__HOST__/mix/dns-query?name=example.com&type=A"
+    <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
 # Queries all upstreams, returns fastest response</code></pre>
     <h3>Single upstream</h3>
     <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
@@ -244,49 +272,46 @@ curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre
   </div>
 </footer>
 <script>
-const FIXED_QUERY='AAABAAABAAAAAAAAB2V4YW1wbGUDY29tAAABAAE=';
-function b64toBytes(b64){const b=atob(b64),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
-document.querySelectorAll('#targets input').forEach(cb=>{cb.addEventListener('change',e=>e.target.parentElement.classList.toggle('checked',e.target.checked));cb.parentElement.classList.add('checked')});
-async function runLatencyTest(){
+async function resolveDomain(){
+  const name=document.getElementById('dns-name').value.trim();
+  const type=parseInt(document.getElementById('dns-type').value);
+  if(!name){return}
   const r=document.getElementById('results'),t=r.querySelector('tbody');
-  r.style.display='block';t.innerHTML='';
-  const cs=document.querySelectorAll('#targets input:checked');
-   if(!cs.length){t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">No endpoints selected</td></tr>';return}
-   const tasks=[...cs].map(async cb=>{
-     const n=cb.value,row=t.insertRow();
-     row.innerHTML='<td><strong>'+n+'</strong></td><td style="color:#999">...</td><td style="color:#999">...</td><td style="color:#999">...</td>';
-     const s=performance.now();
-     try{const res=await fetch('/'+n+'/dns-query',{method:'POST',headers:{'Content-Type':'application/dns-message'},body:b64toBytes(FIXED_QUERY)});row.cells[1].textContent=(performance.now()-s).toFixed(0)+'ms';const xt=res.headers.get('X-Upstream-Time');row.cells[2].textContent=xt?xt+'ms':'-';row.cells[3].textContent=res.ok?'\u2705':'\u274C '+res.status}
-     catch(e){row.cells[1].textContent='-';row.cells[2].textContent='-';row.cells[3].textContent='\u274C'}
-   });
-  await Promise.all(tasks);
+  t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">查询中...</td></tr>';
+  try{
+    const res=await fetch('/dns-query?name='+encodeURIComponent(name)+'&type='+type,{headers:{'Accept':'application/dns-json'}});
+    const data=await res.json();
+    t.innerHTML='';
+    if(data.Answer){
+      data.Answer.forEach(function(a){
+        var row=t.insertRow();
+        var typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
+        row.innerHTML='<td>'+a.name+'</td><td>'+(typeNames[a.type]||a.type)+'</td><td>'+a.TTL+'</td><td style="word-break:break-all"><code>'+a.data+'</code></td>';
+      });
+    }else{
+      var rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
+      t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">'+((data.Status in rcodes)?rcodes[data.Status]:'状态码 '+data.Status)+'</td></tr>';
+    }
+  }catch(e){
+    t.innerHTML='<tr><td colspan=4 style="color:#e74c3c;text-align:center;padding:16px">请求失败</td></tr>';
+  }
 }
+document.getElementById('dns-name').addEventListener('keydown',function(e){if(e.key==='Enter')resolveDomain()});
 </script>
 </body>
 </html>`;
 
 // ── Shared helpers ─────────────────────────────────────────────────
 
-function buildUpstreamListWithMix(names) {
+function buildUpstreamList(names) {
   const entries = names.map((n) => '<span class="endpoint">/' + n + '/dns-query</span>').join(' ');
   return entries || '<em>none</em>';
-}
-
-function buildCheckboxes(names) {
-  if (!names || names.length === 0) return '';
-  return names
-    .map(
-      (n) =>
-        '<label><input type="checkbox" value="' + n + '" checked> <strong>' + n + '</strong></label>'
-    )
-    .join('');
 }
 
 function inject(html, host, upstreams, names) {
   return html
     .replaceAll('__HOST__', host)
-    .replace('__UPSTREAM_LIST__', buildUpstreamListWithMix(names))
-    .replace('__UPSTREAM_CHECKBOXES__', buildCheckboxes(names))
+    .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams));
 }
 
