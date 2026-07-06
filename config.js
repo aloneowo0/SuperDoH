@@ -46,7 +46,7 @@ export const GEOIP_TOR = ["2.56.10.36/32","5.2.67.226/32","5.2.79.190/32","5.44.
 export const AUTO_PROVIDER = 'auto';
 
 // ── 日志级别 ────────────────────────────────────────
-export const LOG_LEVEL = "warn";
+export const LOG_LEVEL = "info";
 
 // ── 地区优化解析 ─────────────────────────────────────
 export const REGION = "CN";
