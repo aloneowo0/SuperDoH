@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import worker from '../src/_worker.js';
+import worker from '../_worker.js';
 import { buildDNS } from '../src/dns-lib.js';
 import { query } from './dns-fixtures.js';
 

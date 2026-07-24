@@ -4,16 +4,16 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './config.js';
-import { prepareQuery } from './edns.js';
-import { serveHomepage, serveHomepageEn } from './homepage.js';
-import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './auto.js';
-import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
-import { resolveMetaFromMap } from './meta-route.js';
-import { logEvent, setLogLevel } from './logger.js';
-import { parseDohRequest } from './doh-request.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './src/config.js';
+import { prepareQuery } from './src/edns.js';
+import { serveHomepage, serveHomepageEn } from './src/homepage.js';
+import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './src/auto.js';
+import { fetchCFEch, injectECH } from './src/ech.js';
+import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
+import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName } from './src/dns-lib.js';
+import { resolveMetaFromMap } from './src/meta-route.js';
+import { logEvent, setLogLevel } from './src/logger.js';
+import { parseDohRequest } from './src/doh-request.js';
 setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };

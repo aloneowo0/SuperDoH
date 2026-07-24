@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "super-doh",
-  "main": "src/_worker.js",
+  "main": "_worker.js",
   "compatibility_date": "2025-05-27",
   "build": {
     "command": "npm run build"
