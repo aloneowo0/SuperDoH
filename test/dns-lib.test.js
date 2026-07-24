@@ -33,4 +33,26 @@ describe('DNS wire helpers', () => {
     trailing.set(withOpt);
     expect(() => validateDnsQuery(trailing.buffer)).toThrow();
   });
+
+  it('rejects query packets carrying answer or authority sections', () => {
+    const base = new Uint8Array(query());
+    const withAnswer = new Uint8Array(base.length + 16);
+    withAnswer.set(base);
+    const view = new DataView(withAnswer.buffer);
+    view.setUint16(6, 1);
+    let offset = base.length;
+    view.setUint16(offset, 0xC00C); offset += 2;
+    view.setUint16(offset, 1); offset += 2;
+    view.setUint16(offset, 1); offset += 2;
+    view.setUint32(offset, 60); offset += 4;
+    view.setUint16(offset, 4); offset += 2;
+    withAnswer.set([1, 2, 3, 4], offset);
+    expect(() => validateDnsQuery(withAnswer.buffer)).toThrow();
+
+    const withAuthority = withAnswer.slice();
+    const authorityView = new DataView(withAuthority.buffer);
+    authorityView.setUint16(6, 0);
+    authorityView.setUint16(8, 1);
+    expect(() => validateDnsQuery(withAuthority.buffer)).toThrow();
+  });
 });

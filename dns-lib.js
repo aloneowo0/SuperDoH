@@ -414,7 +414,7 @@ export function parseQueryMeta(body) {
 export function validateDnsQuery(body) {
   const packet = parseDns(body);
   const flags = packet.header.flags;
-  if ((flags & 0x8000) !== 0 || ((flags >> 11) & 0x0F) !== 0 || packet.header.qdcount !== 1) {
+  if ((flags & 0x8000) !== 0 || ((flags >> 11) & 0x0F) !== 0 || packet.header.qdcount !== 1 || packet.header.ancount !== 0 || packet.header.nscount !== 0) {
     throw new Error('invalid DNS query header');
   }
   const question = decodeName(packet.view, DNS_HEADER_LEN);
