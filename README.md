@@ -29,6 +29,7 @@ AUTO 1 — 8 上游并发查询原始域名
 | 模块 | 职责 |
 |------|------|
 | `_worker.js` | 入口、路由、两次 AUTO 调度、remap AAAA 屏蔽、CF/Meta/Pixiv/Google 分流 |
+| `doh-request.js` | DoH HTTP 方法、媒体类型、GET 参数和客户端 DNS wire 查询校验 |
 | `auto.js` | 多上游竞速引擎（ECS 保护窗 + postProcessBody ECH 注入） |
 | `edns.js` | DNS 包解析、ECS 注入、IP 黑名单过滤 |
 | `ech.js` | CF ECH 动态获取 + Meta ECH 静态构建 + HTTPS RR 注入 |
@@ -48,6 +49,14 @@ AUTO 1 — 8 上游并发查询原始域名
 | `/health` | GET | JSON 健康检查 |
 | `/dns-query` | GET/POST | 多上游并发竞速（auto） |
 | `/:provider/dns-query` | GET/POST | 单上游查询 |
+
+### DoH 请求校验与兼容性
+
+- DoH 端点只接受 `GET` 和 `POST`；其他方法返回 `405`，并带有 `Allow: GET, POST`，不会请求上游。
+- `POST` 必须使用 `Content-Type: application/dns-message`（可附带参数，大小写不敏感）；其他媒体类型返回 `415`。
+- 客户端格式、base64url、DNS 线格式和问题段不合法时返回 `400`，不会请求上游。所有这些 HTTP 错误也包含 `X-DoH-Request-ID`。
+- DNS wire 消息超过 65535 字节时返回 `413`，不会请求上游。
+- 保持兼容的 GET 扩展：`?name=example.com&type=A` 构造标准 wire 查询，`?dns=...` 接受 base64url wire 查询；两种参数不能同时使用。`Accept: application/dns-json` 继续返回 DNS JSON 兼容响应。
 
 ### 响应头
 
@@ -171,6 +180,7 @@ superdoh/
 ├── scripts/build-config.cjs # .env → config.js，或 USE_CONFIG_JS=true 时跳过生成
 ├── config.js                # 运行时配置（自动生成或手写）
 ├── _worker.js               # 入口、路由、两次 AUTO
+├── doh-request.js           # DoH HTTP/请求边界校验
 ├── auto.js                   # 竞速引擎
 ├── edns.js                  # ECS/EDNS
 ├── ech.js                   # ECH 注入
