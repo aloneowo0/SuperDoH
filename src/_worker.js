@@ -21,7 +21,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
 // ── Response helper with requestId ──────────────────────────────────
 
 function respond(body, ctx, upstreamTime) {
-  var r = dnsResponse(body, upstreamTime);
+  const r = dnsResponse(body, upstreamTime);
   r.headers.set('X-DoH-Request-ID', ctx.requestId);
   return r;
 }
@@ -29,9 +29,9 @@ function respond(body, ctx, upstreamTime) {
 /** Check if domain should be force-routed to CF via region remap. */
 function isCFDomain(name, remapList) {
   if (!name || !remapList || !remapList.length) return false;
-  var n = name.toLowerCase().replace(/\.+$/, '');
-  for (var i = 0; i < remapList.length; i++) {
-    var rd = remapList[i].toLowerCase().replace(/\.+$/, '');
+  const n = name.toLowerCase().replace(/\.+$/, '');
+  for (let i = 0; i < remapList.length; i++) {
+    const rd = remapList[i].toLowerCase().replace(/\.+$/, '');
     if (n === rd || n.endsWith('.' + rd)) return true;
   }
   return false;
@@ -43,12 +43,12 @@ function ipToBytes(ip) {
     // IPv6 parsing deferred — no Google proxy uses IPv6
     return null;
   }
-  var parts = ip.split('.');
+  const parts = ip.split('.');
   if (parts.length !== 4) return null;
-  var bytes = new Uint8Array(4);
-  for (var i = 0; i < parts.length; i++) {
+  const bytes = new Uint8Array(4);
+  for (let i = 0; i < parts.length; i++) {
     if (!/^\d{1,3}$/.test(parts[i])) return null;
-    var octet = Number(parts[i]);
+    const octet = Number(parts[i]);
     if (octet > 255) return null;
     bytes[i] = octet;
   }
@@ -57,17 +57,17 @@ function ipToBytes(ip) {
 
 function matchGoogleProxy(name, googleConf) {
   if (!name || !googleConf || !googleConf.length) return null;
-  for (var i = 0; i < googleConf.length; i++) {
-    var entry = googleConf[i];
-    var patterns = entry.match || [];
-    for (var j = 0; j < patterns.length; j++) {
-      var p = patterns[j];
+  for (let i = 0; i < googleConf.length; i++) {
+    const entry = googleConf[i];
+    const patterns = entry.match || [];
+    for (let j = 0; j < patterns.length; j++) {
+      const p = patterns[j];
       if (p instanceof RegExp) {
         if (p.test(name)) return entry;
       } else if (typeof p === 'string') {
-        var n = name.toLowerCase().replace(/\.+$/, '');
-        var rd = p.toLowerCase().replace(/\.+$/, '');
-        var suffix = rd.startsWith('.') ? rd : '.' + rd;
+        const n = name.toLowerCase().replace(/\.+$/, '');
+        const rd = p.toLowerCase().replace(/\.+$/, '');
+        const suffix = rd.startsWith('.') ? rd : '.' + rd;
         if (n === rd || n.endsWith(suffix)) return entry;
       }
     }
@@ -109,19 +109,19 @@ function jsonError(error, status = 400) {
 }
 
 function bytesToBase64(bytes) {
-  var s = '';
-  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
   return btoa(s);
 }
 
 function rdataToJsonData(view, record) {
-  var rdata = new Uint8Array(view.buffer, view.byteOffset + record.rdataOffset, record.rdlength);
+  const rdata = new Uint8Array(view.buffer, view.byteOffset + record.rdataOffset, record.rdlength);
   if (record.type === 1 && rdata.length === 4) {
     return rdata[0] + '.' + rdata[1] + '.' + rdata[2] + '.' + rdata[3];
   }
   if (record.type === 28 && rdata.length === 16) {
-    var parts = [];
-    for (var i = 0; i < 16; i += 2) parts.push(((rdata[i] << 8) | rdata[i + 1]).toString(16));
+    const parts = [];
+    for (let i = 0; i < 16; i += 2) parts.push(((rdata[i] << 8) | rdata[i + 1]).toString(16));
     return parts.join(':');
   }
   return bytesToBase64(rdata);
@@ -129,23 +129,23 @@ function rdataToJsonData(view, record) {
 
 async function dnsWireToJsonResponse(response) {
   try {
-    var buf = await response.arrayBuffer();
-    var packet = parseDns(buf);
-    var view = packet.view;
-    var flags = packet.header.flags;
-    var offset = 12;
-    var questions = [];
-    for (var i = 0; i < packet.header.qdcount; i++) {
-      var qName = decodeName(view, offset);
+    const buf = await response.arrayBuffer();
+    const packet = parseDns(buf);
+    const view = packet.view;
+    const flags = packet.header.flags;
+    let offset = 12;
+    const questions = [];
+    for (let i = 0; i < packet.header.qdcount; i++) {
+      const qName = decodeName(view, offset);
       offset = qName.end;
       if (offset + 4 > view.byteLength) throw new Error('DNS question out of bounds');
       questions.push({ name: qName.name, type: view.getUint16(offset) });
       offset += 4;
     }
-    var answers = [];
-    for (var j = 0; j < packet.answers.length; j++) {
-      var rec = packet.answers[j];
-      var rrName = decodeName(view, rec.offset);
+    const answers = [];
+    for (let j = 0; j < packet.answers.length; j++) {
+      const rec = packet.answers[j];
+      const rrName = decodeName(view, rec.offset);
       answers.push({
         name: rrName.name,
         type: rec.type,
@@ -153,7 +153,7 @@ async function dnsWireToJsonResponse(response) {
         data: rdataToJsonData(view, rec),
       });
     }
-    var json = {
+    const json = {
       Status: flags & 0x000F,
       TC: !!(flags & 0x0200),
       RD: !!(flags & 0x0100),
@@ -163,8 +163,8 @@ async function dnsWireToJsonResponse(response) {
       Question: questions,
     };
     if (answers.length) json.Answer = answers;
-    var out = new Response(JSON.stringify(json), { status: response.status, headers: JSON_HEADERS });
-    var upstreamTime = response.headers.get('X-Upstream-Time');
+    const out = new Response(JSON.stringify(json), { status: response.status, headers: JSON_HEADERS });
+    const upstreamTime = response.headers.get('X-Upstream-Time');
     if (upstreamTime) out.headers.set('X-Upstream-Time', upstreamTime);
     return out;
   } catch (err) {
@@ -213,55 +213,54 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60), ctx);
   }
 
-  var startedAt = Date.now();
-  var hardDeadline = startedAt + META_HARD_TIMEOUT_MS;
-  var candidates = [];
+  const startedAt = Date.now();
+  const hardDeadline = startedAt + META_HARD_TIMEOUT_MS;
+  const candidates = [];
 
   // Static route / cache hit — only use IPs matching query type
-  var allRouteIPs = resolveMetaFromMap(queryMeta.name);
+  const allRouteIPs = resolveMetaFromMap(queryMeta.name);
   if (allRouteIPs && allRouteIPs.length > 0) {
-    var expectedLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : -1;
-    for (var ri = 0; ri < allRouteIPs.length; ri++) {
+    const expectedLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : -1;
+    for (let ri = 0; ri < allRouteIPs.length; ri++) {
       if (allRouteIPs[ri].length === expectedLen) candidates.push(allRouteIPs[ri]);
     }
   }
 
   // Prepare query with EDNS/ECS (same semantics as main flow)
-  var preparedBody = prepareQuery(body, clientIP);
+  const preparedBody = prepareQuery(body, clientIP);
 
   // Fire all upstreams — each tagged with its index
-  var controllers = [];
-  var tagged = [];
-  var done = [];
-  var upstreamKeys = Object.keys(UPSTREAMS);
+  const controllers = [];
+  const tagged = [];
+  const done = [];
+  let upstreamKeys = Object.keys(UPSTREAMS);
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < upstreamKeys.length) {
     upstreamKeys = upstreamKeys.slice(0, AUTO_CONCURRENCY);
   }
-  for (var i = 0; i < upstreamKeys.length; i++) {
-    var ctrl = new AbortController();
+  for (let i = 0; i < upstreamKeys.length; i++) {
+    const ctrl = new AbortController();
     controllers.push(ctrl);
     done.push(false);
-    (function (idx) {
-      tagged.push(
-        queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal, upstreamKeys[idx])
-          .then(function (r) { return { idx: idx, result: r }; })
-      );
-    })(i);
+    const idx = i;
+    tagged.push(
+      queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal, upstreamKeys[idx])
+        .then((r) => ({ idx, result: r }))
+    );
   }
 
   function abortAll() {
-    for (var i = 0; i < controllers.length; i++) {
+    for (let i = 0; i < controllers.length; i++) {
       try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
   // Build a race list from unresolved tagged promises + timeout promise
   function raceList(deadline) {
-    var list = [];
-    for (var i = 0; i < tagged.length; i++) {
+    const list = [];
+    for (let i = 0; i < tagged.length; i++) {
       if (!done[i]) list.push(tagged[i]);
     }
-    var remaining = deadline - Date.now();
+    const remaining = deadline - Date.now();
     if (remaining <= 0) return [];
     list.push(new Promise(function (resolve) { setTimeout(function () { resolve(null); }, remaining); }));
     return list;
@@ -269,21 +268,21 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
   // ── Phase 1: wait for first valid response within 800ms ──────────
 
-  var firstValid = null;
+  let firstValid = null;
   while (Date.now() < hardDeadline) {
-    var racers = raceList(hardDeadline);
+    const racers = raceList(hardDeadline);
     if (racers.length <= 1) break; // nothing left except the timeout (or nothing at all)
 
-    var winner = await Promise.race(racers);
+    const winner = await Promise.race(racers);
     if (!winner) break; // timeout
     done[winner.idx] = true;
 
     if (winner.result.valid) {
       try {
-        var rawIps = extractIPBytes(winner.result.response, queryMeta.type);
+        const rawIps = extractIPBytes(winner.result.response, queryMeta.type);
         if (rawIps.length > 0) {
           firstValid = winner.result;
-          for (var j = 0; j < rawIps.length; j++) candidates.push(rawIps[j]);
+          for (let j = 0; j < rawIps.length; j++) candidates.push(rawIps[j]);
           break;
         }
       } catch (err) {
@@ -295,19 +294,19 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   // ── Phase 2: 50ms collect window after first valid ───────────────
 
   if (firstValid) {
-    var collectDeadline = Math.min(Date.now() + META_COLLECT_WINDOW_MS, hardDeadline);
+    const collectDeadline = Math.min(Date.now() + META_COLLECT_WINDOW_MS, hardDeadline);
     while (Date.now() < collectDeadline) {
-      var racers = raceList(collectDeadline);
+      const racers = raceList(collectDeadline);
       if (racers.length <= 1) break;
 
-      var winner = await Promise.race(racers);
+      const winner = await Promise.race(racers);
       if (!winner) break;
       done[winner.idx] = true;
 
       if (winner.result.valid) {
         try {
-          var ips = extractIPBytes(winner.result.response, queryMeta.type);
-          for (var j = 0; j < ips.length; j++) candidates.push(ips[j]);
+          const ips = extractIPBytes(winner.result.response, queryMeta.type);
+          for (let j = 0; j < ips.length; j++) candidates.push(ips[j]);
         } catch (err) {
           logEvent('error', 'meta_error', { requestId: ctx.requestId, stage: 'metaResolve_phase2_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         }
@@ -323,10 +322,10 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
   // ── Dedup + Meta CIDR + max 4 ────────────────────────────────────
 
-  var seen = new Set();
-  var filtered = [];
-  for (var i = 0; i < candidates.length; i++) {
-    var key = Array.from(candidates[i]).join(',');
+  const seen = new Set();
+  let filtered = [];
+  for (let i = 0; i < candidates.length; i++) {
+    const key = Array.from(candidates[i]).join(',');
     if (!seen.has(key)) {
       seen.add(key);
       filtered.push(candidates[i]);
@@ -341,10 +340,10 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 // Meta type 65 ECH: handled by postProcessBody() in auto.js (autoFlow
 // routes non-A/AAAA to concurrentAll before metaResolve is reached).
   // Every IP must match expected RDATA length for the query type.
-  var rdataLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : null;
+  const rdataLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : null;
   if (rdataLen) {
-    var validFiltered = [];
-    for (var fi = 0; fi < filtered.length; fi++) {
+    const validFiltered = [];
+    for (let fi = 0; fi < filtered.length; fi++) {
       if (filtered[fi].length === rdataLen) validFiltered.push(filtered[fi]);
     }
     filtered = validFiltered;
@@ -367,11 +366,11 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
   }
 
   // AUTO 1: classify — only used for owner detection
-  var startedAt = Date.now();
+  const startedAt = Date.now();
   const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true }, ctx);
-  var auto1Buf = await firstResult.clone().arrayBuffer();
-  var auto1AnswerCount = auto1Buf && auto1Buf.byteLength >= 12 ? new DataView(auto1Buf).getUint16(6) : 0;
-  var auto1Rcode = auto1Buf && auto1Buf.byteLength >= 3 ? (new DataView(auto1Buf).getUint8(3) & 0x0F) : -1;
+  const auto1Buf = await firstResult.clone().arrayBuffer();
+  const auto1AnswerCount = auto1Buf && auto1Buf.byteLength >= 12 ? new DataView(auto1Buf).getUint16(6) : 0;
+  const auto1Rcode = auto1Buf && auto1Buf.byteLength >= 3 ? (new DataView(auto1Buf).getUint8(3) & 0x0F) : -1;
   logEvent('info', 'auto1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: auto1Rcode, answerCount: auto1AnswerCount });
 
   if (!regionActive) {
@@ -383,8 +382,8 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
   const firstBuf = await firstResult.clone().arrayBuffer();
 
   // Domain rules take priority over IP classification
-  var owner;
-  var classifySource = '';
+  let owner;
+  let classifySource = '';
     if (isCFDomain(queryMeta.name, remapList)) {
     owner = 'CF';
     classifySource = 'domain_rule';
@@ -393,7 +392,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
     classifySource = 'domain_rule';
   }
   if (!owner && googleConf && queryMeta.type === 1) {
-    var googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
+    const googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
     if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
       owner = 'GOOGLE';
       classifySource = 'domain_rule';
@@ -424,7 +423,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
       firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
       return firstResult;
     }
-    var answer = await preferredAnswer(ctx, queryMeta, preferredCf, 60, 'CF');
+    const answer = await preferredAnswer(ctx, queryMeta, preferredCf, 60, 'CF');
     if (answer) {
       logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
       return answer;
@@ -438,7 +437,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
       firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
       return firstResult;
     }
-    var answer = await preferredAnswer(ctx, queryMeta, preferredCft, 60, 'CFT');
+    const answer = await preferredAnswer(ctx, queryMeta, preferredCft, 60, 'CFT');
     if (answer) {
       logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
       return answer;
@@ -452,7 +451,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
       firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
       return firstResult;
     }
-    var answer = await preferredAnswer(ctx, queryMeta, preferredVrc, 60, 'VRC');
+    const answer = await preferredAnswer(ctx, queryMeta, preferredVrc, 60, 'VRC');
     if (answer) {
       logEvent('info', 'request_end', { requestId: ctx.requestId, result: 'optimized', owner: owner, answerCount: 1 });
       return answer;
@@ -462,25 +461,25 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
   }
 
   if (owner === 'GOOGLE') {
-    var googleMatch = ctx._googleMatch;
+    const googleMatch = ctx._googleMatch;
     if (googleMatch && googleMatch.ips) {
-      var proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
+      const proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
       if (proxyBytes.length > 0) {
-        var existingIps = auto1Buf && auto1Buf.byteLength >= 12 ? extractIPBytes(auto1Buf, 1) : [];
-        var seen = {};
-        var combined = [];
+        const existingIps = auto1Buf && auto1Buf.byteLength >= 12 ? extractIPBytes(auto1Buf, 1) : [];
+        const seen = {};
+        const combined = [];
         // Proxy IPs first — GFW blackholes real Google IPv4, so browser
         // Happy Eyeballs must try the tunnel proxy before timing out on
         // blocked direct IPs.
-        for (var pi = 0; pi < proxyBytes.length; pi++) {
-          var key = Array.prototype.join.call(proxyBytes[pi], '.');
+        for (let pi = 0; pi < proxyBytes.length; pi++) {
+          const key = Array.prototype.join.call(proxyBytes[pi], '.');
           if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
         }
-        for (var ei = 0; ei < existingIps.length; ei++) {
-          var key = Array.prototype.join.call(existingIps[ei], '.');
+        for (let ei = 0; ei < existingIps.length; ei++) {
+          const key = Array.prototype.join.call(existingIps[ei], '.');
           if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
         }
-        var mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
+        const mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
         logEvent('info', 'google_proxy', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
         return respond(mergedBuf, ctx);
       }
@@ -497,33 +496,33 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
 
 export default {
   async fetch(request) {
-    var requestId = crypto.randomUUID().slice(0, 8);
-    var startedAt = Date.now();
+    const requestId = crypto.randomUUID().slice(0, 8);
+    const startedAt = Date.now();
     let body = null;
     try {
       const route = resolveRoute(request);
       const upstreamNames = [AUTO_PROVIDER, ...Object.keys(UPSTREAMS)];
       if (route.home) {
-        var homeResp = new URL(request.url).pathname === '/en'
+        const homeResp = new URL(request.url).pathname === '/en'
           ? serveHomepageEn(request, UPSTREAMS, upstreamNames)
           : serveHomepage(request, UPSTREAMS, upstreamNames);
         homeResp.headers.set('X-DoH-Request-ID', requestId);
         return homeResp;
       }
       if (route.health) {
-        var hResp = healthResponse(upstreamNames);
+        const hResp = healthResponse(upstreamNames);
         hResp.headers.set('X-DoH-Request-ID', requestId);
         return hResp;
       }
       if (route.error) {
-        var errResp = jsonError(route.error);
+        const errResp = jsonError(route.error);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
       }
 
       const parsedRequest = await parseDohRequest(request);
       if (parsedRequest.error) {
-        var requestError = jsonError(parsedRequest.error.error, parsedRequest.error.status);
+        const requestError = jsonError(parsedRequest.error.error, parsedRequest.error.status);
         Object.keys(parsedRequest.error.headers).forEach(function(name) { requestError.headers.set(name, parsedRequest.error.headers[name]); });
         requestError.headers.set('X-DoH-Request-ID', requestId);
         return requestError;
@@ -543,19 +542,19 @@ export default {
       const clientIP = request.headers.get('CF-Connecting-IP');
       const queryMeta = qMeta;
       if (queryMeta && queryMeta.name) {
-        var remapForOwner = regionCfg ? regionCfg.remap : null;
+        const remapForOwner = regionCfg ? regionCfg.remap : null;
         queryMeta.forcedOwner = isCFDomain(queryMeta.name, remapForOwner) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
       }
 
-      var ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0 };
+      const ctx = { requestId: requestId, region: clientCountry, qname: queryMeta ? queryMeta.name : '', qtype: queryMeta ? queryMeta.type : 0 };
       logEvent('info', 'request_start', { requestId: requestId, qname: ctx.qname, qtype: ctx.qtype, region: clientCountry });
 
       // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
         if (queryMeta.type === 1 || queryMeta.type === 28) {
-          var nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
+          const nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
           new DataView(nx).setUint16(2, 0x8183);
-          var r = respond(nx, ctx);
+          const r = respond(nx, ctx);
           logEvent('info', 'request_end', { requestId: requestId, result: 'canary_nxdomain', owner: null, answerCount: 0 });
           return r;
         }
@@ -563,20 +562,20 @@ export default {
 
       // AAAA block for remap domains
       if (queryMeta && queryMeta.name && queryMeta.type === 28 && regionCfg && regionCfg.remap && isCFDomain(queryMeta.name, regionCfg.remap)) {
-        var no6 = buildDNS(queryMeta.id, queryMeta.name, 28, [], 300);
-        var r6 = respond(no6, ctx);
+        const no6 = buildDNS(queryMeta.id, queryMeta.name, 28, [], 300);
+        const r6 = respond(no6, ctx);
         logEvent('info', 'request_end', { requestId: requestId, result: 'remap_no_aaaa', owner: null, answerCount: 0 });
         return r6;
       }
 
       if (route.provider === AUTO_PROVIDER) {
-        var result = await autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
+        let result = await autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, regionCfg ? regionCfg.remap : null, regionCfg ? regionCfg.google : null);
         if (wantsJson) result = await dnsWireToJsonResponse(result);
         result.headers.set('X-DoH-Request-ID', requestId);
         logEvent('info', 'request_end', { requestId: requestId, result: 'completed', owner: ctx.owner || null });
         return result;
       }
-      var sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);
+      let sResult = await singleUpstream(ctx, route.provider, body, clientIP, queryMeta, echActive);
       if (wantsJson) sResult = await dnsWireToJsonResponse(sResult);
       sResult.headers.set('X-DoH-Request-ID', requestId);
       logEvent('info', 'request_end', { requestId: requestId, result: 'single_upstream', owner: null });
@@ -584,11 +583,11 @@ export default {
     } catch (err) {
       logEvent('error', 'request_error', { requestId: requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), elapsedMs: Date.now() - startedAt });
       if (body) {
-        var sfResp = dnsResponse(servfail(body));
+        const sfResp = dnsResponse(servfail(body));
         sfResp.headers.set('X-DoH-Request-ID', requestId);
         return sfResp;
       }
-      var errResp = jsonError('internal_error', 500);
+      const errResp = jsonError('internal_error', 500);
       errResp.headers.set('X-DoH-Request-ID', requestId);
       return errResp;
     }
@@ -620,7 +619,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
     }
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
-      var owner = null;
+      let owner = null;
       if (queryMeta.forcedOwner) {
         owner = queryMeta.forcedOwner;
       } else if (isMetaDomain(queryMeta.name)) {
@@ -631,9 +630,9 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
       }
       if (owner) {
         const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
-        var echResult = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
+        const echResult = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
         if (echResult.changed) {
-          var injectedBytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
+          const injectedBytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
           if (injectedBytes) finalBody = injectedBytes;
         } else {
           logEvent('warn', 'ech_result', { requestId: ctx.requestId, owner: owner, status: 'degraded', reason: 'ech_not_applied_' + echResult.status });

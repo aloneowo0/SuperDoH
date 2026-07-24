@@ -8,10 +8,10 @@ const PROBE_CACHE_TTL = 3600 * 1000;
 const MAX_PROBE_CACHE = 256;
 
 export function isMetaDomain(name) {
-    var domains = ['facebook.com','fbcdn.net','instagram.com','cdninstagram.com','messenger.com','whatsapp.com','whatsapp.net','threads.net','meta.com','oculus.com','fbsbx.com','thefacebook.com','connect.facebook.net'];
+    const domains = ['facebook.com','fbcdn.net','instagram.com','cdninstagram.com','messenger.com','whatsapp.com','whatsapp.net','threads.net','meta.com','oculus.com','fbsbx.com','thefacebook.com','connect.facebook.net'];
     try {
-        var n = name.toLowerCase().replace(/\.+$/, '');
-        for (var i = 0; i < domains.length; i++) {
+        const n = name.toLowerCase().replace(/\.+$/, '');
+        for (let i = 0; i < domains.length; i++) {
             if (n === domains[i] || n.endsWith('.' + domains[i])) return true;
         }
         return false;
@@ -107,10 +107,10 @@ export async function probeOwner(domain) {
         }
 
         if (probeCache.size >= MAX_PROBE_CACHE) {
-          var firstKey = probeCache.keys().next().value;
+          const firstKey = probeCache.keys().next().value;
           if (firstKey !== undefined) probeCache.delete(firstKey);
         }
-        var ttl = owner ? PROBE_CACHE_TTL : 15000;
+        const ttl = owner ? PROBE_CACHE_TTL : 15000;
         probeCache.set(key, { owner, ips, expire: Date.now() + ttl });
         return { owner, ips };
     } catch (err) {

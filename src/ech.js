@@ -25,20 +25,20 @@ export async function fetchCFEch(_env, _ctx) {
             return cached.data;
         }
 
-        var query = buildWireQuery(CF_ECH_DOMAIN, TYPE_HTTPS);
-        var queryId = new DataView(query).getUint16(0);
-        var entries = Object.entries(UPSTREAMS).slice(0, 3);
-        var buf = null;
-        var controller = new AbortController();
-        var timer = setTimeout(function() { controller.abort(); }, HARD_TIMEOUT_MS);
-        var deadline = Date.now() + HARD_TIMEOUT_MS;
+        const query = buildWireQuery(CF_ECH_DOMAIN, TYPE_HTTPS);
+        const queryId = new DataView(query).getUint16(0);
+        const entries = Object.entries(UPSTREAMS).slice(0, 3);
+        let buf = null;
+        const controller = new AbortController();
+        const timer = setTimeout(function() { controller.abort(); }, HARD_TIMEOUT_MS);
+        const deadline = Date.now() + HARD_TIMEOUT_MS;
         try {
-        for (var i = 0; i < entries.length && !buf && Date.now() < deadline; i++) {
+        for (let i = 0; i < entries.length && !buf && Date.now() < deadline; i++) {
           try {
-            var res = await fetch(entries[i][1].url, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query, signal: controller.signal });
+            const res = await fetch(entries[i][1].url, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query, signal: controller.signal });
             if (res.status !== 200) continue;
-            var ab = await res.arrayBuffer();
-            var validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
+            const ab = await res.arrayBuffer();
+            const validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
             if (validation.classification === 'positive') buf = ab;
           } catch (_) { /* ignore — skip failed upstream in ECH fetch loop */ }
         }
@@ -68,7 +68,7 @@ export async function fetchCFEch(_env, _ctx) {
             params.push({ key: key, val: val });
         }
 
-        var hasEch = params.some(function(p) { return p.key === 'ech' && p.val; });
+        const hasEch = params.some(function(p) { return p.key === 'ech' && p.val; });
         if (!hasEch) return getStaleCFEch(cached);
 
         const rdata = packHttpsParams(httpsRdata.priority, httpsRdata.target, params);
@@ -119,15 +119,15 @@ function encodeBase64Url(bytes) {
 }
 
 function rebuildTail(packet, startOffset) {
-  var parts = [];
-  var end = packet.view.byteLength;
+  const parts = [];
+  const end = packet.view.byteLength;
 
   function adjoin() {
-    var total = 0;
-    for (var i = 0; i < parts.length; i++) total += parts[i].length;
-    var out = new Uint8Array(total);
-    var pos = 0;
-    for (var i = 0; i < parts.length; i++) {
+    let total = 0;
+    for (let i = 0; i < parts.length; i++) total += parts[i].length;
+    const out = new Uint8Array(total);
+    let pos = 0;
+    for (let i = 0; i < parts.length; i++) {
       out.set(parts[i], pos);
       pos += parts[i].length;
     }
@@ -136,23 +136,23 @@ function rebuildTail(packet, startOffset) {
 
   // Use the ORIGINAL packet view for name decoding — compression pointers
   // reference absolute offsets in the full packet, not the tail slice.
-  var fullView = packet.view;
-  var offset = startOffset;
+  const fullView = packet.view;
+  let offset = startOffset;
   while (offset < end) {
-    var nameResult = decodeName(fullView, offset);
+    const nameResult = decodeName(fullView, offset);
     requireBytes(fullView, nameResult.end, 10);
-    var type = fullView.getUint16(nameResult.end);
-    var ttl = fullView.getUint32(nameResult.end + 4);
-    var rdlength = fullView.getUint16(nameResult.end + 8);
-    var rdataOffset = nameResult.end + 10;
+    const type = fullView.getUint16(nameResult.end);
+    const ttl = fullView.getUint32(nameResult.end + 4);
+    const rdlength = fullView.getUint16(nameResult.end + 8);
+    const rdataOffset = nameResult.end + 10;
     requireBytes(fullView, rdataOffset, rdlength);
 
-    var expandedRdata = expandRdataNames(fullView, rdataOffset, rdlength, type);
-    var ownerBytes = encodeDnsName(nameResult.name);
+    const expandedRdata = expandRdataNames(fullView, rdataOffset, rdlength, type);
+    const ownerBytes = encodeDnsName(nameResult.name);
 
-    var rr = new Uint8Array(ownerBytes.length + 10 + expandedRdata.length);
+    const rr = new Uint8Array(ownerBytes.length + 10 + expandedRdata.length);
     rr.set(ownerBytes, 0);
-    var dv = new DataView(rr.buffer);
+    const dv = new DataView(rr.buffer);
     dv.setUint16(ownerBytes.length, type);
     dv.setUint16(ownerBytes.length + 2, fullView.getUint16(nameResult.end + 2));
     dv.setUint32(ownerBytes.length + 4, ttl);
@@ -185,7 +185,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             // avoids DNS CNAME conflict that causes Chromium to discard ECH
             const body = await readBody(originalResponse);
             if (!body || body.byteLength < 2) return { body: originalResponse, changed: false, status: 'failed' };
-            var id = new DataView(body).getUint16(0);
+            const id = new DataView(body).getUint16(0);
             const params = [];
             if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
             params.push({ key: 'ech', val: echValue });
@@ -226,7 +226,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
         }
 
         const newRecords = [];
-        var httpsWritten = false;
+        let httpsWritten = false;
         let ttl = 3600;
 
         for (let i = 0; i < packet.answers.length; i++) {
@@ -293,12 +293,12 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           };
         }
 
-        var lastAnswerEnd = packet.answers.length > 0 ? packet.answers[packet.answers.length - 1].end : 0;
-        var rebuiltTail = lastAnswerEnd > 0 && packet.view.byteLength > lastAnswerEnd
+        const lastAnswerEnd = packet.answers.length > 0 ? packet.answers[packet.answers.length - 1].end : 0;
+        const rebuiltTail = lastAnswerEnd > 0 && packet.view.byteLength > lastAnswerEnd
           ? rebuildTail(packet, lastAnswerEnd)
           : new Uint8Array(0);
-        var tailNsCount = rebuiltTail.length > 0 ? (packet.header.nscount || 0) : 0;
-        var tailArCount = rebuiltTail.length > 0 ? (packet.header.arcount || 0) : 0;
+        const tailNsCount = rebuiltTail.length > 0 ? (packet.header.nscount || 0) : 0;
+        const tailArCount = rebuiltTail.length > 0 ? (packet.header.arcount || 0) : 0;
         const newBody = createDNSResponseEx(
             packet.header.id,
             queryName,
@@ -427,7 +427,7 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
 
     const buf = new Uint8Array(totalLen);
     const v = new DataView(buf.buffer);
-    var newFlags = (flags || 0x8180) & ~0x0200;
+    let newFlags = (flags || 0x8180) & ~0x0200;
     newFlags = newFlags & ~0x000F;
     newFlags |= 0x8000;
     const tailNsCount = tailBytes.length ? (nsCount || 0) : 0;
@@ -452,7 +452,7 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
         const rdLen = rd.byteLength || rd.length;
 
         if (rec.name && rec.name !== qName) {
-            var encOwner = encodeDnsName(rec.name);
+            const encOwner = encodeDnsName(rec.name);
             buf.set(encOwner, offset); offset += encOwner.length;
         } else {
             v.setUint16(offset, 0xC00C); offset += 2;
@@ -477,16 +477,16 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
     }
 
     if (rrType === 5 || rrType === 2 || rrType === 12) {
-        var name = decodeName(view, rdataOffset);
+        const name = decodeName(view, rdataOffset);
         return encodeDnsName(name.name);
     }
 
     if (rrType === 15) {
         requireBytes(view, rdataOffset, 2);
-        var pref = view.getUint16(rdataOffset);
-        var mxName = decodeName(view, rdataOffset + 2);
-        var encodedMx = encodeDnsName(mxName.name);
-        var mxResult = new Uint8Array(2 + encodedMx.length);
+        const pref = view.getUint16(rdataOffset);
+        const mxName = decodeName(view, rdataOffset + 2);
+        const encodedMx = encodeDnsName(mxName.name);
+        const mxResult = new Uint8Array(2 + encodedMx.length);
         new DataView(mxResult.buffer).setUint16(0, pref);
         mxResult.set(encodedMx, 2);
         return mxResult;
@@ -494,23 +494,23 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
 
     if (rrType === 33) {
         requireBytes(view, rdataOffset, 6);
-        var srvName = decodeName(view, rdataOffset + 6);
-        var encodedSrv = encodeDnsName(srvName.name);
-        var srvResult = new Uint8Array(6 + encodedSrv.length);
+        const srvName = decodeName(view, rdataOffset + 6);
+        const encodedSrv = encodeDnsName(srvName.name);
+        const srvResult = new Uint8Array(6 + encodedSrv.length);
         srvResult.set(copyRdata(view, rdataOffset, 6), 0);
         srvResult.set(encodedSrv, 6);
         return srvResult;
     }
 
     if (rrType === 6) {
-        var mname = decodeName(view, rdataOffset);
-        var rname = decodeName(view, mname.end);
-        var encodedMname = encodeDnsName(mname.name);
-        var encodedRname = encodeDnsName(rname.name);
-        var fixedOffset = rname.end;
+        const mname = decodeName(view, rdataOffset);
+        const rname = decodeName(view, mname.end);
+        const encodedMname = encodeDnsName(mname.name);
+        const encodedRname = encodeDnsName(rname.name);
+        const fixedOffset = rname.end;
         requireBytes(view, fixedOffset, 20);
-        var soaResult = new Uint8Array(encodedMname.length + encodedRname.length + 20);
-        var soaOffset = 0;
+        const soaResult = new Uint8Array(encodedMname.length + encodedRname.length + 20);
+        let soaOffset = 0;
         soaResult.set(encodedMname, soaOffset); soaOffset += encodedMname.length;
         soaResult.set(encodedRname, soaOffset); soaOffset += encodedRname.length;
         soaResult.set(copyRdata(view, fixedOffset, 20), soaOffset);

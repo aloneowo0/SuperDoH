@@ -2,14 +2,14 @@
 import { ECS_PROTECT_MS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS, AUTO_CONCURRENCY, PREFERRED_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner, isMetaDomain } from './cdn.js';
+import { probeOwner, isMetaDomain, detectOwner } from './cdn.js';
 import { buildWireQuery, dnsResponse, extractIPBytes, parseQueryMeta, servfail } from './dns-lib.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 
 export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options, ctx) {
-  var opts = options || {};
+  const opts = options || {};
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
   const protectEnd = started + ECS_PROTECT_MS;
@@ -18,7 +18,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   const queryId = effectiveBody && effectiveBody.byteLength >= 2 ? new DataView(effectiveBody).getUint16(0) : 0;
   const preparedBody = prepareQuery(effectiveBody, clientIP);
 
-  var entries = Object.entries(UPSTREAMS);
+  let entries = Object.entries(UPSTREAMS);
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < entries.length) {
     entries = entries.slice(0, AUTO_CONCURRENCY);
   }
@@ -50,7 +50,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   }
 
   async function finishResult(result) {
-    var processed;
+    let processed;
     if (opts.skipPostProcess) {
       abortPending();
       processed = result.response;
@@ -67,7 +67,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
     // 保护窗到期先检查暂存：释放最快的那条
     if (!inProtect && held.some((item) => item.result.classification === 'positive')) {
       sortHeld();
-      var bestHeld = held[0];
+      const bestHeld = held[0];
       if (opts.acceptFilter && !opts.acceptFilter(bestHeld.result.response)) {
         held.shift();
         continue;
@@ -123,7 +123,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   if (held.length > 0) {
     sortHeld();
     while (held.length > 0) {
-      var bestHeld = held[0];
+      const bestHeld = held[0];
       if (opts.acceptFilter && !opts.acceptFilter(bestHeld.result.response)) {
         held.shift();
         continue;
@@ -166,29 +166,29 @@ export function answersPass(responseBody, queryId, qname, qtype) {
 }
 
 export async function resolvePreferred(domain, type, expectedOwner, ctx, clientIP) {
-  var wireQuery = buildWireQuery(domain, type);
-  var query = prepareQuery(wireQuery, clientIP);
-  var started = Date.now();
-  var deadline = started + PREFERRED_TIMEOUT_MS;
-  var requestId = ctx && ctx.requestId;
+  const wireQuery = buildWireQuery(domain, type);
+  const query = prepareQuery(wireQuery, clientIP);
+  const started = Date.now();
+  const deadline = started + PREFERRED_TIMEOUT_MS;
+  const requestId = ctx && ctx.requestId;
 
-  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  let foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < foreignUrls.length) {
     foreignUrls = foreignUrls.slice(0, AUTO_CONCURRENCY);
   }
   if (foreignUrls.length === 0) return [];
 
-  var controllers = [];
-  var collected = [];
+  const controllers = [];
+  const collected = [];
 
   function abortAll() {
-    for (var i = 0; i < controllers.length; i++) {
+    for (let i = 0; i < controllers.length; i++) {
       try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
-  var promises = foreignUrls.map(function (url) {
-    var ctrl = new AbortController();
+  const promises = foreignUrls.map(function (url) {
+    const ctrl = new AbortController();
     controllers.push(ctrl);
     return fetch(url, {
       method: 'POST',
@@ -197,15 +197,15 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
       signal: ctrl.signal,
     }).then(async function (res) {
       if (res.status !== 200) return null;
-      var buf = await res.arrayBuffer();
+      const buf = await res.arrayBuffer();
       if (buf.byteLength < 12) return null;
       if (new DataView(buf).getUint16(6) === 0) return null;
       return buf;
     }).then(function (buf) {
       if (!buf) return null;
       try {
-        var ips = extractIPBytes(buf, type);
-        for (var i = 0; i < ips.length; i++) {
+        const ips = extractIPBytes(buf, type);
+        for (let i = 0; i < ips.length; i++) {
           collected.push(ips[i]);
         }
       } catch (err) {
@@ -219,8 +219,8 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
     });
   });
 
-  var timeout = new Promise(function (resolve) {
-    var remaining = deadline - Date.now();
+  const timeout = new Promise(function (resolve) {
+    const remaining = deadline - Date.now();
     if (remaining <= 0) { resolve(); return; }
     setTimeout(function () { abortAll(); resolve(); }, remaining);
   });
@@ -228,10 +228,10 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
   await Promise.race([Promise.all(promises), timeout]);
   abortAll();
 
-  var ipSet = new Set();
-  var allIps = [];
-  for (var i = 0; i < collected.length; i++) {
-    var key = Array.from(collected[i]).join(',');
+  const ipSet = new Set();
+  const allIps = [];
+  for (let i = 0; i < collected.length; i++) {
+    const key = Array.from(collected[i]).join(',');
     if (!ipSet.has(key)) {
       ipSet.add(key);
       allIps.push(collected[i]);
@@ -240,16 +240,15 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
 
   if (expectedOwner) {
     try {
-      var { detectOwner } = await import('./cdn.js');
-      var ownerFiltered = [];
-      for (var oi = 0; oi < allIps.length; oi++) {
-        var ipBytes = allIps[oi];
-        var ipStr;
+      const ownerFiltered = [];
+      for (let oi = 0; oi < allIps.length; oi++) {
+        const ipBytes = allIps[oi];
+        let ipStr;
         if (ipBytes.length === 4) {
           ipStr = ipBytes[0] + '.' + ipBytes[1] + '.' + ipBytes[2] + '.' + ipBytes[3];
         } else if (ipBytes.length === 16) {
-          var parts = [];
-          for (var pi = 0; pi < 16; pi += 2) {
+          const parts = [];
+          for (let pi = 0; pi < 16; pi += 2) {
             parts.push(((ipBytes[pi] << 8) | ipBytes[pi + 1]).toString(16));
           }
           ipStr = parts.join(':');
@@ -273,7 +272,7 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
 
   if (echActive && queryMeta.type === 65) {
     try {
-      var owner = null;
+      let owner = null;
       if (queryMeta._knownCF) {
         owner = 'CF';
       } else if (queryMeta.forcedOwner) {
@@ -285,8 +284,8 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
         if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
       }
       if (owner) {
-        var cfEch = null;
-        var echStale = false;
+        let cfEch = null;
+        let echStale = false;
         if (owner === 'CF') {
           cfEch = await fetchCFEch(null, null);
           if (!cfEch) {
@@ -300,11 +299,11 @@ export async function postProcessBody(responseBody, queryMeta, echActive, active
           // META uses static ECH (META_ECH_B64) inside injectECH, so cfEch
           // is expected to be null here — this is the normal Meta ECH path.
         }
-        var echResult = await injectECH(responseBody, queryMeta.name, owner, cfEch, ctx);
+        const echResult = await injectECH(responseBody, queryMeta.name, owner, cfEch, ctx);
         if (echResult.changed) {
-          var bytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
+          const bytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
           if (bytes) {
-            var echStatus = echStale ? 'stale' : (cfEch ? 'fresh' : 'built');
+            const echStatus = echStale ? 'stale' : (cfEch ? 'fresh' : 'built');
             logEvent(echStatus === 'degraded' ? 'warn' : 'info', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: echStatus, reason: echStatus === 'degraded' ? 'ech_fetch_failed' : '' });
             return bytes;
           }

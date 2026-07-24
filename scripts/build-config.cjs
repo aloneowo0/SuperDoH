@@ -179,14 +179,14 @@ function generateConfig(env, upstreams, fetchedGoogleProxy, geoipCidrs) {
         ? '[\n' + blockedLines.join('\n') + '\n]'
         : '[]';
 
-    const ecsProtectMs = 20;
-    const hardTimeoutMs = 800;
+    const ecsProtectMs = parseInt(env.ECS_PROTECT_MS, 10) || 20;
+    const hardTimeoutMs = parseInt(env.HARD_TIMEOUT_MS, 10) || 800;
     const ecsPrefix4 = parseInt(env.ECS_PREFIX4, 10);
     const ecsPrefix6 = parseInt(env.ECS_PREFIX6, 10);
-    const metaHardTimeoutMs = 800;
-    const metaCollectWindowMs = 50;
-    const metaMaxIps = 4;
-    const preferredTimeoutMs = 300;
+    const metaHardTimeoutMs = parseInt(env.META_HARD_TIMEOUT_MS, 10) || 800;
+    const metaCollectWindowMs = parseInt(env.META_COLLECT_WINDOW_MS, 10) || 50;
+    const metaMaxIps = parseInt(env.META_MAX_IPS, 10) || 4;
+    const preferredTimeoutMs = parseInt(env.PREFERRED_TIMEOUT_MS, 10) || 300;
     // AUTO 竞速并发上游数。0 = 全部上游（默认）。
     // Cloudflare Workers Free 计划只有 6 个同时出站连接，设为 4 可避免挤占其他子请求的槽位。
     var autoConcurrency = parseInt(env.AUTO_CONCURRENCY || env.MIX_CONCURRENCY, 10);
@@ -224,7 +224,7 @@ function generateConfig(env, upstreams, fetchedGoogleProxy, geoipCidrs) {
         .replace(/^\s{2}/, '');
 
     return `/**
- * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
+ * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成，请勿手动修改）
  * USE_CONFIG_JS=true 时 scripts/build-config.cjs 不会重写本文件，
  * Worker 会直接读取现有 config.js。
  */

@@ -135,12 +135,12 @@ async function resolveDomain(){
     t.innerHTML='';
     if(data.Answer){
       data.Answer.forEach(function(a){
-        var row=t.insertRow();
-        var typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
+        const row=t.insertRow();
+        const typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
         row.innerHTML='<td>'+a.name+'</td><td>'+(typeNames[a.type]||a.type)+'</td><td>'+a.TTL+'</td><td style="word-break:break-all"><code>'+a.data+'</code></td>';
       });
     }else{
-      var rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
+      const rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
       t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">'+((data.Status in rcodes)?rcodes[data.Status]:'状态码 '+data.Status)+'</td></tr>';
     }
   }catch(e){
@@ -284,12 +284,12 @@ async function resolveDomain(){
     t.innerHTML='';
     if(data.Answer){
       data.Answer.forEach(function(a){
-        var row=t.insertRow();
-        var typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
+        const row=t.insertRow();
+        const typeNames={1:'A',28:'AAAA',15:'MX',16:'TXT',5:'CNAME',2:'NS',65:'HTTPS'};
         row.innerHTML='<td>'+a.name+'</td><td>'+(typeNames[a.type]||a.type)+'</td><td>'+a.TTL+'</td><td style="word-break:break-all"><code>'+a.data+'</code></td>';
       });
     }else{
-      var rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
+      const rcodes={0:'NOERROR（无记录）',1:'FORMERR',2:'SERVFAIL',3:'NXDOMAIN（域名不存在）',4:'NOTIMP',5:'REFUSED'};
       t.innerHTML='<tr><td colspan=4 style="color:#999;text-align:center;padding:16px">'+((data.Status in rcodes)?rcodes[data.Status]:'状态码 '+data.Status)+'</td></tr>';
     }
   }catch(e){

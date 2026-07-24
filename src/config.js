@@ -1,5 +1,5 @@
 /**
- * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成）
+ * SuperDoH — 配置文件（由 scripts/build-config.cjs 自动生成，请勿手动修改）
  * USE_CONFIG_JS=true 时 scripts/build-config.cjs 不会重写本文件，
  * Worker 会直接读取现有 config.js。
  */

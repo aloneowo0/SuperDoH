@@ -103,8 +103,8 @@ export function validateResponse(response, queryId, expectedQname, expectedQtype
 function readQuestion(packet) {
     if (packet.header.qdcount < 1) return null;
     try {
-        var result = decodeName(packet.view, DNS_HEADER_LEN);
-        var name = result ? result.name.toLowerCase() : null;
+        const result = decodeName(packet.view, DNS_HEADER_LEN);
+        const name = result ? result.name.toLowerCase() : null;
         if (!result || result.end + 4 > packet.bytes.length) return null;
         return { name: name, type: packet.view.getUint16(result.end) };
     } catch (_) { // ignore — return null on malformed question

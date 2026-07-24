@@ -4,8 +4,8 @@
 // Each Meta CDN edge IP serves a specific class of hostnames.
 // IPs verified reachable via TCP/443 from China (June 2026).
 
-var _metaExact = null;
-var _metaWild = null;
+let _metaExact = null;
+let _metaWild = null;
 
 function metaExactMap() {
   if (_metaExact) return _metaExact;
@@ -57,13 +57,13 @@ function metaWildList() {
 export function resolveMetaFromMap(domain) {
   try {
     if (!domain || typeof domain !== 'string') return null;
-    var d = domain.trim().toLowerCase().replace(/\.+$/, '');
+    const d = domain.trim().toLowerCase().replace(/\.+$/, '');
     if (!d) return null;
-    var exact = metaExactMap()[d];
+    const exact = metaExactMap()[d];
     if (exact) return exact;
-    var wild = metaWildList();
-    for (var i = 0; i < wild.length; i++) {
-      var suffix = wild[i][0];
+    const wild = metaWildList();
+    for (let i = 0; i < wild.length; i++) {
+      const suffix = wild[i][0];
       if (d === suffix || d.endsWith('.' + suffix)) return [wild[i][1]];
     }
     return null;

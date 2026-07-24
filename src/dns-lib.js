@@ -433,7 +433,7 @@ export function validateDnsQuery(body) {
 // ── DNS response builders ───────────────────────────────────────────
 
 export function dnsResponse(body, upstreamTime) {
-  const headers = upstreamTime != null
+  const headers = upstreamTime !== null && upstreamTime !== undefined
     ? { ...DNS_HEADERS, 'X-Upstream-Time': String(upstreamTime) }
     : DNS_HEADERS;
   return new Response(body, { status: 200, headers });
@@ -600,26 +600,26 @@ export async function resolveDNSWire(domain, type) {
 }
 
 export async function resolveDNSWireForeign(body, timeoutMs) {
-  var t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
-  var started = Date.now();
-  var deadline = started + t;
+  const t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
+  const started = Date.now();
+  const deadline = started + t;
 
-  var foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  const foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
   if (foreignUrls.length === 0) return null;
 
-  var controllers = [];
-  var result = null;
-  var done = false;
+  const controllers = [];
+  let result = null;
+  let done = false;
 
   function abortAll() {
     done = true;
-    for (var i = 0; i < controllers.length; i++) {
+    for (let i = 0; i < controllers.length; i++) {
       try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
-  var promises = foreignUrls.map(function (url) {
-    var ctrl = new AbortController();
+  const promises = foreignUrls.map(function (url) {
+    const ctrl = new AbortController();
     controllers.push(ctrl);
     return fetch(url, {
       method: 'POST',
@@ -629,7 +629,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
     }).then(async function (res) {
       if (done) return null;
       if (res.status !== 200) return null;
-      var buf = await res.arrayBuffer();
+      const buf = await res.arrayBuffer();
       if (done) return null;
       if (buf.byteLength < 12) return null;
       if (new DataView(buf).getUint16(6) === 0) return null;
@@ -643,8 +643,8 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
     });
   });
 
-  var timeoutPromise = new Promise(function (resolve) {
-    var remaining = deadline - Date.now();
+  const timeoutPromise = new Promise(function (resolve) {
+    const remaining = deadline - Date.now();
     if (remaining <= 0) { resolve(); return; }
     setTimeout(function () { if (!done) abortAll(); resolve(); }, remaining);
   });
