@@ -177,18 +177,19 @@ npm run deploy   # → Cloudflare Workers
 ```
 superdoh/
 ├── .env                     # 用户配置
-├── scripts/build-config.cjs # .env → config.js，或 USE_CONFIG_JS=true 时跳过生成
-├── config.js                # 运行时配置（自动生成或手写）
-├── _worker.js               # 入口、路由、两次 AUTO
-├── doh-request.js           # DoH HTTP/请求边界校验
-├── auto.js                   # 竞速引擎
-├── edns.js                  # ECS/EDNS
-├── ech.js                   # ECH 注入
-├── dns-lib.js               # DNS 线格式库
-├── cdn.js                   # CDN CIDR + Meta LPM
-├── meta-route.js            # Meta 静态 IP 路由
-├── logger.js                # 结构化日志
-├── homepage.js              # 首页
-├── wrangler.jsonc           # CF Workers 配置
+├── scripts/build-config.cjs # .env → src/config.js，或 USE_CONFIG_JS=true 时跳过生成
+├── src/
+│   ├── config.js             # 运行时配置（自动生成或手写）
+│   ├── _worker.js            # 入口、路由、两次 AUTO
+│   ├── doh-request.js        # DoH HTTP/请求边界校验
+│   ├── auto.js               # 竞速引擎
+│   ├── edns.js               # ECS/EDNS
+│   ├── ech.js                # ECH 注入
+│   ├── dns-lib.js            # DNS 线格式库
+│   ├── cdn.js                # CDN CIDR + Meta LPM
+│   ├── meta-route.js         # Meta 静态 IP 路由
+│   ├── logger.js             # 结构化日志
+│   └── homepage.js           # 首页
+├── wrangler.jsonc            # CF Workers 配置
 └── README.md
 ```

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildDNS, buildQueryWireId, encodeDnsName, validateDnsQuery } from '../dns-lib.js';
+import { buildDNS, buildQueryWireId, encodeDnsName, validateDnsQuery } from '../src/dns-lib.js';
 import { query } from './dns-fixtures.js';
 
 describe('DNS wire helpers', () => {

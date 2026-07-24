@@ -263,7 +263,7 @@ export const REGION_CONFIG = ${regionConfigStr};
 // ── Main ───────────────────────────────────────────────────────────
 const rootDir = path.resolve(__dirname, '..');
 const envPath = path.join(rootDir, '.env');
-const configPath = path.join(rootDir, 'config.js');
+const configPath = path.join(rootDir, 'src', 'config.js');
 
 async function main() {
   console.log(`Reading ${envPath} ...`);
@@ -271,7 +271,7 @@ async function main() {
 
   if (env.USE_CONFIG_JS === 'true') {
     if (!fs.existsSync(configPath)) {
-      console.error('USE_CONFIG_JS=true but config.js does not exist. Copy config.example.js to config.js first.');
+      console.error('USE_CONFIG_JS=true but src/config.js does not exist. Copy src/config.example.js to src/config.js first.');
       process.exit(1);
     }
     console.log(`USE_CONFIG_JS=true — using existing ${configPath}; no config generated.`);

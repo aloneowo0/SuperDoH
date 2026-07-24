@@ -1,4 +1,4 @@
-import { buildDNS, buildQueryWireId } from '../dns-lib.js';
+import { buildDNS, buildQueryWireId } from '../src/dns-lib.js';
 
 export function query(name = 'example.com', type = 1, id = 0x1234) {
   return buildQueryWireId(name, type, id);

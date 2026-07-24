@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseDohRequest } from '../doh-request.js';
+import { parseDohRequest } from '../src/doh-request.js';
 import { query, toBase64Url } from './dns-fixtures.js';
 
 describe('DoH request boundary', () => {

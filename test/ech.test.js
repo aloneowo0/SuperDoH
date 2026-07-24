@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { __resetCFEchCacheForTests, fetchCFEch, injectECH } from '../ech.js';
-import { buildDNS, parseDns } from '../dns-lib.js';
+import { __resetCFEchCacheForTests, fetchCFEch, injectECH } from '../src/ech.js';
+import { buildDNS, parseDns } from '../src/dns-lib.js';
 
 afterEach(() => {
   __resetCFEchCacheForTests();
