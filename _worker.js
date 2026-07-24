@@ -5,14 +5,15 @@
  */
 
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './config.js';
-import { prepareQuery, filterAnswers } from './edns.js';
+import { prepareQuery } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
-import { concurrentAll, queryUpstream, resolvePreferred } from './auto.js';
+import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './auto.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, detectOwner, extractIps, isMetaDomain } from './cdn.js';
-import { dnsResponse, servfail, buildDNS, buildQueryFromURL, parseQueryMeta, parseQueryMetaFromURL, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
+import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
 import { logEvent, setLogLevel } from './logger.js';
+import { parseDohRequest } from './doh-request.js';
 setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -44,7 +45,14 @@ function ipToBytes(ip) {
   }
   var parts = ip.split('.');
   if (parts.length !== 4) return null;
-  return new Uint8Array(parts.map(function(p) { return parseInt(p, 10); }));
+  var bytes = new Uint8Array(4);
+  for (var i = 0; i < parts.length; i++) {
+    if (!/^\d{1,3}$/.test(parts[i])) return null;
+    var octet = Number(parts[i]);
+    if (octet > 255) return null;
+    bytes[i] = octet;
+  }
+  return bytes;
 }
 
 function matchGoogleProxy(name, googleConf) {
@@ -529,15 +537,16 @@ export default {
         return errResp;
       }
 
-      const url = new URL(request.url);
-      const acceptHeader = request.headers.get('Accept') || '';
-      const wantsJson = acceptHeader.includes('application/dns-json');
-      let qMeta = parseQueryMetaFromURL(url);
-      if (request.method === 'POST') {
-        const rawBody = await request.clone().arrayBuffer();
-        body = rawBody;
-        if (!qMeta) qMeta = parseQueryMeta(body);
+      const parsedRequest = await parseDohRequest(request);
+      if (parsedRequest.error) {
+        var requestError = jsonError(parsedRequest.error.error, parsedRequest.error.status);
+        Object.keys(parsedRequest.error.headers).forEach(function(name) { requestError.headers.set(name, parsedRequest.error.headers[name]); });
+        requestError.headers.set('X-DoH-Request-ID', requestId);
+        return requestError;
       }
+      body = parsedRequest.body;
+      const qMeta = parsedRequest.queryMeta;
+      const wantsJson = parsedRequest.wantsJson;
 
       const clientCountry = request.cf && request.cf.country || '';
       const regionCfg = REGION_CONFIG && REGION_CONFIG[clientCountry];
@@ -547,21 +556,8 @@ export default {
       const preferredCft = regionCfg ? (regionCfg.preferredCft || '') : '';
       const preferredVrc = regionCfg ? (regionCfg.preferredVrc || '') : '';
 
-      if (!body) {
-        if (request.method === 'GET' || wantsJson) {
-          body = buildQueryFromURL(url);
-          if (!body) {
-            var errR = jsonError('missing_name_or_type');
-            errR.headers.set('X-DoH-Request-ID', requestId);
-            return errR;
-          }
-          qMeta = parseQueryMeta(body);
-        } else {
-          body = await request.clone().arrayBuffer();
-        }
-      }
       const clientIP = request.headers.get('CF-Connecting-IP');
-      const queryMeta = qMeta || parseQueryMeta(body);
+      const queryMeta = qMeta;
       if (queryMeta && queryMeta.name) {
         var remapForOwner = regionCfg ? regionCfg.remap : null;
         queryMeta.forcedOwner = isCFDomain(queryMeta.name, remapForOwner) ? 'CF' : isMetaDomain(queryMeta.name) ? 'META' : null;
@@ -623,18 +619,21 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
   const queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
   const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(function() { try { ctrl.abort(); } catch (_) {} }, HARD_TIMEOUT_MS);
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(function() { try { ctrl.abort(); } catch (_) {} }, HARD_TIMEOUT_MS);
     const response = await fetch(upstream.url, {
       method: 'POST',
       headers: DNS_HEADERS,
       body: queryBody,
       signal: ctrl.signal,
     });
-    clearTimeout(timer);
     const responseBody = await response.arrayBuffer();
     const elapsed = Date.now() - started;
+    const originalResult = answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
+    if (response.status !== 200 || !originalResult.passed || originalResult.classification === 'invalid') {
+      return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
+    }
     let finalBody = responseBody;
     if (echActive && queryMeta && queryMeta.type === 65) {
       var owner = null;
@@ -657,11 +656,11 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
         }
       }
     }
-    const fResult = filterAnswers(finalBody, queryId);
-    if (response.status === 200 && fResult !== false && fResult?.passed !== false) return respond(finalBody, ctx, elapsed);
+    const fResult = answersPass(finalBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
+    if (response.status === 200 && fResult.passed && fResult.classification !== 'invalid') return respond(finalBody, ctx, elapsed);
     return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
   } catch (err) {
     logEvent('error', 'single_upstream_error', { requestId: ctx.requestId, stage: 'singleUpstream', provider: provider, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-  }
+  } finally { clearTimeout(timer); }
   return respond(servfail(body), ctx);
 }
