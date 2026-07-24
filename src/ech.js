@@ -11,6 +11,12 @@ const SVC_KEY_ECH = 5;
 const CACHE_TTL_MS = 600000;
 const STALE_TTL_MS = 3600000;
 const CF_ECH_DOMAIN = 'cloudflare-ech.com';
+const TYPE_CNAME = 5;
+const TYPE_NS = 2;
+const TYPE_PTR = 12;
+const TYPE_MX = 15;
+const TYPE_SRV = 33;
+const TYPE_SOA = 6;
 
 export const META_ECH_B64 = 'AsH+DQBECAAgACBoagCiXnMAHTpss2UZ+fW/N/wRflRdwnBsica6bun8NgAEAAEAATIVc2NvbnRlbnQueHguZmJjZG4ubmV0AAD+DQBBBQAgACCEpikd9ey1gwO/XpN3lcToJ/wzH7QlYfY3DZVicyiPAgAEAAEAATISZ3JhcGguZmFjZWJvb2suY29tAAD+DQBBCQAgACDP0okJjRYtkh5AWEPcjqA1Z9xWn2JkE49qj7n+gwY3GgAEAAEAATISdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBEAQAgACAdd+scUi0IYFsXnUIU7ko2Nd9+F8M26pAGZVpz/KrWPgAEAAEAAWQVZWNoLXB1YmxpYy5hdG1ldGEuY29tAAD+DQBBAwAgACC2SuomaKhQlkusWMQiUkCjuz8+0WR6jyC0DIsANT6gAQAEAAEAAWQSdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBIBwAgACBH8Vs19gc3DIDfTChp3+G6H71KivZY4dtweKazCugIQgAEAAEAATIZdmlkZW8tbGF4My0yLnh4LmZiY2RuLm5ldAAA/g0ASwYAIAAgti54XaD8VhwGEmxjGpaxUkuAz3VmpQSMOFSRgSPchR0ABAABAAEyHHNjb250ZW50LWxheDMtMi54eC5mYmNkbi5uZXQAAP4NAEgEACAAINQS+ceVTWrz9nffBM163+nvpZ9k5F5WK51t4DAGG3ReAAQAAQABZBl2aWRlby1sYXgzLTIueHguZmJjZG4ubmV0AAD+DQA7AAAgACBKTLEeFRxf7iC7wIdiRa2umX+yPtIeglGqBP7tfrgFdwAEAAEAAWQMZmFjZWJvb2suY29tAAD+DQA4AgAgACD+3t6VFcOw4TgdcWhjku+MWmbhq5VMyaPg3THh0iZNSAAEAAEAAWQJZmJjZG4ubmV0AAA=';
 const META_ECH_DATE = '2026-05-30';
@@ -472,16 +478,16 @@ function copyRdata(view, rdataOffset, rdlength) {
 }
 
 function expandRdataNames(view, rdataOffset, rdlength, rrType) {
-    if (rrType !== 5 && rrType !== 2 && rrType !== 12 && rrType !== 15 && rrType !== 33 && rrType !== 6) {
+    if (rrType !== TYPE_CNAME && rrType !== TYPE_NS && rrType !== TYPE_PTR && rrType !== TYPE_MX && rrType !== TYPE_SRV && rrType !== TYPE_SOA) {
         return copyRdata(view, rdataOffset, rdlength);
     }
 
-    if (rrType === 5 || rrType === 2 || rrType === 12) {
+    if (rrType === TYPE_CNAME || rrType === TYPE_NS || rrType === TYPE_PTR) {
         const name = decodeName(view, rdataOffset);
         return encodeDnsName(name.name);
     }
 
-    if (rrType === 15) {
+    if (rrType === TYPE_MX) {
         requireBytes(view, rdataOffset, 2);
         const pref = view.getUint16(rdataOffset);
         const mxName = decodeName(view, rdataOffset + 2);
@@ -492,7 +498,7 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
         return mxResult;
     }
 
-    if (rrType === 33) {
+    if (rrType === TYPE_SRV) {
         requireBytes(view, rdataOffset, 6);
         const srvName = decodeName(view, rdataOffset + 6);
         const encodedSrv = encodeDnsName(srvName.name);
@@ -502,7 +508,7 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
         return srvResult;
     }
 
-    if (rrType === 6) {
+    if (rrType === TYPE_SOA) {
         const mname = decodeName(view, rdataOffset);
         const rname = decodeName(view, mname.end);
         const encodedMname = encodeDnsName(mname.name);

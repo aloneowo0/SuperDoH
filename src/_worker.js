@@ -18,6 +18,9 @@ setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
+const TYPE_A = 1;
+const TYPE_AAAA = 28;
+const TYPE_HTTPS = 65;
 // ── Response helper with requestId ──────────────────────────────────
 
 function respond(body, ctx, upstreamTime) {
@@ -116,10 +119,10 @@ function bytesToBase64(bytes) {
 
 function rdataToJsonData(view, record) {
   const rdata = new Uint8Array(view.buffer, view.byteOffset + record.rdataOffset, record.rdlength);
-  if (record.type === 1 && rdata.length === 4) {
+  if (record.type === TYPE_A && rdata.length === 4) {
     return rdata[0] + '.' + rdata[1] + '.' + rdata[2] + '.' + rdata[3];
   }
-  if (record.type === 28 && rdata.length === 16) {
+  if (record.type === TYPE_AAAA && rdata.length === 16) {
     const parts = [];
     for (let i = 0; i < 16; i += 2) parts.push(((rdata[i] << 8) | rdata[i + 1]).toString(16));
     return parts.join(':');
@@ -209,7 +212,7 @@ async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
 async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   void echActive; // Meta type 65 ECH handled by postProcessBody()
   // Meta AAAA: no IPv6 reachability data, return NODATA immediately
-  if (queryMeta.type === 28) {
+  if (queryMeta.type === TYPE_AAAA) {
     return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60), ctx);
   }
 
@@ -220,7 +223,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   // Static route / cache hit — only use IPs matching query type
   const allRouteIPs = resolveMetaFromMap(queryMeta.name);
   if (allRouteIPs && allRouteIPs.length > 0) {
-    const expectedLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : -1;
+    const expectedLen = queryMeta.type === TYPE_A ? 4 : queryMeta.type === TYPE_AAAA ? 16 : -1;
     for (let ri = 0; ri < allRouteIPs.length; ri++) {
       if (allRouteIPs[ri].length === expectedLen) candidates.push(allRouteIPs[ri]);
     }
@@ -340,7 +343,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 // Meta type 65 ECH: handled by postProcessBody() in auto.js (autoFlow
 // routes non-A/AAAA to concurrentAll before metaResolve is reached).
   // Every IP must match expected RDATA length for the query type.
-  const rdataLen = queryMeta.type === 1 ? 4 : queryMeta.type === 28 ? 16 : null;
+  const rdataLen = queryMeta.type === TYPE_A ? 4 : queryMeta.type === TYPE_AAAA ? 16 : null;
   if (rdataLen) {
     const validFiltered = [];
     for (let fi = 0; fi < filtered.length; fi++) {
@@ -361,7 +364,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
 async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, remapList, googleConf) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
-  if (!queryMeta || (queryMeta.type !== 1 && queryMeta.type !== 28)) {
+  if (!queryMeta || (queryMeta.type !== TYPE_A && queryMeta.type !== TYPE_AAAA)) {
     return await concurrentAll(body, clientIP, queryMeta, echActive, preferredCf, preferredCft, preferredVrc, {}, ctx);
   }
 
@@ -391,7 +394,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
     owner = 'META';
     classifySource = 'domain_rule';
   }
-  if (!owner && googleConf && queryMeta.type === 1) {
+  if (!owner && googleConf && queryMeta.type === TYPE_A) {
     const googleMatch = matchGoogleProxy(queryMeta.name, googleConf);
     if (googleMatch && googleMatch.ips && googleMatch.ips.length) {
       owner = 'GOOGLE';
@@ -465,7 +468,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
     if (googleMatch && googleMatch.ips) {
       const proxyBytes = googleMatch.ips.map(ipToBytes).filter(function(b) { return b; });
       if (proxyBytes.length > 0) {
-        const existingIps = auto1Buf && auto1Buf.byteLength >= 12 ? extractIPBytes(auto1Buf, 1) : [];
+        const existingIps = auto1Buf && auto1Buf.byteLength >= 12 ? extractIPBytes(auto1Buf, TYPE_A) : [];
         const seen = {};
         const combined = [];
         // Proxy IPs first — GFW blackholes real Google IPv4, so browser
@@ -479,7 +482,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
           const key = Array.prototype.join.call(existingIps[ei], '.');
           if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
         }
-        const mergedBuf = buildDNS(queryMeta.id, queryMeta.name, 1, combined, 300);
+        const mergedBuf = buildDNS(queryMeta.id, queryMeta.name, TYPE_A, combined, 300);
         logEvent('info', 'google_proxy', { requestId: ctx.requestId, qname: queryMeta.name, mixed: existingIps.length, proxy: proxyBytes.length, total: combined.length });
         return respond(mergedBuf, ctx);
       }
@@ -551,7 +554,7 @@ export default {
 
       // Chrome DoH canary
       if (queryMeta && queryMeta.name && queryMeta.name.toLowerCase().replace(/\.+$/, '') === 'use-application-dns.net') {
-        if (queryMeta.type === 1 || queryMeta.type === 28) {
+        if (queryMeta.type === TYPE_A || queryMeta.type === TYPE_AAAA) {
           const nx = buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, [], 60);
           new DataView(nx).setUint16(2, 0x8183);
           const r = respond(nx, ctx);
@@ -561,8 +564,8 @@ export default {
       }
 
       // AAAA block for remap domains
-      if (queryMeta && queryMeta.name && queryMeta.type === 28 && regionCfg && regionCfg.remap && isCFDomain(queryMeta.name, regionCfg.remap)) {
-        const no6 = buildDNS(queryMeta.id, queryMeta.name, 28, [], 300);
+      if (queryMeta && queryMeta.name && queryMeta.type === TYPE_AAAA && regionCfg && regionCfg.remap && isCFDomain(queryMeta.name, regionCfg.remap)) {
+        const no6 = buildDNS(queryMeta.id, queryMeta.name, TYPE_AAAA, [], 300);
         const r6 = respond(no6, ctx);
         logEvent('info', 'request_end', { requestId: requestId, result: 'remap_no_aaaa', owner: null, answerCount: 0 });
         return r6;
@@ -618,7 +621,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
       return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
     }
     let finalBody = responseBody;
-    if (echActive && queryMeta && queryMeta.type === 65) {
+    if (echActive && queryMeta && queryMeta.type === TYPE_HTTPS) {
       let owner = null;
       if (queryMeta.forcedOwner) {
         owner = queryMeta.forcedOwner;
