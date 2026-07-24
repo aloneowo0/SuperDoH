@@ -56,7 +56,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
       processed = result.response;
     } else {
       abortPending();
-      processed = await postProcessBody(result.response, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx);
+      processed = await postProcessBody(result.response, queryMeta, echActive, ctx);
     }
     return dnsResponse(processed, result.time);
   }
@@ -264,18 +264,13 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
   return allIps;
 }
 
-export async function postProcessBody(responseBody, queryMeta, echActive, activePref, preferredCft, preferredVrc, ctx) {
+export async function postProcessBody(responseBody, queryMeta, echActive, ctx) {
   if (!queryMeta) return responseBody;
-  void activePref;
-  void preferredCft;
-  void preferredVrc;
 
   if (echActive && queryMeta.type === 65) {
     try {
       let owner = null;
-      if (queryMeta._knownCF) {
-        owner = 'CF';
-      } else if (queryMeta.forcedOwner) {
+      if (queryMeta.forcedOwner) {
         owner = queryMeta.forcedOwner;
       } else if (isMetaDomain(queryMeta.name)) {
         owner = 'META';

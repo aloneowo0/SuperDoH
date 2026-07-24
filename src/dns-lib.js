@@ -10,6 +10,7 @@ const TYPE_AAAA = 28;
 const TYPE_OPT = 41;
 const OPT_EDE = 15;
 const MAX_NAME_JUMPS = 128;
+const FOREIGN_DEFAULT_TIMEOUT_MS = 50;
 
 // ── Low-level byte helpers ──────────────────────────────────────────
 
@@ -494,7 +495,7 @@ export function servfail(originalBody, edeCode = 0, edeText = '') {
 
   const qdcount = qdBytes.length > 0 ? 1 : 0;
   out.setUint16(0, id);
-  out.setUint16(2, 0x8182);
+  const originalFlags = originalView && originalView.byteLength >= 4 ? originalView.getUint16(2) : 0; const rdBit = originalFlags & 0x0100; out.setUint16(2, 0x8182 | rdBit);
   out.setUint16(4, qdcount);
   out.setUint16(6, 0);
   out.setUint16(8, 0);
@@ -600,7 +601,7 @@ export async function resolveDNSWire(domain, type) {
 }
 
 export async function resolveDNSWireForeign(body, timeoutMs) {
-  const t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 50;
+  const t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : FOREIGN_DEFAULT_TIMEOUT_MS;
   const started = Date.now();
   const deadline = started + t;
 

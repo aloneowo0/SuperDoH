@@ -475,11 +475,11 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
         // Happy Eyeballs must try the tunnel proxy before timing out on
         // blocked direct IPs.
         for (let pi = 0; pi < proxyBytes.length; pi++) {
-          const key = Array.prototype.join.call(proxyBytes[pi], '.');
+          const key = [...proxyBytes[pi]].join('.');
           if (!seen[key]) { seen[key] = true; combined.push(proxyBytes[pi]); }
         }
         for (let ei = 0; ei < existingIps.length; ei++) {
-          const key = Array.prototype.join.call(existingIps[ei], '.');
+          const key = [...existingIps[ei]].join('.');
           if (!seen[key]) { seen[key] = true; combined.push(existingIps[ei]); }
         }
         const mergedBuf = buildDNS(queryMeta.id, queryMeta.name, TYPE_A, combined, 300);

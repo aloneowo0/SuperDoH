@@ -1,4 +1,4 @@
-import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
+import { toBytes, resolveDNSWire, extractIPStrings, parseAnswers } from './dns-lib.js';
 import { logEvent } from './logger.js';
 import { GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY, GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR } from './config.js';
 
@@ -122,42 +122,15 @@ export async function probeOwner(domain) {
 export function extractIps(buffer) {
   const ips = [];
   try {
-    const bytes = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-    if (bytes.length < 12) return ips;
-    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    const ancount = view.getUint16(6);
-    let offset = 12;
-    for (let i = 0; i < view.getUint16(4); i++) {
-      while (offset < bytes.length) {
-        const b = bytes[offset];
-        if (b === 0) { offset++; break; }
-        if ((b & 0xC0) === 0xC0) { offset += 2; break; }
-        offset += b + 1;
-      }
-      offset += 4;
+    const aAnswers = parseAnswers(buffer, TYPE_A);
+    for (const a of aAnswers) {
+      ips.push(a.rdata[0] + '.' + a.rdata[1] + '.' + a.rdata[2] + '.' + a.rdata[3]);
     }
-    for (let i = 0; i < ancount; i++) {
-      if (offset + 12 > bytes.length) break;
-      let b = bytes[offset];
-      if ((b & 0xC0) === 0xC0) { offset += 2; }
-      else {
-        while (b !== 0) {
-          if ((b & 0xC0) === 0xC0) { offset += 1; break; }
-          offset += b + 1;
-          b = bytes[offset];
-        }
-        offset++;
-      }
-      const type = view.getUint16(offset); offset += 8;
-      const rdlen = view.getUint16(offset); offset += 2;
-      if (type === TYPE_A && rdlen === 4) {
-        ips.push(bytes[offset] + '.' + bytes[offset+1] + '.' + bytes[offset+2] + '.' + bytes[offset+3]);
-      } else if (type === TYPE_AAAA && rdlen === 16) {
-        const p = [];
-        for (let j = 0; j < 16; j += 2) p.push(((bytes[offset+j] << 8) | bytes[offset+j+1]).toString(16));
-        ips.push(p.join(':'));
-      }
-      offset += rdlen;
+    const aaaaAnswers = parseAnswers(buffer, TYPE_AAAA);
+    for (const a of aaaaAnswers) {
+      const p = [];
+      for (let j = 0; j < 16; j += 2) p.push(((a.rdata[j] << 8) | a.rdata[j + 1]).toString(16));
+      ips.push(p.join(':'));
     }
   } catch (err) {
     logEvent('error', 'cdn_error', { stage: 'extractIps', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
@@ -202,7 +175,7 @@ function compileCidrs(cidrList) {
                 const end = (start | ((1 << (32 - bits)) - 1)) >>> 0;
                 v4.push({ start: start, end: end });
             }
-        } catch (_) { /* skip malformed CIDR entry */ }
+        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed CIDR entry */ }
     }
     return { v4: v4, v6: v6 };
 }
@@ -215,7 +188,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipBn >= ranges[i].start && ipBn <= ranges[i].end) return true;
             }
-        } catch (_) { /* skip malformed IPv6 */ }
+        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed IPv6 */ }
     } else {
         try {
             const ipNum = ipToLong(ip);
@@ -223,7 +196,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipNum >= ranges[i].start && ipNum <= ranges[i].end) return true;
             }
-        } catch (_) { /* skip malformed IPv4 */ }
+        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed IPv4 */ }
     }
     return false;
 }

@@ -56,11 +56,11 @@ export function filterAnswers(response, queryId) {
         if (rcode === 1 || rcode === 2 || rcode === 4 || rcode === 5) return { passed: false, reason: 'error_rcode' };
         for (const answer of packet.answers) {
             if (answer.type === TYPE_A && answer.rdlength === 4) {
-                const addr = packet.bytes.subarray(answer.rdataOffset, answer.end);
+                const addr = packet.bytes.subarray(answer.rdataOffset, answer.rdataOffset + answer.rdlength);
                 if (matchesBlockedRange(4, addr)) return { passed: false, reason: 'blocked_ip' };
             }
             if (answer.type === TYPE_AAAA && answer.rdlength === 16) {
-                const addr = packet.bytes.subarray(answer.rdataOffset, answer.end);
+                const addr = packet.bytes.subarray(answer.rdataOffset, answer.rdataOffset + answer.rdlength);
                 if (matchesBlockedRange(6, addr)) return { passed: false, reason: 'blocked_ip' };
             }
         }

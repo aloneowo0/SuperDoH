@@ -89,6 +89,7 @@ export async function fetchCFEch(_env, _ctx) {
 }
 
 export function __resetCFEchCacheForTests() {
+    // Test-only export — not used at runtime
     echCache.clear();
 }
 
