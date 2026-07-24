@@ -1,7 +1,8 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
 import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS, decodeName } from './dns-lib.js';
-import { UPSTREAMS } from './config.js';
+import { HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { logEvent } from './logger.js';
+import { validateResponse } from './edns.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
@@ -25,17 +26,23 @@ export async function fetchCFEch(_env, _ctx) {
         }
 
         var query = buildWireQuery(CF_ECH_DOMAIN, TYPE_HTTPS);
-        var googleUrl = UPSTREAMS['google'] ? UPSTREAMS['google'].url : null;
-        if (!googleUrl) return getStaleCFEch(cached);
-
+        var queryId = new DataView(query).getUint16(0);
+        var entries = Object.entries(UPSTREAMS).slice(0, 3);
         var buf = null;
+        var controller = new AbortController();
+        var timer = setTimeout(function() { controller.abort(); }, HARD_TIMEOUT_MS);
+        var deadline = Date.now() + HARD_TIMEOUT_MS;
         try {
-          var res = await fetch(googleUrl, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query });
-          if (res.status === 200) {
+        for (var i = 0; i < entries.length && !buf && Date.now() < deadline; i++) {
+          try {
+            var res = await fetch(entries[i][1].url, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query, signal: controller.signal });
+            if (res.status !== 200) continue;
             var ab = await res.arrayBuffer();
-            if (ab.byteLength >= 12 && new DataView(ab).getUint16(6) > 0) buf = ab;
-          }
-        } catch (_) {}
+            var validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
+            if (validation.classification === 'positive') buf = ab;
+          } catch (_) {}
+        }
+        } finally { clearTimeout(timer); }
         if (!buf) return getStaleCFEch(cached);
 
         const packet = parseDns(buf);
@@ -73,6 +80,10 @@ export async function fetchCFEch(_env, _ctx) {
         logEvent('error', 'ech_error', { stage: 'fetchCFEch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return getStaleCFEch(echCache.get(CF_ECH_DOMAIN));
     }
+}
+
+export function __resetCFEchCacheForTests() {
+    echCache.clear();
 }
 
 function getStaleCFEch(cached) {
@@ -416,7 +427,7 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
 
     const buf = new Uint8Array(totalLen);
     const v = new DataView(buf.buffer);
-    var newFlags = (flags || 0x8180) & ~0x0020;
+    var newFlags = (flags || 0x8180) & ~0x0200;
     newFlags = newFlags & ~0x000F;
     newFlags |= 0x8000;
     const tailNsCount = tailBytes.length ? (nsCount || 0) : 0;
