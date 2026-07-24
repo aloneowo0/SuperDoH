@@ -23,9 +23,10 @@ export function requireBytes(view, offset, len) {
 // ── DNS name encoding/decoding ──────────────────────────────────────
 
 export function encodeDnsName(domain) {
-  if (!domain || domain === '.') return new Uint8Array([0]);
-  const parts = domain.split('.');
-  const buf = new Uint8Array(domain.length + 2);
+  const normalized = normalizeDnsName(domain);
+  if (!normalized) return new Uint8Array([0]);
+  const parts = normalized.split('.');
+  const buf = new Uint8Array(normalized.length + 2);
   let offset = 0;
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
@@ -34,6 +35,28 @@ export function encodeDnsName(domain) {
   }
   buf[offset++] = 0;
   return buf.slice(0, offset);
+}
+
+export function normalizeDnsName(domain) {
+  if (typeof domain !== 'string') throw new Error('DNS name must be a string');
+  const name = domain.replace(/\.+$/, '');
+  if (!name) return '';
+  const labels = name.split('.');
+  let encodedLength = 1;
+  for (const label of labels) {
+    if (!/^[A-Za-z0-9_-]+$/.test(label) || label.length > 63) {
+      throw new Error('invalid DNS label');
+    }
+    encodedLength += label.length + 1;
+  }
+  if (encodedLength > 255) throw new Error('DNS name exceeds 255 octets');
+  return name.toLowerCase();
+}
+
+export function normalizeQtype(type) {
+  const qtype = Number(type);
+  if (!Number.isInteger(qtype) || qtype < 1 || qtype > 0xFFFF) throw new Error('invalid DNS qtype');
+  return qtype;
 }
 
 // ── DNS packet parsing (canonical: edns.js version with cycle detection) ──
@@ -264,13 +287,10 @@ function readNameRaw(bytes, start) {
 
 export function buildWireQuery(domain, type) {
   const id = Math.floor(Math.random() * 65536);
-  const labels = domain.replace(/\.+$/, '').split('.');
+  const nameBytes = encodeDnsName(domain);
+  const qtype = normalizeQtype(type);
 
-  let nameLen = 0;
-  for (const label of labels) nameLen += label.length + 1;
-  nameLen += 1;
-
-  const total = 12 + nameLen + 4;
+  const total = 12 + nameBytes.length + 4;
   const buf = new ArrayBuffer(total);
   const v = new DataView(buf);
   const bytes = new Uint8Array(buf);
@@ -283,27 +303,18 @@ export function buildWireQuery(domain, type) {
   v.setUint16(10, 0);
 
   let offset = 12;
-  for (const label of labels) {
-    bytes[offset++] = label.length;
-    for (let i = 0; i < label.length; i++) bytes[offset++] = label.charCodeAt(i);
-  }
-  bytes[offset++] = 0;
+  bytes.set(nameBytes, offset); offset += nameBytes.length;
 
-  v.setUint16(offset, type); offset += 2;
+  v.setUint16(offset, qtype); offset += 2;
   v.setUint16(offset, 1);
 
   return buf;
 }
 
 export function buildQueryWireId(qname, qtype, id) {
-  const labels = qname.replace(/\.+$/, '').split('.');
-  const nameBytes = [];
-  for (const label of labels) {
-    if (label.length > 63) break;
-    nameBytes.push(label.length);
-    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
-  }
-  nameBytes.push(0);
+  const nameBytes = encodeDnsName(qname);
+  const normalizedType = normalizeQtype(qtype);
+  if (!Number.isInteger(id) || id < 0 || id > 0xFFFF) throw new Error('invalid DNS id');
   const total = 12 + nameBytes.length + 4;
   const out = new Uint8Array(total);
   const view = new DataView(out.buffer);
@@ -315,7 +326,7 @@ export function buildQueryWireId(qname, qtype, id) {
   view.setUint16(10, 0);
   let off = 12;
   out.set(nameBytes, off); off += nameBytes.length;
-  view.setUint16(off, qtype); off += 2;
+  view.setUint16(off, normalizedType); off += 2;
   view.setUint16(off, 1);
   return out.buffer;
 }
@@ -324,8 +335,7 @@ export function buildQueryFromURL(url) {
   const dnsParam = url.searchParams.get('dns');
   if (dnsParam) {
     try {
-      const b64 = dnsParam.replace(/-/g, '+').replace(/_/g, '/');
-      const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const bin = decodeBase64Url(dnsParam);
       return bin.buffer;
     } catch (err) {
       logEvent('error', 'dns_error', { stage: 'buildQueryFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
@@ -334,11 +344,23 @@ export function buildQueryFromURL(url) {
 
   const name = url.searchParams.get('name');
   if (!name) return null;
-  const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
-  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
-  const qtype = typeMap[typeStr] || parseInt(typeStr, 10) || 1;
+  const qtype = parseQtype(url.searchParams.get('type'));
 
   return buildQueryWireId(name, qtype, Math.floor(Math.random() * 65536));
+}
+
+export function decodeBase64Url(value) {
+  if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value) || value.length % 4 === 1) {
+    throw new Error('invalid base64url DNS parameter');
+  }
+  const b64 = value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4);
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
+
+export function parseQtype(value) {
+  const typeStr = String(value || 'A').toUpperCase();
+  const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
+  return normalizeQtype(typeMap[typeStr] || Number(typeStr));
 }
 
 // ── Query metadata parsers ──────────────────────────────────────────
@@ -389,6 +411,22 @@ export function parseQueryMeta(body) {
   }
 }
 
+export function validateDnsQuery(body) {
+  const packet = parseDns(body);
+  const flags = packet.header.flags;
+  if ((flags & 0x8000) !== 0 || ((flags >> 11) & 0x0F) !== 0 || packet.header.qdcount !== 1) {
+    throw new Error('invalid DNS query header');
+  }
+  const question = decodeName(packet.view, DNS_HEADER_LEN);
+  requireBytes(packet.view, question.end, 4);
+  const type = packet.view.getUint16(question.end);
+  const qclass = packet.view.getUint16(question.end + 2);
+  if (qclass !== 1) throw new Error('DNS query class must be IN');
+  normalizeQtype(type);
+  const name = normalizeDnsName(question.name);
+  return { id: packet.header.id, name, type };
+}
+
 // ── DNS response builders ───────────────────────────────────────────
 
 export function dnsResponse(body, upstreamTime) {
@@ -399,14 +437,9 @@ export function dnsResponse(body, upstreamTime) {
 }
 
 export function buildDNS(id, qName, qType, rdataList, ttl) {
-  const labels = qName.replace(/\.+$/, '').split('.');
-  const nameBytes = [];
-  for (const label of labels) {
-    if (label.length > 63) throw new Error('DNS label exceeds 63 octets');
-    nameBytes.push(label.length);
-    for (let i = 0; i < label.length; i++) nameBytes.push(label.charCodeAt(i));
-  }
-  nameBytes.push(0);
+  if (!Number.isInteger(id) || id < 0 || id > 0xFFFF) throw new Error('invalid DNS id');
+  const nameBytes = encodeDnsName(qName);
+  const type = normalizeQtype(qType);
 
   let totalLen = 12 + nameBytes.length + 4;
   for (const rd of rdataList) totalLen += 12 + rd.length;
@@ -423,12 +456,12 @@ export function buildDNS(id, qName, qType, rdataList, ttl) {
 
   let offset = 12;
   bytes.set(nameBytes, offset); offset += nameBytes.length;
-  view.setUint16(offset, qType); offset += 2;
+  view.setUint16(offset, type); offset += 2;
   view.setUint16(offset, 1); offset += 2;
 
   for (const rd of rdataList) {
     view.setUint16(offset, 0xC00C); offset += 2;
-    view.setUint16(offset, qType); offset += 2;
+    view.setUint16(offset, type); offset += 2;
     view.setUint16(offset, 1); offset += 2;
     view.setUint32(offset, ttl); offset += 4;
     view.setUint16(offset, rd.length); offset += 2;
