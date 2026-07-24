@@ -32,30 +32,39 @@
     <p>__UPSTREAM_LIST__</p>
   </section>
 
-  <div class="row">
-  <section>
-    <h2>上游 EDNS 能力</h2>
-    <p style="font-size:.85em;color:#666">部署时自动探测或手动标记</p>
-    __EDNS_CAPS_TABLE__
-  </section>
-  <section>
-    <h2>域名解析</h2>
-    <div class="resolver-form">
-      <input id="dns-name" type="text" placeholder="输入域名，如 example.com">
-      <select id="dns-type">
-        <option value="1">A (IPv4)</option>
-        <option value="28">AAAA (IPv6)</option>
-        <option value="15">MX</option>
-        <option value="16">TXT</option>
-        <option value="5">CNAME</option>
-        <option value="2">NS</option>
-        <option value="65">HTTPS</option>
-      </select>
-      <button class="btn" onclick="resolveDomain()">解析</button>
+  <!-- Sticker tab cards -->
+  <div class="tab-bar">
+    <div class="sticker-card active" data-tab="home">
+      <div class="tape"></div>
+      <span>主页</span>
     </div>
-    <div id="results"><table><thead><tr><th>名称</th><th>类型</th><th>TTL</th><th>数据</th></tr></thead><tbody></tbody></table></div>
-  </section>
-</div>
+    <div class="sticker-card" data-tab="config">
+      <div class="tape"></div>
+      <span>配置</span>
+    </div>
+  </div>
+
+  <!-- Tab panels -->
+  <div class="tab-content">
+    <div class="tab-panel active" id="panel-home">
+      <div class="resolver-form">
+        <input id="dns-name" type="text" placeholder="输入域名，如 example.com">
+        <select id="dns-type">
+          <option value="1">A (IPv4)</option>
+          <option value="28">AAAA (IPv6)</option>
+          <option value="15">MX</option>
+          <option value="16">TXT</option>
+          <option value="5">CNAME</option>
+          <option value="2">NS</option>
+          <option value="65">HTTPS</option>
+        </select>
+        <button type="button" class="btn" onclick="resolveDomain()">解析</button>
+      </div>
+      <div id="results"><table><thead><tr><th>名称</th><th>类型</th><th>TTL</th><th>数据</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tab-panel" id="panel-config">
+    </div>
+  </div>
 
   <section>
     <h2>使用方法</h2>

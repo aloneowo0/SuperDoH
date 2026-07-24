@@ -23,3 +23,5 @@ async function resolveDomain(){
   }
 }
 document.getElementById('dns-name').addEventListener('keydown',function(e){if(e.key==='Enter')resolveDomain()});
+
+document.querySelectorAll('.sticker-card').forEach(function(card){card.addEventListener('click',function(){document.querySelectorAll('.sticker-card').forEach(function(c){c.classList.remove('active')});document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});card.classList.add('active');document.getElementById('panel-'+card.dataset.tab).classList.add('active')})});

@@ -35,6 +35,16 @@ footer a{color:var(--primary-color)}
 .caps-table td{padding:6px 10px;border-bottom:1px solid #eee;font-size:.88em}
 .caps-table .yes{color:#27ae60;font-weight:700}
 .caps-table .no{color:#e74c3c}
-.row{display:flex;gap:20px;flex-wrap:wrap}
-.row>section{flex:1;min-width:280px}
-@media(max-width:600px){header h1{font-size:1.5rem}section{padding:1rem}.lang-switch{float:none;display:inline-block;margin-top:.5rem}.row{flex-direction:column}}
+.tab-bar{display:flex;gap:16px;justify-content:center;margin:1.2rem 0 0}
+.sticker-card{background:#fff;padding:.7rem 1.8rem;cursor:pointer;position:relative;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15);font-weight:700;font-size:1.05rem;color:#555;transition:all .3s ease;user-select:none}
+.sticker-card:nth-child(1){transform:rotate(-1deg)}
+.sticker-card:nth-child(2){transform:rotate(1deg)}
+.sticker-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.2);color:#333}
+.sticker-card:nth-child(1):hover{transform:rotate(-.5deg)}
+.sticker-card:nth-child(2):hover{transform:rotate(.5deg)}
+.sticker-card.active{transform:rotate(0);box-shadow:0 4px 16px rgba(0,0,0,.2);color:var(--primary-color);border-bottom:3px solid var(--primary-color)}
+.sticker-card .tape{position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:40px;height:16px;background:rgba(255,235,130,.6);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.tab-content{margin-top:1rem}
+.tab-panel{display:none}
+.tab-panel.active{display:block;background:#fff;padding:1.2rem 1.5rem;border-radius:5px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+@media(max-width:600px){header h1{font-size:1.5rem}section{padding:1rem}.lang-switch{float:none;display:inline-block;margin-top:.5rem}.sticker-card{padding:.5rem 1.2rem;font-size:.95rem}}

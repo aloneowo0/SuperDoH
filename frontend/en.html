@@ -32,30 +32,37 @@
     <p>__UPSTREAM_LIST__</p>
   </section>
 
-  <div class="row">
-  <section>
-    <h2>Upstream EDNS Capabilities</h2>
-    <p style="font-size:.85em;color:#666">Auto-detected or manually configured</p>
-    __EDNS_CAPS_TABLE__
-  </section>
-  <section>
-    <h2>DNS Lookup</h2>
-    <div class="resolver-form">
-      <input id="dns-name" type="text" placeholder="Enter domain, e.g. example.com">
-      <select id="dns-type">
-        <option value="1">A (IPv4)</option>
-        <option value="28">AAAA (IPv6)</option>
-        <option value="15">MX</option>
-        <option value="16">TXT</option>
-        <option value="5">CNAME</option>
-        <option value="2">NS</option>
-        <option value="65">HTTPS</option>
-      </select>
-      <button class="btn" onclick="resolveDomain()">Lookup</button>
+  <div class="tab-bar">
+    <div class="sticker-card active" data-tab="home">
+      <div class="tape"></div>
+      <span>Home</span>
     </div>
-    <div id="results"><table><thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Data</th></tr></thead><tbody></tbody></table></div>
-  </section>
-</div>
+    <div class="sticker-card" data-tab="config">
+      <div class="tape"></div>
+      <span>Config</span>
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <div class="tab-panel active" id="panel-home">
+      <div class="resolver-form">
+        <input id="dns-name" type="text" placeholder="Enter domain, e.g. example.com">
+        <select id="dns-type">
+          <option value="1">A (IPv4)</option>
+          <option value="28">AAAA (IPv6)</option>
+          <option value="15">MX</option>
+          <option value="16">TXT</option>
+          <option value="5">CNAME</option>
+          <option value="2">NS</option>
+          <option value="65">HTTPS</option>
+        </select>
+        <button type="button" class="btn" onclick="resolveDomain()">Lookup</button>
+      </div>
+      <div id="results"><table><thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Data</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="tab-panel" id="panel-config">
+    </div>
+  </div>
 
   <section>
     <h2>Usage</h2>
