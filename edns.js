@@ -21,7 +21,7 @@ function autoMode(body, clientIP) {
         }
 
         return appendOpt(packet, ecs, 0).buffer;
-    } catch (_) {
+    } catch (_) { // ignore — return original body on ECS failure
         return body;
     }
 }
@@ -43,7 +43,7 @@ export function prepareQuery(body, clientIP) {
         }
 
         return prepared;
-    } catch (_) {
+    } catch (_) { // ignore — return original body on prepare failure
         return body;
     }
 }
@@ -64,7 +64,7 @@ export function filterAnswers(response, queryId) {
                 if (matchesBlockedRange(6, addr)) return { passed: false, reason: 'blocked_ip' };
             }
         }
-    } catch (_) {
+    } catch (_) { // ignore — return parse error result on malformed response
         return { passed: false, reason: 'parse_error' };
     }
 
@@ -95,7 +95,7 @@ export function validateResponse(response, queryId, expectedQname, expectedQtype
         if (rcode === 3 || (rcode === 0 && answerCount === 0)) return { classification: 'negative', rcode, answerCount };
         if (rcode === 1 || rcode === 2 || rcode === 4 || rcode === 5) return { classification: 'invalid', rcode, answerCount };
         return { classification: 'invalid', rcode, answerCount };
-    } catch (_) {
+    } catch (_) { // ignore — return invalid on malformed response
         return { classification: 'invalid', rcode: -1, answerCount: 0 };
     }
 }
@@ -107,7 +107,7 @@ function readQuestion(packet) {
         var name = result ? result.name.toLowerCase() : null;
         if (!result || result.end + 4 > packet.bytes.length) return null;
         return { name: name, type: packet.view.getUint16(result.end) };
-    } catch (_) {
+    } catch (_) { // ignore — return null on malformed question
         return null;
     }
 }

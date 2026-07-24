@@ -13,8 +13,8 @@ const STALE_TTL_MS = 3600000;
 const CF_ECH_DOMAIN = 'cloudflare-ech.com';
 
 export const META_ECH_B64 = 'AsH+DQBECAAgACBoagCiXnMAHTpss2UZ+fW/N/wRflRdwnBsica6bun8NgAEAAEAATIVc2NvbnRlbnQueHguZmJjZG4ubmV0AAD+DQBBBQAgACCEpikd9ey1gwO/XpN3lcToJ/wzH7QlYfY3DZVicyiPAgAEAAEAATISZ3JhcGguZmFjZWJvb2suY29tAAD+DQBBCQAgACDP0okJjRYtkh5AWEPcjqA1Z9xWn2JkE49qj7n+gwY3GgAEAAEAATISdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBEAQAgACAdd+scUi0IYFsXnUIU7ko2Nd9+F8M26pAGZVpz/KrWPgAEAAEAAWQVZWNoLXB1YmxpYy5hdG1ldGEuY29tAAD+DQBBAwAgACC2SuomaKhQlkusWMQiUkCjuz8+0WR6jyC0DIsANT6gAQAEAAEAAWQSdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBIBwAgACBH8Vs19gc3DIDfTChp3+G6H71KivZY4dtweKazCugIQgAEAAEAATIZdmlkZW8tbGF4My0yLnh4LmZiY2RuLm5ldAAA/g0ASwYAIAAgti54XaD8VhwGEmxjGpaxUkuAz3VmpQSMOFSRgSPchR0ABAABAAEyHHNjb250ZW50LWxheDMtMi54eC5mYmNkbi5uZXQAAP4NAEgEACAAINQS+ceVTWrz9nffBM163+nvpZ9k5F5WK51t4DAGG3ReAAQAAQABZBl2aWRlby1sYXgzLTIueHguZmJjZG4ubmV0AAD+DQA7AAAgACBKTLEeFRxf7iC7wIdiRa2umX+yPtIeglGqBP7tfrgFdwAEAAEAAWQMZmFjZWJvb2suY29tAAD+DQA4AgAgACD+3t6VFcOw4TgdcWhjku+MWmbhq5VMyaPg3THh0iZNSAAEAAEAAWQJZmJjZG4ubmV0AAA=';
-var META_ECH_DATE = '2026-05-30';
-console.log('[ECH] Meta ECH config date: ' + META_ECH_DATE);
+const META_ECH_DATE = '2026-05-30';
+logEvent('info', 'meta_ech_date', { date: META_ECH_DATE });
 
 const echCache = new Map();
 
@@ -40,7 +40,7 @@ export async function fetchCFEch(_env, _ctx) {
             var ab = await res.arrayBuffer();
             var validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
             if (validation.classification === 'positive') buf = ab;
-          } catch (_) {}
+          } catch (_) { /* ignore — skip failed upstream in ECH fetch loop */ }
         }
         } finally { clearTimeout(timer); }
         if (!buf) return getStaleCFEch(cached);

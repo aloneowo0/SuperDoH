@@ -55,7 +55,7 @@ export async function parseDohRequest(request) {
     crypto.getRandomValues(idBytes);
     const body = buildQueryWireId(name, parseQtype(url.searchParams.get('type')), idBytes[0]);
     return { body, queryMeta: validateDnsQuery(body), wantsJson };
-  } catch (_) {
+  } catch (_) { // ignore — return 400 on malformed DNS query
     return clientError(400, 'invalid_dns_query');
   }
 }

@@ -9,7 +9,7 @@ import { prepareQuery } from './edns.js';
 import { serveHomepage, serveHomepageEn } from './homepage.js';
 import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './auto.js';
 import { fetchCFEch, injectECH } from './ech.js';
-import { probeOwner, detectOwner, extractIps, isMetaDomain } from './cdn.js';
+import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './cdn.js';
 import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName } from './dns-lib.js';
 import { resolveMetaFromMap } from './meta-route.js';
 import { logEvent, setLogLevel } from './logger.js';
@@ -198,22 +198,6 @@ async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
   return null;
 }
 
-// ── classifyResponse ───────────────────────────────────────────────
-
-function classifyResponse(buffer, type, ctx) {
-  try {
-    if (type !== 1 && type !== 28) return null;
-    const ips = extractIps(buffer);
-    for (const ip of ips) {
-      const owner = detectOwner(ip);
-      if (owner) return owner;
-    }
-  } catch (err) {
-    logEvent('error', 'classify_error', { requestId: ctx && ctx.requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-  }
-  return null;
-}
-
 // ── Meta resolve: 800ms + 50ms collect ─────────────────────────────
 //
 // Tagged-promise + mask pattern:
@@ -267,7 +251,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
   function abortAll() {
     for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
+      try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
@@ -620,7 +604,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
   const queryBody = prepareQuery(body, clientIP);
   const started = Date.now();
   const ctrl = new AbortController();
-  const timer = setTimeout(function() { try { ctrl.abort(); } catch (_) {} }, HARD_TIMEOUT_MS);
+  const timer = setTimeout(function() { try { ctrl.abort(); } catch (_) { /* ignore — abort may throw if already aborted */ } }, HARD_TIMEOUT_MS);
   try {
     const response = await fetch(upstream.url, {
       method: 'POST',

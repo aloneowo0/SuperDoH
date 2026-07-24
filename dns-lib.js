@@ -5,7 +5,10 @@ import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const DNS_HEADER_LEN = 12;
+const TYPE_A = 1;
+const TYPE_AAAA = 28;
 const TYPE_OPT = 41;
+const OPT_EDE = 15;
 const MAX_NAME_JUMPS = 128;
 
 // ── Low-level byte helpers ──────────────────────────────────────────
@@ -501,11 +504,11 @@ export function servfail(originalBody, edeCode = 0, edeText = '') {
   if (includeEde) {
     const off = headerLen + qdBytes.length;
     bytes[off] = 0;
-    out.setUint16(off + 1, 41);
+    out.setUint16(off + 1, TYPE_OPT);
     out.setUint16(off + 3, 4096);
     out.setUint32(off + 5, 0);
     out.setUint16(off + 9, edeOptionLen);
-    out.setUint16(off + 11, 15);
+    out.setUint16(off + 11, OPT_EDE);
     out.setUint16(off + 13, 2 + textBytes.length);
     out.setUint16(off + 15, edeCode);
     if (textBytes.length) bytes.set(textBytes, off + 17);
@@ -529,7 +532,7 @@ function queryHadOpt(bytes) {
       if (record.type === TYPE_OPT) return true;
       offset = record.end;
     }
-  } catch (_) {
+  } catch (_) { // ignore — degrade gracefully on parse failure
     return false;
   }
   return false;
@@ -549,7 +552,7 @@ export async function resolveDNSWire(domain, type) {
 
   function abortAll() {
     for (const c of controllers) {
-      try { c.abort(); } catch (_) {}
+      try { c.abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
@@ -611,7 +614,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   function abortAll() {
     done = true;
     for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
+      try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
@@ -666,16 +669,16 @@ export function extractIPBytes(buf, type) {
 export function extractIPStrings(buf, type) {
   try {
     const answers = parseAnswers(buf, type);
-    if (type === 1) {
+    if (type === TYPE_A) {
       return answers.filter(function (a) {
-        return a.type === 1 && a.rdata.length === 4;
+        return a.type === TYPE_A && a.rdata.length === 4;
       }).map(function (a) {
         return a.rdata[0] + '.' + a.rdata[1] + '.' + a.rdata[2] + '.' + a.rdata[3];
       });
     }
-    if (type === 28) {
+    if (type === TYPE_AAAA) {
       return answers.filter(function (a) {
-        return a.type === 28 && a.rdata.length === 16;
+        return a.type === TYPE_AAAA && a.rdata.length === 16;
       }).map(function (a) {
         const p = [];
         for (let i = 0; i < 16; i += 2) {
@@ -727,7 +730,7 @@ export async function resolveDNSWireAll(domain, type) {
   await Promise.race([Promise.allSettled(promises), timeout]);
 
   for (const c of controllers) {
-    try { c.abort(); } catch (_) {}
+    try { c.abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
   }
 
   const results = await Promise.allSettled(promises);

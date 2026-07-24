@@ -67,5 +67,5 @@ export function resolveMetaFromMap(domain) {
       if (d === suffix || d.endsWith('.' + suffix)) return [wild[i][1]];
     }
     return null;
-  } catch (_) { return null; }
+  } catch (_) { return null; /* ignore — return null on malformed domain */ }
 }

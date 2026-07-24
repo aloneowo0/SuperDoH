@@ -36,7 +36,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
 
   function abortPending() {
     for (const p of pending) {
-      try { p.ctrl.abort(); } catch (_) {}
+      try { p.ctrl.abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 
@@ -183,7 +183,7 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
 
   function abortAll() {
     for (var i = 0; i < controllers.length; i++) {
-      try { controllers[i].abort(); } catch (_) {}
+      try { controllers[i].abort(); } catch (_) { /* ignore — abort may throw if already aborted */ }
     }
   }
 

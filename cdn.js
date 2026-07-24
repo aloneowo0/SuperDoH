@@ -2,6 +2,8 @@ import { toBytes, resolveDNSWire, extractIPStrings } from './dns-lib.js';
 import { logEvent } from './logger.js';
 import { GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY, GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR } from './config.js';
 
+const TYPE_A = 1;
+const TYPE_AAAA = 28;
 const PROBE_CACHE_TTL = 3600 * 1000;
 const MAX_PROBE_CACHE = 256;
 
@@ -69,7 +71,7 @@ export function detectOwner(ip) {
         if (isIpInCompiled(trimmed, COMPILED_TWITTER)) return 'TWITTER';
         if (isIpInCompiled(trimmed, COMPILED_TOR)) return 'TOR';
         return null;
-    } catch (_) {
+    } catch (_) { // ignore — return null on malformed IP
         return null;
     }
 }
@@ -148,9 +150,9 @@ export function extractIps(buffer) {
       }
       const type = view.getUint16(offset); offset += 8;
       const rdlen = view.getUint16(offset); offset += 2;
-      if (type === 1 && rdlen === 4) {
+      if (type === TYPE_A && rdlen === 4) {
         ips.push(bytes[offset] + '.' + bytes[offset+1] + '.' + bytes[offset+2] + '.' + bytes[offset+3]);
-      } else if (type === 28 && rdlen === 16) {
+      } else if (type === TYPE_AAAA && rdlen === 16) {
         const p = [];
         for (let j = 0; j < 16; j += 2) p.push(((bytes[offset+j] << 8) | bytes[offset+j+1]).toString(16));
         ips.push(p.join(':'));
@@ -173,19 +175,6 @@ async function resolveA(domain) {
         return [];
     }
 }
-
-
-
-export function parseQueryId(body) {
-    try {
-        const bytes = toBytes(body);
-        if (bytes.length < 2) return 0;
-        return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint16(0);
-    } catch (_) {
-        return 0;
-    }
-}
-
 
 
 function compileCidrs(cidrList) {
@@ -213,7 +202,7 @@ function compileCidrs(cidrList) {
                 const end = (start | ((1 << (32 - bits)) - 1)) >>> 0;
                 v4.push({ start: start, end: end });
             }
-        } catch (_) {}
+        } catch (_) { /* skip malformed CIDR entry */ }
     }
     return { v4: v4, v6: v6 };
 }
@@ -226,7 +215,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipBn >= ranges[i].start && ipBn <= ranges[i].end) return true;
             }
-        } catch (_) {}
+        } catch (_) { /* skip malformed IPv6 */ }
     } else {
         try {
             const ipNum = ipToLong(ip);
@@ -234,7 +223,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipNum >= ranges[i].start && ipNum <= ranges[i].end) return true;
             }
-        } catch (_) {}
+        } catch (_) { /* skip malformed IPv4 */ }
     }
     return false;
 }
@@ -280,18 +269,22 @@ function ipv6ToBigInt(ip) {
 /**
  * Classify a DNS response buffer by detecting the CDN owner of resolved IPs.
  * Returns 'META', 'CF', 'CFT', 'VRC', 'FASTLY', 'NETFLIX', 'TELEGRAM', 'TWITTER', 'TOR', or null.
+ * @param {ArrayBuffer|Uint8Array} responseBuf - DNS wire-format response
+ * @param {number} queryType - DNS query type (only A/AAAA are classified)
+ * @param {Object} [ctx] - Request context for logging (optional)
+ * @returns {string|null} CDN owner label or null
  */
-export function classifyResponse(responseBuf, queryType) {
+export function classifyResponse(responseBuf, queryType, ctx) {
   try {
-    if (queryType !== 1 && queryType !== 28) return null;
+    if (queryType !== TYPE_A && queryType !== TYPE_AAAA) return null;
     const ips = extractIps(responseBuf);
-    for (var i = 0; i < ips.length; i++) {
+    for (let i = 0; i < ips.length; i++) {
       const owner = detectOwner(ips[i]);
       if (owner) return owner;
     }
     return null;
   } catch (err) {
-    logEvent('error', 'cdn_error', { stage: 'classifyResponse', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'cdn_error', { stage: 'classifyResponse', requestId: ctx && ctx.requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return null;
   }
 }

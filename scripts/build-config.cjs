@@ -313,14 +313,24 @@ async function main() {
       const http = require('http');
       const fetcher = url.startsWith('https') ? https : http;
       const cealingData = await new Promise(function(resolve, reject) {
-        fetcher.get(url, function(res) {
+        const req = fetcher.get(url, function(res) {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            res.resume();
+            reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+            return;
+          }
           var body = '';
+          res.setEncoding('utf8');
           res.on('data', function(chunk) { body += chunk; });
           res.on('end', function() {
             try { resolve(JSON.parse(body)); }
             catch(e) { reject(e); }
           });
-        }).on('error', reject);
+        });
+        req.setTimeout(15000, function() {
+          req.destroy(new Error('Timeout fetching Cealing-Host'));
+        });
+        req.on('error', reject);
       });
 
       if (cealingData && Array.isArray(cealingData)) {
