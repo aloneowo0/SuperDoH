@@ -15,23 +15,6 @@
   </div>
 </header>
 <div class="container">
-  <section>
-    <h2>Introduction</h2>
-    <p>A Cloudflare Worker based DoH proxy supporting multi-upstream concurrent queries and EDNS client-subnet injection. Request path determines the upstream target, preserving all original query parameters.</p>
-    <h3>Key Features</h3>
-    <ul>
-      <li><strong>Multi-upstream race</strong>: /dns-query endpoint queries all upstreams concurrently, returns the fastest valid response</li>
-      <li><strong>EDNS control</strong>: automatically injects ECS client-subnet for geo-optimized resolution</li>
-      <li><strong>Flexible routing</strong>: Each upstream at its own dedicated path</li>
-      <li><strong>Zero-config deploy</strong>: Cloudflare Worker/Pages, no server maintenance</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>Available Endpoints</h2>
-    <p>__UPSTREAM_LIST__</p>
-  </section>
-
   <div class="tab-bar">
     <div class="sticker-card active" data-tab="home">
       <div class="tape"></div>
@@ -45,36 +28,38 @@
 
   <div class="tab-content">
     <div class="tab-panel active" id="panel-home">
-      <div class="resolver-form">
-        <input id="dns-name" type="text" placeholder="Enter domain, e.g. example.com">
-        <select id="dns-type">
-          <option value="1">A (IPv4)</option>
-          <option value="28">AAAA (IPv6)</option>
-          <option value="15">MX</option>
-          <option value="16">TXT</option>
-          <option value="5">CNAME</option>
-          <option value="2">NS</option>
-          <option value="65">HTTPS</option>
-        </select>
-        <button type="button" class="btn" onclick="resolveDomain()">Lookup</button>
-      </div>
-      <div id="results"><table><thead><tr><th>Name</th><th>Type</th><th>TTL</th><th>Data</th></tr></thead><tbody></tbody></table></div>
+      <section>
+        <h2>Introduction</h2>
+        <p>A Cloudflare Worker based DoH proxy supporting multi-upstream concurrent queries and EDNS client-subnet injection. Request path determines the upstream target, preserving all original query parameters.</p>
+        <h3>Key Features</h3>
+        <ul>
+          <li><strong>Multi-upstream race</strong>: /dns-query endpoint queries all upstreams concurrently, returns the fastest valid response</li>
+          <li><strong>EDNS control</strong>: automatically injects ECS client-subnet for geo-optimized resolution</li>
+          <li><strong>Flexible routing</strong>: Each upstream at its own dedicated path</li>
+          <li><strong>Zero-config deploy</strong>: Cloudflare Worker/Pages, no server maintenance</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Available Endpoints</h2>
+        <p>__UPSTREAM_LIST__</p>
+      </section>
+
+      <section>
+        <h2>Usage</h2>
+        <p>Supports POST application/dns-message, GET ?name=&type=, and Accept: application/dns-json (RFC 8484 passthrough).</p>
+        <h3>Concurrent mode</h3>
+        <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
+# Queries all upstreams, returns fastest response</code></pre>
+        <h3>Single upstream</h3>
+        <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
+curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre>
+        <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams by editing <code>.env</code> (set <code>=true</code> then run <code>npm run build</code>)</p>
+      </section>
     </div>
     <div class="tab-panel" id="panel-config">
     </div>
   </div>
-
-  <section>
-    <h2>Usage</h2>
-    <p>Supports POST application/dns-message, GET ?name=&type=, and Accept: application/dns-json (RFC 8484 passthrough).</p>
-    <h3>Concurrent mode</h3>
-    <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
-# Queries all upstreams, returns fastest response</code></pre>
-    <h3>Single upstream</h3>
-    <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
-curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre>
-    <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams by editing <code>.env</code> (set <code>=true</code> then run <code>npm run build</code>)</p>
-  </section>
 </div>
 <footer>
   <div class="container">
