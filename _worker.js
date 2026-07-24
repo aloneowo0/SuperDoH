@@ -526,10 +526,10 @@ export default {
       }
       if (route.static) {
         if (route.static === 'css') {
-          return new Response(CSS, { status: 200, headers: { 'Content-Type': 'text/css;charset=utf-8', 'Cache-Control': 'public,max-age=3600' } });
+          return new Response(CSS, { status: 200, headers: { 'Content-Type': 'text/css;charset=utf-8', 'Cache-Control': 'no-cache' } });
         }
         if (route.static === 'js') {
-          return new Response(JS, { status: 200, headers: { 'Content-Type': 'application/javascript;charset=utf-8', 'Cache-Control': 'public,max-age=3600' } });
+          return new Response(JS, { status: 200, headers: { 'Content-Type': 'application/javascript;charset=utf-8', 'Cache-Control': 'no-cache' } });
         }
       }
       if (route.error) {
