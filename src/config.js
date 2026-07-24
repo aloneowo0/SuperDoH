@@ -63,49 +63,6 @@ export const REGION_CONFIG = {
         "imp.pixiv.net"
       ],
       "ech": true,
-      "google": [
-        {
-          "ips": [
-            "47.102.115.14"
-          ],
-          "sni": null,
-          "match": [
-            "gemini.google.com"
-          ]
-        },
-        {
-          "ips": [
-            "183.56.143.147"
-          ],
-          "sni": "g.cn",
-          "match": [
-            "google",
-            "google.com",
-            "gstatic.com",
-            "youtube.com",
-            "youtu.be",
-            ".ggpht.com",
-            "i.ytimg.com",
-            "youtube-nocookie.com",
-            "blogger.com",
-            "android.com",
-            "googlevideo.com",
-            "yt3.ggpht.com",
-            "ytimg.com",
-            "gvt1.com",
-            "gvt2.com",
-            "gvt3.com",
-            "video.google.com",
-            "doubleclick.net",
-            "googleadservices.com",
-            "googlesyndication.com",
-            "google.com.hk",
-            "google.cn",
-            "google.co.jp",
-            "googleusercontent.com",
-            "gmail.com"
-          ]
-        }
-      ]
+      "google": []
     }
   };

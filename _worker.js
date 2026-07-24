@@ -7,6 +7,7 @@
 import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './src/config.js';
 import { prepareQuery } from './src/edns.js';
 import { serveHomepage, serveHomepageEn } from './src/homepage.js';
+import { CSS, JS } from './src/templates.js';
 import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './src/auto.js';
 import { fetchCFEch, injectECH } from './src/ech.js';
 import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
@@ -94,6 +95,12 @@ function resolveRoute(request) {
   }
   if (pathname === '/health') {
     return { health: true };
+  }
+  if (pathname === '/css/style.css') {
+    return { static: 'css' };
+  }
+  if (pathname === '/js/resolver.js') {
+    return { static: 'js' };
   }
   if (pathname === '/dns-query') {
     return { provider: AUTO_PROVIDER, queryString: search };
@@ -516,6 +523,14 @@ export default {
         const hResp = healthResponse(upstreamNames);
         hResp.headers.set('X-DoH-Request-ID', requestId);
         return hResp;
+      }
+      if (route.static) {
+        if (route.static === 'css') {
+          return new Response(CSS, { status: 200, headers: { 'Content-Type': 'text/css;charset=utf-8', 'Cache-Control': 'public,max-age=3600' } });
+        }
+        if (route.static === 'js') {
+          return new Response(JS, { status: 200, headers: { 'Content-Type': 'application/javascript;charset=utf-8', 'Cache-Control': 'public,max-age=3600' } });
+        }
       }
       if (route.error) {
         const errResp = jsonError(route.error);
