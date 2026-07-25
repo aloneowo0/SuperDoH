@@ -49,30 +49,31 @@ AUTO 1 — 多上游并发查询原始域名，分类 CDN 归属
 | `cdn.js` | CDN CIDR 归属检测（9 家）、域名探测、IP 分类 |
 | `meta-route.js` | Meta 类匹配静态 IP 路由表（19 精确 + 8 泛域名） |
 | `logger.js` | 结构化 JSON 日志，支持级别过滤 |
-| `homepage.js` | 中英文双首页，附带 DNS 查询工具 |
-| `config.js` | 运行时配置（自动生成或手写） |
+| `homepage.js` | 中英文双首页，模板注入 + CONFIGURED 透传 |
+| `config.js` | 运行时配置（自动生成，gitignored） |
 
 ## 快速开始
 
 ### 前置要求
 
-- Node.js >= 18
 - Cloudflare 账号
-- [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) 已登录
+- GitHub 账号（用于 Workers Builds 自动部署）
 
 ### 部署
 
-```bash
-# 克隆项目
-git clone <repo> && cd superdoh
+1. Fork 本仓库
+2. 在 Cloudflare Dashboard 连接 GitHub 仓库到 Workers（Workers Builds）
+3. 第一次部署 — `superdoh.config.js` 默认 `configured: 0`，Worker 用内置默认（CF + Google + AUTO，无地区优化）跑，首页「配置」tab 显示图形化配置向导
+4. 在向导中选择上游、地区、ECH、超时等 → 生成 `superdoh.config.js` → 下载 → 覆盖仓库根目录的 `superdoh.config.js` → 提交
+5. Workers Builds 自动触发第二次部署 — `configured: 1`，Worker 进入正式运行模式
 
-# 编辑配置
-cp .env.example .env   # 修改上游开关、地区优化参数
-
-# 构建配置 + 部署
-npm run build           # 从 .env 生成 src/config.js
-npm run deploy          # wrangler deploy → Cloudflare Workers
 ```
+用户 Fork → 连接 GitHub → 第一次部署(configured:0)
+  → 首页「配置」tab 图形向导 → 生成配置 → 覆盖 superdoh.config.js → push
+  → 自动第二次部署(configured:1) → 正式运行
+```
+
+> 也可本地部署：`npm run build && npm run deploy`（需 [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) 已登录）
 
 ### 使用示例
 
@@ -102,9 +103,10 @@ curl "https://你的worker域名/google/dns-query?name=example.com&type=A"
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `/` | GET | 中文首页（内嵌 DNS 查询工具） |
+| `/` | GET | 中文首页（主页 tab + 配置 tab） |
 | `/en` | GET | 英文首页 |
-| `/health` | GET | JSON 健康检查（上游列表、超时配置、地区信息） |
+| `/health` | GET | JSON 健康检查（上游列表、超时配置、地区信息、configured 状态） |
+| `/config.json` | GET | JSON 当前生效配置（供配置向导/只读视图读取） |
 | `/dns-query` | GET/POST | 多上游并发竞速（AUTO 模式） |
 | `/:provider/dns-query` | GET/POST | 单上游查询（provider 见配置中启用的上游名） |
 
@@ -150,55 +152,98 @@ CF 的 ECH 通过 `cloudflare-ech.com` 的 HTTPS RR 动态获取公钥，注入�
 
 ## 配置
 
-配置分三层：`.env` → `scripts/build-config.cjs` → `src/config.js`。
+配置源为仓库根目录的 `superdoh.config.js`（JS 格式，`export default`）。`scripts/build-config.cjs` 读取该文件 → 生成 `src/config.js`（机器产物，gitignored）→ 打包进 Worker。
 
-编辑 `.env` 后执行 `npm run build` 自动生成 `config.js`。设置 `USE_CONFIG_JS=true` 时构建脚本跳过生成，Worker 直接读取已有 `config.js`。
+两种模式由 `configured` 字段控制：
 
-### 核心配置项
+| `configured` | 行为 | 首页「配置」tab |
+|:---:|------|----------------|
+| `0` | 首次配置模式。Worker 用内置默认（CF + Google + AUTO，无地区优化）跑 | 显示图形化配置向导 |
+| `1` | 正式运行模式。Worker 使用 `superdoh.config.js` 中的配置 | 只读展示当前生效配置 |
 
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `GOOGLE` / `CLOUDFLARE_PUBLIC` / ... | bool | `true`/`false` | 预设上游开关 |
-| `CUSTOM_<NAME>` | URL | — | 自定义上游，格式 `CUSTOM_<名称>=<DoH URL>` |
-| `LOG_LEVEL` | string | `info` | 日志级别：debug / info / warn / error / none |
-| `AUTO_CONCURRENCY` | number | `6` | AUTO 竞速并发数（Free 计划建议 4~6） |
-| `ECS_PREFIX4` | number | `24` | ECS IPv4 前缀长度（隐私保护） |
-| `ECS_PREFIX6` | number | `56` | ECS IPv6 前缀长度 |
-| `BLOCKED_CIDRS` | string | 回环地址 | 应答 IP 黑名单 CIDR（命中后整包丢弃） |
-| `REGION_XX_PREFERRED_CF` | string | — | 地区 CF 优选域名 |
-| `REGION_XX_PREFERRED_CFT` | string | — | 地区 CloudFront 优选域名 |
-| `REGION_XX_PREFERRED_VRC` | string | — | 地区 Vercel 优选域名 |
-| `REGION_XX_REMAP` | string | — | 地区 remap 域名列表（空格分隔） |
-| `REGION_XX_ECH` | bool | — | 地区 ECH 注入开关 |
-| `REGION_XX_GOOGLE` | bool | — | 地区 Google 代理注入开关 |
+改完 `superdoh.config.js` 后必须重新部署（Workers Builds 会自动触发）才生效。
 
-### 关键技术参数（内置）
+### 图形化配置
 
-| 参数 | 值 | 说明 |
-|------|-----|------|
-| `HARD_TIMEOUT_MS` | 800 | 上游硬超时 |
-| `ECS_PROTECT_MS` | 20 | ECS 保护期窗口 |
-| `META_HARD_TIMEOUT_MS` | 800 | Meta 上游硬超时 |
-| `META_COLLECT_WINDOW_MS` | 50 | Meta 首响应后收集窗口 |
-| `META_MAX_IPS` | 4 | Meta 结果最大 IP 数 |
-| `PREFERRED_TIMEOUT_MS` | 300 | 优选解析超时 |
+首页「配置」tab 内置向导（`frontend/js/config-wizard.js`）：
+
+- `configured: 0` — 可编辑表单（上游勾选、地区添加、调优参数），内联校验，生成 `superdoh.config.js` 文本，支持下载/复制
+- `configured: 1` — 只读展示当前生效配置 + 「重新配置」按钮切换到可编辑模式（预填当前值）
+
+### superdoh.config.js 字段
+
+```js
+export default {
+  configured: 0,            // 0=首次配置模式 / 1=正式运行
+  upstreams: {              // 预设名: true 启用；自定义: name: 'https://...'
+    google: true,
+    cloudflare_Public: true,
+  },
+  ecsPrefix4: 24,           // ECS IPv4 前缀长度
+  ecsPrefix6: 56,           // ECS IPv6 前缀长度
+  blockedCidrs: '...',      // 应答 IP 黑名单（CIDR 空格分隔）
+  autoConcurrency: 6,      // AUTO 竞速并发数（0=全部）
+  ecsProtectMs: 20,        // ECS 保护窗（毫秒）
+  hardTimeoutMs: 800,       // 上游硬超时
+  metaHardTimeoutMs: 800,
+  metaCollectWindowMs: 50,
+  metaMaxIps: 4,
+  preferredTimeoutMs: 300,
+  logLevel: 'info',         // debug/info/warn/error/none
+  regions: {               // 空对象=不启用地区优化
+    CN: {
+      preferredCf: 'cf.example.com',
+      preferredCft: 'cloudfront.example.com',
+      preferredVrc: 'vercel.example.com',
+      remap: 'twimg.com twitter.com x.com',
+      ech: true,
+      google: true,         // 启用 Cealing-Host Google 代理注入
+    },
+  },
+  geoipUrl: 'https://...',           // GeoIP CIDR 列表源（构建时抓取）
+  cealingHostUrl: 'https://...',     // Cealing-Host Google 代理源
+  fetchGoogleProxy: true,
+};
+```
+
+### 预设上游
+
+| 名称 | URL | ECS |
+|------|-----|:---:|
+| `google` | `https://dns.google/dns-query` | ✓ |
+| `cloudflare_Public` | `https://cloudflare-dns.com/dns-query` | ✗ |
+| `quad9` | `https://dns11.quad9.net/dns-query` | ✓ |
+| `adguard` | `https://dns.adguard-dns.com/dns-query` | ✓ |
+| `opendns` | `https://dns.opendns.com/dns-query` | ✓ |
+| `nextdns` | `https://dns.nextdns.io` | ✓ |
+| `yandex` | `https://common.dot.dns.yandex.net/dns-query` | ✗ |
+| `dnspod` | `https://sm2.doh.pub/dns-query` | ✓ |
+| `alidns` | `https://dns.alidns.com/dns-query` | ✓ |
+| `360` | `https://doh.360.cn/dns-query` | ✓ |
+
+自定义上游：`upstreams` 中添加 `name: 'https://your-doh.example.com/dns-query'`（键名须 `^[a-z][a-z0-9_]*$`，强制 ECS 启用）。
+
+> [!NOTE]
+> `.env` 文件仍可作为可选覆盖保留（legacy），优先级低于 `superdoh.config.js`。后续版本将移除。
 
 ## 项目结构
 
 ```
 superdoh/
 ├── _worker.js                  # 入口 + 路由 + 两阶段 AUTO 调度
-├── .env                        # 用户配置（上游开关、地区参数）
+├── superdoh.config.js          # 用户配置（JS，唯一人类配置源，tracked）
 ├── frontend/                   # 前端静态资源
-│   ├── index.html              # 中文首页
+│   ├── index.html              # 中文首页（主页 + 配置 tab）
 │   ├── en.html                 # 英文首页
 │   ├── css/style.css           # 共享样式
-│   └── js/resolver.js          # DNS 查询小工具
+│   └── js/
+│       ├── resolver.js         # tab 切换
+│       └── config-wizard.js    # 配置向导（图形化配置 + 生成器）
 ├── scripts/
-│   └── build-config.cjs        # 构建脚本：.env → config.js + templates.js + GeoIP + Cealing-Host
+│   └── build-config.cjs        # 构建脚本：superdoh.config.js → config.js + templates.js + GeoIP + Cealing-Host
 ├── src/
-│   ├── config.js               # 运行时配置（自动生成或手写）
-│   ├── templates.js            # HTML 模板（自动生成，来自 frontend/*.html）
+│   ├── config.js               # 运行时配置（自动生成，gitignored）
+│   ├── templates.js            # HTML/CSS/JS 模板（自动生成，gitignored）
 │   ├── doh-request.js          # DoH HTTP 请求边界校验
 │   ├── auto.js                 # 多上游竞速引擎
 │   ├── edns.js                 # DNS 包解析 + ECS 注入 + 响应验证
@@ -208,12 +253,7 @@ superdoh/
 │   ├── meta-route.js           # Meta 静态 IP 路由表
 │   ├── logger.js               # 结构化 JSON 日志
 │   └── homepage.js             # 模板加载 + 动态注入
-├── test/                       # 21 个测试用例（vitest）
-│   ├── dns-lib.test.js
-│   ├── doh-request.test.js
-│   ├── ech.test.js
-│   ├── worker-boundary.test.js
-│   └── dns-fixtures.js
+├── test/                       # 测试用例（vitest）
 ├── wrangler.jsonc              # Cloudflare Workers 配置
 ├── package.json                # v2.0.0
 └── README.md
