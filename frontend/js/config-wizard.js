@@ -78,7 +78,9 @@
     '.sw-checkbox-row{display:flex;align-items:center;gap:.5rem;padding:.35rem 0}',
     '.sw-checkbox-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color)}',
     '.sw-checkbox-row label{cursor:pointer;font-size:.88rem;color:#333}',
-    '.sw-upstream{display:flex;align-items:flex-start;gap:.6rem;padding:.5rem .6rem;border:1px solid #eee;border-radius:4px;margin-bottom:.4rem;background:#fafafa}',
+    '.sw-upstream-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}',
+    '.sw-upstream{display:flex;align-items:flex-start;gap:.6rem;padding:.5rem .6rem;border:1px solid #eee;border-radius:4px;background:#fafafa}',
+    '@media(max-width:600px){.sw-upstream-grid{grid-template-columns:1fr}}',
     '.sw-upstream input[type=checkbox]{margin-top:.2rem;width:18px;height:18px;cursor:pointer;accent-color:var(--primary-color)}',
     '.sw-upstream-info{flex:1;min-width:0}',
     '.sw-upstream-name{font-weight:700;color:#333;font-size:.9rem}',
@@ -391,6 +393,7 @@
     var body = el('div', { class: 'sw-body' });
 
     // 预设上游
+    var upGrid = el('div', { class: 'sw-upstream-grid' });
     PRESET_ORDER.forEach(function (name) {
       var p = PRESETS[name], checked = false, found;
       if (cfg && cfg.upstreams) {
@@ -411,8 +414,9 @@
           el('div', { class: 'sw-upstream-url', text: p.url })
         ])
       ]);
-      body.appendChild(row);
+      upGrid.appendChild(row);
     });
+    body.appendChild(upGrid);
 
     // 自定义上游容器
     var customWrap = el('div', { id: 'sw-custom-list' });
