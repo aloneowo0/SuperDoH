@@ -54,10 +54,11 @@
         <h3>Single upstream</h3>
         <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
 curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre>
-        <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams by editing <code>.env</code> (set <code>=true</code> then run <code>npm run build</code>)</p>
+        <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams in the Config tab</p>
       </section>
     </div>
     <div class="tab-panel" id="panel-config">
+      <div id="config-wizard"></div>
     </div>
   </div>
 </div>
@@ -66,6 +67,8 @@ curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre
     <p>MIT License</p>
   </div>
 </footer>
+<script>window.__CONFIGURED__ = __CONFIGURED__;</script>
 <script src="/js/resolver.js?v=3"></script>
+<script src="/js/config-wizard.js?v=3"></script>
 </body>
 </html>
