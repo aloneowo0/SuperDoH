@@ -4,10 +4,10 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL } from './src/config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, FOREIGN_UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL, CONFIGURED } from './src/config.js';
 import { prepareQuery } from './src/edns.js';
 import { serveHomepage, serveHomepageEn } from './src/homepage.js';
-import { CSS, JS } from './src/templates.js';
+import { CSS, JS, WIZARD_JS } from './src/templates.js';
 import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './src/auto.js';
 import { fetchCFEch, injectECH } from './src/ech.js';
 import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
@@ -96,11 +96,17 @@ function resolveRoute(request) {
   if (pathname === '/health') {
     return { health: true };
   }
+  if (pathname === '/config.json') {
+    return { configJson: true };
+  }
   if (pathname === '/css/style.css') {
     return { static: 'css' };
   }
   if (pathname === '/js/resolver.js') {
     return { static: 'js' };
+  }
+  if (pathname === '/js/config-wizard.js') {
+    return { static: 'wizard' };
   }
   if (pathname === '/dns-query') {
     return { provider: AUTO_PROVIDER, queryString: search };
@@ -185,6 +191,7 @@ async function dnsWireToJsonResponse(response) {
 function healthResponse(upstreamNames) {
   return new Response(JSON.stringify({
     status: 'ok',
+    configured: CONFIGURED,
     upstreams: upstreamNames,
     hardTimeoutMs: HARD_TIMEOUT_MS,
     ecsProtectMs: ECS_PROTECT_MS,
@@ -514,8 +521,8 @@ export default {
       const upstreamNames = [AUTO_PROVIDER, ...Object.keys(UPSTREAMS)];
       if (route.home) {
         const homeResp = new URL(request.url).pathname === '/en'
-          ? serveHomepageEn(request, UPSTREAMS, upstreamNames)
-          : serveHomepage(request, UPSTREAMS, upstreamNames);
+          ? serveHomepageEn(request, UPSTREAMS, upstreamNames, CONFIGURED)
+          : serveHomepage(request, UPSTREAMS, upstreamNames, CONFIGURED);
         homeResp.headers.set('X-DoH-Request-ID', requestId);
         return homeResp;
       }
@@ -524,12 +531,37 @@ export default {
         hResp.headers.set('X-DoH-Request-ID', requestId);
         return hResp;
       }
+      if (route.configJson) {
+        const cfg = {
+          configured: CONFIGURED,
+          upstreams: Object.keys(UPSTREAMS).map((n) => ({ name: n, url: UPSTREAMS[n].url, ecs: UPSTREAMS[n].ecs })),
+          foreignUpstreams: FOREIGN_UPSTREAMS,
+          autoConcurrency: AUTO_CONCURRENCY,
+          ecsProtectMs: ECS_PROTECT_MS,
+          hardTimeoutMs: HARD_TIMEOUT_MS,
+          metaHardTimeoutMs: META_HARD_TIMEOUT_MS,
+          metaCollectWindowMs: META_COLLECT_WINDOW_MS,
+          metaMaxIps: META_MAX_IPS,
+          preferredTimeoutMs: PREFERRED_TIMEOUT_MS,
+          ecsPrefix4: ECS_PREFIX4,
+          ecsPrefix6: ECS_PREFIX6,
+          logLevel: LOG_LEVEL,
+          region: REGION,
+          regionConfig: REGION_CONFIG,
+        };
+        const cResp = new Response(JSON.stringify(cfg, null, 2), { headers: JSON_HEADERS });
+        cResp.headers.set('X-DoH-Request-ID', requestId);
+        return cResp;
+      }
       if (route.static) {
         if (route.static === 'css') {
           return new Response(CSS, { status: 200, headers: { 'Content-Type': 'text/css;charset=utf-8', 'Cache-Control': 'no-cache' } });
         }
         if (route.static === 'js') {
           return new Response(JS, { status: 200, headers: { 'Content-Type': 'application/javascript;charset=utf-8', 'Cache-Control': 'no-cache' } });
+        }
+        if (route.static === 'wizard') {
+          return new Response(WIZARD_JS, { status: 200, headers: { 'Content-Type': 'application/javascript;charset=utf-8', 'Cache-Control': 'no-cache' } });
         }
       }
       if (route.error) {

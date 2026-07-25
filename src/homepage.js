@@ -15,11 +15,12 @@ function buildUpstreamList(names) {
   return entries || '<em>none</em>';
 }
 
-function inject(html, host, upstreams, names) {
+function inject(html, host, upstreams, names, configured) {
   return html
     .replaceAll('__HOST__', host)
     .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
-    .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams));
+    .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams))
+    .replace('__CONFIGURED__', String(configured || 0));
 }
 
 function buildCapsTable(upstreams) {
@@ -36,24 +37,17 @@ function buildCapsTable(upstreams) {
 
 // ── Exports ────────────────────────────────────────────────────────
 
-/**
- * Serve Chinese homepage.
- * @param {Request} request
- * @param {object} upstreams  UPSTREAMS config object
- * @param {string[]} names  upstream names list
- * @returns {Response}
- */
-export function serveHomepage(request, upstreams, names) {
+export function serveHomepage(request, upstreams, names, configured) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_CN, host, upstreams, names), {
+  return new Response(inject(HTML_CN, host, upstreams, names, configured), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
 }
 
-export function serveHomepageEn(request, upstreams, names) {
+export function serveHomepageEn(request, upstreams, names, configured) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_EN, host, upstreams, names), {
+  return new Response(inject(HTML_EN, host, upstreams, names, configured), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
