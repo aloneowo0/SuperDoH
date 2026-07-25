@@ -4,7 +4,7 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, FOREIGN_UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL, CONFIGURED } from './src/config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, FOREIGN_UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL, CONFIGURED, ECS_PREFIX4, ECS_PREFIX6, PREFERRED_TIMEOUT_MS } from './src/config.js';
 import { prepareQuery } from './src/edns.js';
 import { serveHomepage, serveHomepageEn } from './src/homepage.js';
 import { CSS, JS, WIZARD_JS } from './src/templates.js';
