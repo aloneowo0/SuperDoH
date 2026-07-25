@@ -1,6 +1,13 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
 import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS } from './config.js';
+
+let _runtimeUp = null;
+let _runtimeForeign = null;
+export function setRuntimeUpstreams(ups, foreign) {
+  _runtimeUp = ups;
+  _runtimeForeign = foreign;
+}
 import { logEvent } from './logger.js';
 
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -546,7 +553,7 @@ export async function resolveDNSWire(domain, type) {
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
-  const entries = Object.entries(UPSTREAMS);
+  const entries = Object.entries(_runtimeUp || UPSTREAMS);
   if (entries.length === 0) return null;
 
   const controllers = [];
@@ -605,7 +612,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   const started = Date.now();
   const deadline = started + t;
 
-  const foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  const foreignUrls = (_runtimeForeign || FOREIGN_UPSTREAMS).map(function(n) { return (_runtimeUp || UPSTREAMS)[n].url; });
   if (foreignUrls.length === 0) return null;
 
   const controllers = [];
@@ -700,7 +707,7 @@ export async function resolveDNSWireAll(domain, type) {
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
-  const entries = Object.entries(UPSTREAMS);
+  const entries = Object.entries(_runtimeUp || UPSTREAMS);
   if (entries.length === 0) return [];
 
   const controllers = [];

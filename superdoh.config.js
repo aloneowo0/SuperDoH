@@ -30,8 +30,6 @@ export default {
     // dnspod: false,
     // alidns: false,
     // '360': false,
-    // 示例自定义上游：键名须小写字母/数字/下划线
-    // mycustom: 'https://my-doh.example.com/dns-query',
   },
 
   // ── ECS / DNS 调优 ────────────────────────────────

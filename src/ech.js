@@ -24,7 +24,7 @@ logEvent('info', 'meta_ech_date', { date: META_ECH_DATE });
 
 const echCache = new Map();
 
-export async function fetchCFEch(_env, _ctx) {
+export async function fetchCFEch(_env, _ctx, upstreams) {
     try {
         const cached = echCache.get(CF_ECH_DOMAIN);
         if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
@@ -33,7 +33,7 @@ export async function fetchCFEch(_env, _ctx) {
 
         const query = buildWireQuery(CF_ECH_DOMAIN, TYPE_HTTPS);
         const queryId = new DataView(query).getUint16(0);
-        const entries = Object.entries(UPSTREAMS).slice(0, 3);
+        const entries = Object.entries(upstreams || UPSTREAMS).slice(0, 3);
         let buf = null;
         const controller = new AbortController();
         const timer = setTimeout(function() { controller.abort(); }, HARD_TIMEOUT_MS);

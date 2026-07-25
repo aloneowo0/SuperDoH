@@ -200,7 +200,6 @@
   // ── 状态 ─────────────────────────────────────────────
   var state = {
     mode: 'edit', // 'edit' | 'readonly'
-    customUpstreams: [], // [{name, url}]
     regions: [], // [{cc, preferredCf, preferredCft, preferredVrc, remap, ech, google}]
     configData: null // 来自 /config.json
   };
@@ -243,7 +242,6 @@
   }
 
   function initEditDefaults() {
-    state.customUpstreams = [];
     state.regions = [];
   }
 
@@ -341,15 +339,6 @@
   }
 
   function prefillFromConfig(cfg) {
-    // 自定义上游：/config.json 的 upstreams 包含所有（预设+自定义），需区分
-    state.customUpstreams = [];
-    if (cfg.upstreams) {
-      cfg.upstreams.forEach(function (u) {
-        if (!PRESETS[u.name]) {
-          state.customUpstreams.push({ name: u.name, url: u.url });
-        }
-      });
-    }
     // 地区
     state.regions = [];
     if (cfg.regionConfig) {
@@ -418,53 +407,8 @@
     });
     body.appendChild(upGrid);
 
-    // 自定义上游容器
-    var customWrap = el('div', { id: 'sw-custom-list' });
-    body.appendChild(customWrap);
-    renderCustomUpstreams(customWrap);
-
-    // 添加自定义按钮
-    body.appendChild(el('button', {
-      class: 'sw-btn sw-btn-secondary sw-btn-sm',
-      type: 'button',
-      onclick: function () {
-        state.customUpstreams.push({ name: '', url: '' });
-        renderCustomUpstreams(customWrap);
-      }
-    }, '+ 添加自定义上游'));
-
-    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游键名须匹配 ^[a-z][a-z0-9_]*$，URL 须以 https:// 开头。自定义上游强制 ECS:true。' }));
-
     sec.appendChild(body);
     return sec;
-  }
-
-  function renderCustomUpstreams(container) {
-    container.innerHTML = '';
-    state.customUpstreams.forEach(function (cu, idx) {
-      var field = el('div', { class: 'sw-field', 'data-custom': idx });
-      var row = el('div', { class: 'sw-custom-row' });
-      row.appendChild(el('input', {
-        class: 'sw-input', type: 'text', placeholder: '名称 (如 mydns)',
-        value: cu.name,
-        oninput: function (e) { state.customUpstreams[idx].name = e.target.value.trim(); clearErr(field); }
-      }));
-      row.appendChild(el('input', {
-        class: 'sw-input', type: 'text', placeholder: 'https://your-doh.example.com/dns-query',
-        value: cu.url,
-        oninput: function (e) { state.customUpstreams[idx].url = e.target.value.trim(); clearErr(field); }
-      }));
-      row.appendChild(el('button', {
-        class: 'sw-icon-btn', type: 'button', title: '删除',
-        onclick: function () {
-          state.customUpstreams.splice(idx, 1);
-          renderCustomUpstreams(container);
-        }
-      }, '删除'));
-      field.appendChild(row);
-      field.appendChild(el('div', { class: 'sw-error' }));
-      container.appendChild(field);
-    });
   }
 
   // ── 调优 section ─────────────────────────────────────
@@ -780,34 +724,6 @@
       }
     });
 
-    // 自定义上游
-    var customNames = {};
-    state.customUpstreams.forEach(function (cu, idx) {
-      var fieldEl = wrap.querySelector('[data-custom="' + idx + '"]');
-      if (fieldEl) clearErr(fieldEl);
-      var name = cu.name.trim();
-      var url = cu.url.trim();
-      if (!name && !url) return; // 空行跳过
-      if (!/^[a-z][a-z0-9_]*$/.test(name)) {
-        if (fieldEl) showErr(fieldEl, '名称须匹配 ^[a-z][a-z0-9_]*$');
-        errors.push('自定义上游 #' + (idx + 1) + ' 名称无效');
-        return;
-      }
-      if (customNames[name] || PRESETS[name]) {
-        if (fieldEl) showErr(fieldEl, '名称与预设或其他自定义上游重复');
-        errors.push('自定义上游 #' + (idx + 1) + ' 名称重复: ' + name);
-        return;
-      }
-      if (url.indexOf('https://') !== 0) {
-        if (fieldEl) showErr(fieldEl, 'URL 须以 https:// 开头');
-        errors.push('自定义上游 #' + (idx + 1) + ' URL 无效');
-        return;
-      }
-      customNames[name] = true;
-      config.upstreams[name] = url;
-      enabledCount++;
-    });
-
     if (enabledCount === 0) {
       errors.push('至少启用 1 个上游');
     }
@@ -913,7 +829,7 @@
     lines.push(' *   0 = 首次配置模式（Worker 用内置默认跑，首页「配置」tab 显示向导）。');
     lines.push(' *');
     lines.push(' * 格式说明：');
-    lines.push(' *   - upstreams: 预设名设 true 启用；自定义上游写 DoH URL（强制 ecs:true）');
+    lines.push(' *   - upstreams: 预设名设 true 启用；自定义上游通过 Workers 环境变量注入（CUSTOM_<NAME>=https://...）');
     lines.push(' *   - regions: 空对象 = 不启用地区优化；每地区一块，实际匹配由 request.cf.country 决定');
     lines.push(' *   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改');
     lines.push(' */');
@@ -929,12 +845,6 @@
       } else {
         lines.push('    // ' + name + ': false,');
       }
-    });
-    // 自定义上游
-    Object.keys(config.upstreams).forEach(function (name) {
-      if (config.upstreams[name] === true) return; // 预设
-      var val = config.upstreams[name];
-      lines.push('    ' + (isIdent(name) ? name : JSON.stringify(name)) + ': ' + JSON.stringify(val) + ',');
     });
     lines.push('  },');
     lines.push('');

@@ -10,6 +10,7 @@ const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 
 export async function concurrentAll(body, clientIP, queryMeta, echActive, activePref, preferredCft, preferredVrc, options, ctx) {
   const opts = options || {};
+  const upstreams = opts.upstreams || UPSTREAMS;
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
   const protectEnd = started + ECS_PROTECT_MS;
@@ -18,7 +19,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   const queryId = effectiveBody && effectiveBody.byteLength >= 2 ? new DataView(effectiveBody).getUint16(0) : 0;
   const preparedBody = prepareQuery(effectiveBody, clientIP);
 
-  let entries = Object.entries(UPSTREAMS);
+  let entries = Object.entries(upstreams);
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < entries.length) {
     entries = entries.slice(0, AUTO_CONCURRENCY);
   }
@@ -165,14 +166,16 @@ export function answersPass(responseBody, queryId, qname, qtype) {
   return { passed: result !== false && result?.passed !== false, reason: result?.reason || null, ...validation };
 }
 
-export async function resolvePreferred(domain, type, expectedOwner, ctx, clientIP) {
+export async function resolvePreferred(domain, type, expectedOwner, ctx, clientIP, upstreams, foreignUpstreams) {
+  const ups = upstreams || UPSTREAMS;
+  const foreign = foreignUpstreams || FOREIGN_UPSTREAMS;
   const wireQuery = buildWireQuery(domain, type);
   const query = prepareQuery(wireQuery, clientIP);
   const started = Date.now();
   const deadline = started + PREFERRED_TIMEOUT_MS;
   const requestId = ctx && ctx.requestId;
 
-  let foreignUrls = FOREIGN_UPSTREAMS.map(function(n) { return UPSTREAMS[n].url; });
+  let foreignUrls = foreign.map(function(n) { return ups[n].url; });
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < foreignUrls.length) {
     foreignUrls = foreignUrls.slice(0, AUTO_CONCURRENCY);
   }

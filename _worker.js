@@ -11,7 +11,7 @@ import { CSS, JS, WIZARD_JS } from './src/templates.js';
 import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './src/auto.js';
 import { fetchCFEch, injectECH } from './src/ech.js';
 import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
-import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName } from './src/dns-lib.js';
+import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName, setRuntimeUpstreams } from './src/dns-lib.js';
 import { resolveMetaFromMap } from './src/meta-route.js';
 import { logEvent, setLogLevel } from './src/logger.js';
 import { parseDohRequest } from './src/doh-request.js';
@@ -82,9 +82,33 @@ function matchGoogleProxy(name, googleConf) {
 // ── Router (inlined) ───────────────────────────────────────────────
 
 let _validProviders = null;
+let _runtimeUpstreams = null;
+let _runtimeForeign = null;
+let _runtimeUpstreamKeys = null;
+
 function validProviders() {
   if (!_validProviders) _validProviders = new Set([...Object.keys(UPSTREAMS), AUTO_PROVIDER]);
   return _validProviders;
+}
+
+function mergeUpstreams(env) {
+  if (_runtimeUpstreams) return _runtimeUpstreams;
+  const merged = { ...UPSTREAMS };
+  if (env) {
+    for (const key of Object.keys(env)) {
+      if (!key.startsWith('CUSTOM_') || key === 'CUSTOM_') continue;
+      const name = key.slice(7).toLowerCase();
+      if (!/^[a-z][a-z0-9_]*$/.test(name)) continue;
+      const url = env[key];
+      if (typeof url !== 'string' || !url.startsWith('https://')) continue;
+      merged[name] = { url, ecs: true };
+    }
+  }
+  _runtimeUpstreams = merged;
+  _runtimeForeign = Object.keys(merged).filter((n) => n !== 'dnspod' && n !== 'alidns');
+  _runtimeUpstreamKeys = Object.keys(merged);
+  _validProviders = new Set([...Object.keys(merged), AUTO_PROVIDER]);
+  return merged;
 }
 
 function resolveRoute(request) {
@@ -204,7 +228,7 @@ function healthResponse(upstreamNames) {
 // ── Preferred answer helper ────────────────────────────────────────
 
 async function preferredAnswer(ctx, queryMeta, prefDomain, ttl, expectedOwner) {
-  const ips = await resolvePreferred(prefDomain, queryMeta.type, expectedOwner, ctx, ctx.clientIP);
+  const ips = await resolvePreferred(prefDomain, queryMeta.type, expectedOwner, ctx, ctx.clientIP, _runtimeUpstreams, _runtimeForeign);
   logEvent('info', 'preferred_result', { requestId: ctx.requestId, owner: expectedOwner, candidateCount: ips ? ips.length : 0, fallback: !ips || ips.length === 0 });
   if (ips && ips.length > 0) {
     return respond(buildDNS(queryMeta.id, queryMeta.name, queryMeta.type, ips, ttl), ctx);
@@ -250,7 +274,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
   const controllers = [];
   const tagged = [];
   const done = [];
-  let upstreamKeys = Object.keys(UPSTREAMS);
+  let upstreamKeys = Object.keys(_runtimeUpstreams || UPSTREAMS);
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < upstreamKeys.length) {
     upstreamKeys = upstreamKeys.slice(0, AUTO_CONCURRENCY);
   }
@@ -260,7 +284,7 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
     done.push(false);
     const idx = i;
     tagged.push(
-      queryUpstream(UPSTREAMS[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal, upstreamKeys[idx])
+      queryUpstream((_runtimeUpstreams || UPSTREAMS)[upstreamKeys[idx]].url, preparedBody, startedAt, controllers[idx].signal, upstreamKeys[idx])
         .then((r) => ({ idx, result: r }))
     );
   }
@@ -379,12 +403,12 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive, preferredCf, preferredCft, preferredVrc, remapList, googleConf) {
   // Non-A/AAAA → concurrentAll with post-processing (ECH)
   if (!queryMeta || (queryMeta.type !== TYPE_A && queryMeta.type !== TYPE_AAAA)) {
-    return await concurrentAll(body, clientIP, queryMeta, echActive, preferredCf, preferredCft, preferredVrc, {}, ctx);
+    return await concurrentAll(body, clientIP, queryMeta, echActive, preferredCf, preferredCft, preferredVrc, { upstreams: _runtimeUpstreams }, ctx);
   }
 
   // AUTO 1: classify — only used for owner detection
   const startedAt = Date.now();
-  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true }, ctx);
+  const firstResult = await concurrentAll(body, clientIP, queryMeta, false, '', '', '', { skipPostProcess: true, upstreams: _runtimeUpstreams }, ctx);
   const auto1Buf = await firstResult.clone().arrayBuffer();
   const auto1AnswerCount = auto1Buf && auto1Buf.byteLength >= 12 ? new DataView(auto1Buf).getUint16(6) : 0;
   const auto1Rcode = auto1Buf && auto1Buf.byteLength >= 3 ? (new DataView(auto1Buf).getUint8(3) & 0x0F) : -1;
@@ -512,17 +536,19 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
 // ── Main handler ───────────────────────────────────────────────────
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const requestId = crypto.randomUUID().slice(0, 8);
     const startedAt = Date.now();
     let body = null;
     try {
+      const upstreams = mergeUpstreams(env);
+      setRuntimeUpstreams(_runtimeUpstreams, _runtimeForeign);
       const route = resolveRoute(request);
-      const upstreamNames = [AUTO_PROVIDER, ...Object.keys(UPSTREAMS)];
+      const upstreamNames = [AUTO_PROVIDER, ..._runtimeUpstreamKeys];
       if (route.home) {
         const homeResp = new URL(request.url).pathname === '/en'
-          ? serveHomepageEn(request, UPSTREAMS, upstreamNames, CONFIGURED)
-          : serveHomepage(request, UPSTREAMS, upstreamNames, CONFIGURED);
+          ? serveHomepageEn(request, upstreams, upstreamNames, CONFIGURED)
+          : serveHomepage(request, upstreams, upstreamNames, CONFIGURED);
         homeResp.headers.set('X-DoH-Request-ID', requestId);
         return homeResp;
       }
@@ -534,8 +560,8 @@ export default {
       if (route.configJson) {
         const cfg = {
           configured: CONFIGURED,
-          upstreams: Object.keys(UPSTREAMS).map((n) => ({ name: n, url: UPSTREAMS[n].url, ecs: UPSTREAMS[n].ecs })),
-          foreignUpstreams: FOREIGN_UPSTREAMS,
+          upstreams: _runtimeUpstreamKeys.map((n) => ({ name: n, url: upstreams[n].url, ecs: upstreams[n].ecs })),
+          foreignUpstreams: _runtimeForeign,
           autoConcurrency: AUTO_CONCURRENCY,
           ecsProtectMs: ECS_PROTECT_MS,
           hardTimeoutMs: HARD_TIMEOUT_MS,
@@ -647,7 +673,7 @@ export default {
 // ── Single upstream query ──────────────────────────────────────────
 
 async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActive) {
-  const upstream = UPSTREAMS[provider];
+  const upstream = (_runtimeUpstreams || UPSTREAMS)[provider];
   if (!upstream) return respond(servfail(body), ctx);
   const queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
   const queryBody = prepareQuery(body, clientIP);
@@ -679,7 +705,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
         if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
       }
       if (owner) {
-        const cfEch = owner === 'CF' ? await fetchCFEch(null, null) : null;
+        const cfEch = owner === 'CF' ? await fetchCFEch(null, null, _runtimeUpstreams) : null;
         const echResult = await injectECH(finalBody, queryMeta.name, owner, cfEch, ctx);
         if (echResult.changed) {
           const injectedBytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;

@@ -221,7 +221,13 @@ export default {
 | `alidns` | `https://dns.alidns.com/dns-query` | ✓ |
 | `360` | `https://doh.360.cn/dns-query` | ✓ |
 
-自定义上游：`upstreams` 中添加 `name: 'https://your-doh.example.com/dns-query'`（键名须 `^[a-z][a-z0-9_]*$`，强制 ECS 启用）。
+自定义上游：通过 Workers 运行时环境变量注入（不进 `superdoh.config.js`）。在 Cloudflare Dashboard → Worker → Settings → Variables 添加：
+
+| 变量名 | 值 | 规则 |
+|--------|----|------|
+| `CUSTOM_<NAME>` | `https://your-doh.example.com/dns-query` | 键名须 `^[a-z][a-z0-9_]*$`，URL 须 `https://`，强制 ECS 启用 |
+
+注入的自定义上游与预设上游合并，可在 `/health` 和 `/config.json` 中看到。环境变量改完即时生效，无需重新部署。
 
 > [!NOTE]
 > `.env` 文件仍可作为可选覆盖保留（legacy），优先级低于 `superdoh.config.js`。后续版本将移除。
