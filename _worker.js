@@ -123,6 +123,7 @@ function normalizeEntrance(raw) {
   if (!path || path === '/') return '';
   if (!path.startsWith('/')) path = '/' + path;
   path = path.replace(/\/+$/, '');
+  if (!path || !/^\/[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*$/.test(path)) return '';
   return path;
 }
 
@@ -165,6 +166,14 @@ async function proxyFetch(request, targetUrl) {
     headers.delete('x-forwarded-for');
     headers.delete('x-real-ip');
     headers.delete('true-client-ip');
+    headers.delete('authorization');
+    headers.delete('proxy-authorization');
+    headers.delete('cookie');
+    headers.delete('referer');
+    headers.delete('origin');
+    headers.delete('cf-access-jwt-assertion');
+    headers.delete('cf-access-client-id');
+    headers.delete('cf-access-client-secret');
 
     const response = await fetch(upstreamUrl, {
       method: request.method,
@@ -191,6 +200,15 @@ async function proxyFetch(request, targetUrl) {
   } catch {
     return new Response('Bad Gateway', { status: 502 });
   }
+}
+
+function isMisroutedDoh(request, token) {
+  const url = new URL(request.url);
+  const contentType = (request.headers.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
+  return contentType === 'application/dns-message'
+    || url.searchParams.has('dns')
+    || (url.searchParams.has('name') && url.searchParams.has('type'))
+    || (token && url.searchParams.getAll('token').includes(token));
 }
 
 function resolveRoute(request, entrance) {
@@ -617,8 +635,9 @@ export default {
       setRuntimeUpstreams(_runtimeUpstreams, _runtimeForeign);
       const entranceValue = typeof (env && env.ENTRANCE) === 'string' ? env.ENTRANCE.trim() : '';
       const proxyValue = typeof (env && env.PROXY) === 'string' ? env.PROXY.trim() : '';
-      const camouflageEnabled = Boolean(entranceValue && proxyValue);
-      const entrance = camouflageEnabled ? normalizeEntrance(entranceValue) : '';
+      const normalizedEntrance = entranceValue ? normalizeEntrance(entranceValue) : '';
+      const camouflageEnabled = Boolean(normalizedEntrance && proxyValue);
+      const entrance = camouflageEnabled ? normalizedEntrance : '';
       const proxyUrl = camouflageEnabled ? proxyValue : '';
       const route = resolveRoute(request, entrance);
       const upstreamNames = [AUTO_PROVIDER, ..._runtimeUpstreamKeys];
@@ -669,6 +688,9 @@ export default {
       }
       if (route.error) {
         if (camouflageEnabled) {
+          if (isMisroutedDoh(request, env && env.TOKEN)) {
+            return new Response('Not Found', { status: 404 });
+          }
           return await proxyFetch(request, proxyUrl);
         }
         const errResp = jsonError(route.error);
