@@ -538,7 +538,7 @@
 
     // preferredCf
     var cfField = el('div', { class: 'sw-field' });
-    cfField.appendChild(el('label', { text: 'preferredCf' }));
+    cfField.appendChild(el('label', { text: 'Cloudflare 优选域名' }));
     cfField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'cf.example.com',
       value: r.preferredCf,
@@ -548,7 +548,7 @@
 
     // preferredCft
     var cftField = el('div', { class: 'sw-field' });
-    cftField.appendChild(el('label', { text: 'preferredCft' }));
+    cftField.appendChild(el('label', { text: 'CloudFront 优选域名' }));
     cftField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'worker.cloudfront.example.com',
       value: r.preferredCft,
@@ -558,7 +558,7 @@
 
     // preferredVrc
     var vrcField = el('div', { class: 'sw-field' });
-    vrcField.appendChild(el('label', { text: 'preferredVrc' }));
+    vrcField.appendChild(el('label', { text: 'Vercel 优选域名' }));
     vrcField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'worker.vercel.example.com',
       value: r.preferredVrc,
