@@ -20,14 +20,14 @@ export default {
   upstreams: {
     google: true,
     cloudflare_Public: true,
-    // quad9: false,
-    // adguard: false,
-    // opendns: false,
+    quad9: true,
+    adguard: true,
+    opendns: true,
     // yandex: false,
     // dnspod: false,
     // alidns: false,
-    // 360: false,
-    // nextdns: false,
+    // '360': false,
+    nextdns: true,
   },
 
   // ── ECS / DNS 调优 ────────────────────────────────
@@ -49,11 +49,11 @@ export default {
 
   // ── 地区优化 ──────────────────────────────────────
   regions: {
-    "CN": {
-      preferredCf: "",
-      preferredCft: "",
-      preferredVrc: "",
-      remap: "",
+    CN: {
+      preferredCf: 'cf.090227.xyz',
+      preferredCft: 'worker.cloudfront.182682.xyz',
+      preferredVrc: 'worker.vercel.182682.xyz',
+      remap: 'twimg.com twitter.com x.com t.co pixiv.net www.pixiv.net imp.pixiv.net',
       ech: true,
       google: true,
     },
