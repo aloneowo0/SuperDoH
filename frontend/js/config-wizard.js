@@ -407,7 +407,7 @@
     });
     body.appendChild(upGrid);
 
-    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://your-doh.com/dns-query，即时生效。' }));
+    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。' }));
 
     sec.appendChild(body);
     return sec;
