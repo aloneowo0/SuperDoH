@@ -20,7 +20,7 @@ function inject(html, host, upstreams, names, configured) {
     .replaceAll('__HOST__', host)
     .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams))
-    .replace('__CONFIGURED__', String(configured || 0));
+      .replaceAll('__CONFIGURED__', String(configured || 0));
 }
 
 function buildCapsTable(upstreams) {
