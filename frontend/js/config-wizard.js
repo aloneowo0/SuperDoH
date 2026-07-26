@@ -407,7 +407,7 @@
     });
     body.appendChild(upGrid);
 
-    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。' }));
+    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://your-doh.com/dns-query，即时生效。' }));
 
     sec.appendChild(body);
     return sec;
@@ -540,7 +540,7 @@
     var cfField = el('div', { class: 'sw-field' });
     cfField.appendChild(el('label', { text: 'Cloudflare 优选域名' }));
     cfField.appendChild(el('input', {
-      class: 'sw-input', type: 'text', placeholder: 'cf.example.com',
+      class: 'sw-input', type: 'text', placeholder: 'cf.090227.xyz',
       value: r.preferredCf,
       oninput: function (e) { state.regions[idx].preferredCf = e.target.value.trim(); }
     }));
@@ -550,7 +550,7 @@
     var cftField = el('div', { class: 'sw-field' });
     cftField.appendChild(el('label', { text: 'CloudFront 优选域名' }));
     cftField.appendChild(el('input', {
-      class: 'sw-input', type: 'text', placeholder: 'worker.cloudfront.example.com',
+      class: 'sw-input', type: 'text', placeholder: 'worker.cloudfront.182682.xyz',
       value: r.preferredCft,
       oninput: function (e) { state.regions[idx].preferredCft = e.target.value.trim(); }
     }));
@@ -560,7 +560,7 @@
     var vrcField = el('div', { class: 'sw-field' });
     vrcField.appendChild(el('label', { text: 'Vercel 优选域名' }));
     vrcField.appendChild(el('input', {
-      class: 'sw-input', type: 'text', placeholder: 'worker.vercel.example.com',
+      class: 'sw-input', type: 'text', placeholder: 'worker.vercel.182682.xyz',
       value: r.preferredVrc,
       oninput: function (e) { state.regions[idx].preferredVrc = e.target.value.trim(); }
     }));
