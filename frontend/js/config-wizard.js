@@ -688,8 +688,7 @@
   }
 
   function toggleSection(sec, e) {
-    // 不在 input/button 上触发
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
     sec.classList.toggle('collapsed');
   }
 
