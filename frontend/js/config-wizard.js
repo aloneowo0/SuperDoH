@@ -1,7 +1,7 @@
 /**
  * SuperDoH 配置向导 (config-wizard.js)
  * 纯 vanilla JS，无依赖。渲染到 #config-wizard。
- * 根据 window.__CONFIGURED__ 决定只读摘要 / 可编辑向导。
+ * configured:0 时用默认值显示可编辑表单；configured:1 时从 /config.json 预填当前值后显示可编辑表单。
  */
 (function () {
   'use strict';
@@ -199,7 +199,7 @@
 
   // ── 状态 ─────────────────────────────────────────────
   var state = {
-    mode: 'edit', // 'edit' | 'readonly'
+    mode: 'edit',
     regions: [], // [{cc, preferredCf, preferredCft, preferredVrc, remap, ech, google}]
     configData: null // 来自 /config.json
   };
@@ -219,7 +219,9 @@
       .then(function (r) { return r.json(); })
       .then(function (cfg) {
         state.configData = cfg;
-        renderReadOnly(cfg);
+        prefillFromConfig(cfg);
+        state.mode = 'edit';
+        renderEdit();
       })
       .catch(function (err) {
         renderLoadError(err);
@@ -243,99 +245,6 @@
 
   function initEditDefaults() {
     state.regions = [];
-  }
-
-  // ── 只读视图 ─────────────────────────────────────────
-  function renderReadOnly(cfg) {
-    var sec, body, t, tb;
-    wrap.innerHTML = '';
-    state.mode = 'readonly';
-
-    sec = el('section', { class: 'sw-section' });
-    sec.appendChild(el('div', { class: 'sw-section-h' }, [
-      el('h2', { text: '当前配置（只读）' })
-    ]));
-    body = el('div', { class: 'sw-body' });
-
-    // 上游列表
-    body.appendChild(el('h3', { text: '上游 (' + (cfg.upstreams ? cfg.upstreams.length : 0) + ')' }));
-    if (cfg.upstreams && cfg.upstreams.length) {
-      t = el('table', { class: 'sw-summary' });
-      t.appendChild(el('thead', {}, [el('tr', {}, [el('th', { text: '名称' }), el('th', { text: 'URL' }), el('th', { text: 'ECS' })])]));
-      tb = el('tbody', {});
-      cfg.upstreams.forEach(function (u) {
-        tb.appendChild(el('tr', {}, [
-          el('td', { text: u.name }),
-          el('td', { text: u.url }),
-          el('td', { text: u.ecs ? '是' : '否' })
-        ]));
-      });
-      t.appendChild(tb);
-      body.appendChild(t);
-    }
-
-    // 关键参数
-    body.appendChild(el('h3', { text: '关键参数' }));
-    var kv = el('dl', { class: 'sw-kv' });
-    var kvRows = [
-      ['autoConcurrency', cfg.autoConcurrency],
-      ['ecsPrefix4 / ecsPrefix6', cfg.ecsPrefix4 + ' / ' + cfg.ecsPrefix6],
-      ['hardTimeoutMs', cfg.hardTimeoutMs],
-      ['metaHardTimeoutMs', cfg.metaHardTimeoutMs],
-      ['metaCollectWindowMs', cfg.metaCollectWindowMs],
-      ['metaMaxIps', cfg.metaMaxIps],
-      ['preferredTimeoutMs', cfg.preferredTimeoutMs],
-      ['ecsProtectMs', cfg.ecsProtectMs],
-      ['logLevel', cfg.logLevel],
-      ['region (CF country)', cfg.region || '(未匹配)']
-    ];
-    kvRows.forEach(function (r) {
-      kv.appendChild(el('dt', { text: r[0] }));
-      kv.appendChild(el('dd', { text: String(r[1]) }));
-    });
-    body.appendChild(kv);
-
-    // 地区配置
-    if (cfg.regionConfig && Object.keys(cfg.regionConfig).length) {
-      body.appendChild(el('h3', { text: '地区优化 (' + Object.keys(cfg.regionConfig).length + ')' }));
-      Object.keys(cfg.regionConfig).forEach(function (cc) {
-        var rc = cfg.regionConfig[cc];
-        var rdiv = el('div', { class: 'sw-region' });
-        rdiv.appendChild(el('div', { class: 'sw-region-h' }, [el('span', { class: 'sw-region-title', text: cc })]));
-        var rkv = el('dl', { class: 'sw-kv' });
-        var rows = [
-          ['preferredCf', rc.preferredCf || ''],
-          ['preferredCft', rc.preferredCft || ''],
-          ['preferredVrc', rc.preferredVrc || ''],
-          ['remap', Array.isArray(rc.remap) ? rc.remap.join(' ') : (rc.remap || '')],
-          ['ech', rc.ech ? '是' : '否'],
-          ['google', rc.google ? (Array.isArray(rc.google) ? ('是 (' + rc.google.length + ' 条)') : '是') : '否']
-        ];
-        rows.forEach(function (r) {
-          rkv.appendChild(el('dt', { text: r[0] }));
-          rkv.appendChild(el('dd', { text: r[1] }));
-        });
-        rdiv.appendChild(rkv);
-        body.appendChild(rdiv);
-      });
-    } else {
-      body.appendChild(el('p', { class: 'sw-note', text: '未启用地区优化。' }));
-    }
-
-    sec.appendChild(body);
-    wrap.appendChild(sec);
-
-    // 重新配置按钮
-    var actions = el('div', { class: 'sw-actions' });
-    actions.appendChild(el('button', {
-      class: 'sw-btn',
-      onclick: function () {
-        prefillFromConfig(cfg);
-        state.mode = 'edit';
-        renderEdit();
-      }
-    }, '重新配置（切换到编辑模式）'));
-    wrap.appendChild(actions);
   }
 
   function prefillFromConfig(cfg) {
