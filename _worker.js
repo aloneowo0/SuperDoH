@@ -545,7 +545,14 @@ export default {
       setRuntimeUpstreams(_runtimeUpstreams, _runtimeForeign);
       const route = resolveRoute(request);
       const upstreamNames = [AUTO_PROVIDER, ..._runtimeUpstreamKeys];
+      const homepageDisabled = env && env.HOMEPAGE === 'false';
+      const proxyDisabled = env && env.PROXY === 'false';
       if (route.home) {
+        if (homepageDisabled) {
+          const errResp = jsonError('homepage_disabled', 403);
+          errResp.headers.set('X-DoH-Request-ID', requestId);
+          return errResp;
+        }
         const homeResp = new URL(request.url).pathname === '/en'
           ? serveHomepageEn(request, upstreams, upstreamNames, CONFIGURED)
           : serveHomepage(request, upstreams, upstreamNames, CONFIGURED);
@@ -592,6 +599,12 @@ export default {
       }
       if (route.error) {
         const errResp = jsonError(route.error);
+        errResp.headers.set('X-DoH-Request-ID', requestId);
+        return errResp;
+      }
+
+      if (proxyDisabled) {
+        const errResp = jsonError('proxy_disabled', 403);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
       }

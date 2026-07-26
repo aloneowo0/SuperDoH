@@ -28,6 +28,7 @@
   var LANG = (document.documentElement.lang === 'en' || location.pathname.indexOf('/en') === 0) ? 'en' : 'zh';
   var i18n = {
     // Section titles
+    securitySection: { zh: '安全入口', en: 'Security' },
     upstreamsSection: { zh: '上游配置', en: 'Upstreams' },
     tuningSection: { zh: 'DNS 调优', en: 'DNS Tuning' },
     regionsSection: { zh: '地区优化', en: 'Region Optimization' },
@@ -38,6 +39,9 @@
     toggleExpand: { zh: '展开 ▾', en: 'Expand ▾' },
     // Upstream section
     upstreamBadgeNoEcs: { zh: '无 ECS', en: 'No ECS' },
+    securityHomepageNote: { zh: '主页入口：在 Cloudflare Dashboard → Worker → Variables 设置 HOMEPAGE = false 可关闭主页和配置页（仅保留 DoH 端点）。未设置时主页开放。', en: 'Homepage access: set HOMEPAGE=false in Cloudflare Dashboard → Worker → Variables to disable the homepage and config page (DoH endpoints only). If unset, homepage is open.' },
+    securityProxyNote: { zh: '代理网站入口：在 Cloudflare Dashboard → Worker → Variables 设置 PROXY = false 可关闭 DoH 代理端点（仅保留主页）。未设置时代理开放。', en: 'Proxy access: set PROXY=false in Cloudflare Dashboard → Worker → Variables to disable DoH proxy endpoints (homepage only). If unset, proxy is open.' },
+    securityTokenNote: { zh: 'DoH Token：设置 TOKEN = 你的密钥 后，/dns-query 须带 ?token=你的密钥 才可访问。未设置时无 token 限制。', en: 'DoH Token: set TOKEN=your-secret to require ?token=your-secret on /dns-query. If unset, no token restriction.' },
     upstreamNote: { zh: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。', en: 'Custom upstreams: add CUSTOM_<NAME>=https://... in Cloudflare Dashboard → Worker → Variables, takes effect instantly.' },
     // Tuning fields
     ecsPrefix4Label: { zh: 'ECS IPv4 前缀', en: 'ECS IPv4 Prefix' },
@@ -380,11 +384,31 @@
     wrap.innerHTML = '';
     state.mode = 'edit';
 
+    wrap.appendChild(buildSecuritySection());
     wrap.appendChild(buildUpstreamSection());
     wrap.appendChild(buildTuningSection());
     wrap.appendChild(buildRegionsSection());
     wrap.appendChild(buildAdvancedSection());
     wrap.appendChild(buildGenerateSection());
+  }
+
+  // ── 安全入口 section ─────────────────────────────────
+  function buildSecuritySection() {
+    var sec = el('section', { class: 'sw-section' });
+
+    sec.appendChild(el('div', { class: 'sw-section-h' }, [
+      el('h2', { text: t('securitySection') }),
+      el('button', { class: 'sw-toggle', type: 'button' })
+    ]));
+
+    var body = el('div', { class: 'sw-body' });
+
+    body.appendChild(el('div', { class: 'sw-note', text: t('securityHomepageNote') }));
+    body.appendChild(el('div', { class: 'sw-note', text: t('securityProxyNote') }));
+    body.appendChild(el('div', { class: 'sw-note', text: t('securityTokenNote') }));
+
+    sec.appendChild(body);
+    return sec;
   }
 
   // ── 上游 section ─────────────────────────────────────
