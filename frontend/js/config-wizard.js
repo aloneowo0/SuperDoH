@@ -483,7 +483,7 @@
     ]));
 
     var body = el('div', { class: 'sw-body' });
-    body.appendChild(el('p', { class: 'sw-note', text: '空 = 不启用地区优化。每地区一块，键为 ISO 国家码（实际匹配由 request.cf.country 决定）。' }));
+    body.appendChild(el('p', { class: 'sw-note', text: '空 = 不启用地区优化。每地区一块，键为 ISO 国家码（实际匹配由 request.cf.country 决定）。键为 * 时表示全球通配，未命中具体国家码时回退到此配置。' }));
 
     var list = el('div', { id: 'sw-region-list' });
     body.appendChild(list);
@@ -585,7 +585,7 @@
       type: 'checkbox', id: 'sw-ech-' + idx, checked: r.ech ? 'checked' : null,
       onchange: function (e) { state.regions[idx].ech = e.target.checked; }
     }));
-    echWrap.appendChild(el('label', { text: 'ECH', for: 'sw-ech-' + idx }));
+    echWrap.appendChild(el('label', { text: '尽力 ECH 支持', for: 'sw-ech-' + idx }));
     cbRow.appendChild(echWrap);
 
     var gWrap = el('div', { class: 'sw-checkbox-row' });
@@ -832,7 +832,7 @@
     lines.push(' *');
     lines.push(' * 格式说明：');
     lines.push(' *   - upstreams: 预设名设 true 启用；自定义上游通过 Workers 环境变量注入（CUSTOM_<NAME>=https://...）');
-    lines.push(' *   - regions: 空对象 = 不启用地区优化；每地区一块，实际匹配由 request.cf.country 决定');
+    lines.push(' *   - regions: 空对象 = 不启用地区优化；每地区一块，键为 ISO 国家码或 * (全球通配)；实际匹配由 request.cf.country 决定');
     lines.push(' *   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改');
     lines.push(' */');
     lines.push('export default {');
