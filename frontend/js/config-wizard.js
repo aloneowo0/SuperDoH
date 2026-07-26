@@ -24,6 +24,115 @@
   };
   var PRESET_ORDER = ['google', 'cloudflare_Public', 'quad9', 'adguard', 'opendns', 'yandex', 'dnspod', 'alidns', '360', 'nextdns'];
 
+  // ── 语言检测 + i18n ─────────────────────────────────
+  var LANG = (document.documentElement.lang === 'en' || location.pathname.indexOf('/en') === 0) ? 'en' : 'zh';
+  var i18n = {
+    // Section titles
+    upstreamsSection: { zh: '上游配置', en: 'Upstreams' },
+    tuningSection: { zh: 'DNS 调优', en: 'DNS Tuning' },
+    regionsSection: { zh: '地区优化', en: 'Region Optimization' },
+    advancedSection: { zh: '构建抓取 — 高级 (通常无需修改)', en: 'Build Fetch — Advanced (usually no changes needed)' },
+    generateSection: { zh: '生成配置', en: 'Generate Config' },
+    // Toggle
+    toggleCollapse: { zh: '收起 ▴', en: 'Collapse ▴' },
+    toggleExpand: { zh: '展开 ▾', en: 'Expand ▾' },
+    // Upstream section
+    upstreamBadgeNoEcs: { zh: '无 ECS', en: 'No ECS' },
+    upstreamNote: { zh: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。', en: 'Custom upstreams: add CUSTOM_<NAME>=https://... in Cloudflare Dashboard → Worker → Variables, takes effect instantly.' },
+    // Tuning fields
+    ecsPrefix4Label: { zh: 'ECS IPv4 前缀', en: 'ECS IPv4 Prefix' },
+    ecsPrefix4Hint: { zh: 'EDNS Client Subnet IPv4 掩码（通常 24）', en: 'EDNS Client Subnet IPv4 mask (usually 24)' },
+    ecsPrefix6Label: { zh: 'ECS IPv6 前缀', en: 'ECS IPv6 Prefix' },
+    ecsPrefix6Hint: { zh: 'EDNS Client Subnet IPv6 掩码（通常 56）', en: 'EDNS Client Subnet IPv6 mask (usually 56)' },
+    autoConcurrencyLabel: { zh: 'AUTO 并发数', en: 'AUTO Concurrency' },
+    autoConcurrencyHint: { zh: '竞速上游数（0=全部；Free 计划建议 4-6）', en: 'Number of racing upstreams (0=all; Free plan recommends 4-6)' },
+    ecsProtectMsLabel: { zh: 'ECS 保护 (ms)', en: 'ECS Protect (ms)' },
+    ecsProtectMsHint: { zh: 'ECS 注入保护窗口', en: 'ECS injection protection window' },
+    hardTimeoutMsLabel: { zh: '硬超时 (ms)', en: 'Hard Timeout (ms)' },
+    hardTimeoutMsHint: { zh: '单上游硬超时', en: 'Per-upstream hard timeout' },
+    metaHardTimeoutMsLabel: { zh: 'Meta 硬超时 (ms)', en: 'Meta Hard Timeout (ms)' },
+    metaHardTimeoutMsHint: { zh: 'Meta 查询硬超时', en: 'Meta query hard timeout' },
+    metaCollectWindowMsLabel: { zh: 'Meta 收集窗口 (ms)', en: 'Meta Collect Window (ms)' },
+    metaCollectWindowMsHint: { zh: 'Meta 应答收集窗口', en: 'Meta answer collection window' },
+    metaMaxIpsLabel: { zh: 'Meta 最大 IP', en: 'Meta Max IPs' },
+    metaMaxIpsHint: { zh: 'Meta 最多保留 IP 数', en: 'Max IPs kept by Meta' },
+    preferredTimeoutMsLabel: { zh: 'Preferred 超时 (ms)', en: 'Preferred Timeout (ms)' },
+    preferredTimeoutMsHint: { zh: 'Preferred 上游超时', en: 'Preferred upstream timeout' },
+    blockedCidrsLabel: { zh: '应答 IP 黑名单 (CIDR，空格分隔)', en: 'Answer IP Blocklist (CIDR, space-separated)' },
+    blockedCidrsHint: { zh: '每项须为合法 CIDR，如 127.0.0.0/8 或 ::1/128', en: 'Each entry must be a valid CIDR, e.g. 127.0.0.0/8 or ::1/128' },
+    logLevelLabel: { zh: '日志级别', en: 'Log Level' },
+    logLevelHint: { zh: '生产环境建议 info', en: 'Production recommends info' },
+    // Regions section
+    regionsNote: { zh: '空 = 不启用地区优化。每地区一块，键为 ISO 国家码（实际匹配由 request.cf.country 决定）。键为 * 时表示全球通配，未命中具体国家码时回退到此配置。', en: 'Empty = no region optimization. Each entry is one region, key is ISO country code or * (global wildcard), matched by request.cf.country.' },
+    addRegionBtn: { zh: '+ 添加地区', en: '+ Add Region' },
+    removeBtn: { zh: '删除', en: 'Remove' },
+    regionTitle: { zh: '地区 #', en: 'Region #' },
+    ccLabel: { zh: '国家码 (2 字母大写，或 * 表示全球)', en: 'Country code (2-letter uppercase, or * for global)' },
+    ccPlaceholder: { zh: 'CN 或 *', en: 'CN or *' },
+    preferredCfLabel: { zh: 'Cloudflare 优选域名', en: 'Cloudflare preferred domain' },
+    preferredCftLabel: { zh: 'CloudFront 优选域名', en: 'CloudFront preferred domain' },
+    preferredVrcLabel: { zh: 'Vercel 优选域名', en: 'Vercel preferred domain' },
+    remapLabel: { zh: 'remap (空格分隔域名)', en: 'remap (space-separated domains)' },
+    echLabel: { zh: '尽力 ECH 支持', en: 'Best-effort ECH' },
+    googleLabel: { zh: 'google 加速（规则来源 Cealing-Host，仅对 CN 地区有效）', en: 'Google acceleration (Cealing-Host rules, CN region only)' },
+    // Advanced section
+    geoipUrlHint: { zh: 'GeoIP CIDR 列表源', en: 'GeoIP CIDR list source' },
+    cealingHostUrlHint: { zh: 'Cealing-Host Google 代理列表源', en: 'Cealing-Host Google proxy source' },
+    fetchGoogleProxyLabel: { zh: 'fetchGoogleProxy (构建时抓取 Cealing-Host)', en: 'fetchGoogleProxy (fetch Cealing-Host at build time)' },
+    // Generate section
+    generateBtn: { zh: '生成配置文件', en: 'Generate Config File' },
+    downloadBtn: { zh: '下载 superdoh.config.js', en: 'Download superdoh.config.js' },
+    copyBtn: { zh: '复制到剪贴板', en: 'Copy to clipboard' },
+    generateNote: { zh: '生成后请将下载的 superdoh.config.js 覆盖你 fork 仓库中的同名文件，然后推送以触发 Workers Builds 重新部署。', en: 'After generating, overwrite the same-named file in your forked repo, then push to trigger a Workers Builds redeploy.' },
+    previewPlaceholder: { zh: '// 点击「生成配置文件」以预览', en: '// Click "Generate Config File" to preview' },
+    // Validation errors
+    errAtLeastOneUpstream: { zh: '至少启用 1 个上游', en: 'At least 1 upstream required' },
+    errNonNegInt: { zh: '须为非负整数', en: 'Must be a non-negative integer' },
+    errInvalidCidr: { zh: '无效 CIDR: ', en: 'Invalid CIDR: ' },
+    errBlockedCidrsInvalid: { zh: 'blockedCidrs 含无效 CIDR', en: 'blockedCidrs contains invalid CIDR' },
+    errCcInvalid: { zh: '须为 2 字母大写国家码或 *', en: 'Must be 2-letter uppercase country code or *' },
+    errCcDuplicate: { zh: '国家码重复', en: 'Duplicate country code' },
+    errRegionInvalid: { zh: ' 国家码无效', en: ' invalid country code' },
+    errRegionDuplicate: { zh: ' 国家码重复: ', en: ' duplicate country code: ' },
+    errNotEmpty: { zh: '不能为空', en: 'Cannot be empty' },
+    errGeoipUrlEmpty: { zh: 'geoipUrl 不能为空', en: 'geoipUrl cannot be empty' },
+    errCealingHostUrlEmpty: { zh: 'cealingHostUrl 不能为空', en: 'cealingHostUrl cannot be empty' },
+    // Generate messages
+    msgErrorsPrefix: { zh: '配置有 ', en: 'Config has ' },
+    msgErrorsSuffix: { zh: ' 处错误，已标红，请修正后重试：\n• ', en: ' error(s), marked in red, please fix and retry:\n• ' },
+    msgPreviewFixFirst: { zh: '// 修正错误后再生成', en: '// Fix errors before generating' },
+    msgGenerated: { zh: '配置已生成，可下载或复制。', en: 'Config generated, you can download or copy.' },
+    msgCopied: { zh: '已复制到剪贴板。', en: 'Copied to clipboard.' },
+    msgCopyFailed: { zh: '复制失败：', en: 'Copy failed: ' },
+    msgClipboardUnsupported: { zh: '当前浏览器不支持 clipboard API。', en: 'Current browser does not support the clipboard API.' },
+    // Loading
+    loadingText: { zh: '正在加载当前配置…', en: 'Loading current configuration…' },
+    loadErrorPrefix: { zh: '无法加载 /config.json：', en: 'Failed to load /config.json: ' },
+    // Generated config comments
+    cfgHeaderTitle: { zh: 'SuperDoH 用户配置文件', en: 'SuperDoH User Config File' },
+    cfgHeaderDesc1: { zh: '这是 SuperDoH 唯一的人类可编辑配置源。', en: 'This is the only human-editable config source for SuperDoH.' },
+    cfgHeaderDesc2: { zh: 'scripts/build-config.cjs 读取本文件 → 生成 src/config.js（机器产物）→ 打包进 Worker。', en: 'scripts/build-config.cjs reads this file → generates src/config.js (machine product) → bundled into the Worker.' },
+    cfgHeaderDesc3: { zh: '改完本文件后必须重新部署（Workers Builds 会自动触发）才生效。', en: 'After editing this file you must redeploy (Workers Builds triggers automatically) for it to take effect.' },
+    cfgHeaderConfigured1: { zh: 'configured: 1 = 正式运行模式。Worker 使用下面你填写的配置。', en: 'configured: 1 = production mode. Worker uses the config you fill in below.' },
+    cfgHeaderConfigured0: { zh: '   0 = 首次配置模式（Worker 用内置默认跑，首页「配置」tab 显示向导）。', en: '   0 = first-time setup mode (Worker runs with built-in defaults, homepage "Config" tab shows the wizard).' },
+    cfgHeaderFormatTitle: { zh: '格式说明：', en: 'Format notes:' },
+    cfgHeaderFormat1: { zh: '   - upstreams: 预设名设 true 启用；自定义上游通过 Workers 环境变量注入（CUSTOM_<NAME>=https://...）', en: '   - upstreams: set preset name to true to enable; custom upstreams injected via Workers env vars (CUSTOM_<NAME>=https://...)' },
+    cfgHeaderFormat2: { zh: '   - regions: 空对象 = 不启用地区优化；每地区一块，键为 ISO 国家码或 * (全球通配)；实际匹配由 request.cf.country 决定', en: '   - regions: empty object = no region optimization; each entry is one region, key is ISO country code or * (global wildcard); matched by request.cf.country' },
+    cfgHeaderFormat3: { zh: '   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改', en: '   - geoipUrl / cealingHostUrl: sources auto-fetched at build time for large lists; ordinary users need not change' },
+    cfgCommentUpstreams: { zh: '── 上游', en: '── Upstreams' },
+    cfgCommentTuning: { zh: '── ECS / DNS 调优', en: '── ECS / DNS Tuning' },
+    cfgCommentBlockedCidrs: { zh: '应答 IP 黑名单（CIDR，空格分隔）', en: 'Answer IP blocklist (CIDR, space-separated)' },
+    cfgCommentAutoConcurrency: { zh: 'AUTO 竞速并发上游数（0 = 全部上游；Free 计划建议 4-6）', en: 'AUTO racing concurrency (0 = all upstreams; Free plan recommends 4-6)' },
+    cfgCommentMsNoChange: { zh: '以下均为毫秒，通常无需改动', en: 'All values below are in ms; usually no changes needed' },
+    cfgCommentLogLevel: { zh: '日志级别：debug / info / warn / error / none', en: 'Log level: debug / info / warn / error / none' },
+    cfgCommentRegions: { zh: '── 地区优化', en: '── Region Optimization' },
+    cfgCommentBuildFetch: { zh: '── 构建时远程抓取', en: '── Build-time Remote Fetch' },
+    cfgCommentGeoip: { zh: 'GeoIP CIDR 列表源（8 个分类，构建时自动抓取并编译进 config.js）', en: 'GeoIP CIDR list source (8 categories, auto-fetched at build time and compiled into config.js)' },
+    cfgCommentCealing: { zh: 'Cealing-Host Google 代理列表源（regions.*.google=true 时抓取）', en: 'Cealing-Host Google proxy source (fetched when regions.*.google=true)' },
+    cfgCommentSkipCealing: { zh: '设为 false 可跳过 Cealing-Host 抓取', en: 'Set to false to skip Cealing-Host fetch' }
+  };
+  function t(key) { return (i18n[key] && i18n[key][LANG]) || key; }
+
   // ── 默认值 ───────────────────────────────────────────
   var DEFAULTS = {
     ecsPrefix4: 24,
@@ -44,15 +153,15 @@
 
   // ── 调优字段定义 ─────────────────────────────────────
   var TUNING_FIELDS = [
-    { key: 'ecsPrefix4', label: 'ECS IPv4 前缀', hint: 'EDNS Client Subnet IPv4 掩码（通常 24）' },
-    { key: 'ecsPrefix6', label: 'ECS IPv6 前缀', hint: 'EDNS Client Subnet IPv6 掩码（通常 56）' },
-    { key: 'autoConcurrency', label: 'AUTO 并发数', hint: '竞速上游数（0=全部；Free 计划建议 4-6）' },
-    { key: 'ecsProtectMs', label: 'ECS 保护 (ms)', hint: 'ECS 注入保护窗口' },
-    { key: 'hardTimeoutMs', label: '硬超时 (ms)', hint: '单上游硬超时' },
-    { key: 'metaHardTimeoutMs', label: 'Meta 硬超时 (ms)', hint: 'Meta 查询硬超时' },
-    { key: 'metaCollectWindowMs', label: 'Meta 收集窗口 (ms)', hint: 'Meta 应答收集窗口' },
-    { key: 'metaMaxIps', label: 'Meta 最大 IP', hint: 'Meta 最多保留 IP 数' },
-    { key: 'preferredTimeoutMs', label: 'Preferred 超时 (ms)', hint: 'Preferred 上游超时' }
+    { key: 'ecsPrefix4', label: t('ecsPrefix4Label'), hint: t('ecsPrefix4Hint') },
+    { key: 'ecsPrefix6', label: t('ecsPrefix6Label'), hint: t('ecsPrefix6Hint') },
+    { key: 'autoConcurrency', label: t('autoConcurrencyLabel'), hint: t('autoConcurrencyHint') },
+    { key: 'ecsProtectMs', label: t('ecsProtectMsLabel'), hint: t('ecsProtectMsHint') },
+    { key: 'hardTimeoutMs', label: t('hardTimeoutMsLabel'), hint: t('hardTimeoutMsHint') },
+    { key: 'metaHardTimeoutMs', label: t('metaHardTimeoutMsLabel'), hint: t('metaHardTimeoutMsHint') },
+    { key: 'metaCollectWindowMs', label: t('metaCollectWindowMsLabel'), hint: t('metaCollectWindowMsHint') },
+    { key: 'metaMaxIps', label: t('metaMaxIpsLabel'), hint: t('metaMaxIpsHint') },
+    { key: 'preferredTimeoutMs', label: t('preferredTimeoutMsLabel'), hint: t('preferredTimeoutMsHint') }
   ];
 
   // ── 注入样式 ─────────────────────────────────────────
@@ -65,8 +174,8 @@
     '.sw-toggle:hover{text-decoration:underline}',
     '.sw-body{margin-top:.8rem}',
     '.sw-section.collapsed .sw-body{display:none}',
-    '.sw-section.collapsed .sw-toggle:before{content:"展开 ▾"}',
-    '.sw-toggle:before{content:"收起 ▴"}',
+    '.sw-section.collapsed .sw-toggle:before{content:"' + t('toggleExpand') + '"}',
+    '.sw-toggle:before{content:"' + t('toggleCollapse') + '"}',
     '.sw-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem 1rem;margin-bottom:.6rem}',
     '@media(max-width:600px){.sw-row{grid-template-columns:1fr}}',
     '.sw-field{display:flex;flex-direction:column;gap:.2rem}',
@@ -233,12 +342,12 @@
 
   function renderLoading() {
     wrap.innerHTML = '';
-    wrap.appendChild(el('div', { class: 'sw-loading' }, '正在加载当前配置…'));
+    wrap.appendChild(el('div', { class: 'sw-loading' }, t('loadingText')));
   }
 
   function renderLoadError(err) {
     wrap.innerHTML = '';
-    wrap.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, '无法加载 /config.json：' + (err && err.message ? err.message : err)));
+    wrap.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, t('loadErrorPrefix') + (err && err.message ? err.message : err)));
     initEditDefaults();
     renderEdit();
   }
@@ -284,7 +393,7 @@
     var cfg = state.configData;
 
     sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
-      el('h2', { text: '上游配置' }),
+      el('h2', { text: t('upstreamsSection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));
 
@@ -307,7 +416,7 @@
         el('div', { class: 'sw-upstream-info' }, [
           el('div', {}, [
             el('span', { class: 'sw-upstream-name', text: name }),
-            el('span', { class: 'sw-badge ' + (p.ecs ? 'sw-badge-ecs' : 'sw-badge-noecs'), text: p.ecs ? 'ECS' : '无 ECS' })
+            el('span', { class: 'sw-badge ' + (p.ecs ? 'sw-badge-ecs' : 'sw-badge-noecs'), text: p.ecs ? 'ECS' : t('upstreamBadgeNoEcs') })
           ]),
           el('div', { class: 'sw-upstream-url', text: p.url })
         ])
@@ -316,7 +425,7 @@
     });
     body.appendChild(upGrid);
 
-    body.appendChild(el('div', { class: 'sw-note', text: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。' }));
+    body.appendChild(el('div', { class: 'sw-note', text: t('upstreamNote') }));
 
     sec.appendChild(body);
     return sec;
@@ -328,7 +437,7 @@
     var cfg = state.configData;
 
     sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
-      el('h2', { text: 'DNS 调优' }),
+      el('h2', { text: t('tuningSection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));
 
@@ -354,19 +463,19 @@
 
     // blockedCidrs
     var bcField = el('div', { class: 'sw-field', 'data-field': 'blockedCidrs' });
-    bcField.appendChild(el('label', { text: '应答 IP 黑名单 (CIDR，空格分隔)' }));
+    bcField.appendChild(el('label', { text: t('blockedCidrsLabel') }));
     var bcVal = cfg ? (cfg.blockedCidrs || DEFAULTS.blockedCidrs) : DEFAULTS.blockedCidrs;
     bcField.appendChild(el('textarea', {
       class: 'sw-textarea', 'data-tuning': 'blockedCidrs',
       oninput: function () { clearErr(bcField); }
     }, bcVal));
-    bcField.appendChild(el('div', { class: 'sw-hint', text: '每项须为合法 CIDR，如 127.0.0.0/8 或 ::1/128' }));
+    bcField.appendChild(el('div', { class: 'sw-hint', text: t('blockedCidrsHint') }));
     bcField.appendChild(el('div', { class: 'sw-error' }));
     body.appendChild(bcField);
 
     // logLevel
     var llField = el('div', { class: 'sw-field', 'data-field': 'logLevel' });
-    llField.appendChild(el('label', { text: '日志级别' }));
+    llField.appendChild(el('label', { text: t('logLevelLabel') }));
     var llVal = cfg ? (cfg.logLevel || DEFAULTS.logLevel) : DEFAULTS.logLevel;
     var sel = el('select', { class: 'sw-select', 'data-tuning': 'logLevel' });
     ['debug', 'info', 'warn', 'error', 'none'].forEach(function (lv) {
@@ -375,7 +484,7 @@
       sel.appendChild(o);
     });
     llField.appendChild(sel);
-    llField.appendChild(el('div', { class: 'sw-hint', text: '生产环境建议 info' }));
+    llField.appendChild(el('div', { class: 'sw-hint', text: t('logLevelHint') }));
     body.appendChild(llField);
 
     sec.appendChild(body);
@@ -387,12 +496,12 @@
     var sec = el('section', { class: 'sw-section' });
 
     sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
-      el('h2', { text: '地区优化' }),
+      el('h2', { text: t('regionsSection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));
 
     var body = el('div', { class: 'sw-body' });
-    body.appendChild(el('p', { class: 'sw-note', text: '空 = 不启用地区优化。每地区一块，键为 ISO 国家码（实际匹配由 request.cf.country 决定）。键为 * 时表示全球通配，未命中具体国家码时回退到此配置。' }));
+    body.appendChild(el('p', { class: 'sw-note', text: t('regionsNote') }));
 
     var list = el('div', { id: 'sw-region-list' });
     body.appendChild(list);
@@ -404,7 +513,7 @@
         state.regions.push({ cc: '', preferredCf: '', preferredCft: '', preferredVrc: '', remap: '', ech: true, google: false });
         renderRegions(list);
       }
-    }, '+ 添加地区'));
+    }, t('addRegionBtn')));
 
     sec.appendChild(body);
     return sec;
@@ -421,14 +530,14 @@
     var block = el('div', { class: 'sw-region', 'data-region': idx });
 
     var header = el('div', { class: 'sw-region-h' }, [
-      el('span', { class: 'sw-region-title', text: '地区 #' + (idx + 1) }),
+      el('span', { class: 'sw-region-title', text: t('regionTitle') + (idx + 1) }),
       el('button', {
         class: 'sw-icon-btn', type: 'button',
         onclick: function () {
           state.regions.splice(idx, 1);
           renderRegions(container);
         }
-      }, '删除')
+      }, t('removeBtn'))
     ]);
     block.appendChild(header);
 
@@ -436,9 +545,9 @@
 
     // CC
     var ccField = el('div', { class: 'sw-field', 'data-rfield': 'cc' });
-    ccField.appendChild(el('label', { text: '国家码 (2 字母大写，或 * 表示全球)' }));
+    ccField.appendChild(el('label', { text: t('ccLabel') }));
     ccField.appendChild(el('input', {
-      class: 'sw-input', type: 'text', maxlength: '2', placeholder: 'CN 或 *',
+      class: 'sw-input', type: 'text', maxlength: '2', placeholder: t('ccPlaceholder'),
       value: r.cc,
       oninput: function (e) { state.regions[idx].cc = e.target.value.trim().toUpperCase(); clearErr(ccField); }
     }));
@@ -447,7 +556,7 @@
 
     // preferredCf
     var cfField = el('div', { class: 'sw-field' });
-    cfField.appendChild(el('label', { text: 'Cloudflare 优选域名' }));
+    cfField.appendChild(el('label', { text: t('preferredCfLabel') }));
     cfField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'cf.090227.xyz',
       value: r.preferredCf,
@@ -457,7 +566,7 @@
 
     // preferredCft
     var cftField = el('div', { class: 'sw-field' });
-    cftField.appendChild(el('label', { text: 'CloudFront 优选域名' }));
+    cftField.appendChild(el('label', { text: t('preferredCftLabel') }));
     cftField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'worker.cloudfront.182682.xyz',
       value: r.preferredCft,
@@ -467,7 +576,7 @@
 
     // preferredVrc
     var vrcField = el('div', { class: 'sw-field' });
-    vrcField.appendChild(el('label', { text: 'Vercel 优选域名' }));
+    vrcField.appendChild(el('label', { text: t('preferredVrcLabel') }));
     vrcField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'worker.vercel.182682.xyz',
       value: r.preferredVrc,
@@ -479,7 +588,7 @@
 
     // remap (full width)
     var remapField = el('div', { class: 'sw-field' });
-    remapField.appendChild(el('label', { text: 'remap (空格分隔域名)' }));
+    remapField.appendChild(el('label', { text: t('remapLabel') }));
     remapField.appendChild(el('input', {
       class: 'sw-input', type: 'text', placeholder: 'twimg.com twitter.com x.com',
       value: r.remap,
@@ -494,7 +603,7 @@
       type: 'checkbox', id: 'sw-ech-' + idx, checked: r.ech ? 'checked' : null,
       onchange: function (e) { state.regions[idx].ech = e.target.checked; }
     }));
-    echWrap.appendChild(el('label', { text: '尽力 ECH 支持', for: 'sw-ech-' + idx }));
+    echWrap.appendChild(el('label', { text: t('echLabel'), for: 'sw-ech-' + idx }));
     cbRow.appendChild(echWrap);
 
     var gWrap = el('div', { class: 'sw-checkbox-row' });
@@ -502,7 +611,7 @@
       type: 'checkbox', id: 'sw-g-' + idx, checked: r.google ? 'checked' : null,
       onchange: function (e) { state.regions[idx].google = e.target.checked; }
     }));
-    gWrap.appendChild(el('label', { text: 'google 加速（规则来源 Cealing-Host，仅对 CN 地区有效）', for: 'sw-g-' + idx }));
+    gWrap.appendChild(el('label', { text: t('googleLabel'), for: 'sw-g-' + idx }));
     cbRow.appendChild(gWrap);
     block.appendChild(cbRow);
 
@@ -514,7 +623,7 @@
     var sec = el('section', { class: 'sw-section collapsed' });
 
     sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
-      el('h2', { text: '构建抓取 — 高级 (通常无需修改)' }),
+      el('h2', { text: t('advancedSection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));
 
@@ -528,7 +637,7 @@
       value: DEFAULTS.geoipUrl,
       oninput: function () { clearErr(geoField); }
     }));
-    geoField.appendChild(el('div', { class: 'sw-hint', text: 'GeoIP CIDR 列表源' }));
+    geoField.appendChild(el('div', { class: 'sw-hint', text: t('geoipUrlHint') }));
     geoField.appendChild(el('div', { class: 'sw-error' }));
     row.appendChild(geoField);
 
@@ -539,7 +648,7 @@
       value: DEFAULTS.cealingHostUrl,
       oninput: function () { clearErr(chField); }
     }));
-    chField.appendChild(el('div', { class: 'sw-hint', text: 'Cealing-Host Google 代理列表源' }));
+    chField.appendChild(el('div', { class: 'sw-hint', text: t('cealingHostUrlHint') }));
     chField.appendChild(el('div', { class: 'sw-error' }));
     row.appendChild(chField);
 
@@ -550,7 +659,7 @@
       type: 'checkbox', id: 'sw-fgp', checked: DEFAULTS.fetchGoogleProxy ? 'checked' : null,
       'data-adv': 'fetchGoogleProxy'
     }));
-    fgWrap.appendChild(el('label', { text: 'fetchGoogleProxy (构建时抓取 Cealing-Host)', for: 'sw-fgp' }));
+    fgWrap.appendChild(el('label', { text: t('fetchGoogleProxyLabel'), for: 'sw-fgp' }));
     body.appendChild(fgWrap);
 
     sec.appendChild(body);
@@ -562,7 +671,7 @@
     var sec = el('section', { class: 'sw-section' });
 
     sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
-      el('h2', { text: '生成配置' }),
+      el('h2', { text: t('generateSection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));
 
@@ -575,21 +684,21 @@
     actions.appendChild(el('button', {
       class: 'sw-btn', type: 'button',
       onclick: function () { doGenerate(); }
-    }, '生成配置文件'));
+    }, t('generateBtn')));
     actions.appendChild(el('button', {
       class: 'sw-btn sw-btn-secondary', type: 'button', id: 'sw-download-btn',
       onclick: function () { doDownload(); }
-    }, '下载 superdoh.config.js'));
+    }, t('downloadBtn')));
     actions.appendChild(el('button', {
       class: 'sw-btn sw-btn-ghost', type: 'button',
       onclick: function () { doCopy(); }
-    }, '复制到剪贴板'));
+    }, t('copyBtn')));
     body.appendChild(actions);
 
-    body.appendChild(el('div', { class: 'sw-note', text: '生成后请将下载的 superdoh.config.js 覆盖你 fork 仓库中的同名文件，然后推送以触发 Workers Builds 重新部署。' }));
+    body.appendChild(el('div', { class: 'sw-note', text: t('generateNote') }));
 
     var preview = el('div', { class: 'sw-preview' });
-    preview.appendChild(el('pre', {}, [el('code', { id: 'sw-preview-code', text: '// 点击「生成配置文件」以预览' })]));
+    preview.appendChild(el('pre', {}, [el('code', { id: 'sw-preview-code', text: t('previewPlaceholder') })]));
     body.appendChild(preview);
 
     sec.appendChild(body);
@@ -635,7 +744,7 @@
     });
 
     if (enabledCount === 0) {
-      errors.push('至少启用 1 个上游');
+      errors.push(t('errAtLeastOneUpstream'));
     }
 
     // 调优数值字段
@@ -646,8 +755,8 @@
       var raw = input ? input.value : '';
       var n = parseInt(raw, 10);
       if (!/^\d+$/.test(String(raw).trim()) || isNaN(n) || n < 0) {
-        if (fieldEl) showErr(fieldEl, '须为非负整数');
-        errors.push(f.label + ' 须为非负整数');
+        if (fieldEl) showErr(fieldEl, t('errNonNegInt'));
+        errors.push(f.label + ' ' + t('errNonNegInt'));
         return;
       }
       config[f.key] = n;
@@ -664,8 +773,8 @@
       if (!isValidCidr(tok)) bcBad.push(tok);
     });
     if (bcBad.length) {
-      if (bcField) showErr(bcField, '无效 CIDR: ' + bcBad.join(' '));
-      errors.push('blockedCidrs 含无效 CIDR');
+      if (bcField) showErr(bcField, t('errInvalidCidr') + bcBad.join(' '));
+      errors.push(t('errBlockedCidrsInvalid'));
     }
     config.blockedCidrs = bcRaw.trim();
 
@@ -681,13 +790,13 @@
       var cc = r.cc.trim().toUpperCase();
       if (!cc) return; // 空地区块跳过
     if (!/^([A-Z]{2}|\*)$/.test(cc)) {
-      if (ccFieldEl) showErr(ccFieldEl, '须为 2 字母大写国家码或 *');
-      errors.push('地区 #' + (idx + 1) + ' 国家码无效');
+      if (ccFieldEl) showErr(ccFieldEl, t('errCcInvalid'));
+      errors.push(t('regionTitle') + (idx + 1) + t('errRegionInvalid'));
         return;
       }
       if (regionCCs[cc]) {
-        if (ccFieldEl) showErr(ccFieldEl, '国家码重复');
-        errors.push('地区 #' + (idx + 1) + ' 国家码重复: ' + cc);
+        if (ccFieldEl) showErr(ccFieldEl, t('errCcDuplicate'));
+        errors.push(t('regionTitle') + (idx + 1) + t('errRegionDuplicate') + cc);
         return;
       }
       regionCCs[cc] = true;
@@ -707,8 +816,8 @@
     var geoInput = wrap.querySelector('[data-adv="geoipUrl"]');
     config.geoipUrl = geoInput ? geoInput.value.trim() : DEFAULTS.geoipUrl;
     if (!config.geoipUrl) {
-      if (geoField) showErr(geoField, '不能为空');
-      errors.push('geoipUrl 不能为空');
+      if (geoField) showErr(geoField, t('errNotEmpty'));
+      errors.push(t('errGeoipUrlEmpty'));
     }
 
     var chField = wrap.querySelector('[data-field="cealingHostUrl"]');
@@ -716,8 +825,8 @@
     var chInput = wrap.querySelector('[data-adv="cealingHostUrl"]');
     config.cealingHostUrl = chInput ? chInput.value.trim() : DEFAULTS.cealingHostUrl;
     if (!config.cealingHostUrl) {
-      if (chField) showErr(chField, '不能为空');
-      errors.push('cealingHostUrl 不能为空');
+      if (chField) showErr(chField, t('errNotEmpty'));
+      errors.push(t('errCealingHostUrlEmpty'));
     }
 
     var fgpCb = wrap.querySelector('[data-adv="fetchGoogleProxy"]');
@@ -729,24 +838,24 @@
   function genConfigText(config) {
     var lines = [];
     lines.push('/**');
-    lines.push(' * SuperDoH 用户配置文件');
+    lines.push(' * ' + t('cfgHeaderTitle'));
     lines.push(' *');
-    lines.push(' * 这是 SuperDoH 唯一的人类可编辑配置源。');
-    lines.push(' * scripts/build-config.cjs 读取本文件 → 生成 src/config.js（机器产物）→ 打包进 Worker。');
-    lines.push(' * 改完本文件后必须重新部署（Workers Builds 会自动触发）才生效。');
+    lines.push(' * ' + t('cfgHeaderDesc1'));
+    lines.push(' * ' + t('cfgHeaderDesc2'));
+    lines.push(' * ' + t('cfgHeaderDesc3'));
     lines.push(' *');
-    lines.push(' * configured: 1 = 正式运行模式。Worker 使用下面你填写的配置。');
-    lines.push(' *   0 = 首次配置模式（Worker 用内置默认跑，首页「配置」tab 显示向导）。');
+    lines.push(' * ' + t('cfgHeaderConfigured1'));
+    lines.push(' * ' + t('cfgHeaderConfigured0'));
     lines.push(' *');
-    lines.push(' * 格式说明：');
-    lines.push(' *   - upstreams: 预设名设 true 启用；自定义上游通过 Workers 环境变量注入（CUSTOM_<NAME>=https://...）');
-    lines.push(' *   - regions: 空对象 = 不启用地区优化；每地区一块，键为 ISO 国家码或 * (全球通配)；实际匹配由 request.cf.country 决定');
-    lines.push(' *   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改');
+    lines.push(' * ' + t('cfgHeaderFormatTitle'));
+    lines.push(' * ' + t('cfgHeaderFormat1'));
+    lines.push(' * ' + t('cfgHeaderFormat2'));
+    lines.push(' * ' + t('cfgHeaderFormat3'));
     lines.push(' */');
     lines.push('export default {');
     lines.push('  configured: 1,');
     lines.push('');
-    lines.push('  // ── 上游 ──────────────────────────────────────────');
+    lines.push('  // ' + t('cfgCommentUpstreams') + ' ──────────────────────────────────────────');
     lines.push('  upstreams: {');
     // 预设按 PRESET_ORDER 输出（启用的），未启用的注释
     PRESET_ORDER.forEach(function (name) {
@@ -758,24 +867,24 @@
     });
     lines.push('  },');
     lines.push('');
-    lines.push('  // ── ECS / DNS 调优 ────────────────────────────────');
+    lines.push('  // ' + t('cfgCommentTuning') + ' ───────────────────────────────');
     lines.push('  ecsPrefix4: ' + config.ecsPrefix4 + ',');
     lines.push('  ecsPrefix6: ' + config.ecsPrefix6 + ',');
-    lines.push('  // 应答 IP 黑名单（CIDR，空格分隔）');
+    lines.push('  // ' + t('cfgCommentBlockedCidrs'));
     lines.push('  blockedCidrs: ' + JSON.stringify(config.blockedCidrs) + ',');
-    lines.push('  // AUTO 竞速并发上游数（0 = 全部上游；Free 计划建议 4-6）');
+    lines.push('  // ' + t('cfgCommentAutoConcurrency'));
     lines.push('  autoConcurrency: ' + config.autoConcurrency + ',');
-    lines.push('  // 以下均为毫秒，通常无需改动');
+    lines.push('  // ' + t('cfgCommentMsNoChange'));
     lines.push('  ecsProtectMs: ' + config.ecsProtectMs + ',');
     lines.push('  hardTimeoutMs: ' + config.hardTimeoutMs + ',');
     lines.push('  metaHardTimeoutMs: ' + config.metaHardTimeoutMs + ',');
     lines.push('  metaCollectWindowMs: ' + config.metaCollectWindowMs + ',');
     lines.push('  metaMaxIps: ' + config.metaMaxIps + ',');
     lines.push('  preferredTimeoutMs: ' + config.preferredTimeoutMs + ',');
-    lines.push('  // 日志级别：debug / info / warn / error / none');
+    lines.push('  // ' + t('cfgCommentLogLevel'));
     lines.push('  logLevel: ' + JSON.stringify(config.logLevel) + ',');
     lines.push('');
-    lines.push('  // ── 地区优化 ──────────────────────────────────────');
+    lines.push('  // ' + t('cfgCommentRegions') + ' ──────────────────────────────────────');
     if (Object.keys(config.regions).length === 0) {
       lines.push('  regions: {},');
     } else {
@@ -794,12 +903,12 @@
       lines.push('  },');
     }
     lines.push('');
-    lines.push('  // ── 构建时远程抓取 ────────────────────────────────');
-    lines.push('  // GeoIP CIDR 列表源（8 个分类，构建时自动抓取并编译进 config.js）');
+    lines.push('  // ' + t('cfgCommentBuildFetch') + ' ───────────────────────────────');
+    lines.push('  // ' + t('cfgCommentGeoip'));
     lines.push('  geoipUrl: ' + JSON.stringify(config.geoipUrl) + ',');
-    lines.push('  // Cealing-Host Google 代理列表源（regions.*.google=true 时抓取）');
+    lines.push('  // ' + t('cfgCommentCealing'));
     lines.push('  cealingHostUrl: ' + JSON.stringify(config.cealingHostUrl) + ',');
-    lines.push('  // 设为 false 可跳过 Cealing-Host 抓取');
+    lines.push('  // ' + t('cfgCommentSkipCealing'));
     lines.push('  fetchGoogleProxy: ' + config.fetchGoogleProxy + ',');
     lines.push('};');
     return lines.join('\n');
@@ -816,14 +925,14 @@
     var msgBox = document.getElementById('sw-gen-msg');
     msgBox.innerHTML = '';
     if (result.errors.length) {
-      msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, '配置有 ' + result.errors.length + ' 处错误，已标红，请修正后重试：\n• ' + result.errors.join('\n• ')));
-      document.getElementById('sw-preview-code').textContent = '// 修正错误后再生成';
+      msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, t('msgErrorsPrefix') + result.errors.length + t('msgErrorsSuffix') + result.errors.join('\n• ')));
+      document.getElementById('sw-preview-code').textContent = t('msgPreviewFixFirst');
       lastGeneratedText = '';
       return;
     }
     lastGeneratedText = genConfigText(result.config);
     document.getElementById('sw-preview-code').textContent = lastGeneratedText;
-    msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-ok' }, '配置已生成，可下载或复制。'));
+    msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-ok' }, t('msgGenerated')));
   }
 
   function doDownload() {
@@ -850,12 +959,12 @@
     var msgBox = document.getElementById('sw-gen-msg');
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(lastGeneratedText).then(function () {
-        msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-ok' }, '已复制到剪贴板。'));
+        msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-ok' }, t('msgCopied')));
       }, function (err) {
-        msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, '复制失败：' + (err && err.message ? err.message : err)));
+        msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, t('msgCopyFailed') + (err && err.message ? err.message : err)));
       });
     } else {
-      msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, '当前浏览器不支持 clipboard API。'));
+      msgBox.appendChild(el('div', { class: 'sw-msg sw-msg-error' }, t('msgClipboardUnsupported')));
     }
   }
 })();
