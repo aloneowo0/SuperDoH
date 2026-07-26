@@ -593,7 +593,7 @@
       type: 'checkbox', id: 'sw-g-' + idx, checked: r.google ? 'checked' : null,
       onchange: function (e) { state.regions[idx].google = e.target.checked; }
     }));
-    gWrap.appendChild(el('label', { text: 'google (启用 Cealing-Host 抓取，仅对 CN 地区有效)', for: 'sw-g-' + idx }));
+    gWrap.appendChild(el('label', { text: 'google 加速（规则来源 Cealing-Host，仅对 CN 地区有效）', for: 'sw-g-' + idx }));
     cbRow.appendChild(gWrap);
     block.appendChild(cbRow);
 
