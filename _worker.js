@@ -596,6 +596,17 @@ export default {
         return errResp;
       }
 
+      // Token 校验：env.TOKEN 设置后，DoH 端点须带 ?token=xxx 匹配；未设置则放行
+      if (env && env.TOKEN) {
+        const url = new URL(request.url);
+        const token = url.searchParams.get('token');
+        if (token !== env.TOKEN) {
+          const errResp = jsonError('unauthorized', 401);
+          errResp.headers.set('X-DoH-Request-ID', requestId);
+          return errResp;
+        }
+      }
+
       const parsedRequest = await parseDohRequest(request);
       if (parsedRequest.error) {
         const requestError = jsonError(parsedRequest.error.error, parsedRequest.error.status);
