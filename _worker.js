@@ -111,35 +111,107 @@ function mergeUpstreams(env) {
   return merged;
 }
 
-function resolveRoute(request) {
+// ── Entrance + Proxy (reverse proxy camouflage) ────────────────────
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizeEntrance(raw) {
+  if (typeof raw !== 'string') return '';
+  let path = raw.trim();
+  if (!path || path === '/') return '';
+  if (!path.startsWith('/')) path = '/' + path;
+  path = path.replace(/\/+$/, '');
+  return path;
+}
+
+function rewriteProxyLocation(location, upstreamUrl, requestUrl, target, basePath) {
+  const next = new URL(location, upstreamUrl);
+  if (next.origin !== target.origin) return null;
+  let publicPath;
+  if (!basePath) {
+    publicPath = next.pathname;
+  } else if (next.pathname === basePath) {
+    publicPath = '/';
+  } else if (next.pathname.startsWith(basePath + '/')) {
+    publicPath = next.pathname.slice(basePath.length);
+  } else {
+    return null;
+  }
+  const visible = new URL(requestUrl);
+  visible.pathname = publicPath;
+  visible.search = next.search;
+  visible.hash = next.hash;
+  return visible.toString();
+}
+
+async function proxyFetch(request, targetUrl) {
+  try {
+    const requestUrl = new URL(request.url);
+    const target = new URL(targetUrl);
+    if (target.protocol !== 'https:' && target.protocol !== 'http:') {
+      throw new Error('Unsupported proxy protocol');
+    }
+    const basePath = target.pathname.replace(/\/+$/, '');
+    const upstreamUrl = new URL(target);
+    upstreamUrl.pathname = basePath + requestUrl.pathname;
+    upstreamUrl.search = requestUrl.search;
+    upstreamUrl.hash = '';
+
+    const headers = new Headers(request.headers);
+    headers.delete('host');
+    headers.delete('cf-connecting-ip');
+    headers.delete('x-forwarded-for');
+    headers.delete('x-real-ip');
+    headers.delete('true-client-ip');
+
+    const response = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
+      redirect: 'manual',
+    });
+
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('set-cookie');
+
+    const location = responseHeaders.get('location');
+    if (location && response.status >= 300 && response.status < 400) {
+      const rewritten = rewriteProxyLocation(location, upstreamUrl, request.url, target, basePath);
+      if (!rewritten) return new Response('Bad Gateway', { status: 502 });
+      responseHeaders.set('location', rewritten);
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
+  } catch {
+    return new Response('Bad Gateway', { status: 502 });
+  }
+}
+
+function resolveRoute(request, entrance) {
   const url = new URL(request.url);
   const { pathname, search } = url;
-  if (pathname === '/' || pathname === '/index.html' || pathname === '/en') {
-    return { home: true };
+  const prefix = entrance || '';
+
+  if (pathname === (prefix || '/') || pathname === prefix + '/' || pathname === prefix + '/index.html' || pathname === prefix + '/en') {
+    return { home: true, en: pathname === prefix + '/en' };
   }
-  if (pathname === '/health') {
-    return { health: true };
+  if (pathname === prefix + '/health') return { health: true };
+  if (pathname === prefix + '/config.json') return { configJson: true };
+  if (pathname === prefix + '/css/style.css') return { static: 'css' };
+  if (pathname === prefix + '/js/resolver.js') return { static: 'js' };
+  if (pathname === prefix + '/js/config-wizard.js') return { static: 'wizard' };
+  if (pathname === prefix + '/dns-query') return { provider: AUTO_PROVIDER, queryString: search };
+  const match = pathname.match(new RegExp('^' + escapeRegExp(prefix) + '/([^/]+)/dns-query$'));
+  if (match && validProviders().has(match[1])) {
+    return { provider: match[1], queryString: search };
   }
-  if (pathname === '/config.json') {
-    return { configJson: true };
-  }
-  if (pathname === '/css/style.css') {
-    return { static: 'css' };
-  }
-  if (pathname === '/js/resolver.js') {
-    return { static: 'js' };
-  }
-  if (pathname === '/js/config-wizard.js') {
-    return { static: 'wizard' };
-  }
-  if (pathname === '/dns-query') {
-    return { provider: AUTO_PROVIDER, queryString: search };
-  }
-  const match = pathname.match(/^\/([^/]+)\/dns-query$/);
-  if (!match) return { error: 'not_found' };
-  const provider = match[1];
-  if (!validProviders().has(provider)) return { error: 'unknown_provider' };
-  return { provider, queryString: search };
+  return { error: 'not_found' };
 }
 
 // ── Response helpers ───────────────────────────────────────────────
@@ -543,19 +615,17 @@ export default {
     try {
       const upstreams = mergeUpstreams(env);
       setRuntimeUpstreams(_runtimeUpstreams, _runtimeForeign);
-      const route = resolveRoute(request);
+      const entranceValue = typeof (env && env.ENTRANCE) === 'string' ? env.ENTRANCE.trim() : '';
+      const proxyValue = typeof (env && env.PROXY) === 'string' ? env.PROXY.trim() : '';
+      const camouflageEnabled = Boolean(entranceValue && proxyValue);
+      const entrance = camouflageEnabled ? normalizeEntrance(entranceValue) : '';
+      const proxyUrl = camouflageEnabled ? proxyValue : '';
+      const route = resolveRoute(request, entrance);
       const upstreamNames = [AUTO_PROVIDER, ..._runtimeUpstreamKeys];
-      const homepageDisabled = env && env.HOMEPAGE === 'false';
-      const proxyDisabled = env && env.PROXY === 'false';
       if (route.home) {
-        if (homepageDisabled) {
-          const errResp = jsonError('homepage_disabled', 403);
-          errResp.headers.set('X-DoH-Request-ID', requestId);
-          return errResp;
-        }
-        const homeResp = new URL(request.url).pathname === '/en'
-          ? serveHomepageEn(request, upstreams, upstreamNames, CONFIGURED)
-          : serveHomepage(request, upstreams, upstreamNames, CONFIGURED);
+        const homeResp = route.en
+          ? serveHomepageEn(request, upstreams, upstreamNames, CONFIGURED, entrance)
+          : serveHomepage(request, upstreams, upstreamNames, CONFIGURED, entrance);
         homeResp.headers.set('X-DoH-Request-ID', requestId);
         return homeResp;
       }
@@ -598,13 +668,10 @@ export default {
         }
       }
       if (route.error) {
+        if (camouflageEnabled) {
+          return await proxyFetch(request, proxyUrl);
+        }
         const errResp = jsonError(route.error);
-        errResp.headers.set('X-DoH-Request-ID', requestId);
-        return errResp;
-      }
-
-      if (proxyDisabled) {
-        const errResp = jsonError('proxy_disabled', 403);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
       }

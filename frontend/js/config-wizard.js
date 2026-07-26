@@ -39,9 +39,9 @@
     toggleExpand: { zh: '展开 ▾', en: 'Expand ▾' },
     // Upstream section
     upstreamBadgeNoEcs: { zh: '无 ECS', en: 'No ECS' },
-    securityHomepageNote: { zh: '主页入口：在 Cloudflare Dashboard → Worker → Variables 设置 HOMEPAGE = false 可关闭主页和配置页（仅保留 DoH 端点）。未设置时主页开放。', en: 'Homepage access: set HOMEPAGE=false in Cloudflare Dashboard → Worker → Variables to disable the homepage and config page (DoH endpoints only). If unset, homepage is open.' },
-    securityProxyNote: { zh: '代理网站入口：在 Cloudflare Dashboard → Worker → Variables 设置 PROXY = false 可关闭 DoH 代理端点（仅保留主页）。未设置时代理开放。', en: 'Proxy access: set PROXY=false in Cloudflare Dashboard → Worker → Variables to disable DoH proxy endpoints (homepage only). If unset, proxy is open.' },
-    securityTokenNote: { zh: 'DoH Token：设置 TOKEN = 你的密钥 后，/dns-query 须带 ?token=你的密钥 才可访问。未设置时无 token 限制。', en: 'DoH Token: set TOKEN=your-secret to require ?token=your-secret on /dns-query. If unset, no token restriction.' },
+    securityHomepageNote: { zh: '伪装入口：设置 ENTRANCE 和 PROXY 环境变量后，只有访问 ENTRANCE 路径（如 /abc123）才显示主页，其他路径反向代理 PROXY 网站。两个变量都设置才生效。', en: 'Camouflage: set both ENTRANCE and PROXY env vars — only the ENTRANCE path (e.g. /abc123) shows the homepage; all other paths reverse-proxy to the PROXY URL. Both must be set to take effect.' },
+    securityProxyNote: { zh: '示例：ENTRANCE=/abc123，PROXY=https://baidu.com → 访问 / 显示百度，访问 /abc123 显示主页，DoH 端点变为 /abc123/dns-query。', en: 'Example: ENTRANCE=/abc123, PROXY=https://baidu.com → visiting / shows baidu.com, visiting /abc123 shows homepage, DoH endpoint becomes /abc123/dns-query.' },
+    securityTokenNote: { zh: 'DoH Token：设置 TOKEN = 你的密钥 后，DoH 端点须带 ?token=你的密钥 才可访问。未设置时无 token 限制。', en: 'DoH Token: set TOKEN=your-secret to require ?token=your-secret on DoH endpoints. If unset, no token restriction.' },
     upstreamNote: { zh: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。', en: 'Custom upstreams: add CUSTOM_<NAME>=https://... in Cloudflare Dashboard → Worker → Variables, takes effect instantly.' },
     // Tuning fields
     ecsPrefix4Label: { zh: 'ECS IPv4 前缀', en: 'ECS IPv4 Prefix' },
@@ -328,7 +328,7 @@
   // ── 启动 ─────────────────────────────────────────────
   if (window.__CONFIGURED__ === 1) {
     renderLoading();
-    fetch('/config.json', { cache: 'no-store' })
+    fetch((window.__BASE_PATH__ || '') + '/config.json', { cache: 'no-store' })
       .then(function (r) { return r.json(); })
       .then(function (cfg) {
         state.configData = cfg;

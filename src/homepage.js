@@ -10,17 +10,27 @@ import { HTML_CN, HTML_EN } from './templates.js';
 
 // ── Shared helpers ─────────────────────────────────────────────────
 
-function buildUpstreamList(names) {
-  const entries = names.map((n) => '<span class="endpoint">/' + n + '/dns-query</span>').join(' ');
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function buildUpstreamList(names, basePath) {
+  const entries = names.map((n) => '<span class="endpoint">' + basePath + '/' + n + '/dns-query</span>').join(' ');
   return entries || '<em>none</em>';
 }
 
-function inject(html, host, upstreams, names, configured) {
+function inject(html, host, upstreams, names, configured, entrance) {
+  const basePath = entrance || '';
+  const htmlBasePath = escapeHtml(basePath);
   return html
-    .replaceAll('__HOST__', host)
-    .replace('__UPSTREAM_LIST__', buildUpstreamList(names))
+    .replace('__BASE_PATH_JSON__', JSON.stringify(basePath))
+    .replaceAll('__BASE_PATH__', htmlBasePath)
+    .replaceAll('__HOST__', escapeHtml(host))
+    .replace('__UPSTREAM_LIST__', buildUpstreamList(names, htmlBasePath))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams))
-      .replace('__CONFIGURED_VALUE__', String(configured || 0));
+    .replace('__CONFIGURED_VALUE__', String(configured || 0));
 }
 
 function buildCapsTable(upstreams) {
@@ -37,17 +47,17 @@ function buildCapsTable(upstreams) {
 
 // ── Exports ────────────────────────────────────────────────────────
 
-export function serveHomepage(request, upstreams, names, configured) {
+export function serveHomepage(request, upstreams, names, configured, entrance) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_CN, host, upstreams, names, configured), {
+  return new Response(inject(HTML_CN, host, upstreams, names, configured, entrance), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });
 }
 
-export function serveHomepageEn(request, upstreams, names, configured) {
+export function serveHomepageEn(request, upstreams, names, configured, entrance) {
   const host = new URL(request.url).host;
-  return new Response(inject(HTML_EN, host, upstreams, names, configured), {
+  return new Response(inject(HTML_EN, host, upstreams, names, configured, entrance), {
     status: 200,
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
   });

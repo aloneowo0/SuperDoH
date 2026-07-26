@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>DoH 服务</title>
-<link rel="stylesheet" href="/css/style.css?v=11">
+<link rel="stylesheet" href="__BASE_PATH__/css/style.css?v=11">
 </head>
 <body>
 <header>
   <div class="container">
-    <a href="/en" class="lang-switch">EN</a>
+    <a href="__BASE_PATH__/en" class="lang-switch">EN</a>
     <h1>SuperDoH</h1>
     <p class="subtitle">轻量级 DNS over HTTPS 代理</p>
   </div>
@@ -51,11 +51,11 @@
         <h2>使用方法</h2>
         <p>支持 POST application/dns-message、GET ?name=&type= 和 Accept: application/dns-json（RFC 8484 透传）。</p>
         <h3>并发模式</h3>
-        <pre><code>curl "https://__HOST__/dns-query?name=example.com&type=A"
+        <pre><code>curl "https://__HOST____BASE_PATH__/dns-query?name=example.com&type=A"
 # 全部上游并发，返回最快有效响应</code></pre>
         <h3>单上游查询</h3>
-        <pre><code>curl "https://__HOST__/google/dns-query?name=example.com"
-curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre>
+        <pre><code>curl "https://__HOST____BASE_PATH__/google/dns-query?name=example.com"
+curl "https://__HOST____BASE_PATH__/cloudflare_Public/dns-query?name=example.com"</code></pre>
         <p style="font-size:.85em;color:#666;margin-top:.8rem">更多上游可在「配置」tab 中启用</p>
       </section>
     </div>
@@ -69,8 +69,9 @@ curl "https://__HOST__/cloudflare_Public/dns-query?name=example.com"</code></pre
     <p>MIT License</p>
   </div>
 </footer>
-<script>window.__CONFIGURED__ = __CONFIGURED_VALUE__;</script>
-<script src="/js/resolver.js?v=11"></script>
-<script src="/js/config-wizard.js?v=11"></script>
+<script>window.__CONFIGURED__ = __CONFIGURED_VALUE__;
+window.__BASE_PATH__ = __BASE_PATH_JSON__;</script>
+<script src="__BASE_PATH__/js/resolver.js?v=11"></script>
+<script src="__BASE_PATH__/js/config-wizard.js?v=11"></script>
 </body>
 </html>
