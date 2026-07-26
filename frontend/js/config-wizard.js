@@ -527,9 +527,9 @@
 
     // CC
     var ccField = el('div', { class: 'sw-field', 'data-rfield': 'cc' });
-    ccField.appendChild(el('label', { text: '国家码 (2 字母大写)' }));
+    ccField.appendChild(el('label', { text: '国家码 (2 字母大写，或 * 表示全球)' }));
     ccField.appendChild(el('input', {
-      class: 'sw-input', type: 'text', maxlength: '2', placeholder: 'CN',
+      class: 'sw-input', type: 'text', maxlength: '2', placeholder: 'CN 或 *',
       value: r.cc,
       oninput: function (e) { state.regions[idx].cc = e.target.value.trim().toUpperCase(); clearErr(ccField); }
     }));
@@ -772,9 +772,9 @@
       if (ccFieldEl) clearErr(ccFieldEl);
       var cc = r.cc.trim().toUpperCase();
       if (!cc) return; // 空地区块跳过
-      if (!/^[A-Z]{2}$/.test(cc)) {
-        if (ccFieldEl) showErr(ccFieldEl, '须为 2 字母大写国家码');
-        errors.push('地区 #' + (idx + 1) + ' 国家码无效');
+    if (!/^([A-Z]{2}|\*)$/.test(cc)) {
+      if (ccFieldEl) showErr(ccFieldEl, '须为 2 字母大写国家码或 *');
+      errors.push('地区 #' + (idx + 1) + ' 国家码无效');
         return;
       }
       if (regionCCs[cc]) {

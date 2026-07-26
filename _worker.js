@@ -608,7 +608,8 @@ export default {
       const wantsJson = parsedRequest.wantsJson;
 
       const clientCountry = request.cf && request.cf.country || '';
-      const regionCfg = REGION_CONFIG && REGION_CONFIG[clientCountry];
+      // * = 全球通配地区，未命中具体国家码时回退到此配置
+      const regionCfg = REGION_CONFIG && (REGION_CONFIG[clientCountry] || REGION_CONFIG['*']);
       const regionActive = !!(regionCfg && (regionCfg.preferredCf || regionCfg.preferredCft || regionCfg.preferredVrc || regionCfg.ech || (regionCfg.remap && regionCfg.remap.length) || (regionCfg.google && regionCfg.google.length)));
       const preferredCf = regionCfg ? (regionCfg.preferredCf || '') : '';
       const echActive = !!(regionCfg && regionCfg.ech);
