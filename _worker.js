@@ -4,13 +4,13 @@
  * Routes requests and dispatches DNS queries through upstream flows.
  */
 
-import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, FOREIGN_UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL, CONFIGURED, ECS_PREFIX4, ECS_PREFIX6, PREFERRED_TIMEOUT_MS } from './src/config.js';
+import { ECS_PROTECT_MS, HARD_TIMEOUT_MS, META_HARD_TIMEOUT_MS, META_COLLECT_WINDOW_MS, META_MAX_IPS, AUTO_CONCURRENCY, AUTO_PROVIDER, UPSTREAMS, REGION, REGION_CONFIG, LOG_LEVEL, CONFIGURED, ECS_PREFIX4, ECS_PREFIX6, PREFERRED_TIMEOUT_MS } from './src/config.js';
 import { prepareQuery } from './src/edns.js';
 import { serveHomepage, serveHomepageEn } from './src/homepage.js';
 import { CSS, JS, WIZARD_JS } from './src/templates.js';
 import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './src/auto.js';
 import { fetchCFEch, injectECH } from './src/ech.js';
-import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
+import { probeOwner, isMetaDomain, classifyResponse } from './src/cdn.js';
 import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName, setRuntimeUpstreams } from './src/dns-lib.js';
 import { resolveMetaFromMap } from './src/meta-route.js';
 import { logEvent, setLogLevel } from './src/logger.js';
@@ -653,6 +653,16 @@ export default {
         hResp.headers.set('X-DoH-Request-ID', requestId);
         return hResp;
       }
+      // Token 校验：env.TOKEN 设置后，/config.json 和 DoH 端点须带 ?token=xxx 匹配；未设置则放行
+      if (env && env.TOKEN) {
+        const url = new URL(request.url);
+        const token = url.searchParams.get('token');
+        if (token !== env.TOKEN) {
+          const errResp = jsonError('unauthorized', 401);
+          errResp.headers.set('X-DoH-Request-ID', requestId);
+          return errResp;
+        }
+      }
       if (route.configJson) {
         const cfg = {
           configured: CONFIGURED,
@@ -696,17 +706,6 @@ export default {
         const errResp = jsonError(route.error);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
-      }
-
-      // Token 校验：env.TOKEN 设置后，DoH 端点须带 ?token=xxx 匹配；未设置则放行
-      if (env && env.TOKEN) {
-        const url = new URL(request.url);
-        const token = url.searchParams.get('token');
-        if (token !== env.TOKEN) {
-          const errResp = jsonError('unauthorized', 401);
-          errResp.headers.set('X-DoH-Request-ID', requestId);
-          return errResp;
-        }
       }
 
       const parsedRequest = await parseDohRequest(request);
