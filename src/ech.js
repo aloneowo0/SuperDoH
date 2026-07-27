@@ -175,6 +175,15 @@ function rebuildTail(packet, startOffset) {
 
 export async function injectECH(originalResponse, queryName, ownerType, echConfig, ctx) {
     try {
+        const body = await readBody(originalResponse);
+        if (!body || body.byteLength < 2) return { body: originalResponse, changed: false, status: 'failed' };
+        const packet = parseDns(body);
+        if (!packet) return { body: originalResponse, changed: false, status: 'failed' };
+        const rcode = packet.header.flags & 0x000F;
+        if (rcode !== 0) {
+          return { body: originalResponse, changed: false, status: 'rcode_not_noerror' };
+        }
+
         let echValue = null;
         let echAlpn = null;
 
@@ -190,9 +199,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
             // Build fresh HTTPS RR from scratch — discarding CNAME chain
             // avoids DNS CNAME conflict that causes Chromium to discard ECH
-            const body = await readBody(originalResponse);
-            if (!body || body.byteLength < 2) return { body: originalResponse, changed: false, status: 'failed' };
-            const id = new DataView(body).getUint16(0);
+            const id = packet.header.id;
             const params = [];
             if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
             params.push({ key: 'ech', val: echValue });
@@ -209,11 +216,6 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
         if (!echValue) return { body: originalResponse, changed: false, status: 'unchanged' };
 
-        const body = await readBody(originalResponse);
-        if (!body) return { body: originalResponse, changed: false, status: 'unchanged' };
-
-        const packet = parseDns(body);
-        if (!packet) return { body: originalResponse, changed: false, status: 'failed' };
         if (packet.header.ancount === 0) {
           const params = [];
           if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
