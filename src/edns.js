@@ -1,7 +1,6 @@
 import { BLOCKED_RANGES, ECS_PREFIX4, ECS_PREFIX6 } from './config.js';
-import { requireBytes, parseDns, decodeName } from './dns-lib.js';
+import { requireBytes, parseDns, validateDnsResponse } from './dns-lib.js';
 
-const DNS_HEADER_LEN = 12;
 const TYPE_A = 1;
 const TYPE_OPT = 41;
 const TYPE_AAAA = 28;
@@ -72,48 +71,7 @@ export function filterAnswers(response, queryId) {
 }
 
 export function validateResponse(response, queryId, expectedQname, expectedQtype) {
-    try {
-        const packet = parseDns(response);
-        if (queryId !== undefined && queryId !== null && packet.header.id !== queryId) {
-            return { classification: 'invalid', rcode: -1, answerCount: 0 };
-        }
-
-        if (expectedQname || expectedQtype !== undefined && expectedQtype !== null) {
-            const question = readQuestion(packet);
-            if (!question) return { classification: 'invalid', rcode: -1, answerCount: 0 };
-            if (expectedQname && question.name !== normalizeName(expectedQname)) {
-                return { classification: 'invalid', rcode: -1, answerCount: 0 };
-            }
-            if (expectedQtype !== undefined && expectedQtype !== null && question.type !== expectedQtype) {
-                return { classification: 'invalid', rcode: -1, answerCount: 0 };
-            }
-        }
-
-        const rcode = packet.header.flags & 0xF;
-        const answerCount = packet.header.ancount;
-        if (rcode === 0 && answerCount > 0) return { classification: 'positive', rcode, answerCount };
-        if (rcode === 3 || (rcode === 0 && answerCount === 0)) return { classification: 'negative', rcode, answerCount };
-        if (rcode === 1 || rcode === 2 || rcode === 4 || rcode === 5) return { classification: 'invalid', rcode, answerCount };
-        return { classification: 'invalid', rcode, answerCount };
-    } catch (_) { // ignore — return invalid on malformed response
-        return { classification: 'invalid', rcode: -1, answerCount: 0 };
-    }
-}
-
-function readQuestion(packet) {
-    if (packet.header.qdcount < 1) return null;
-    try {
-        const result = decodeName(packet.view, DNS_HEADER_LEN);
-        const name = result ? result.name.toLowerCase() : null;
-        if (!result || result.end + 4 > packet.bytes.length) return null;
-        return { name: name, type: packet.view.getUint16(result.end) };
-    } catch (_) { // ignore — return null on malformed question
-        return null;
-    }
-}
-
-function normalizeName(name) {
-    return String(name).toLowerCase().replace(/\.+$/, '');
+    return validateDnsResponse(response, queryId, expectedQname, expectedQtype);
 }
 
 

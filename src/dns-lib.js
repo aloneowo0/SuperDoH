@@ -1,6 +1,7 @@
 /** DNS utility library — wire format, response building, internal resolution */
 
 import { UPSTREAMS, FOREIGN_UPSTREAMS, HARD_TIMEOUT_MS } from './config.js';
+import { cancelDnsResponseBody, readDnsResponseBody } from './dns-response.js';
 
 let _runtimeUp = null;
 let _runtimeForeign = null;
@@ -438,12 +439,43 @@ export function validateDnsQuery(body) {
   return { id: packet.header.id, name, type };
 }
 
+export function validateDnsResponse(body, queryId, expectedQname, expectedQtype) {
+  try {
+    const packet = parseDns(body);
+    const flags = packet.header.flags;
+    if ((flags & 0x8000) === 0 || ((flags >> 11) & 0x0F) !== 0 || packet.header.qdcount !== 1) {
+      return { classification: 'invalid', rcode: -1, answerCount: 0 };
+    }
+    if (queryId !== undefined && queryId !== null && packet.header.id !== queryId) {
+      return { classification: 'invalid', rcode: -1, answerCount: 0 };
+    }
+
+    const question = decodeName(packet.view, DNS_HEADER_LEN);
+    requireBytes(packet.view, question.end, 4);
+    const name = normalizeDnsName(question.name);
+    const type = packet.view.getUint16(question.end);
+    const qclass = packet.view.getUint16(question.end + 2);
+    const hasExpectedQname = expectedQname !== undefined && expectedQname !== null;
+    if (qclass !== 1 || (hasExpectedQname && name !== normalizeDnsName(expectedQname)) || (expectedQtype !== undefined && expectedQtype !== null && type !== expectedQtype)) {
+      return { classification: 'invalid', rcode: -1, answerCount: 0 };
+    }
+
+    const rcode = flags & 0x0F;
+    const answerCount = packet.header.ancount;
+    if (rcode === 0 && answerCount > 0) return { classification: 'positive', rcode, answerCount };
+    if (rcode === 3 || (rcode === 0 && answerCount === 0)) return { classification: 'negative', rcode, answerCount };
+    return { classification: 'invalid', rcode, answerCount };
+  } catch (_) { // ignore — return invalid on malformed response
+    return { classification: 'invalid', rcode: -1, answerCount: 0 };
+  }
+}
+
 // ── DNS response builders ───────────────────────────────────────────
 
 export function dnsResponse(body, upstreamTime) {
   const headers = upstreamTime !== null && upstreamTime !== undefined
-    ? { ...DNS_HEADERS, 'X-Upstream-Time': String(upstreamTime) }
-    : DNS_HEADERS;
+    ? { ...DNS_HEADERS, 'X-Upstream-Time': String(upstreamTime), 'Cache-Control': 'no-store', Vary: 'Accept' }
+    : { ...DNS_HEADERS, 'Cache-Control': 'no-store', Vary: 'Accept' };
   return new Response(body, { status: 200, headers });
 }
 
@@ -550,6 +582,7 @@ function queryHadOpt(bytes) {
 
 export async function resolveDNSWire(domain, type) {
   const query = buildWireQuery(domain, type);
+  const queryMeta = parseQueryMeta(query);
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
@@ -573,10 +606,9 @@ export async function resolveDNSWire(domain, type) {
       body: query,
       signal: ctrl.signal,
     }).then(async function (res) {
-      if (res.status !== 200) return null;
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength < 12) return null;
-      if (new DataView(buf).getUint16(6) === 0) return null;
+      if (res.status !== 200) { cancelDnsResponseBody(res); return null; }
+      const buf = await readDnsResponseBody(res);
+      if (!queryMeta || validateDnsResponse(buf, queryMeta.id, domain, type).classification !== 'positive') return null;
       return buf;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
@@ -611,6 +643,8 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   const t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : FOREIGN_DEFAULT_TIMEOUT_MS;
   const started = Date.now();
   const deadline = started + t;
+  const queryMeta = parseQueryMeta(body);
+  if (!queryMeta) return null;
 
   const foreignUrls = (_runtimeForeign || FOREIGN_UPSTREAMS).map(function(n) { return (_runtimeUp || UPSTREAMS)[n].url; });
   if (foreignUrls.length === 0) return null;
@@ -636,11 +670,10 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
       signal: ctrl.signal,
     }).then(async function (res) {
       if (done) return null;
-      if (res.status !== 200) return null;
-      const buf = await res.arrayBuffer();
+      if (res.status !== 200) { cancelDnsResponseBody(res); return null; }
+      const buf = await readDnsResponseBody(res);
       if (done) return null;
-      if (buf.byteLength < 12) return null;
-      if (new DataView(buf).getUint16(6) === 0) return null;
+      if (validateDnsResponse(buf, queryMeta.id, queryMeta.name, queryMeta.type).classification !== 'positive') return null;
       result = buf;
       abortAll();
       return buf;
@@ -704,6 +737,7 @@ export function extractIPStrings(buf, type) {
 
 export async function resolveDNSWireAll(domain, type) {
   const query = buildWireQuery(domain, type);
+  const queryMeta = parseQueryMeta(query);
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
@@ -720,8 +754,10 @@ export async function resolveDNSWireAll(domain, type) {
       body: query,
       signal: ctrl.signal,
     }).then(async function (res) {
-      if (res.status !== 200) return null;
-      return await res.arrayBuffer();
+      if (res.status !== 200) { cancelDnsResponseBody(res); return null; }
+      const buf = await readDnsResponseBody(res);
+      if (!queryMeta || validateDnsResponse(buf, queryMeta.id, domain, type).classification !== 'positive') return null;
+      return buf;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
       logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });

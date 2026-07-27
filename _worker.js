@@ -12,6 +12,7 @@ import { answersPass, concurrentAll, queryUpstream, resolvePreferred } from './s
 import { fetchCFEch, injectECH } from './src/ech.js';
 import { probeOwner, detectOwner, extractIps, isMetaDomain, classifyResponse } from './src/cdn.js';
 import { dnsResponse, servfail, buildDNS, parseDns, extractIPBytes, decodeName, setRuntimeUpstreams } from './src/dns-lib.js';
+import { cancelDnsResponseBody, readDnsResponseBody } from './src/dns-response.js';
 import { resolveMetaFromMap } from './src/meta-route.js';
 import { logEvent, setLogLevel } from './src/logger.js';
 import { parseDohRequest } from './src/doh-request.js';
@@ -19,6 +20,11 @@ setLogLevel(LOG_LEVEL);
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const JSON_HEADERS = { 'Content-Type': 'application/json;charset=utf-8' };
+const DNS_JSON_HEADERS = {
+  'Content-Type': 'application/dns-json;charset=utf-8',
+  'Cache-Control': 'no-store',
+  Vary: 'Accept',
+};
 const TYPE_A = 1;
 const TYPE_AAAA = 28;
 const TYPE_HTTPS = 65;
@@ -293,7 +299,7 @@ async function dnsWireToJsonResponse(response) {
       Question: questions,
     };
     if (answers.length) json.Answer = answers;
-    const out = new Response(JSON.stringify(json), { status: response.status, headers: JSON_HEADERS });
+    const out = new Response(JSON.stringify(json), { status: response.status, headers: DNS_JSON_HEADERS });
     const upstreamTime = response.headers.get('X-Upstream-Time');
     if (upstreamTime) out.headers.set('X-Upstream-Time', upstreamTime);
     return out;
@@ -821,10 +827,14 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
       body: queryBody,
       signal: ctrl.signal,
     });
-    const responseBody = await response.arrayBuffer();
+    if (response.status !== 200) {
+      cancelDnsResponseBody(response);
+      return respond(servfail(body, 17, 'Filtered'), ctx, Date.now() - started);
+    }
+    const responseBody = await readDnsResponseBody(response);
     const elapsed = Date.now() - started;
     const originalResult = answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
-    if (response.status !== 200 || !originalResult.passed || originalResult.classification === 'invalid') {
+    if (!originalResult.passed || originalResult.classification === 'invalid') {
       return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
     }
     let finalBody = responseBody;
@@ -850,7 +860,7 @@ async function singleUpstream(ctx, provider, body, clientIP, queryMeta, echActiv
       }
     }
     const fResult = answersPass(finalBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
-    if (response.status === 200 && fResult.passed && fResult.classification !== 'invalid') return respond(finalBody, ctx, elapsed);
+    if (fResult.passed && fResult.classification !== 'invalid') return respond(finalBody, ctx, elapsed);
     return respond(servfail(body, 17, 'Filtered'), ctx, elapsed);
   } catch (err) {
     logEvent('error', 'single_upstream_error', { requestId: ctx.requestId, stage: 'singleUpstream', provider: provider, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });

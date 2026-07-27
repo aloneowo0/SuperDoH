@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { buildDNS, buildQueryWireId, encodeDnsName, validateDnsQuery } from '../src/dns-lib.js';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { buildDNS, buildQueryWireId, encodeDnsName, resolveDNSWire, resolveDNSWireAll, resolveDNSWireForeign, setRuntimeUpstreams, validateDnsQuery, validateDnsResponse } from '../src/dns-lib.js';
 import { query } from './dns-fixtures.js';
+
+afterEach(() => {
+  setRuntimeUpstreams(null, null);
+  vi.unstubAllGlobals();
+});
 
 describe('DNS wire helpers', () => {
   it('rejects invalid textual names and qtypes without truncating labels', () => {
@@ -54,5 +59,38 @@ describe('DNS wire helpers', () => {
     authorityView.setUint16(6, 0);
     authorityView.setUint16(8, 1);
     expect(() => validateDnsQuery(withAuthority.buffer)).toThrow();
+  });
+
+  it.each([
+    ['missing QR flag', function(body) { new DataView(body).setUint16(2, 0x0180); }],
+    ['non-standard opcode', function(body) { new DataView(body).setUint16(2, 0x8980); }],
+    ['multiple questions', function(body) { new DataView(body).setUint16(4, 2); }],
+    ['non-IN question class', function(body) {
+      const bytes = new Uint8Array(body);
+      let offset = 12;
+      while (bytes[offset] !== 0) offset += bytes[offset] + 1;
+      new DataView(body).setUint16(offset + 3, 3);
+    }],
+  ])('rejects responses with %s', (_name, mutate) => {
+    const response = buildDNS(0x1234, 'example.com', 1, [new Uint8Array([1, 1, 1, 1])], 60);
+    mutate(response);
+    expect(validateDnsResponse(response, 0x1234, 'example.com', 1).classification).toBe('invalid');
+  });
+
+  it('rejects mismatched query identity in internal resolver paths', async () => {
+    setRuntimeUpstreams({ test: { url: 'https://resolver.test', ecs: false } }, ['test']);
+    vi.stubGlobal('fetch', vi.fn(async (_url, options) => {
+      const id = new DataView(options.body).getUint16(0);
+      return new Response(buildDNS(id, 'wrong.example', 1, [new Uint8Array([1, 1, 1, 1])], 60));
+    }));
+
+    expect(await resolveDNSWire('example.com', 1)).toBeNull();
+    expect(await resolveDNSWireForeign(query('example.com', 1, 0x1234))).toBeNull();
+    expect(await resolveDNSWireAll('example.com', 1)).toEqual([]);
+  });
+
+  it('binds root queries to the root response question', () => {
+    const response = buildDNS(0x1234, 'wrong.example', 1, [new Uint8Array([1, 1, 1, 1])], 60);
+    expect(validateDnsResponse(response, 0x1234, '', 1).classification).toBe('invalid');
   });
 });

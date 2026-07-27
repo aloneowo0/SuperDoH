@@ -4,6 +4,7 @@ import { prepareQuery, filterAnswers, validateResponse } from './edns.js';
 import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain, detectOwner } from './cdn.js';
 import { buildWireQuery, dnsResponse, extractIPBytes, parseQueryMeta, servfail } from './dns-lib.js';
+import { cancelDnsResponseBody, readDnsResponseBody } from './dns-response.js';
 import { logEvent } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
@@ -142,12 +143,16 @@ export async function queryUpstream(url, body, started, signal, upstreamName, qu
     if (queryId === undefined || queryId === null) queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
     const queryMeta = parseQueryMeta(body);
     const response = await fetch(url, { method: 'POST', headers: DNS_HEADERS, body, signal });
-    const responseBody = await response.arrayBuffer();
-    const pass = response.status === 200 ? answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type) : { passed: false, classification: 'invalid', rcode: -1, answerCount: 0 };
+    if (response.status !== 200) {
+      cancelDnsResponseBody(response);
+      return { response: null, time: Date.now() - started, valid: false, classification: 'invalid', rcode: -1, answerCount: 0 };
+    }
+    const responseBody = await readDnsResponseBody(response);
+    const pass = answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
     return {
       response: responseBody,
       time: Date.now() - started,
-      valid: response.status === 200 && pass.passed === true && pass.classification !== 'invalid',
+      valid: pass.passed === true && pass.classification !== 'invalid',
       classification: pass.classification || 'invalid',
       rcode: pass.rcode,
       answerCount: pass.answerCount,
@@ -199,10 +204,10 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
       body: query,
       signal: ctrl.signal,
     }).then(async function (res) {
-      if (res.status !== 200) return null;
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength < 12) return null;
-      if (new DataView(buf).getUint16(6) === 0) return null;
+      if (res.status !== 200) { cancelDnsResponseBody(res); return null; }
+      const buf = await readDnsResponseBody(res);
+      const validation = validateResponse(buf, new DataView(wireQuery).getUint16(0), domain, type);
+      if (validation.classification !== 'positive') return null;
       return buf;
     }).then(function (buf) {
       if (!buf) return null;

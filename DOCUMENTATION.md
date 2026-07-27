@@ -58,6 +58,8 @@ AUTO 1 — 多上游并发查询原始域名，分类 CDN 归属
 | `Content-Type` | `application/dns-message` 或 `application/dns-json` |
 | `X-DoH-Request-ID` | 请求追踪 ID（8 位 hex），所有日志共享 |
 | `X-Upstream-Time` | 上游处理耗时（毫秒） |
+| `Cache-Control` | `no-store`；响应会按 ECS 和地区配置转换，不允许共享缓存 |
+| `Vary` | `Accept`；区分 wire-format 与 DNS JSON 响应 |
 
 > [!NOTE]
 > DoH 端点只接受 `GET` 和 `POST`；其他方法返回 `405`。`POST` 必须使用 `Content-Type: application/dns-message`，否则返回 `415`。DNS wire 消息超过 65535 字节返回 `413`。所有 HTTP 级别错误均含 `X-DoH-Request-ID`。

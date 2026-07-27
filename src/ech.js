@@ -1,5 +1,6 @@
 /** ECH injection module — fetches CF ECH, injects into HTTPS RR */
 import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS, decodeName } from './dns-lib.js';
+import { cancelDnsResponseBody, readDnsResponseBody } from './dns-response.js';
 import { HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
 import { logEvent } from './logger.js';
 import { validateResponse } from './edns.js';
@@ -43,8 +44,8 @@ export async function fetchCFEch(_env, _ctx, upstreams) {
         for (let i = 0; i < entries.length && !buf && Date.now() < deadline; i++) {
           try {
             const res = await fetch(entries[i][1].url, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query, signal: controller.signal });
-            if (res.status !== 200) continue;
-            const ab = await res.arrayBuffer();
+            if (res.status !== 200) { cancelDnsResponseBody(res); continue; }
+            const ab = await readDnsResponseBody(res);
             const validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
             if (validation.classification === 'positive') buf = ab;
           } catch (_) { /* ignore — skip failed upstream in ECH fetch loop */ }

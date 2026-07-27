@@ -1,8 +1,8 @@
 # SuperDoH 已知问题
 
-## 上游响应无大小限制
+## DoH 响应显式禁止共享缓存
 
-`arrayBuffer()` 无限制读取上游 DoH 响应。DoH 响应正常只有几百字节到几 KB，实际触发概率极低，但理论上恶意上游可返回大 body 消耗 Worker 内存。
+客户端 DNS 响应设置 `Cache-Control: no-store` 和 `Vary: Accept`。请求会按 ECS 与地区配置转换，上游或 CDN 的共享缓存无法安全复用这些响应；这是 RFC 8484 §5.1 下的有意策略。
 
 ## GeoIP 部分失败静默降级
 
