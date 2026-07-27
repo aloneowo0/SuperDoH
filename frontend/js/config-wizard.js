@@ -396,7 +396,7 @@
   function buildSecuritySection() {
     var sec = el('section', { class: 'sw-section' });
 
-    sec.appendChild(el('div', { class: 'sw-section-h' }, [
+    sec.appendChild(el('div', { class: 'sw-section-h', onclick: function (e) { toggleSection(sec, e); } }, [
       el('h2', { text: t('securitySection') }),
       el('button', { class: 'sw-toggle', type: 'button' })
     ]));

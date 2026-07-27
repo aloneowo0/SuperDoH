@@ -453,15 +453,31 @@ async function metaResolve(ctx, body, clientIP, queryMeta, echActive) {
 
   // ── Dedup + Meta CIDR + max 4 ────────────────────────────────────
 
+  function ipBytesToString(bytes) {
+    if (bytes.length === 4) return bytes[0] + '.' + bytes[1] + '.' + bytes[2] + '.' + bytes[3];
+    if (bytes.length === 16) {
+      const groups = [];
+      for (let i = 0; i < 16; i += 2) groups.push(((bytes[i] << 8) | bytes[i + 1]).toString(16));
+      return groups.join(':');
+    }
+    return '';
+  }
+
+  const staticKeys = new Set(allRouteIPs ? allRouteIPs.filter(function(ip) { return ip.length === (queryMeta.type === TYPE_A ? 4 : 16); }).map(function(ip) { return Array.from(ip).join(','); }) : []);
+
   const seen = new Set();
   let filtered = [];
   for (let i = 0; i < candidates.length; i++) {
     const key = Array.from(candidates[i]).join(',');
-    if (!seen.has(key)) {
-      seen.add(key);
-      filtered.push(candidates[i]);
-      if (filtered.length >= META_MAX_IPS) break;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const isStatic = staticKeys.has(key);
+    if (!isStatic) {
+      const owner = detectOwner(ipBytesToString(candidates[i]));
+      if (owner !== 'META') continue;
     }
+    filtered.push(candidates[i]);
+    if (filtered.length >= META_MAX_IPS) break;
   }
 
   if (filtered.length === 0) {
@@ -505,7 +521,11 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
   logEvent('info', 'auto1_result', { requestId: ctx.requestId, elapsedMs: Date.now() - startedAt, rcode: auto1Rcode, answerCount: auto1AnswerCount });
 
   if (!regionActive) {
-    // Add header to non-region response
+    firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
+    return firstResult;
+  }
+
+  if (auto1Rcode !== 0 || auto1AnswerCount === 0) {
     firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
@@ -693,7 +713,7 @@ export default {
           }
           return await proxyFetch(request, proxyUrl);
         }
-        const errResp = jsonError(route.error);
+        const errResp = jsonError(route.error, route.error === 'not_found' ? 404 : 400);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
       }

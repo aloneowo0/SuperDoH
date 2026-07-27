@@ -6,6 +6,7 @@ import { validateResponse } from './edns.js';
 
 const DNS_HEADER_LEN = 12;
 const TYPE_HTTPS = 65;
+const TYPE_RRSIG = 46;
 const SVC_KEY_ALPN = 1;
 const SVC_KEY_ECH = 5;
 const CACHE_TTL_MS = 600000;
@@ -242,6 +243,9 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             const answer = packet.answers[i];
             const ownerName = decodeName(packet.view, answer.offset).name;
             if (answer.type !== TYPE_HTTPS) {
+                if (answer.type === TYPE_RRSIG && answer.rdlength >= 2 && packet.view.getUint16(answer.rdataOffset) === TYPE_HTTPS) {
+                    continue;
+                }
                 newRecords.push({ name: ownerName, type: answer.type, rdata: expandRdataNames(packet.view, answer.rdataOffset, answer.rdlength, answer.type), ttl: answer.ttl });
                 continue;
             }
