@@ -1,4 +1,4 @@
-import { toBytes, resolveDNSWire, extractIPStrings, parseAnswers } from './dns-lib.js';
+import { resolveDNSWire, extractIPStrings, parseAnswers } from './dns-lib.js';
 import { logEvent } from './logger.js';
 import { GEOIP_CF, GEOIP_CFT, GEOIP_META, GEOIP_FASTLY, GEOIP_NETFLIX, GEOIP_TELEGRAM, GEOIP_TWITTER, GEOIP_TOR } from './config.js';
 
