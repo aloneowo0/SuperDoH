@@ -214,10 +214,6 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
         const packet = parseDns(body);
         if (!packet) return { body: originalResponse, changed: false, status: 'failed' };
-        const rcode = packet.header.flags & 0x000F;
-        if (rcode !== 0) {
-          return { body: originalResponse, changed: false, status: 'unchanged' };
-        }
         if (packet.header.ancount === 0) {
           const params = [];
           if (echAlpn) params.push({ key: 'alpn', val: echAlpn });
