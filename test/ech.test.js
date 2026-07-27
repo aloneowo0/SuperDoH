@@ -23,12 +23,12 @@ describe('ECH upstream selection and response flags', () => {
     expect(result.params.some((param) => param.key === 'ech')).toBe(true);
   });
 
-  it('clears TC but preserves AD when rebuilding HTTPS responses', async () => {
+  it('clears TC and AD when rebuilding HTTPS responses', async () => {
     const original = buildDNS(0x1234, 'example.com', 65, [new Uint8Array([0, 1, 0])], 60);
     new DataView(original).setUint16(2, 0x82A0);
     const result = await injectECH(original, 'example.com', 'CF', { params: [{ key: 'ech', val: 'AQID' }] });
     const flags = parseDns(await result.body.arrayBuffer()).header.flags;
     expect(flags & 0x0200).toBe(0);
-    expect(flags & 0x0020).toBe(0x0020);
+    expect(flags & 0x0020).toBe(0);
   });
 });

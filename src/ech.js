@@ -436,6 +436,7 @@ function createDNSResponseEx(id, qName, records, nsArBytes, flags, nsCount, arCo
     const v = new DataView(buf.buffer);
     let newFlags = (flags || 0x8180) & ~0x0200;
     newFlags = newFlags & ~0x000F;
+    newFlags &= ~0x0020;
     newFlags |= 0x8000;
     const tailNsCount = tailBytes.length ? (nsCount || 0) : 0;
     const tailArCount = tailBytes.length ? (arCount || 0) : 0;
