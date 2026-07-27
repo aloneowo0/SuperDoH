@@ -256,18 +256,19 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
             }
 
             const keptParams = [];
+            let hasAlpn = false;
             for (let j = 0; j < httpsRdata.paramBytes.length; j++) {
                 const pb = httpsRdata.paramBytes[j];
                 const key = new DataView(pb.buffer, pb.byteOffset, 2).getUint16(0);
-                if (key !== SVC_KEY_ECH && key !== SVC_KEY_ALPN) {
-                    keptParams.push(pb);
-                }
+                if (key === SVC_KEY_ECH) continue;
+                if (key === SVC_KEY_ALPN) hasAlpn = true;
+                keptParams.push(pb);
             }
 
             const echParam = encodeSvcParam('ech', echValue);
             if (echParam) keptParams.push(echParam);
 
-            if (echAlpn) {
+            if (echAlpn && !hasAlpn) {
                 const alpnParam = encodeSvcParam('alpn', echAlpn);
                 if (alpnParam) keptParams.push(alpnParam);
             }
