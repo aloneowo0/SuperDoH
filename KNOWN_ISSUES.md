@@ -16,13 +16,9 @@
 
 `slice(0, AUTO_CONCURRENCY)` 按插入顺序截断，`CUSTOM_*` 环境变量注入的上游在末尾被排除。自定义上游只能通过 `/<provider>/dns-query` 单独访问。这是特性，非 bug。
 
-## Token 仅支持 query 参数
-
-`?token=secret` 是 DoH 的标准做法。不支持 `Authorization: Bearer` header，因为部分 DoH 客户端不支持自定义 header。token 可能出现在浏览器历史、代理日志中。
-
 ## /config.json 无鉴权
 
-`/config.json` 在 token 校验之前返回，暴露上游名称、URL、地区配置、Google 代理 IP 等信息。主页和静态资源也无鉴权。
+`/config.json` 公开返回上游名称、URL、地区配置、Google 代理 IP 等信息。主页和静态资源也无鉴权。
 
 ## 默认记录完整查询域名
 
