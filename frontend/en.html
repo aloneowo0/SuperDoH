@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>DoH Service</title>
-<link rel="stylesheet" href="__BASE_PATH__/css/style.css?v=11">
+<link rel="stylesheet" href="__BASE_PATH_HTML__/css/style.css?v=11">
 </head>
 <body>
 <header>
   <div class="container">
-    <a href="__BASE_PATH__/" class="lang-switch">中文</a>
+    <a href="__BASE_PATH_HTML__/" class="lang-switch">中文</a>
     <h1>SuperDoH</h1>
     <p class="subtitle">DNS over HTTPS on Cloudflare Workers</p>
   </div>
@@ -49,11 +49,11 @@
         <h2>Usage</h2>
         <p>Supports POST application/dns-message, GET ?name=&type=, and Accept: application/dns-json (RFC 8484 passthrough).</p>
         <h3>Concurrent mode</h3>
-        <pre><code>curl "https://__HOST____BASE_PATH__/dns-query?name=example.com&type=A"
+        <pre><code>curl "https://__HOST____BASE_PATH_HTML__/dns-query?name=example.com&type=A"
 # Queries all upstreams, returns fastest response</code></pre>
         <h3>Single upstream</h3>
-        <pre><code>curl "https://__HOST____BASE_PATH__/google/dns-query?name=example.com"
-curl "https://__HOST____BASE_PATH__/cloudflare_Public/dns-query?name=example.com"</code></pre>
+        <pre><code>curl "https://__HOST____BASE_PATH_HTML__/google/dns-query?name=example.com"
+curl "https://__HOST____BASE_PATH_HTML__/cloudflare_Public/dns-query?name=example.com"</code></pre>
         <p style="font-size:.85em;color:#666;margin-top:.8rem">Enable more upstreams in the Config tab</p>
       </section>
     </div>
@@ -69,7 +69,7 @@ curl "https://__HOST____BASE_PATH__/cloudflare_Public/dns-query?name=example.com
 </footer>
 <script>window.__CONFIGURED__ = __CONFIGURED_VALUE__;
 window.__BASE_PATH__ = __BASE_PATH_JSON__;</script>
-<script src="__BASE_PATH__/js/resolver.js?v=11"></script>
-<script src="__BASE_PATH__/js/config-wizard.js?v=11"></script>
+<script src="__BASE_PATH_HTML__/js/resolver.js?v=11"></script>
+<script src="__BASE_PATH_HTML__/js/config-wizard.js?v=11"></script>
 </body>
 </html>

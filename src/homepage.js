@@ -25,8 +25,8 @@ function inject(html, host, upstreams, names, configured, entrance) {
   const basePath = entrance || '';
   const htmlBasePath = escapeHtml(basePath);
   return html
+    .replaceAll('__BASE_PATH_HTML__', htmlBasePath)
     .replace('__BASE_PATH_JSON__', JSON.stringify(basePath))
-    .replaceAll('__BASE_PATH__', htmlBasePath)
     .replaceAll('__HOST__', escapeHtml(host))
     .replace('__UPSTREAM_LIST__', buildUpstreamList(names, htmlBasePath))
     .replace('__EDNS_CAPS_TABLE__', buildCapsTable(upstreams))
