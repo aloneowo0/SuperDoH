@@ -16,6 +16,8 @@
 - **结构化 JSON 日志** — 全链路 requestId 追踪，支持 debug/info/warn/error 分级
 - **双响应格式** — 同时支持 RFC 8484 wire-format（`application/dns-message`）和 JSON（`application/dns-json`）
 - **图形化配置向导** — 首页内置配置 UI，浏览器内完成全部配置，无需手写配置文件
+- **伪装入口** — 设置 `ENTRANCE` + `PROXY` 环境变量后，非秘密路径反向代理到指定网站，仅秘密路径显示主页
+- **自定义上游** — 通过 Workers 环境变量 `CUSTOM_<NAME>` 运行时注入自定义 DoH 上游，即时生效无需重新部署
 
 ## 部署
 
@@ -41,7 +43,7 @@ Fork 仓库 → 在 Cloudflare 连接 GitHub（Workers Builds）
 
 > [!WARNING]
 > - **Meta ECH 是静态的** — `META_ECH_B64` 硬编码于 `ech.js`，不随 Meta 服务器轮换自动更新。ECH 公钥过期后需手动更新。
-> - **ECH 注入会丢弃部分 DNS 记录** — HTTPS RR 重建时仅保留问题段和回答段，不保留原响应的 NS/AR/OPT/DNSSEC 信息。对普通浏览器 DoH 无影响，但依赖 DNSSEC 的客户端可能拿到不完整响应。
+> - **ECH 注入会修改 DNS 响应** — HTTPS RR 重建时清除 AD 位并删除覆盖 type 65 的 RRSIG，不保留原响应的 DNSSEC 签名。对普通浏览器 DoH 无影响，但 DNSSEC 验证客户端会丢弃修改后的响应。
 > - **Workers Free 计划 6 连接限制** — Free 计划仅有 6 个同时出站 TCP 连接。超过 6 个上游会导致排队等待，拖慢 DNS 响应。建议启用上游数不超过 6，并为 AUTO 2 优选解析预留槽位（`autoConcurrency` 设为 4）。
 > - **地区优化依赖 `request.cf.country`** — `wrangler dev` 或非 Cloudflare 环境下该字段为空，地区优化路径不会触发。需通过线上 Worker 验证地区优化行为。
 

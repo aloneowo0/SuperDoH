@@ -208,13 +208,12 @@ async function proxyFetch(request, targetUrl) {
   }
 }
 
-function isMisroutedDoh(request, token) {
+function isMisroutedDoh(request) {
   const url = new URL(request.url);
   const contentType = (request.headers.get('content-type') || '').split(';', 1)[0].trim().toLowerCase();
   return contentType === 'application/dns-message'
     || url.searchParams.has('dns')
-    || (url.searchParams.has('name') && url.searchParams.has('type'))
-    || (token && url.searchParams.getAll('token').includes(token));
+    || (url.searchParams.has('name') && url.searchParams.has('type'));
 }
 
 function resolveRoute(request, entrance) {
@@ -714,7 +713,7 @@ export default {
       }
       if (route.error) {
         if (camouflageEnabled) {
-          if (isMisroutedDoh(request, env && env.TOKEN)) {
+          if (isMisroutedDoh(request)) {
             return new Response('Not Found', { status: 404 });
           }
           return await proxyFetch(request, proxyUrl);
@@ -722,17 +721,6 @@ export default {
         const errResp = jsonError(route.error, route.error === 'not_found' ? 404 : 400);
         errResp.headers.set('X-DoH-Request-ID', requestId);
         return errResp;
-      }
-
-      // Token 校验：env.TOKEN 设置后，DoH 端点须带 ?token=xxx 匹配；未设置则放行
-      if (env && env.TOKEN) {
-        const url = new URL(request.url);
-        const token = url.searchParams.get('token');
-        if (token !== env.TOKEN) {
-          const errResp = jsonError('unauthorized', 401);
-          errResp.headers.set('X-DoH-Request-ID', requestId);
-          return errResp;
-        }
       }
 
       const parsedRequest = await parseDohRequest(request);
