@@ -13,7 +13,7 @@ describe('worker DoH boundary integration', () => {
     expect(response.status).toBe(405);
     expect(response.headers.get('Content-Type')).toBe('application/json;charset=utf-8');
     expect(response.headers.get('Allow')).toBe('GET, POST');
-    expect(response.headers.get('X-DoH-Request-ID')).toMatch(/^[0-9a-f]{8}$/);
+    expect(response.headers.get('X-DoH-Request-ID')).toMatch(/^[0-9a-f]{16}$/);
     expect(upstream).not.toHaveBeenCalled();
   });
 
@@ -26,7 +26,7 @@ describe('worker DoH boundary integration', () => {
     vi.stubGlobal('fetch', upstream);
     const response = await worker.fetch(request);
     expect(response.status).toBe(status);
-    expect(response.headers.get('X-DoH-Request-ID')).toMatch(/^[0-9a-f]{8}$/);
+    expect(response.headers.get('X-DoH-Request-ID')).toMatch(/^[0-9a-f]{16}$/);
     expect(upstream).not.toHaveBeenCalled();
   });
 

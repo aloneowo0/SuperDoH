@@ -70,8 +70,8 @@ export function filterAnswers(response, queryId) {
     return { passed: true, reason: null };
 }
 
-export function validateResponse(response, queryId, expectedQname, expectedQtype) {
-    return validateDnsResponse(response, queryId, expectedQname, expectedQtype);
+export function validateResponse(response, queryId, expectedQname, expectedQtype, ctx = null) {
+    return validateDnsResponse(response, queryId, expectedQname, expectedQtype, ctx);
 }
 
 

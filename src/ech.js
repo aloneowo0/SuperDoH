@@ -2,7 +2,7 @@
 import { buildWireQuery, requireBytes, parseDns, encodeDnsName, buildDNS, decodeName } from './dns-lib.js';
 import { cancelDnsResponseBody, readDnsResponseBody } from './dns-response.js';
 import { HARD_TIMEOUT_MS, UPSTREAMS } from './config.js';
-import { logEvent } from './logger.js';
+import { logEvent, recordFallback } from './logger.js';
 import { validateResponse } from './edns.js';
 
 const DNS_HEADER_LEN = 12;
@@ -21,12 +21,9 @@ const TYPE_SRV = 33;
 const TYPE_SOA = 6;
 
 export const META_ECH_B64 = 'AsH+DQBECAAgACBoagCiXnMAHTpss2UZ+fW/N/wRflRdwnBsica6bun8NgAEAAEAATIVc2NvbnRlbnQueHguZmJjZG4ubmV0AAD+DQBBBQAgACCEpikd9ey1gwO/XpN3lcToJ/wzH7QlYfY3DZVicyiPAgAEAAEAATISZ3JhcGguZmFjZWJvb2suY29tAAD+DQBBCQAgACDP0okJjRYtkh5AWEPcjqA1Z9xWn2JkE49qj7n+gwY3GgAEAAEAATISdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBEAQAgACAdd+scUi0IYFsXnUIU7ko2Nd9+F8M26pAGZVpz/KrWPgAEAAEAAWQVZWNoLXB1YmxpYy5hdG1ldGEuY29tAAD+DQBBAwAgACC2SuomaKhQlkusWMQiUkCjuz8+0WR6jyC0DIsANT6gAQAEAAEAAWQSdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBIBwAgACBH8Vs19gc3DIDfTChp3+G6H71KivZY4dtweKazCugIQgAEAAEAATIZdmlkZW8tbGF4My0yLnh4LmZiY2RuLm5ldAAA/g0ASwYAIAAgti54XaD8VhwGEmxjGpaxUkuAz3VmpQSMOFSRgSPchR0ABAABAAEyHHNjb250ZW50LWxheDMtMi54eC5mYmNkbi5uZXQAAP4NAEgEACAAINQS+ceVTWrz9nffBM163+nvpZ9k5F5WK51t4DAGG3ReAAQAAQABZBl2aWRlby1sYXgzLTIueHguZmJjZG4ubmV0AAD+DQA7AAAgACBKTLEeFRxf7iC7wIdiRa2umX+yPtIeglGqBP7tfrgFdwAEAAEAAWQMZmFjZWJvb2suY29tAAD+DQA4AgAgACD+3t6VFcOw4TgdcWhjku+MWmbhq5VMyaPg3THh0iZNSAAEAAEAAWQJZmJjZG4ubmV0AAA=';
-const META_ECH_DATE = '2026-05-30';
-logEvent('info', 'meta_ech_date', { date: META_ECH_DATE });
-
 const echCache = new Map();
 
-export async function fetchCFEch(_env, _ctx, upstreams) {
+export async function fetchCFEch(_env, ctx = null, upstreams) {
     try {
         const cached = echCache.get(CF_ECH_DOMAIN);
         if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
@@ -46,21 +43,21 @@ export async function fetchCFEch(_env, _ctx, upstreams) {
             const res = await fetch(entries[i][1].url, { method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query, signal: controller.signal });
             if (res.status !== 200) { cancelDnsResponseBody(res); continue; }
             const ab = await readDnsResponseBody(res);
-            const validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS);
+            const validation = validateResponse(ab, queryId, CF_ECH_DOMAIN, TYPE_HTTPS, ctx);
             if (validation.classification === 'positive') buf = ab;
           } catch (_) { /* ignore — skip failed upstream in ECH fetch loop */ }
         }
         } finally { clearTimeout(timer); }
-        if (!buf) return getStaleCFEch(cached);
+        if (!buf) return getStaleCFEch(cached, ctx);
 
         const packet = parseDns(buf);
-        if (!packet || packet.header.ancount === 0) return getStaleCFEch(cached);
+        if (!packet || packet.header.ancount === 0) return getStaleCFEch(cached, ctx);
 
         const ans = findHttpsAnswer(packet);
-        if (!ans) return getStaleCFEch(cached);
+        if (!ans) return getStaleCFEch(cached, ctx);
 
-        const httpsRdata = parseHttpsRdata(packet.view, ans.rdataOffset, ans.rdlength);
-        if (!httpsRdata) return getStaleCFEch(cached);
+        const httpsRdata = parseHttpsRdata(packet.view, ans.rdataOffset, ans.rdlength, ctx);
+        if (!httpsRdata) return getStaleCFEch(cached, ctx);
 
         const params = [];
         for (let i = 0; i < httpsRdata.paramBytes.length; i++) {
@@ -77,7 +74,7 @@ export async function fetchCFEch(_env, _ctx, upstreams) {
         }
 
         const hasEch = params.some(function(p) { return p.key === 'ech' && p.val; });
-        if (!hasEch) return getStaleCFEch(cached);
+        if (!hasEch) return getStaleCFEch(cached, ctx);
 
         const rdata = packHttpsParams(httpsRdata.priority, httpsRdata.target, params);
 
@@ -85,8 +82,8 @@ export async function fetchCFEch(_env, _ctx, upstreams) {
         echCache.set(CF_ECH_DOMAIN, { ts: Date.now(), data: result });
         return result;
     } catch (err) {
-        logEvent('error', 'ech_error', { stage: 'fetchCFEch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
-        return getStaleCFEch(echCache.get(CF_ECH_DOMAIN));
+        logEvent('error', 'ech_error', ctx, { stage: 'fetchCFEch', domain: CF_ECH_DOMAIN, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        return getStaleCFEch(echCache.get(CF_ECH_DOMAIN), ctx);
     }
 }
 
@@ -95,9 +92,9 @@ export function __resetCFEchCacheForTests() {
     echCache.clear();
 }
 
-function getStaleCFEch(cached) {
+function getStaleCFEch(cached, ctx = null) {
     if (!cached || !cached.data || (Date.now() - cached.ts) >= STALE_TTL_MS) return null;
-    logEvent('warn', 'ech_result', { owner: 'CF', status: 'stale', reason: 'using_last_known_good' });
+    recordFallback(ctx, { stage: 'fetchCFEch', owner: 'CF', reason: 'using_last_known_good', from: 'fresh_ech', to: 'stale_ech' });
     return Object.assign({}, cached.data, { stale: true });
 }
 
@@ -175,9 +172,9 @@ function rebuildTail(packet, startOffset) {
   return adjoin();
 }
 
-export async function injectECH(originalResponse, queryName, ownerType, echConfig, ctx) {
+export async function injectECH(originalResponse, queryName, ownerType, echConfig, ctx = null) {
     try {
-        const body = await readBody(originalResponse);
+        const body = await readBody(originalResponse, ctx);
         if (!body || body.byteLength < 2) return { body: originalResponse, changed: false, status: 'failed' };
         const packet = parseDns(body);
         if (!packet) return { body: originalResponse, changed: false, status: 'failed' };
@@ -253,7 +250,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
 
             ttl = answer.ttl;
 
-            const httpsRdata = parseHttpsRdata(packet.view, answer.rdataOffset, answer.rdlength);
+            const httpsRdata = parseHttpsRdata(packet.view, answer.rdataOffset, answer.rdlength, ctx);
             if (!httpsRdata) {
                 const raw = packet.bytes.slice(answer.rdataOffset, answer.end);
                 newRecords.push({ name: ownerName, type: answer.type, rdata: new Uint8Array(raw), ttl: answer.ttl });
@@ -335,7 +332,7 @@ export async function injectECH(originalResponse, queryName, ownerType, echConfi
           status: 'injected'
         };
     } catch (err) {
-        logEvent('error', 'ech_error', { requestId: ctx && ctx.requestId, stage: 'injectECH', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
+        logEvent('error', 'ech_error', ctx, { stage: 'injectECH', domain: queryName || (ctx && ctx.qname) || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
         return { body: originalResponse, changed: false, status: 'failed' };
     }
 }
@@ -536,7 +533,7 @@ function expandRdataNames(view, rdataOffset, rdlength, rrType) {
     return copyRdata(view, rdataOffset, rdlength);
 }
 
-function parseHttpsRdata(view, rdataOffset, rdlength) {
+function parseHttpsRdata(view, rdataOffset, rdlength, ctx = null) {
     try {
         const end = rdataOffset + rdlength;
         let offset = rdataOffset;
@@ -563,19 +560,19 @@ function parseHttpsRdata(view, rdataOffset, rdlength) {
 
         return { priority: priority, target: target, paramBytes: paramBytes };
     } catch (err) {
-        logEvent('error', 'ech_error', { stage: 'parseHttpsRdata', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        logEvent('error', 'ech_error', ctx, { stage: 'parseHttpsRdata', domain: ctx && ctx.qname || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return null;
     }
 }
 
-function readBody(input) {
+function readBody(input, ctx = null) {
     try {
         if (input instanceof Response) return input.clone().arrayBuffer();
         if (input instanceof ArrayBuffer) return input;
         if (ArrayBuffer.isView(input)) return input.buffer;
         return null;
     } catch (err) {
-        logEvent('error', 'ech_error', { stage: 'readBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        logEvent('error', 'ech_error', ctx, { stage: 'readBody', domain: ctx && ctx.qname || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return null;
     }
 }

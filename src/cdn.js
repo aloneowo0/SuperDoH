@@ -7,7 +7,7 @@ const TYPE_AAAA = 28;
 const PROBE_CACHE_TTL = 3600 * 1000;
 const MAX_PROBE_CACHE = 256;
 
-export function isMetaDomain(name) {
+export function isMetaDomain(name, ctx = null) {
     const domains = ['facebook.com','fbcdn.net','instagram.com','cdninstagram.com','messenger.com','whatsapp.com','whatsapp.net','threads.net','meta.com','oculus.com','fbsbx.com','thefacebook.com','connect.facebook.net'];
     try {
         const n = name.toLowerCase().replace(/\.+$/, '');
@@ -16,7 +16,7 @@ export function isMetaDomain(name) {
         }
         return false;
     } catch (err) {
-    logEvent('error', 'cdn_error', { stage: 'isMetaDomain', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'cdn_error', ctx, { stage: 'isMetaDomain', domain: name || (ctx && ctx.qname) || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return false;
   }
 }
@@ -82,7 +82,7 @@ export function detectOwner(ip) {
  * @param {string} domain - Domain name to probe
  * @returns {Promise<{owner: 'CF'|'META'|null, ips: string[]}>}
  */
-export async function probeOwner(domain) {
+export async function probeOwner(domain, ctx = null) {
     try {
         if (!domain || typeof domain !== 'string') {
             return { owner: null, ips: [] };
@@ -99,7 +99,7 @@ export async function probeOwner(domain) {
             return { owner: cached.owner, ips: cached.ips };
         }
 
-        const ips = await resolveA(key);
+        const ips = await resolveA(key, ctx);
         let owner = null;
         for (const ip of ips) {
             if (isIpInCompiled(ip, COMPILED_CF)) { owner = 'CF'; break; }
@@ -114,12 +114,12 @@ export async function probeOwner(domain) {
         probeCache.set(key, { owner, ips, expire: Date.now() + ttl });
         return { owner, ips };
     } catch (err) {
-        logEvent('error', 'cdn_error', { stage: 'probeOwner', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_null_owner' });
+        logEvent('error', 'cdn_error', ctx, { stage: 'probeOwner', domain: domain || (ctx && ctx.qname) || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_null_owner' });
         return { owner: null, ips: [] };
     }
 }
 
-export function extractIps(buffer) {
+export function extractIps(buffer, ctx = null) {
   const ips = [];
   try {
     const aAnswers = parseAnswers(buffer, TYPE_A);
@@ -133,18 +133,18 @@ export function extractIps(buffer) {
       ips.push(p.join(':'));
     }
   } catch (err) {
-    logEvent('error', 'cdn_error', { stage: 'extractIps', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'cdn_error', ctx, { stage: 'extractIps', domain: ctx && ctx.qname || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
   }
   return ips;
 }
 
-async function resolveA(domain) {
+async function resolveA(domain, ctx = null) {
     try {
-        const buf = await resolveDNSWire(domain, 1);
+        const buf = await resolveDNSWire(domain, 1, ctx);
         if (!buf) return [];
-        return extractIPStrings(buf, 1);
+        return extractIPStrings(buf, 1, ctx);
     } catch (err) {
-        logEvent('error', 'cdn_error', { stage: 'resolveA', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        logEvent('error', 'cdn_error', ctx, { stage: 'resolveA', domain: domain || (ctx && ctx.qname) || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
         return [];
     }
 }
@@ -175,7 +175,7 @@ function compileCidrs(cidrList) {
                 const end = (start | ((1 << (32 - bits)) - 1)) >>> 0;
                 v4.push({ start: start, end: end });
             }
-        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed CIDR entry */ }
+        } catch (_) {}
     }
     return { v4: v4, v6: v6 };
 }
@@ -188,7 +188,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipBn >= ranges[i].start && ipBn <= ranges[i].end) return true;
             }
-        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed IPv6 */ }
+        } catch (_) {}
     } else {
         try {
             const ipNum = ipToLong(ip);
@@ -196,7 +196,7 @@ function isIpInCompiled(ip, compiled) {
             for (let i = 0; i < ranges.length; i++) {
                 if (ipNum >= ranges[i].start && ipNum <= ranges[i].end) return true;
             }
-        } catch (_) { logEvent('debug', 'cdn_skip', { reason: 'malformed CIDR/IP' }); /* skip malformed IPv4 */ }
+        } catch (_) {}
     }
     return false;
 }
@@ -247,17 +247,17 @@ function ipv6ToBigInt(ip) {
  * @param {Object} [ctx] - Request context for logging (optional)
  * @returns {string|null} CDN owner label or null
  */
-export function classifyResponse(responseBuf, queryType, ctx) {
+export function classifyResponse(responseBuf, queryType, ctx = null) {
   try {
     if (queryType !== TYPE_A && queryType !== TYPE_AAAA) return null;
-    const ips = extractIps(responseBuf);
+    const ips = extractIps(responseBuf, ctx);
     for (let i = 0; i < ips.length; i++) {
       const owner = detectOwner(ips[i]);
       if (owner) return owner;
     }
     return null;
   } catch (err) {
-    logEvent('error', 'cdn_error', { stage: 'classifyResponse', requestId: ctx && ctx.requestId, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'cdn_error', ctx, { stage: 'classifyResponse', domain: ctx && ctx.qname || '', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return null;
   }
 }

@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { __resetCFEchCacheForTests, fetchCFEch, injectECH } from '../src/ech.js';
 import { buildDNS, parseDns } from '../src/dns-lib.js';
 
+function mockCtx(overrides = {}) {
+  return { requestId: 'test0000', qname: null, qtype: null, fallbacks: [], ...overrides };
+}
+
 afterEach(() => {
   __resetCFEchCacheForTests();
   vi.unstubAllGlobals();
@@ -18,7 +22,7 @@ describe('ECH upstream selection and response flags', () => {
       const rdata = new Uint8Array([0, 1, 0, 0, 5, 0, 3, 1, 2, 3]);
       return new Response(buildDNS(id, 'cloudflare-ech.com', 65, [rdata], 60));
     }));
-    const result = await fetchCFEch(null, null);
+    const result = await fetchCFEch(null, mockCtx());
     expect(calls).toHaveLength(2);
     expect(result.params.some((param) => param.key === 'ech')).toBe(true);
   });
@@ -26,7 +30,7 @@ describe('ECH upstream selection and response flags', () => {
   it('clears TC and AD when rebuilding HTTPS responses', async () => {
     const original = buildDNS(0x1234, 'example.com', 65, [new Uint8Array([0, 1, 0])], 60);
     new DataView(original).setUint16(2, 0x82A0);
-    const result = await injectECH(original, 'example.com', 'CF', { params: [{ key: 'ech', val: 'AQID' }] });
+    const result = await injectECH(original, 'example.com', 'CF', { params: [{ key: 'ech', val: 'AQID' }] }, mockCtx());
     const flags = parseDns(await result.body.arrayBuffer()).header.flags;
     expect(flags & 0x0200).toBe(0);
     expect(flags & 0x0020).toBe(0);
