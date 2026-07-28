@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildDNS, buildQueryWireId, encodeDnsName, resolveDNSWire, resolveDNSWireAll, resolveDNSWireForeign, setRuntimeUpstreams, validateDnsQuery, validateDnsResponse } from '../src/dns-lib.js';
 import { query } from './dns-fixtures.js';
 
+function mockCtx(overrides = {}) {
+  return { requestId: 'test0000', qname: null, qtype: null, fallbacks: [], ...overrides };
+}
+
 afterEach(() => {
   setRuntimeUpstreams(null, null);
   vi.unstubAllGlobals();
@@ -84,9 +88,10 @@ describe('DNS wire helpers', () => {
       return new Response(buildDNS(id, 'wrong.example', 1, [new Uint8Array([1, 1, 1, 1])], 60));
     }));
 
-    expect(await resolveDNSWire('example.com', 1)).toBeNull();
-    expect(await resolveDNSWireForeign(query('example.com', 1, 0x1234))).toBeNull();
-    expect(await resolveDNSWireAll('example.com', 1)).toEqual([]);
+    const ctx = mockCtx();
+    expect(await resolveDNSWire('example.com', 1, ctx)).toBeNull();
+    expect(await resolveDNSWireForeign(query('example.com', 1, 0x1234), undefined, ctx)).toBeNull();
+    expect(await resolveDNSWireAll('example.com', 1, ctx)).toEqual([]);
   });
 
   it('binds root queries to the root response question', () => {

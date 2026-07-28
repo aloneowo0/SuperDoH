@@ -5,7 +5,7 @@ import { fetchCFEch, injectECH } from './ech.js';
 import { probeOwner, isMetaDomain, detectOwner } from './cdn.js';
 import { buildWireQuery, dnsResponse, extractIPBytes, parseQueryMeta, servfail } from './dns-lib.js';
 import { cancelDnsResponseBody, readDnsResponseBody } from './dns-response.js';
-import { logEvent } from './logger.js';
+import { logEvent, recordFallback } from './logger.js';
 
 const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 
@@ -29,7 +29,7 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
     return {
       ecs: cfg.ecs,
       ctrl,
-      promise: queryUpstream(cfg.url, preparedBody, started, ctrl.signal, name, queryId)
+      promise: queryUpstream(cfg.url, preparedBody, started, ctrl.signal, name, queryId, ctx)
         .then((r) => ({ ecs: cfg.ecs, result: r })),
     };
   });
@@ -138,17 +138,17 @@ export async function concurrentAll(body, clientIP, queryMeta, echActive, active
   return dnsResponse(servfail(body, 22, 'No reachable upstream'), Date.now() - started);
 }
 
-export async function queryUpstream(url, body, started, signal, upstreamName, queryId) {
+export async function queryUpstream(url, body, started, signal, upstreamName, queryId, ctx = null) {
   try {
     if (queryId === undefined || queryId === null) queryId = body && body.byteLength >= 2 ? new DataView(body).getUint16(0) : 0;
-    const queryMeta = parseQueryMeta(body);
+    const queryMeta = parseQueryMeta(body, ctx);
     const response = await fetch(url, { method: 'POST', headers: DNS_HEADERS, body, signal });
     if (response.status !== 200) {
       cancelDnsResponseBody(response);
       return { response: null, time: Date.now() - started, valid: false, classification: 'invalid', rcode: -1, answerCount: 0 };
     }
     const responseBody = await readDnsResponseBody(response);
-    const pass = answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type);
+    const pass = answersPass(responseBody, queryId, queryMeta && queryMeta.name, queryMeta && queryMeta.type, ctx);
     return {
       response: responseBody,
       time: Date.now() - started,
@@ -159,13 +159,13 @@ export async function queryUpstream(url, body, started, signal, upstreamName, qu
     };
   } catch (err) {
     if (err && err.name === 'AbortError') return { response: null, time: Date.now() - started, valid: false, classification: 'invalid' };
-    logEvent('error', 'auto_error', { stage: 'queryUpstream', upstream: upstreamName || 'unknown', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logEvent('error', 'auto_error', ctx, { stage: 'queryUpstream', domain: ctx && ctx.qname || '', upstream: upstreamName || 'unknown', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
     return { response: null, time: Date.now() - started, valid: false, classification: 'invalid' };
   }
 }
 
-export function answersPass(responseBody, queryId, qname, qtype) {
-  const validation = validateResponse(responseBody, queryId, qname, qtype);
+export function answersPass(responseBody, queryId, qname, qtype, ctx = null) {
+  const validation = validateResponse(responseBody, queryId, qname, qtype, ctx);
   if (validation.classification === 'invalid') return { passed: false, reason: 'invalid_response', ...validation };
   const result = filterAnswers(responseBody, queryId);
   return { passed: result !== false && result?.passed !== false, reason: result?.reason || null, ...validation };
@@ -178,8 +178,6 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
   const query = prepareQuery(wireQuery, clientIP);
   const started = Date.now();
   const deadline = started + PREFERRED_TIMEOUT_MS;
-  const requestId = ctx && ctx.requestId;
-
   let foreignUrls = foreign.map(function(n) { return ups[n].url; });
   if (AUTO_CONCURRENCY > 0 && AUTO_CONCURRENCY < foreignUrls.length) {
     foreignUrls = foreignUrls.slice(0, AUTO_CONCURRENCY);
@@ -206,23 +204,23 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
     }).then(async function (res) {
       if (res.status !== 200) { cancelDnsResponseBody(res); return null; }
       const buf = await readDnsResponseBody(res);
-      const validation = validateResponse(buf, new DataView(wireQuery).getUint16(0), domain, type);
+      const validation = validateResponse(buf, new DataView(wireQuery).getUint16(0), domain, type, ctx);
       if (validation.classification !== 'positive') return null;
       return buf;
     }).then(function (buf) {
       if (!buf) return null;
       try {
-        const ips = extractIPBytes(buf, type);
+        const ips = extractIPBytes(buf, type, ctx);
         for (let i = 0; i < ips.length; i++) {
           collected.push(ips[i]);
         }
       } catch (err) {
-        logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_extract', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+        logEvent('error', 'dns_error', ctx, { stage: 'resolvePreferredIPs_extract', domain, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       }
       return null;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_fetch', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logEvent('error', 'dns_error', ctx, { stage: 'resolvePreferredIPs_fetch', domain, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return null;
     });
   });
@@ -265,7 +263,7 @@ export async function resolvePreferred(domain, type, expectedOwner, ctx, clientI
       }
       return ownerFiltered;
     } catch (err) {
-      logEvent('error', 'dns_error', { requestId: requestId, stage: 'resolvePreferredIPs_owner_filter', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logEvent('error', 'dns_error', ctx, { stage: 'resolvePreferredIPs_owner_filter', domain, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
       return [];
     }
   }
@@ -280,20 +278,24 @@ export async function postProcessBody(responseBody, queryMeta, echActive, ctx) {
       let owner = null;
       if (queryMeta.forcedOwner) {
         owner = queryMeta.forcedOwner;
-      } else if (isMetaDomain(queryMeta.name)) {
+      } else if (isMetaDomain(queryMeta.name, ctx)) {
         owner = 'META';
       } else {
-        const ownerResult = await probeOwner(queryMeta.name);
+        const ownerResult = await probeOwner(queryMeta.name, ctx);
         if (ownerResult && ownerResult.owner) owner = ownerResult.owner;
       }
       if (owner) {
+        if (ctx) ctx.owner = owner;
         let cfEch = null;
         let echStale = false;
         if (owner === 'CF') {
-          cfEch = await fetchCFEch(null, null);
+          cfEch = await fetchCFEch(null, ctx);
           if (!cfEch) {
-            logEvent('warn', 'fallback', { requestId: ctx && ctx.requestId, stage: 'cf_ech', owner: 'CF', reason: 'fresh_and_stale_unavailable', from: 'ech_optimized', to: 'original_https_response' });
-            logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: 'CF', status: 'degraded', reason: 'ech_fetch_failed' });
+            if (ctx) {
+              ctx.echInjected = false;
+              ctx.echStatus = 'degraded';
+            }
+            recordFallback(ctx, { stage: 'cf_ech', owner: 'CF', reason: 'fresh_and_stale_unavailable', from: 'ech_optimized', to: 'original_https_response' });
             return responseBody;
           }
           echStale = !!cfEch.stale;
@@ -307,16 +309,26 @@ export async function postProcessBody(responseBody, queryMeta, echActive, ctx) {
           const bytes = echResult.body instanceof Response ? await echResult.body.arrayBuffer() : echResult.body;
           if (bytes) {
             const echStatus = echStale ? 'stale' : (cfEch ? 'fresh' : 'built');
-            logEvent(echStatus === 'degraded' ? 'warn' : 'info', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: echStatus, reason: echStatus === 'degraded' ? 'ech_fetch_failed' : '' });
+            if (ctx) {
+              ctx.echInjected = true;
+              ctx.echStatus = echStatus;
+            }
             return bytes;
           }
         } else {
-          logEvent('warn', 'fallback', { requestId: ctx && ctx.requestId, stage: 'ech_injection', owner: owner, reason: 'ech_not_applied_' + echResult.status, from: 'ech_optimized', to: 'original_https_response' });
-          logEvent('warn', 'ech_result', { requestId: ctx && ctx.requestId, owner: owner, status: 'degraded', reason: 'ech_not_applied_' + echResult.status });
+          if (ctx) {
+            ctx.echInjected = false;
+            ctx.echStatus = 'degraded';
+          }
+          recordFallback(ctx, { stage: 'ech_injection', owner: owner, reason: 'ech_not_applied_' + echResult.status, from: 'ech_optimized', to: 'original_https_response' });
         }
       }
     } catch (err) {
-      logEvent('error', 'auto_error', { requestId: ctx && ctx.requestId, stage: 'postProcessBody', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
+      if (ctx) {
+        ctx.echInjected = false;
+        ctx.echStatus = 'failed';
+      }
+      logEvent('error', 'auto_error', ctx, { stage: 'postProcessBody', domain: queryMeta.name, errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err), fallbackAction: 'return_original_response' });
     }
   }
 

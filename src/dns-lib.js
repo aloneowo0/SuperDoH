@@ -11,6 +11,15 @@ export function setRuntimeUpstreams(ups, foreign) {
 }
 import { logEvent } from './logger.js';
 
+function logDnsError(ctx, stage, domain, err) {
+  logEvent('error', 'dns_error', ctx, {
+    stage,
+    domain: domain || (ctx && ctx.qname) || '',
+    errorName: err && err.name || 'Error',
+    errorMessage: err && err.message || String(err),
+  });
+}
+
 export const DNS_HEADERS = { 'Content-Type': 'application/dns-message' };
 const DNS_HEADER_LEN = 12;
 const TYPE_A = 1;
@@ -343,14 +352,14 @@ export function buildQueryWireId(qname, qtype, id) {
   return out.buffer;
 }
 
-export function buildQueryFromURL(url) {
+export function buildQueryFromURL(url, ctx = null) {
   const dnsParam = url.searchParams.get('dns');
   if (dnsParam) {
     try {
       const bin = decodeBase64Url(dnsParam);
       return bin.buffer;
     } catch (err) {
-      logEvent('error', 'dns_error', { stage: 'buildQueryFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'buildQueryFromURL', url.searchParams.get('name'), err);
     }
   }
 
@@ -377,7 +386,7 @@ export function parseQtype(value) {
 
 // ── Query metadata parsers ──────────────────────────────────────────
 
-export function parseQueryMetaFromURL(url) {
+export function parseQueryMetaFromURL(url, ctx = null) {
   const typeStr = (url.searchParams.get('type') || 'A').toUpperCase();
   const typeMap = { A: 1, AAAA: 28, TXT: 16, MX: 15, CNAME: 5, NS: 2, SOA: 6, PTR: 12, HTTPS: 65, SVCB: 64 };
   const qtype = typeMap[typeStr] || parseInt(typeStr, 10) || 1;
@@ -400,14 +409,14 @@ export function parseQueryMetaFromURL(url) {
       const qType = view.getUint16(qname.offset);
       return { id, name: qname.name, type: qType };
     } catch (err) {
-      logEvent('error', 'dns_error', { stage: 'parseQueryMetaFromURL', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'parseQueryMetaFromURL', url.searchParams.get('name'), err);
     }
   }
 
   return null;
 }
 
-export function parseQueryMeta(body) {
+export function parseQueryMeta(body, ctx = null) {
   try {
     const bytes = body instanceof ArrayBuffer ? new Uint8Array(body) : new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
     if (bytes.length < 12) return null;
@@ -418,7 +427,7 @@ export function parseQueryMeta(body) {
     const qType = view.getUint16(qname.offset);
     return { id, name: qname.name, type: qType };
   } catch (err) {
-    logEvent('error', 'dns_error', { stage: 'parseQueryMeta', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logDnsError(ctx, 'parseQueryMeta', ctx && ctx.qname, err);
     return null;
   }
 }
@@ -580,9 +589,9 @@ function queryHadOpt(bytes) {
 
 // ── Internal DNS resolution ─────────────────────────────────────────
 
-export async function resolveDNSWire(domain, type) {
+export async function resolveDNSWire(domain, type, ctx = null) {
   const query = buildWireQuery(domain, type);
-  const queryMeta = parseQueryMeta(query);
+  const queryMeta = parseQueryMeta(query, ctx);
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
@@ -612,7 +621,7 @@ export async function resolveDNSWire(domain, type) {
       return buf;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { stage: 'resolveDNSWire', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'resolveDNSWire', domain, err);
       return null;
     });
   });
@@ -628,7 +637,7 @@ export async function resolveDNSWire(domain, type) {
     return p.then(function (r) { if (!r) throw new Error('invalid'); return r; });
   });
   const firstValid = Promise.any(validPromises).catch(function (err) {
-    logEvent('error', 'dns_error', { stage: 'resolveDNSWire_any', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logDnsError(ctx, 'resolveDNSWire_any', domain, err);
     return null;
   });
   const result = await Promise.race([firstValid, timeout]);
@@ -639,11 +648,11 @@ export async function resolveDNSWire(domain, type) {
   return result;
 }
 
-export async function resolveDNSWireForeign(body, timeoutMs) {
+export async function resolveDNSWireForeign(body, timeoutMs, ctx = null) {
   const t = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : FOREIGN_DEFAULT_TIMEOUT_MS;
   const started = Date.now();
   const deadline = started + t;
-  const queryMeta = parseQueryMeta(body);
+  const queryMeta = parseQueryMeta(body, ctx);
   if (!queryMeta) return null;
 
   const foreignUrls = (_runtimeForeign || FOREIGN_UPSTREAMS).map(function(n) { return (_runtimeUp || UPSTREAMS)[n].url; });
@@ -679,7 +688,7 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
       return buf;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { stage: 'resolveDNSWireForeign', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'resolveDNSWireForeign', queryMeta.name, err);
       return null;
     });
   });
@@ -695,19 +704,19 @@ export async function resolveDNSWireForeign(body, timeoutMs) {
   return result;
 }
 
-export function extractIPBytes(buf, type) {
+export function extractIPBytes(buf, type, ctx = null) {
   try {
     const answers = parseAnswers(buf, type);
     return answers.filter(function (a) {
       return a.type === type && (a.rdata.length === 4 || a.rdata.length === 16);
     }).map(function (a) { return a.rdata; });
   } catch (err) {
-    logEvent('error', 'dns_error', { stage: 'extractIPBytes', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logDnsError(ctx, 'extractIPBytes', ctx && ctx.qname, err);
     return [];
   }
 }
 
-export function extractIPStrings(buf, type) {
+export function extractIPStrings(buf, type, ctx = null) {
   try {
     const answers = parseAnswers(buf, type);
     if (type === TYPE_A) {
@@ -730,14 +739,14 @@ export function extractIPStrings(buf, type) {
     }
     return [];
   } catch (err) {
-    logEvent('error', 'dns_error', { stage: 'extractIPStrings', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+    logDnsError(ctx, 'extractIPStrings', ctx && ctx.qname, err);
     return [];
   }
 }
 
-export async function resolveDNSWireAll(domain, type) {
+export async function resolveDNSWireAll(domain, type, ctx = null) {
   const query = buildWireQuery(domain, type);
-  const queryMeta = parseQueryMeta(query);
+  const queryMeta = parseQueryMeta(query, ctx);
   const started = Date.now();
   const deadline = started + HARD_TIMEOUT_MS;
 
@@ -760,7 +769,7 @@ export async function resolveDNSWireAll(domain, type) {
       return buf;
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return null;
-      logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'resolveDNSWireAll', domain, err);
       return null;
     });
   });
@@ -795,7 +804,7 @@ export async function resolveDNSWireAll(domain, type) {
         }
       }
     } catch (err) {
-      logEvent('error', 'dns_error', { stage: 'resolveDNSWireAll_parse', errorName: err && err.name || 'Error', errorMessage: err && err.message || String(err) });
+      logDnsError(ctx, 'resolveDNSWireAll_parse', domain, err);
     }
   }
 
