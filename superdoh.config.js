@@ -14,20 +14,20 @@
  *   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改
  */
 export default {
-  configured: 1,
+  configured: 0,
 
   // ── 上游 ──────────────────────────────────────────
   upstreams: {
     google: true,
     cloudflare_Public: true,
-    quad9: true,
-    adguard: true,
-    opendns: true,
+    // quad9: false,
+    // adguard: false,
+    // opendns: false,
     // yandex: false,
     // dnspod: false,
     // alidns: false,
     // '360': false,
-    nextdns: true,
+    // nextdns: false,
   },
 
   // ── ECS / DNS 调优 ────────────────────────────────
@@ -49,14 +49,14 @@ export default {
 
   // ── 地区优化 ──────────────────────────────────────
   regions: {
-    CN: {
-      preferredCf: 'cf.090227.xyz',
-      preferredCft: 'worker.cloudfront.182682.xyz',
-      preferredVrc: 'worker.vercel.182682.xyz',
-      remap: 'twimg.com twitter.com x.com t.co pixiv.net www.pixiv.net imp.pixiv.net',
-      ech: true,
-      google: true,
-    },
+    // CN: {
+    //   preferredCf: 'cf.090227.xyz',
+    //   preferredCft: 'worker.cloudfront.182682.xyz',
+    //   preferredVrc: 'worker.vercel.182682.xyz',
+    //   remap: 'twimg.com twitter.com x.com t.co pixiv.net',
+    //   ech: true,
+    //   google: true,
+    // },
   },
 
   // ── 构建时远程抓取 ────────────────────────────────
