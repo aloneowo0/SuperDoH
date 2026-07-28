@@ -530,7 +530,7 @@ async function autoFlow(ctx, body, clientIP, queryMeta, regionActive, echActive,
     return firstResult;
   }
 
-  if (auto1Rcode !== 0 || auto1AnswerCount === 0) {
+  if (auto1Rcode !== 0) {
     firstResult.headers.set('X-DoH-Request-ID', ctx.requestId);
     return firstResult;
   }
