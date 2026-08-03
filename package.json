@@ -1,19 +1,11 @@
 {
-  "name": "super-doh",
-  "version": "2.0.0",
-  "type": "module",
+  "name": "superdoh-rs",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "node scripts/build-config.cjs",
     "predeploy": "npm run build",
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
-    "test": "vitest"
-  },
-  "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.7.5",
-    "vitest": "~3.0.7",
-    "wrangler": "^3.114.1"
+    "deploy": "npx wrangler deploy",
+    "dev": "npx wrangler dev"
   }
 }

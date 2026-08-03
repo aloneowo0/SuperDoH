@@ -1,0 +1,4 @@
+# rustfmt 配置 — 见 docs/00-coding-standards.md §2.2
+edition = "2024"
+style_edition = "2024"
+max_width = 100

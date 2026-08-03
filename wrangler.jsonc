@@ -1,10 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "super-doh",
-  "main": "_worker.js",
-  "compatibility_date": "2025-05-27",
+  "name": "super-doh-rs",
+  "main": "build/worker/shim.mjs",
+  "compatibility_date": "2026-08-01",
   "build": {
-    "command": "npm run build"
+    "command": "cargo install -q worker-build@^0.8 && worker-build --release --no-panic-recovery"
   },
   "observability": {
     "enabled": true

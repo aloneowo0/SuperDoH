@@ -1,0 +1,47 @@
+[package]
+name = "superdoh-rs"
+version = "0.1.0"
+edition = "2024"
+description = "SuperDoH — DNS-over-HTTPS proxy on Cloudflare Workers (Rust rewrite)"
+license = "MIT"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+base64 = "0.22"
+futures-util = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+worker = { version = "0.8.5", features = ["http"], default-features = false }
+worker-macros = "0.8"
+
+[profile.release]
+opt-level = "z"
+debug = false
+lto = true
+strip = true
+debug-assertions = false
+codegen-units = 1
+
+[profile.release.package."*"]
+codegen-units = 1
+opt-level = "z"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-bulk-memory", "--all-features"]
+
+[lints]
+workspace = true
+
+[workspace]
+resolver = "3"
+members = ["."]
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+cast_possible_truncation = "deny"
+cast_lossless = "deny"

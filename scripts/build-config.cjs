@@ -1,30 +1,24 @@
 #!/usr/bin/env node
-// build-config.cjs — 读 superdoh.config.js → 生成 src/config.js + src/templates.js
-//
-// 配置源优先级：superdoh.config.js（人类源，tracked）> .env（可选覆盖，legacy）
-// superdoh.config.js 的 configured:0 → 生成内置默认配置（CF+Google+AUTO，无地区优化）
-// superdoh.config.js 的 configured:1 → 用用户填写的配置生成
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const http = require('http');
+const { isIP } = require('net');
+const { spawnSync } = require('child_process');
 
-// ── 预设上游 ─────────────────────────────────────────────────────
 const PRESETS = {
-  google:            { url: 'https://dns.google/dns-query',                ecs: true  },
-  cloudflare_Public: { url: 'https://cloudflare-dns.com/dns-query',         ecs: false },
-  quad9:             { url: 'https://dns11.quad9.net/dns-query',            ecs: true  },
-  adguard:           { url: 'https://dns.adguard-dns.com/dns-query',        ecs: true  },
-  opendns:           { url: 'https://dns.opendns.com/dns-query',            ecs: true  },
-  yandex:            { url: 'https://common.dot.dns.yandex.net/dns-query', ecs: false },
-  dnspod:            { url: 'https://sm2.doh.pub/dns-query',                ecs: true  },
-  alidns:            { url: 'https://dns.alidns.com/dns-query',             ecs: true  },
-  '360':             { url: 'https://doh.360.cn/dns-query',                 ecs: true  },
-  nextdns:           { url: 'https://dns.nextdns.io',                      ecs: true  },
+  google: { url: 'https://dns.google/dns-query', ecs: true },
+  cloudflare_Public: { url: 'https://cloudflare-dns.com/dns-query', ecs: false },
+  quad9: { url: 'https://dns11.quad9.net/dns-query', ecs: true },
+  adguard: { url: 'https://dns.adguard-dns.com/dns-query', ecs: true },
+  opendns: { url: 'https://dns.opendns.com/dns-query', ecs: true },
+  yandex: { url: 'https://common.dot.dns.yandex.net/dns-query', ecs: false },
+  dnspod: { url: 'https://sm2.doh.pub/dns-query', ecs: true },
+  alidns: { url: 'https://dns.alidns.com/dns-query', ecs: true },
+  360: { url: 'https://doh.360.cn/dns-query', ecs: true },
+  nextdns: { url: 'https://dns.nextdns.io', ecs: true },
 };
 
-// configured:0 时使用的内置默认上游
 const DEFAULT_UPSTREAM_KEYS = ['google', 'cloudflare_Public'];
 
 const GEOIP_CATEGORIES = {
@@ -39,130 +33,192 @@ const GEOIP_CATEGORIES = {
 };
 
 const DEFAULT_GEOIP_URL = 'https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/';
-const DEFAULT_CEALING_HOST_URL = 'https://gitlab.com/SpaceTimee/Cealing-Host/raw/main/Cealing-Host.json';
+const DEFAULT_CEALING_HOST_URL =
+  'https://gitlab.com/SpaceTimee/Cealing-Host/raw/main/Cealing-Host.json';
+const DEFAULT_BLOCKED_CIDRS = '127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128';
+const DEFAULT_META_ECH_CONFIG =
+  'AsH+DQBECAAgACBoagCiXnMAHTpss2UZ+fW/N/wRflRdwnBsica6bun8NgAEAAEAATIVc2NvbnRlbnQueHguZmJjZG4ubmV0AAD+DQBBBQAgACCEpikd9ey1gwO/XpN3lcToJ/wzH7QlYfY3DZVicyiPAgAEAAEAATISZ3JhcGguZmFjZWJvb2suY29tAAD+DQBBCQAgACDP0okJjRYtkh5AWEPcjqA1Z9xWn2JkE49qj7n+gwY3GgAEAAEAATISdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBEAQAgACAdd+scUi0IYFsXnUIU7ko2Nd9+F8M26pAGZVpz/KrWPgAEAAEAAWQVZWNoLXB1YmxpYy5hdG1ldGEuY29tAAD+DQBBAwAgACC2SuomaKhQlkusWMQiUkCjuz8+0WR6jyC0DIsANT6gAQAEAAEAAWQSdmlkZW8ueHguZmJjZG4ubmV0AAD+DQBIBwAgACBH8Vs19gc3DIDfTChp3+G6H71KivZY4dtweKazCugIQgAEAAEAATIZdmlkZW8tbGF4My0yLnh4LmZiY2RuLm5ldAAA/g0ASwYAIAAgti54XaD8VhwGEmxjGpaxUkuAz3VmpQSMOFSRgSPchR0ABAABAAEyHHNjb250ZW50LWxheDMtMi54eC5mYmNkbi5uZXQAAP4NAEgEACAAINQS+ceVTWrz9nffBM163+nvpZ9k5F5WK51t4DAGG3ReAAQAAQABZBl2aWRlby1sYXgzLTIueHguZmJjZG4ubmV0AAD+DQA7AAAgACBKTLEeFRxf7iC7wIdiRa2umX+yPtIeglGqBP7tfrgFdwAEAAEAAWQMZmFjZWJvb2suY29tAAD+DQA4AgAgACD+3t6VFcOw4TgdcWhjku+MWmbhq5VMyaPg3THh0iZNSAAEAAEAAWQJZmJjZG4ubmV0AAA=';
+const DEFAULT_META_ECH_MAP = {
+  'scontent.xx.fbcdn.net': DEFAULT_META_ECH_CONFIG,
+};
+const MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024;
 
-// ── HTTP fetch helper ────────────────────────────────────────────
-function fetchText(url) {
-  const fetcher = url.startsWith('https') ? https : http;
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function fetchText(url, redirects = 0) {
+  let target;
+  try {
+    target = new URL(url);
+  } catch {
+    return Promise.reject(new Error(`Invalid download URL: ${url}`));
+  }
+  if (target.protocol !== 'https:') {
+    return Promise.reject(new Error(`Only HTTPS download URLs are allowed: ${url}`));
+  }
   return new Promise((resolve, reject) => {
-    const req = fetcher.get(url, (res) => {
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        res.resume();
-        reject(new Error('HTTP ' + res.statusCode + ' for ' + url));
+    const request = https.get(target, (response) => {
+      const status = response.statusCode || 0;
+      if (status >= 300 && status < 400 && response.headers.location) {
+        response.resume();
+        if (redirects >= 5) {
+          reject(new Error(`Too many redirects for ${url}`));
+          return;
+        }
+        let redirectUrl;
+        try {
+          redirectUrl = new URL(response.headers.location, target);
+        } catch {
+          reject(new Error(`Invalid redirect URL from ${url}`));
+          return;
+        }
+        if (redirectUrl.protocol !== 'https:') {
+          reject(new Error(`Refusing non-HTTPS redirect from ${url}`));
+          return;
+        }
+        fetchText(redirectUrl.toString(), redirects + 1).then(resolve, reject);
         return;
       }
-      let data = '';
-      res.setEncoding('utf8');
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => resolve(data));
+      if (status < 200 || status >= 300) {
+        response.resume();
+        reject(new Error(`HTTP ${status} for ${url}`));
+        return;
+      }
+      const contentLength = Number.parseInt(response.headers['content-length'], 10);
+      if (Number.isSafeInteger(contentLength) && contentLength > MAX_DOWNLOAD_BYTES) {
+        response.destroy();
+        reject(new Error(`Download exceeds ${MAX_DOWNLOAD_BYTES} byte limit for ${url}`));
+        return;
+      }
+      let received = 0;
+      const chunks = [];
+      response.on('data', (chunk) => {
+        received += chunk.length;
+        if (received > MAX_DOWNLOAD_BYTES) {
+          response.destroy(new Error(`Download exceeds ${MAX_DOWNLOAD_BYTES} byte limit for ${url}`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      response.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      response.on('error', reject);
     });
-    req.setTimeout(15000, () => req.destroy(new Error('Timeout fetching ' + url)));
-    req.on('error', reject);
+    request.setTimeout(15000, () => request.destroy(new Error(`Timeout fetching ${url}`)));
+    request.on('error', reject);
   });
 }
 
-// ── 解析 .env（legacy，可选）─────────────────────────────────────
 function parseEnv(filepath) {
   if (!fs.existsSync(filepath)) return {};
   const env = {};
-  const lines = fs.readFileSync(filepath, 'utf-8').split('\n');
-  for (const line of lines) {
+  for (const line of fs.readFileSync(filepath, 'utf8').split('\n')) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq < 0) continue;
-    env[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
+    const separator = trimmed.indexOf('=');
+    if (separator < 0) continue;
+    env[trimmed.slice(0, separator).trim()] = trimmed.slice(separator + 1).trim();
   }
   return env;
 }
 
-// ── CIDR 解析 ─────────────────────────────────────────────────────
-function parseBlockedCidrs(cidrsStr) {
+function num(value, fallback, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isSafeInteger(parsed) && parsed >= min && parsed <= max ? parsed : fallback;
+}
+
+function parseBlockedCidrs(value) {
+  if (typeof value !== 'string') return [];
   const entries = [];
-  if (!cidrsStr) return entries;
-  for (const cidr of cidrsStr.split(/\s+/)) {
+  for (const cidr of value.split(/\s+/)) {
     if (!cidr) continue;
-    try {
-      if (cidr.includes(':')) {
-        const [ip, pfxStr] = cidr.split('/');
-        const mask = Number(pfxStr);
-        if (isNaN(mask) || mask < 0 || mask > 128) continue;
-        const addr = parseIPv6(ip);
-        if (!addr) continue;
-        if (addr.every((b) => b === 0)) {
-          entries.push({ family: 6, mask });
-        } else {
-          entries.push({ family: 6, addr, mask });
-        }
-      } else {
-        const [ip, pfx] = cidr.split('/');
-        const parts = ip.split('.').map(Number);
-        if (parts.length !== 4) continue;
-        if (parts.some((p) => isNaN(p) || p < 0 || p > 255)) continue;
-        const mask = Number(pfx);
-        if (isNaN(mask) || mask < 0 || mask > 32) continue;
-        entries.push({ family: 4, addr: parts, mask });
+    const slash = cidr.lastIndexOf('/');
+    if (slash <= 0 || slash === cidr.length - 1) continue;
+    const address = cidr.slice(0, slash);
+    const prefix = Number.parseInt(cidr.slice(slash + 1), 10);
+    const family = isIP(address);
+    if (family === 6) {
+      if (
+        !Number.isInteger(prefix) ||
+        prefix < 0 ||
+        prefix > 128
+      ) {
+        continue;
       }
-    } catch (_) { /* skip malformed */ }
+      entries.push({ family: 6, address, prefix });
+      continue;
+    }
+    const octets = address.split('.');
+    if (
+      !Number.isInteger(prefix) ||
+      prefix < 0 ||
+      prefix > 32 ||
+      family !== 4 ||
+      octets.length !== 4
+    ) {
+      continue;
+    }
+    entries.push({ family: 4, address, prefix });
   }
   return entries;
 }
 
-function parseIPv6(ip) {
-  const parts = ip.split('::');
-  if (parts.length > 2) return null;
-  const left = parts[0] ? parts[0].split(':').filter((g) => g !== '') : [];
-  const right = parts[1] ? parts[1].split(':').filter((g) => g !== '') : [];
-  const fill = 8 - left.length - right.length;
-  if (fill < 0) return null;
-  const groups = [...left, ...Array(fill).fill('0'), ...right];
-  const addr = new Array(16).fill(0);
-  for (let i = 0; i < 8; i++) {
-    const val = parseInt(groups[i] || '0', 16);
-    addr[i * 2] = (val >> 8) & 0xFF;
-    addr[i * 2 + 1] = val & 0xFF;
-  }
-  return addr;
+function validMetaEchPattern(value) {
+  const pattern = value.startsWith('*.') ? value.slice(2) : value;
+  return pattern.length > 0 && pattern.split('.').every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label));
 }
 
-// ── 从 superdoh.config.js + .env 构建 UPSTREAMS ──────────────────
-function buildUpstreams(userCfg, env) {
+function resolveMetaEchMap(value) {
+  const mappings = { ...DEFAULT_META_ECH_MAP };
+  if (!isRecord(value)) return mappings;
+  for (const [pattern, encoded] of Object.entries(value)) {
+    const normalized = pattern.trim().toLowerCase().replace(/\.+$/, '');
+    if (!validMetaEchPattern(normalized)) {
+      console.warn(`Skip invalid Meta ECH domain pattern: ${pattern}`);
+      continue;
+    }
+    if (encoded === null) {
+      delete mappings[normalized];
+    } else if (typeof encoded === 'string' && encoded.length > 0) {
+      mappings[normalized] = encoded;
+    } else {
+      console.warn(`Skip invalid Meta ECH config for ${pattern}`);
+    }
+  }
+  return mappings;
+}
+
+function buildUpstreams(userConfig, env) {
   const upstreams = {};
+  const userUpstreams = isRecord(userConfig.upstreams) ? userConfig.upstreams : {};
 
-  const userUpstreams = userCfg.upstreams || {};
-
-  for (const [name, val] of Object.entries(userUpstreams)) {
-    if (val === true) {
+  for (const [name, value] of Object.entries(userUpstreams)) {
+    if (value === true) {
       if (PRESETS[name]) {
         upstreams[name] = { ...PRESETS[name] };
       } else {
         console.warn(`Unknown preset upstream: ${name} (skipped)`);
       }
-    } else if (typeof val === 'string' && val.length > 0) {
+    } else if (typeof value === 'string' && value.length > 0) {
       if (!/^[a-z][a-z0-9_]*$/.test(name)) {
         console.warn(`Skip invalid custom upstream name: ${name}`);
         continue;
       }
-      upstreams[name] = { url: val, ecs: true };
-    } else if (val === false) {
-      // 显式禁用，跳过
+      upstreams[name] = { url: value, ecs: true };
     }
   }
 
-  // .env legacy 覆盖（USE_CONFIG_JS=false 时 .env 仍可叠加）
-  for (const [name, cfg] of Object.entries(PRESETS)) {
+  for (const [name, preset] of Object.entries(PRESETS)) {
     const key = name.toUpperCase();
-    if (env[key] === 'true' && !upstreams[name]) {
-      upstreams[name] = { ...cfg };
-    }
-    if (env[key] === 'false') {
-      delete upstreams[name];
-    }
+    if (env[key] === 'true' && !upstreams[name]) upstreams[name] = { ...preset };
+    if (env[key] === 'false') delete upstreams[name];
   }
+
   for (const [key, url] of Object.entries(env)) {
-    if (!key.startsWith('CUSTOM_') || key === 'CUSTOM_') continue;
+    if (!key.startsWith('CUSTOM_') || key === 'CUSTOM_' || upstreams[key.slice(7).toLowerCase()]) {
+      continue;
+    }
     const name = key.slice(7).toLowerCase();
-    if (upstreams[name]) continue;
     if (!/^[a-z][a-z0-9_]*$/.test(name)) {
       console.warn(`Skip invalid custom upstream name from .env: ${key} → ${name}`);
       continue;
@@ -173,131 +229,138 @@ function buildUpstreams(userCfg, env) {
   return upstreams;
 }
 
-// ── GeoIP 抓取 ───────────────────────────────────────────────────
+function joinUrl(base, filename) {
+  return `${base.endsWith('/') ? base : `${base}/`}${filename}`;
+}
+
 async function fetchGeoipCidrs(geoipBase) {
-  const cidrs = {};
-  for (const key of Object.keys(GEOIP_CATEGORIES)) cidrs[key] = [];
-  console.log('Fetching GeoIP CIDR lists from ' + geoipBase + ' ...');
+  const cidrs = Object.fromEntries(Object.keys(GEOIP_CATEGORIES).map((key) => [key, []]));
+  const keys = Object.keys(GEOIP_CATEGORIES);
+  console.log(`Fetching GeoIP CIDR lists from ${geoipBase} ...`);
   const results = await Promise.allSettled(
-    Object.keys(GEOIP_CATEGORIES).map(async (key) => {
-      const category = GEOIP_CATEGORIES[key];
-      const url = geoipBase + category + '.txt';
-      const text = await fetchText(url);
+    keys.map(async (key) => {
+      const text = await fetchText(joinUrl(geoipBase, `${GEOIP_CATEGORIES[key]}.txt`));
       return {
         key,
-        cidrs: text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#')),
+        cidrs: text
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith('#'))
+          .filter((line) => parseBlockedCidrs(line).length === 1),
       };
-    })
+    }),
   );
-  for (let i = 0; i < results.length; i++) {
-    if (results[i].status === 'fulfilled') {
-      cidrs[results[i].value.key] = results[i].value.cidrs;
-      console.log(`Fetched ${results[i].value.cidrs.length} ${GEOIP_CATEGORIES[results[i].value.key]} CIDRs`);
+
+  for (let index = 0; index < results.length; index += 1) {
+    const result = results[index];
+    if (result.status === 'fulfilled') {
+      cidrs[result.value.key] = result.value.cidrs;
+      console.log(`Fetched ${result.value.cidrs.length} ${GEOIP_CATEGORIES[result.value.key]} CIDRs`);
     } else {
-      console.warn('Failed to fetch ' + Object.keys(GEOIP_CATEGORIES)[i] + ': ' + results[i].reason.message);
+      console.warn(`Failed to fetch ${keys[index]}: ${result.reason.message}`);
     }
   }
   return cidrs;
 }
 
-// ── Cealing-Host Google 代理抓取 ─────────────────────────────────
 async function fetchGoogleProxy(cealingUrl) {
-  let fetched = null;
   try {
-    console.log('Fetching Cealing-Host from ' + cealingUrl + ' ...');
-    const data = await fetchText(cealingUrl);
-    const cealingData = JSON.parse(data);
-    if (!cealingData || !Array.isArray(cealingData)) return null;
+    console.log(`Fetching Cealing-Host from ${cealingUrl} ...`);
+    const cealingData = JSON.parse(await fetchText(cealingUrl));
+    if (!Array.isArray(cealingData)) {
+      console.warn('Failed to fetch Cealing-Host for Google proxy: response is not an array');
+      return null;
+    }
 
-    const googleKeys = ['google', 'youtube', 'gstatic', 'youtu.be', 'ggpht',
-      'blogger', 'blogspot', 'googleapis', 'googlevideo',
-      'android.com', 'googleadservices', 'gemini'];
+    const googleKeys = [
+      'google',
+      'youtube',
+      'gstatic',
+      'youtu.be',
+      'ggpht',
+      'blogger',
+      'blogspot',
+      'googleapis',
+      'googlevideo',
+      'android.com',
+      'googleadservices',
+      'gemini',
+    ];
+    const entries = [];
 
-    const googleEntries = [];
-    for (let i = 0; i < cealingData.length; i++) {
-      const r = cealingData[i];
-      const domains = r[0];
-      const sni = (r[1] || '').trim();
-      const ip = (r[2] || '').trim();
+    for (const row of cealingData) {
+      if (!Array.isArray(row) || !Array.isArray(row[0])) continue;
+      const domains = row[0].filter((domain) => typeof domain === 'string');
+      const sni = typeof row[1] === 'string' ? row[1].trim() : '';
+      const ip = typeof row[2] === 'string' ? row[2].trim() : '';
       if (!ip || ip.startsWith('[')) continue;
 
-      let isGoogle = false;
-      for (let j = 0; j < domains.length; j++) {
-        const d = domains[j].replace(/[#$^*]/g, '').toLowerCase();
-        for (let k = 0; k < googleKeys.length; k++) {
-          if (d.indexOf(googleKeys[k]) >= 0) { isGoogle = true; break; }
-        }
-        if (isGoogle) break;
-      }
+      const isGoogle = domains.some((domain) => {
+        const normalized = domain.replace(/[#$^*]/g, '').toLowerCase();
+        return googleKeys.some((key) => normalized.includes(key));
+      });
       if (!isGoogle) continue;
 
-      const matchPatterns = [];
-      for (let j = 0; j < domains.length; j++) {
-        const d = domains[j];
-        if (d.startsWith('^')) continue;
-        const clean = d.replace(/[#$]/g, '').replace(/\*/g, '').trim();
-        if (!clean) continue;
-        matchPatterns.push(clean);
-      }
-      if (matchPatterns.length > 0) {
-        googleEntries.push({ ips: [ip], sni: sni || null, match: matchPatterns });
+      const matchPatterns = domains
+        .filter((domain) => !domain.startsWith('^'))
+        .map((domain) => domain.replace(/[#$]/g, '').replace(/\*/g, '').trim())
+        .filter(Boolean);
+      if (matchPatterns.length > 0) entries.push({ ips: [ip], sni: sni || null, match: matchPatterns });
+    }
+
+    const merged = [];
+    const indexes = new Map();
+    for (const entry of entries) {
+      const key = `${entry.ips.join(',')}|${entry.sni || ''}`;
+      const existing = indexes.get(key);
+      if (existing === undefined) {
+        indexes.set(key, merged.length);
+        merged.push(entry);
+      } else {
+        merged[existing].match.push(...entry.match);
       }
     }
 
-    if (googleEntries.length > 0) {
-      const merged = [];
-      const seenMap = {};
-      for (const e of googleEntries) {
-        const key = JSON.stringify(e.ips) + '|' + (e.sni || '');
-        if (seenMap[key] !== undefined) {
-          merged[seenMap[key]].match = merged[seenMap[key]].match.concat(e.match);
-        } else {
-          seenMap[key] = merged.length;
-          merged.push(e);
-        }
-      }
-      fetched = merged;
-      console.log(`Extracted ${fetched.length} Google proxy entries from Cealing-Host`);
+    const youtubeSupplements = [
+      'googlevideo.com',
+      'yt3.ggpht.com',
+      'ytimg.com',
+      'gvt1.com',
+      'gvt2.com',
+      'gvt3.com',
+      'video.google.com',
+    ];
+    const googleSupplements = [
+      'doubleclick.net',
+      'googleadservices.com',
+      'googlesyndication.com',
+      'google.com.hk',
+      'google.cn',
+      'google.co.jp',
+      'googleusercontent.com',
+      'gmail.com',
+    ];
+    const supplementTarget = merged.find((entry) => entry.sni === 'g.cn');
+    if (supplementTarget) supplementTarget.match.push(...youtubeSupplements, ...googleSupplements);
 
-      const youtubeSupplements = ['googlevideo.com', 'yt3.ggpht.com', 'ytimg.com',
-        'gvt1.com', 'gvt2.com', 'gvt3.com', 'video.google.com'];
-      const googleSupplements = ['doubleclick.net', 'googleadservices.com', 'googlesyndication.com',
-        'google.com.hk', 'google.cn', 'google.co.jp', 'googleusercontent.com', 'gmail.com'];
-      for (const entry of fetched) {
-        if (entry.sni === 'g.cn') {
-          entry.match = entry.match.concat(youtubeSupplements, googleSupplements);
-          break;
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('Failed to fetch Cealing-Host for Google proxy: ' + e.message);
+    console.log(`Extracted ${merged.length} Google proxy entries from Cealing-Host`);
+    return merged;
+  } catch (error) {
+    console.warn(`Failed to fetch Cealing-Host for Google proxy: ${error.message}`);
+    return null;
   }
-  return fetched;
 }
 
-// ── 数字解析 helper ───────────────────────────────────────────────
-function num(val, def) {
-  const n = parseInt(val, 10);
-  return isNaN(n) ? def : n;
-}
-
-// ── 从 userCfg + env 组装最终配置值 ──────────────────────────────
-function resolveConfig(userCfg, env) {
-  const configured = userCfg.configured === 1 ? 1 : 0;
-
+function resolveConfig(userConfig, env) {
+  const configured = userConfig.configured === 1 ? 1 : 0;
   if (configured === 0) {
-    // 首次配置模式：内置默认 CF + Google + AUTO，无地区优化
-    const upstreams = {};
-    for (const k of DEFAULT_UPSTREAM_KEYS) {
-      upstreams[k] = { ...PRESETS[k] };
-    }
     return {
-      configured: 0,
-      upstreams,
+      configured,
+      upstreams: Object.fromEntries(DEFAULT_UPSTREAM_KEYS.map((key) => [key, { ...PRESETS[key] }])),
+      metaEchMap: resolveMetaEchMap(userConfig.metaEchMap),
       ecsPrefix4: 24,
       ecsPrefix6: 56,
-      blockedCidrs: '127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128',
+      blockedCidrs: DEFAULT_BLOCKED_CIDRS,
       autoConcurrency: 6,
       ecsProtectMs: 20,
       hardTimeoutMs: 800,
@@ -305,6 +368,13 @@ function resolveConfig(userCfg, env) {
       metaCollectWindowMs: 50,
       metaMaxIps: 4,
       preferredTimeoutMs: 300,
+      fastTimeoutMs: 200,
+      mixTimeoutMs: 200,
+      mixTtl: 300,
+      preferredTtl: 60,
+      servfailEdeCode: 22,
+      cfEchCacheTtlMs: 600000,
+      cfEchStaleTtlMs: 3600000,
       logLevel: 'info',
       regions: {},
       geoipUrl: DEFAULT_GEOIP_URL,
@@ -313,179 +383,286 @@ function resolveConfig(userCfg, env) {
     };
   }
 
-  // configured:1 — 用用户配置，.env 可选覆盖个别字段
-  const upstreams = buildUpstreams(userCfg, env);
+  const configNumber = (envName, configName, fallback, min, max) =>
+    num(env[envName], num(userConfig[configName], fallback, min, max), min, max);
   return {
-    configured: 1,
-    upstreams,
-    ecsPrefix4: num(env.ECS_PREFIX4, num(userCfg.ecsPrefix4, 24)),
-    ecsPrefix6: num(env.ECS_PREFIX6, num(userCfg.ecsPrefix6, 56)),
-    blockedCidrs: env.BLOCKED_CIDRS || userCfg.blockedCidrs || '127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128',
-    autoConcurrency: num(env.AUTO_CONCURRENCY || env.MIX_CONCURRENCY, num(userCfg.autoConcurrency, 6)),
-    ecsProtectMs: num(env.ECS_PROTECT_MS, num(userCfg.ecsProtectMs, 20)),
-    hardTimeoutMs: num(env.HARD_TIMEOUT_MS, num(userCfg.hardTimeoutMs, 800)),
-    metaHardTimeoutMs: num(env.META_HARD_TIMEOUT_MS, num(userCfg.metaHardTimeoutMs, 800)),
-    metaCollectWindowMs: num(env.META_COLLECT_WINDOW_MS, num(userCfg.metaCollectWindowMs, 50)),
-    metaMaxIps: num(env.META_MAX_IPS, num(userCfg.metaMaxIps, 4)),
-    preferredTimeoutMs: num(env.PREFERRED_TIMEOUT_MS, num(userCfg.preferredTimeoutMs, 300)),
-    logLevel: env.LOG_LEVEL || userCfg.logLevel || 'info',
-    regions: userCfg.regions || {},
-    geoipUrl: userCfg.geoipUrl || DEFAULT_GEOIP_URL,
-    cealingHostUrl: userCfg.cealingHostUrl || DEFAULT_CEALING_HOST_URL,
-    fetchGoogleProxy: userCfg.fetchGoogleProxy !== false,
+    configured,
+    upstreams: buildUpstreams(userConfig, env),
+    metaEchMap: resolveMetaEchMap(userConfig.metaEchMap),
+    ecsPrefix4: configNumber('ECS_PREFIX4', 'ecsPrefix4', 24, 0, 32),
+    ecsPrefix6: configNumber('ECS_PREFIX6', 'ecsPrefix6', 56, 0, 128),
+    blockedCidrs: env.BLOCKED_CIDRS || userConfig.blockedCidrs || DEFAULT_BLOCKED_CIDRS,
+    autoConcurrency: num(
+      env.AUTO_CONCURRENCY || env.MIX_CONCURRENCY,
+      num(userConfig.autoConcurrency, 6),
+    ),
+    ecsProtectMs: configNumber('ECS_PROTECT_MS', 'ecsProtectMs', 20),
+    hardTimeoutMs: configNumber('HARD_TIMEOUT_MS', 'hardTimeoutMs', 800),
+    metaHardTimeoutMs: configNumber('META_HARD_TIMEOUT_MS', 'metaHardTimeoutMs', 800),
+    metaCollectWindowMs: configNumber('META_COLLECT_WINDOW_MS', 'metaCollectWindowMs', 50),
+    metaMaxIps: configNumber('META_MAX_IPS', 'metaMaxIps', 4),
+    preferredTimeoutMs: configNumber('PREFERRED_TIMEOUT_MS', 'preferredTimeoutMs', 300),
+    fastTimeoutMs: configNumber('FAST_TIMEOUT_MS', 'fastTimeoutMs', 200),
+    mixTimeoutMs: configNumber('MIX_TIMEOUT_MS', 'mixTimeoutMs', 200),
+    mixTtl: configNumber('MIX_TTL', 'mixTtl', 300),
+    preferredTtl: configNumber('PREFERRED_TTL', 'preferredTtl', 60),
+    servfailEdeCode: configNumber('SERVFAIL_EDE_CODE', 'servfailEdeCode', 22, 0, 65535),
+    cfEchCacheTtlMs: configNumber('CF_ECH_CACHE_TTL_MS', 'cfEchCacheTtlMs', 600000),
+    cfEchStaleTtlMs: configNumber('CF_ECH_STALE_TTL_MS', 'cfEchStaleTtlMs', 3600000),
+    logLevel: env.LOG_LEVEL || userConfig.logLevel || 'info',
+    regions: isRecord(userConfig.regions) ? userConfig.regions : {},
+    geoipUrl: userConfig.geoipUrl || DEFAULT_GEOIP_URL,
+    cealingHostUrl: userConfig.cealingHostUrl || DEFAULT_CEALING_HOST_URL,
+    fetchGoogleProxy: userConfig.fetchGoogleProxy !== false,
   };
 }
 
-// ── 生成 src/config.js ────────────────────────────────────────────
-function generateConfigJs(cfg, geoipCidrs, fetchedGoogleProxy) {
-  const upstreamEntries = Object.entries(cfg.upstreams)
-    .map(([name, c]) => `    ${name}: { url: ${JSON.stringify(c.url)}, ecs: ${c.ecs} },`)
-    .join('\n');
+function rustString(value) {
+  const escaped = [...String(value)]
+    .map((character) => {
+      if (character === '\\') return '\\\\';
+      if (character === '"') return '\\"';
+      if (character === '\n') return '\\n';
+      if (character === '\r') return '\\r';
+      if (character === '\t') return '\\t';
+      const codePoint = character.codePointAt(0);
+      return codePoint < 0x20 || codePoint === 0x7f ? `\\u{${codePoint.toString(16)}}` : character;
+    })
+    .join('');
+  return `"${escaped}"`;
+}
 
-  const foreignUpstreams = Object.keys(cfg.upstreams)
-    .filter((n) => n !== 'dnspod' && n !== 'alidns');
-
-  const blocked = parseBlockedCidrs(cfg.blockedCidrs);
-  const blockedLines = blocked.map((e, i) => {
-    let line = `    { family: ${e.family}, `;
-    if (e.addr) line += `addr: [${e.addr.join(', ')}], `;
-    line += `mask: ${e.mask} }`;
-    if (i < blocked.length - 1) line += ',';
-    return line;
-  });
-  const blockedStr = blockedLines.length > 0
-    ? '[\n' + blockedLines.join('\n') + '\n]'
-    : '[]';
-
-  // 地区配置
-  const regionNames = Object.keys(cfg.regions).sort();
-  const regionConfig = {};
-  for (const r of regionNames) {
-    const rc = cfg.regions[r];
-    regionConfig[r] = {
-      preferredCf: rc.preferredCf || '',
-      preferredCft: rc.preferredCft || '',
-      preferredVrc: rc.preferredVrc || '',
-      remap: typeof rc.remap === 'string'
-        ? rc.remap.split(/[\s,]+/).filter((d) => d.length > 0)
-        : (Array.isArray(rc.remap) ? rc.remap : []),
-      ech: rc.ech === true,
-      google: rc.google === true ? (fetchedGoogleProxy || []) : undefined,
-    };
+function rustInteger(value) {
+  if (!Number.isSafeInteger(value)) {
+    throw new TypeError(`Expected a safe integer, received ${value}`);
   }
-  const regionConfigStr = JSON.stringify(regionConfig, null, 2)
-    .replace(/^/gm, '  ')
-    .replace(/^\s{2}/, '');
+  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, '_');
+}
 
-  const geoipExportLines = Object.keys(GEOIP_CATEGORIES)
-    .map((key) => `export const GEOIP_${key} = ${JSON.stringify(geoipCidrs[key] || [])};`)
+function rustStringSlice(values, indent) {
+  if (values.length === 0) return '&[]';
+  const itemIndent = `${indent}    `;
+  return `&[\n${values.map((value) => `${itemIndent}${rustString(value)},`).join('\n')}\n${indent}]`;
+}
+
+function remapValues(value) {
+  if (typeof value === 'string') return value.split(/[\s,]+/).filter(Boolean);
+  if (!Array.isArray(value)) return [];
+  return value.filter((domain) => typeof domain === 'string' && domain.length > 0);
+}
+
+function generateConfigRs(config, geoipCidrs, fetchedGoogleProxy) {
+  const regionNames = Object.keys(config.regions).sort();
+  const regions = regionNames.map((name) => {
+    const value = isRecord(config.regions[name]) ? config.regions[name] : {};
+    return {
+      name,
+      preferredCf: typeof value.preferredCf === 'string' ? value.preferredCf : '',
+      preferredCft: typeof value.preferredCft === 'string' ? value.preferredCft : '',
+      preferredVrc: typeof value.preferredVrc === 'string' ? value.preferredVrc : '',
+      remap: remapValues(value.remap),
+      ech: value.ech === true,
+      googleEnabled: value.google === true,
+    };
+  });
+  const upstreams = Object.entries(config.upstreams);
+  const metaEchEntries = Object.entries(config.metaEchMap).sort(([left], [right]) => left.localeCompare(right));
+  const foreignUpstreams = upstreams
+    .map(([name]) => name)
+    .filter((name) => name !== 'dnspod' && name !== 'alidns');
+  const blocked = parseBlockedCidrs(config.blockedCidrs);
+
+  const regionStatics = regions.flatMap((region, index) => {
+    const prefix = `REGION_${index}`;
+    const values = [`static ${prefix}_REMAP: &[&str] = ${rustStringSlice(region.remap, '')};`];
+    if (region.googleEnabled && fetchedGoogleProxy !== null) {
+      const entries = fetchedGoogleProxy.map((entry) => [
+        '    GoogleProxy {',
+        `        match_patterns: ${rustStringSlice(entry.match, '        ')},`,
+        `        ips: ${rustStringSlice(entry.ips, '        ')},`,
+        `        sni: ${entry.sni === null ? 'None' : `Some(${rustString(entry.sni)})`},`,
+        '    },',
+      ].join('\n'));
+      values.push(`static ${prefix}_GOOGLE: &[GoogleProxy] = &[\n${entries.join('\n')}\n];`);
+    }
+    return values;
+  });
+
+  const geoipStatics = Object.keys(GEOIP_CATEGORIES)
+    .map((key) => `pub static GEOIP_${key}: &[&str] = ${rustStringSlice(geoipCidrs[key] || [], '')};`)
+    .join('\n\n');
+  const upstreamEntries = upstreams
+    .map(
+      ([name, upstream]) =>
+        `    Upstream {\n        name: ${rustString(name)},\n        url: ${rustString(upstream.url)},\n        ecs: ${upstream.ecs},\n    },`,
+    )
+    .join('\n');
+  const metaEchMapEntries = metaEchEntries
+    .map(
+      ([domainPattern, configB64]) =>
+        `    MetaEchConfig { domain_pattern: ${rustString(domainPattern)}, config_b64: ${rustString(configB64)} },`,
+    )
+    .join('\n');
+  const blockedEntries = blocked
+    .map(
+      (entry) =>
+        `    Cidr { family: ${rustInteger(entry.family)}, address: ${rustString(entry.address)}, prefix: ${rustInteger(entry.prefix)} },`,
+    )
+    .join('\n');
+  const regionEntries = regions
+    .map((region, index) => {
+      const google = region.googleEnabled && fetchedGoogleProxy !== null ? `Some(REGION_${index}_GOOGLE)` : 'None';
+      return [
+        '    RegionConfig {',
+        `        name: ${rustString(region.name)},`,
+        `        preferred_cf: ${rustString(region.preferredCf)},`,
+        `        preferred_cft: ${rustString(region.preferredCft)},`,
+        `        preferred_vrc: ${rustString(region.preferredVrc)},`,
+        `        remap: REGION_${index}_REMAP,`,
+        `        ech: ${region.ech},`,
+        `        google_enabled: ${region.googleEnabled},`,
+        `        google_proxies: ${google},`,
+        '    },',
+      ].join('\n');
+    })
     .join('\n');
 
-  return `/**
- * SuperDoH — src/config.js（由 scripts/build-config.cjs 自动生成，请勿手动修改）
- * 源文件：仓库根目录 superdoh.config.js
- */
-export const CONFIGURED = ${cfg.configured};
+  return `#[derive(Debug, Clone, Copy)]
+pub struct Upstream {
+    pub name: &'static str,
+    pub url: &'static str,
+    pub ecs: bool,
+}
 
-export const UPSTREAMS = {
+#[derive(Debug, Clone, Copy)]
+pub struct MetaEchConfig {
+    pub domain_pattern: &'static str,
+    pub config_b64: &'static str,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Cidr {
+    pub family: u8,
+    pub address: &'static str,
+    pub prefix: u8,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct GoogleProxy {
+    pub match_patterns: &'static [&'static str],
+    pub ips: &'static [&'static str],
+    pub sni: Option<&'static str>,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RegionConfig {
+    pub name: &'static str,
+    pub preferred_cf: &'static str,
+    pub preferred_cft: &'static str,
+    pub preferred_vrc: &'static str,
+    pub remap: &'static [&'static str],
+    pub ech: bool,
+    pub google_enabled: bool,
+    pub google_proxies: Option<&'static [GoogleProxy]>,
+}
+
+pub const CONFIGURED: u8 = ${rustInteger(config.configured)};
+pub const AUTO_CONCURRENCY: usize = ${rustInteger(config.autoConcurrency)};
+pub const FAST_TIMEOUT_MS: u32 = ${rustInteger(config.fastTimeoutMs)};
+pub const MIX_TIMEOUT_MS: u32 = ${rustInteger(config.mixTimeoutMs)};
+pub const MIX_TTL: u32 = ${rustInteger(config.mixTtl)};
+pub const PREFERRED_TTL: u32 = ${rustInteger(config.preferredTtl)};
+pub const ECS_PREFIX4: u8 = ${rustInteger(config.ecsPrefix4)};
+pub const ECS_PREFIX6: u8 = ${rustInteger(config.ecsPrefix6)};
+pub const SERVFAIL_EDE_CODE: u16 = ${rustInteger(config.servfailEdeCode)};
+pub const CF_ECH_CACHE_TTL_MS: u32 = ${rustInteger(config.cfEchCacheTtlMs)};
+pub const CF_ECH_STALE_TTL_MS: u32 = ${rustInteger(config.cfEchStaleTtlMs)};
+
+pub const ECS_PROTECT_MS: u32 = ${rustInteger(config.ecsProtectMs)};
+pub const HARD_TIMEOUT_MS: u32 = ${rustInteger(config.hardTimeoutMs)};
+pub const META_HARD_TIMEOUT_MS: u32 = ${rustInteger(config.metaHardTimeoutMs)};
+pub const META_COLLECT_WINDOW_MS: u32 = ${rustInteger(config.metaCollectWindowMs)};
+pub const META_MAX_IPS: usize = ${rustInteger(config.metaMaxIps)};
+pub const PREFERRED_TIMEOUT_MS: u32 = ${rustInteger(config.preferredTimeoutMs)};
+pub const AUTO_PROVIDER: &str = "auto";
+pub const LOG_LEVEL: &str = ${rustString(config.logLevel)};
+pub const REGION: &str = ${rustString(regionNames.join(','))};
+
+pub static UPSTREAMS: &[Upstream] = &[
 ${upstreamEntries}
-};
+];
 
-export const FOREIGN_UPSTREAMS = ${JSON.stringify(foreignUpstreams)};
+pub static META_ECH_MAP: &[MetaEchConfig] = &[
+${metaEchMapEntries}
+];
 
-export const ECS_PROTECT_MS = ${cfg.ecsProtectMs};
-export const HARD_TIMEOUT_MS = ${cfg.hardTimeoutMs};
-export const META_HARD_TIMEOUT_MS = ${cfg.metaHardTimeoutMs};
-export const META_COLLECT_WINDOW_MS = ${cfg.metaCollectWindowMs};
-export const META_MAX_IPS = ${cfg.metaMaxIps};
-export const PREFERRED_TIMEOUT_MS = ${cfg.preferredTimeoutMs};
-export const AUTO_CONCURRENCY = ${cfg.autoConcurrency};
-export const ECS_PREFIX4 = ${cfg.ecsPrefix4};
-export const ECS_PREFIX6 = ${cfg.ecsPrefix6};
+pub static FOREIGN_UPSTREAMS: &[&str] = ${rustStringSlice(foreignUpstreams, '')};
 
-export const BLOCKED_RANGES = ${blockedStr};
+pub static BLOCKED_RANGES: &[Cidr] = &[
+${blockedEntries}
+];
 
-${geoipExportLines}
+${geoipStatics}
 
-export const AUTO_PROVIDER = 'auto';
+${regionStatics.join('\n\n')}${regionStatics.length > 0 ? '\n\n' : ''}pub static REGION_NAMES: &[&str] = ${rustStringSlice(regionNames, '')};
 
-export const LOG_LEVEL = ${JSON.stringify(cfg.logLevel)};
-
-export const REGION = ${JSON.stringify(regionNames.join(','))};
-export const REGION_CONFIG = ${regionConfigStr};
+pub static REGION_CONFIG: &[RegionConfig] = &[
+${regionEntries}
+];
 `;
 }
 
-// ── 生成 src/templates.js ────────────────────────────────────────
-function generateTemplatesJs(rootDir) {
-  const frontendDir = path.join(rootDir, 'frontend');
-  const htmlCn = fs.readFileSync(path.join(frontendDir, 'index.html'), 'utf8');
-  const htmlEn = fs.readFileSync(path.join(frontendDir, 'en.html'), 'utf8');
-  const cssContent = fs.readFileSync(path.join(frontendDir, 'css', 'style.css'), 'utf8');
-  const jsContent = fs.readFileSync(path.join(frontendDir, 'js', 'resolver.js'), 'utf8');
-  const wizardJsPath = path.join(frontendDir, 'js', 'config-wizard.js');
-  const wizardContent = fs.existsSync(wizardJsPath) ? fs.readFileSync(wizardJsPath, 'utf8') : '';
-  return `// Auto-generated by scripts/build-config.cjs from frontend/*
-// Do not edit manually — edit frontend/ files instead
-export const HTML_CN = ${JSON.stringify(htmlCn)};
-export const HTML_EN = ${JSON.stringify(htmlEn)};
-export const CSS = ${JSON.stringify(cssContent)};
-export const JS = ${JSON.stringify(jsContent)};
-export const WIZARD_JS = ${JSON.stringify(wizardContent)};
-`;
+function formatRust(filepath) {
+  const result = spawnSync('rustfmt', [filepath], { stdio: 'inherit' });
+  if (result.error?.code === 'ENOENT') {
+    console.warn('rustfmt is unavailable; skipping generated config formatting');
+    return;
+  }
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(`rustfmt failed for ${filepath}`);
+  }
 }
 
-// ── Main ─────────────────────────────────────────────────────────
 async function main() {
   const rootDir = path.resolve(__dirname, '..');
   const configJsPath = path.join(rootDir, 'superdoh.config.js');
   const envPath = path.join(rootDir, '.env');
-  const configPath = path.join(rootDir, 'src', 'config.js');
-  const templatesPath = path.join(rootDir, 'src', 'templates.js');
+  const configRsPath = path.join(rootDir, 'src', 'config.rs');
 
   console.log(`Reading ${configJsPath} ...`);
   if (!fs.existsSync(configJsPath)) {
-    console.error('superdoh.config.js not found at repo root. Copy from superdoh.config.example.js.');
-    process.exit(1);
+    throw new Error('superdoh.config.js not found at repo root. Copy from superdoh.config.example.js.');
   }
 
-  const userCfgMod = await import('file://' + configJsPath);
-  const userCfg = userCfgMod.default || {};
+  const userConfigModule = await import(`file://${configJsPath}`);
+  const userConfig = isRecord(userConfigModule.default) ? userConfigModule.default : {};
+  console.log(`configured = ${userConfig.configured === 1 ? 1 : 0}`);
 
-  console.log(`configured = ${userCfg.configured === 1 ? 1 : 0}`);
   const env = parseEnv(envPath);
   if (Object.keys(env).length > 0) {
     console.log(`.env found (${Object.keys(env).length} keys) — used as optional override`);
   }
 
-  const cfg = resolveConfig(userCfg, env);
-
-  if (Object.keys(cfg.upstreams).length === 0) {
-    console.error('No upstreams enabled! Check superdoh.config.js upstreams section.');
-    process.exit(1);
+  const config = resolveConfig(userConfig, env);
+  if (Object.keys(config.upstreams).length === 0) {
+    throw new Error('No upstreams enabled! Check superdoh.config.js upstreams section.');
   }
 
-  // GeoIP 总是抓取（configured:0 也抓，保证 cdn.js 不爆）
-  const geoipBase = cfg.geoipUrl;
-  const geoipCidrs = await fetchGeoipCidrs(geoipBase);
+  const geoipCidrs = await fetchGeoipCidrs(config.geoipUrl);
+  const needsGoogleProxy =
+    config.fetchGoogleProxy && Object.values(config.regions).some((region) => isRecord(region) && region.google === true);
+  const fetchedGoogleProxy = needsGoogleProxy
+    ? await fetchGoogleProxy(config.cealingHostUrl)
+    : (console.log('No region has google=true — skipping Cealing-Host fetch.'), null);
 
-  // Cealing-Host：仅当任意 region.google=true 时抓取
-  const needsGoogleProxy = cfg.fetchGoogleProxy &&
-    Object.values(cfg.regions).some((r) => r.google === true);
-  let fetchedGoogleProxy = null;
-  if (needsGoogleProxy) {
-    fetchedGoogleProxy = await fetchGoogleProxy(cfg.cealingHostUrl);
-  } else {
-    console.log('No region has google=true — skipping Cealing-Host fetch.');
-  }
-
-  console.log(`Generating ${configPath} ...`);
-  fs.writeFileSync(configPath, generateConfigJs(cfg, geoipCidrs, fetchedGoogleProxy));
-
-  console.log('Generating templates from frontend/*.html ...');
-  fs.writeFileSync(templatesPath, generateTemplatesJs(rootDir));
-
-  console.log(`Done — ${Object.keys(cfg.upstreams).length} upstreams configured, CONFIGURED=${cfg.configured}.`);
+  console.log(`Generating ${configRsPath} ...`);
+  fs.writeFileSync(configRsPath, generateConfigRs(config, geoipCidrs, fetchedGoogleProxy));
+  formatRust(configRsPath);
+  console.log(`Done — ${Object.keys(config.upstreams).length} upstreams configured, CONFIGURED=${config.configured}.`);
 }
 
-main().catch((err) => { console.error(err); process.exit(1); });
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

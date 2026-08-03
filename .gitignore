@@ -1,4 +1,13 @@
-node_modules/
+# Build artifacts
+/target
+/build
+/.wrangler
+
+# Node
+/node_modules
+
+# Generated config (build output from scripts/build-config.cjs)
+/src/config.rs
+
+# Env
 .env
-src/config.js
-src/templates.js
