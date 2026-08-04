@@ -110,6 +110,45 @@ pub(crate) fn replace_ips(
     serialize_response(&message)
 }
 
+pub(crate) fn normalize_https_hints(
+    original: &[u8],
+    remove_ipv4: bool,
+    remove_ipv6: bool,
+) -> Result<Option<Vec<u8>>, PolicyError> {
+    if !remove_ipv4 && !remove_ipv6 {
+        return Ok(None);
+    }
+
+    let mut message = dns::parse_message(original)?;
+    let mut modified_owners = Vec::new();
+    let mut changed = false;
+    for record in &mut message.answers {
+        if record.rr_type != dns::wire::TYPE_HTTPS {
+            continue;
+        }
+        let Some(updated) = dns::svcb::remove_ip_hints(&record.rdata, remove_ipv4, remove_ipv6)?
+        else {
+            continue;
+        };
+        record.rdata = updated;
+        if !modified_owners
+            .iter()
+            .any(|owner: &String| owner.eq_ignore_ascii_case(&record.name))
+        {
+            modified_owners.push(record.name.clone());
+        }
+        changed = true;
+    }
+    if !changed {
+        return Ok(None);
+    }
+
+    for owner in modified_owners {
+        clear_authentication(&mut message, &owner, dns::wire::TYPE_HTTPS);
+    }
+    serialize_response(&message).map(Some)
+}
+
 pub(crate) fn serialize_response(message: &Message) -> Result<Vec<u8>, PolicyError> {
     let mut output = vec![0; 12];
     for question in &message.questions {
@@ -280,6 +319,64 @@ mod tests {
         };
         assert_eq!(parsed.header.flags & FLAG_AD, 0);
         assert_eq!(parsed.answers[0].rdata, [192, 0, 2, 2]);
+    }
+
+    #[test]
+    fn hint_normalization_clears_https_authentication() {
+        let message = Message {
+            header: Header {
+                id: 9,
+                flags: 0x81a0,
+                qd_count: 1,
+                an_count: 2,
+                ns_count: 0,
+                ar_count: 0,
+            },
+            questions: vec![Question {
+                name: "example.com".to_owned(),
+                qtype: dns::wire::TYPE_HTTPS,
+                qclass: CLASS_IN,
+            }],
+            answers: vec![
+                ResourceRecord {
+                    name: "example.com".to_owned(),
+                    rr_type: dns::wire::TYPE_HTTPS,
+                    class: CLASS_IN,
+                    ttl: 60,
+                    rdata: vec![0, 1, 0, 0, 4, 0, 4, 1, 1, 1, 1],
+                },
+                ResourceRecord {
+                    name: "example.com".to_owned(),
+                    rr_type: TYPE_RRSIG,
+                    class: CLASS_IN,
+                    ttl: 60,
+                    rdata: vec![0, 65, 0],
+                },
+            ],
+            authorities: vec![],
+            additionals: vec![],
+        };
+        let original = match serialize_response(&message) {
+            Ok(value) => value,
+            Err(error) => panic!("test HTTPS response must serialize: {error}"),
+        };
+        let changed = match normalize_https_hints(&original, true, false) {
+            Ok(Some(value)) => value,
+            Ok(None) => panic!("IPv4 hint must be removed"),
+            Err(error) => panic!("hint normalization must succeed: {error}"),
+        };
+        let parsed = match parse_message(&changed) {
+            Ok(value) => value,
+            Err(error) => panic!("normalized response must parse: {error}"),
+        };
+        assert_eq!(parsed.header.flags & FLAG_AD, 0);
+        assert!(
+            !parsed
+                .answers
+                .iter()
+                .any(|record| record.rr_type == TYPE_RRSIG)
+        );
+        assert!(dns::proto::https_hint_ips(&changed).is_empty());
     }
 
     #[test]

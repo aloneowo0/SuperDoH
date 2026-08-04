@@ -2,6 +2,9 @@
 
 use std::net::IpAddr;
 
+use hickory_proto::rr::rdata::opt::ClientSubnet;
+use ipnet::IpNet;
+
 use super::wire::{
     DnsError, Message, ResourceRecord, Result, TYPE_OPT, parse_message, serialize_message,
 };
@@ -19,13 +22,8 @@ pub struct OptRecord {
     pub options: Vec<(u16, Vec<u8>)>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Ecs {
-    pub family: u16,
-    pub source_prefix: u8,
-    pub scope_prefix: u8,
-    pub address: Vec<u8>,
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Ecs(ClientSubnet);
 
 /// Parses an OPT RR into its EDNS header and length-delimited option list.
 ///
@@ -96,34 +94,13 @@ pub fn parse_ecs_option(opt: &OptRecord) -> Result<Option<Ecs>> {
     let Some((_, value)) = opt.options.iter().find(|(code, _)| *code == OPTION_ECS) else {
         return Ok(None);
     };
-    if value.len() < 4 {
-        return Err(DnsError::new("truncated ECS option"));
-    }
-    let family = u16::from_be_bytes([value[0], value[1]]);
-    let source_prefix = value[2];
-    let scope_prefix = value[3];
-    let max_prefix = match family {
-        1 => 32,
-        2 => 128,
-        _ => return Err(DnsError::new("unknown ECS address family")),
-    };
-    if source_prefix > max_prefix || scope_prefix > max_prefix {
-        return Err(DnsError::new("invalid ECS prefix"));
-    }
-    let address_len = usize::from(source_prefix.saturating_add(7) / 8);
-    if value.len()
-        != 4_usize
-            .checked_add(address_len)
-            .ok_or(DnsError::new("ECS length overflow"))?
-    {
+    let subnet = ClientSubnet::try_from(value.as_slice())
+        .map_err(|error| DnsError::new(error.to_string()))?;
+    let ecs = Ecs::from_subnet(subnet)?;
+    if ecs.bytes()?.len() != value.len() {
         return Err(DnsError::new("invalid ECS address length"));
     }
-    Ok(Some(Ecs {
-        family,
-        source_prefix,
-        scope_prefix,
-        address: value[4..].to_vec(),
-    }))
+    Ok(Some(ecs))
 }
 
 /// Finds the client ECS option in a DNS query.
@@ -148,58 +125,39 @@ pub fn query_ecs(wire: &[u8]) -> Result<Option<Ecs>> {
 }
 
 impl Ecs {
-    /// Builds a masked ECS value. A `/0` deliberately contains no address bytes.
+    /// Builds a canonical ECS value. `ipnet` masks host bits and Hickory owns the wire encoding.
     ///
     /// # Errors
     ///
     /// Returns an error when `prefix` exceeds the address-family width.
     pub fn from_ip(ip: IpAddr, prefix: u8) -> Result<Self> {
-        let (family, maximum, bytes) = match ip {
-            IpAddr::V4(value) => (1, 32, value.octets().to_vec()),
-            IpAddr::V6(value) => (2, 128, value.octets().to_vec()),
-        };
-        if prefix > maximum {
-            return Err(DnsError::new("ECS prefix exceeds address width"));
-        }
-        let length = usize::from(prefix.saturating_add(7) / 8);
-        let mut address = bytes[..length].to_vec();
-        if let Some(last) = address.last_mut() {
-            let remainder = prefix % 8;
-            if remainder != 0 {
-                *last &= u8::MAX << (8 - remainder);
-            }
-        }
-        Ok(Self {
-            family,
-            source_prefix: prefix,
-            scope_prefix: 0,
-            address,
-        })
+        let network = IpNet::new(ip, prefix)
+            .map_err(|error| DnsError::new(error.to_string()))?
+            .trunc();
+        Ok(Self(ClientSubnet::from(network)))
     }
 
     fn bytes(&self) -> Result<Vec<u8>> {
-        let maximum = match self.family {
-            1 => 32,
-            2 => 128,
-            _ => return Err(DnsError::new("unknown ECS address family")),
-        };
-        if self.source_prefix > maximum || self.scope_prefix > maximum {
-            return Err(DnsError::new("invalid ECS prefix"));
+        Vec::<u8>::try_from(&self.0).map_err(|error| DnsError::new(error.to_string()))
+    }
+
+    fn from_subnet(subnet: ClientSubnet) -> Result<Self> {
+        let network = IpNet::new(subnet.addr(), subnet.source_prefix())
+            .map_err(|error| DnsError::new(error.to_string()))?
+            .trunc();
+        if network.addr() != subnet.addr() {
+            return Err(DnsError::new("non-zero ECS host bits"));
         }
-        let expected = usize::from(self.source_prefix.saturating_add(7) / 8);
-        if self.address.len() != expected {
-            return Err(DnsError::new("invalid ECS address length"));
+        let maximum = if subnet.addr().is_ipv4() { 32 } else { 128 };
+        if subnet.scope_prefix() > maximum {
+            return Err(DnsError::new("invalid ECS scope prefix"));
         }
-        let mut value = Vec::with_capacity(
-            4_usize
-                .checked_add(expected)
-                .ok_or(DnsError::new("ECS length overflow"))?,
-        );
-        value.extend_from_slice(&self.family.to_be_bytes());
-        value.push(self.source_prefix);
-        value.push(self.scope_prefix);
-        value.extend_from_slice(&self.address);
-        Ok(value)
+        Ok(Self(subnet))
+    }
+
+    #[must_use]
+    pub fn source_prefix(&self) -> u8 {
+        self.0.source_prefix()
     }
 }
 
@@ -384,7 +342,7 @@ mod tests {
             parse_ecs(&parse_message(&once_more).unwrap().additionals[0])
                 .unwrap()
                 .unwrap()
-                .source_prefix,
+                .source_prefix(),
             24
         );
     }
@@ -392,12 +350,13 @@ mod tests {
     #[test]
     fn ecs_masks_and_supports_zero_prefix() {
         let masked = Ecs::from_ip(IpAddr::V4(Ipv4Addr::new(192, 168, 255, 1)), 13).unwrap();
-        assert_eq!(masked.address, [192, 168]);
-        assert!(
+        assert_eq!(masked.bytes().unwrap(), [0, 1, 13, 0, 192, 168]);
+        assert_eq!(
             Ecs::from_ip(IpAddr::V4(Ipv4Addr::new(1, 2, 3, 4)), 0)
                 .unwrap()
-                .address
-                .is_empty()
+                .bytes()
+                .unwrap(),
+            [0, 1, 0, 0]
         );
     }
 

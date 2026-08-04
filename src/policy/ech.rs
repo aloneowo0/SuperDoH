@@ -35,6 +35,16 @@ pub(crate) async fn inject(
     trace: &UpstreamTrace,
     ctx: &mut RequestCtx,
 ) -> Result<Vec<u8>, PolicyError> {
+    if !dns::proto::has_https_service_mode(original) {
+        logger::log_event(
+            ctx,
+            LogLevel::Debug,
+            "ech_skipped",
+            serde_json::json!({"owner": owner.label(), "reason": "no_service_mode_https_rr"}),
+        );
+        return Ok(original.to_vec());
+    }
+
     let ech = match owner {
         Owner::Cf => fetch_cf_ech(query, client_ip, runtime_upstreams, trace, ctx).await,
         Owner::Meta => meta_ech_config(&query.question.name),
@@ -92,7 +102,7 @@ async fn fetch_cf_ech(
         false,
         runtime_upstreams,
         trace,
-        |_| true,
+        |outcome| ech_from_response(&outcome.body).is_some(),
     )
     .await;
     if let Some(result) = result
@@ -153,19 +163,13 @@ fn meta_pattern_matches(name: &str, pattern: &str) -> bool {
 }
 
 fn ech_from_response(wire: &[u8]) -> Option<Vec<u8>> {
-    let message = dns::parse_message(wire).ok()?;
-    message
-        .answers
-        .iter()
-        .filter(|record| record.rr_type == dns::wire::TYPE_HTTPS)
-        .find_map(|record| ech_param(&record.rdata))
+    dns::proto::https_ech_config(wire).filter(|value| validate_ech_config_list(value))
 }
 
+#[cfg(test)]
 fn ech_param(rdata: &[u8]) -> Option<Vec<u8>> {
-    dns::svcb::parse_rdata(rdata)
+    dns::svcb::ech_config(rdata)
         .ok()?
-        .param(dns::svcb::PARAM_ECH)
-        .map(ToOwned::to_owned)
         .filter(|value| validate_ech_config_list(value))
 }
 

@@ -2,6 +2,8 @@
 
 use std::net::IpAddr;
 
+pub use ipnet::IpNet as Cidr;
+
 use super::{
     parse_opt,
     wire::{
@@ -31,38 +33,6 @@ pub enum Classification {
     Positive,
     Negative(NegativeKind),
     Invalid,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Cidr {
-    pub network: IpAddr,
-    pub prefix: u8,
-}
-
-impl Cidr {
-    /// Returns true when `address` is within this CIDR, with address-family mismatch rejected.
-    #[must_use]
-    pub fn contains(self, address: IpAddr) -> bool {
-        match (self.network, address) {
-            (IpAddr::V4(network), IpAddr::V4(address)) if self.prefix <= 32 => {
-                let mask = if self.prefix == 0 {
-                    0
-                } else {
-                    u32::MAX << (32 - u32::from(self.prefix))
-                };
-                u32::from(network) & mask == u32::from(address) & mask
-            }
-            (IpAddr::V6(network), IpAddr::V6(address)) if self.prefix <= 128 => {
-                let mask = if self.prefix == 0 {
-                    0
-                } else {
-                    u128::MAX << (128 - u32::from(self.prefix))
-                };
-                u128::from(network) & mask == u128::from(address) & mask
-            }
-            _ => false,
-        }
-    }
 }
 
 /// Validates identity, query semantics, RCODE and blocked A/AAAA answers.
@@ -157,7 +127,7 @@ pub fn classify_response(
         let Some(ip) = record_ip(record) else {
             continue;
         };
-        if blocked.iter().copied().any(|range| range.contains(ip)) {
+        if blocked.iter().any(|range| range.contains(&ip)) {
             return Classification::Invalid;
         }
     }
@@ -171,8 +141,6 @@ mod tests {
         CLASS_IN, Header, Message, ResourceRecord, TYPE_A, TYPE_CNAME, TYPE_NS, TYPE_OPT, TYPE_SOA,
         build_response, encode_name, serialize_message,
     };
-    use std::net::{IpAddr, Ipv4Addr};
-
     fn expected() -> Question {
         Question {
             name: "example.com".to_owned(),
@@ -200,9 +168,9 @@ mod tests {
             classify_response(&nxdomain, 4, &expected(), &[]),
             Classification::Negative(NegativeKind::NxDomain)
         );
-        let blocked = [Cidr {
-            network: IpAddr::V4(Ipv4Addr::new(1, 1, 1, 0)),
-            prefix: 24,
+        let blocked = [match "1.1.1.0/24".parse::<Cidr>() {
+            Ok(value) => value,
+            Err(error) => panic!("test CIDR must parse: {error}"),
         }];
         assert_eq!(
             classify_response(&response, 4, &expected(), &blocked),

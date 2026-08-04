@@ -2,6 +2,7 @@
 
 pub mod classify;
 pub mod edns;
+pub mod proto;
 pub mod svcb;
 pub mod wire;
 
@@ -12,6 +13,5 @@ pub use edns::{
 };
 pub use wire::{
     DnsError, Header, Message, Question, ResourceRecord, build_response, decode_name, encode_name,
-    extract_ip_bytes, find_rr_by_type, parse_answers, parse_message, parse_svcb_rdata,
-    reencode_rdata, replace_svcb_param, servfail,
+    extract_ip_bytes, find_rr_by_type, parse_answers, parse_message, reencode_rdata, servfail,
 };

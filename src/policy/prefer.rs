@@ -33,7 +33,7 @@ pub(crate) async fn replace(
 
     let preferred_query = upstream::build_query(preferred_domain, query.question.qtype, query.id)?;
     let mut preferred_question = query.clone();
-    preferred_question.question.name = preferred_domain.to_owned();
+    preferred_domain.clone_into(&mut preferred_question.question.name);
     let expected_owner_for_accept = expected_owner;
     let result = fast_query(
         &preferred_query,

@@ -27,12 +27,15 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 
 ## dns/ — 协议层(纯 Rust,无 worker 依赖)
 
+通用协议结构优先复用成熟 crate:`hickory-proto` 负责标准 DNS typed RDATA / HTTPS/SVCB/ECH / ECS 编解码,`ipnet` 负责 CIDR;本项目只保留 SuperDoH 特有的响应分类、修改安全边界和策略语义,避免重复实现通用协议。
+
 | 文件 | 行数 | 职责 |
 |---|---|---|
-| `dns/wire.rs` | ~650 | **DNS 线格式编解码**。header/question/RR 解析(压缩指针+循环检测)、`build_response` 构包、`servfail`(EDE 22)、RDATA 域名展开重编码、查询预检(QD=1/计数上限/255 名称限制) |
-| `dns/edns.rs` | ~280 | **EDNS/ECS**。OPT 解析(DO 位/payload)、ECS 选项读写(不重复/不扩大前缀//0)、查询准备(注入 OPT+ECS)、响应 ECS 归一化(客户端没发就剥掉) |
+| `dns/proto.rs` | ~50 | **Hickory typed DNS 适配层**。通用 Message/RData 解码、A/AAAA 提取、HTTPS ECHConfigList 提取;不承载业务策略 |
+| `dns/wire.rs` | ~800 | **响应安全边界/兼容层**。保留需要精确控制的报文边界、压缩名展开、构包和修改保真逻辑;通用 typed RDATA 逐步交给 Hickory |
+| `dns/edns.rs` | ~500 | **EDNS/ECS 策略层**。OPT 状态保持、是否注入/移除 ECS;ECS 网络/前缀与 wire 编解码交给 `ipnet` + Hickory `ClientSubnet` |
 | `dns/classify.rs` | ~150 | **响应三态分类**。positive(需目标 QTYPE RRset 或完整 CNAME 链)/ NXDOMAIN / NODATA / referral / invalid;CIDR 黑名单过滤 |
-| `dns/svcb.rs` | ~300 | **SVCB/HTTPS 记录**。结构化解析(priority/target/params,AliasMode 判定)、ECH 参数替换、mandatory 一致性同步、key 排序、wire 序列化 |
+| `dns/svcb.rs` | ~100 | **Hickory SVCB/HTTPS 薄适配层**。AliasMode/ServiceMode、ECHConfigList、参数排序和 wire 序列化交给 Hickory |
 | `dns/mod.rs` | ~30 | 模块导出 |
 
 ## algo/ — 算法层(纯逻辑,零业务知识)

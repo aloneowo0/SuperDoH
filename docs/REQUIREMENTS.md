@@ -148,6 +148,8 @@ Domain 分类补齐 Meta(Q21):Domain 命中 Meta 时进入 Meta 策略,不应因
 
 按响应 IP 归属分类(CF / Meta / CFT / Vercel / 其他)。**混合 owner 或无法明确 owner 时,默认不做基于 IP owner 的整体替换**(Q17);Domain 明确命中的强制规则不受此限制。
 
+HTTPS(65) 响应没有普通 A/AAAA Answer 时,可直接使用其 ServiceMode `ipv4hint` / `ipv6hint` 作为响应内 IP 归属依据(Q11/Q19);AliasMode、无 hints、混合 owner 或无法明确归属时不做基于 IP owner 的自动分类,不额外引入 side A/AAAA 探测。
+
 ### 6.3 优选替换(CF / CFT / Vercel)
 
 - 用 **fast** 解析优选域名(`preferredCf` / `preferredCft` / `preferredVrc`)
@@ -175,6 +177,7 @@ Domain 分类补齐 Meta(Q21):Domain 命中 Meta 时进入 Meta 策略,不应因
 | Meta 静态 | 独立策略配置;ECHConfig 与域名的映射做成**可配置/可维护数据,不写死进通用算法**(Q22) |
 
 - HTTPS RR 按 DNS/SVCB/HTTPS 规范正确处理 AliasMode、ServiceMode、mandatory、hints、ECH;**不允许为了优化生成非法 RR**;无法安全修改时 no-op / 保留原数据(Q19)
+- 当地区 A/AAAA 地址策略会改变实际连接目标时,HTTPS ServiceMode 中对应的 `ipv4hint` / `ipv6hint` 必须同步重写或移除,避免客户端绕过优选或 remap AAAA 屏蔽。当前实现选择**移除对应 hints 并同步维护 mandatory**,让客户端回到既有 A/AAAA 优化路径,不为 HTTPS 额外增加 side A/AAAA lookup(Q19/Q24)
 - 走到注入节点即尝试:有 HTTPS 记录就注入,没有就跳过(Q2)
 
 ### 6.7 remap AAAA 屏蔽(Q14)
@@ -191,11 +194,12 @@ remap Domain 命中的 AAAA **最终语义必须 NODATA**。如果"构建前删�
 
 ### 7.1 DNSSEC(Q13)
 
-- **DNSSEC 必须支持**,不能因客户端请求 DNSSEC 就直接绕过整个优化流程
-- 正确支持 DO/CD/OPT、DNSKEY、DS、RRSIG 等 DNSSEC 语义,并可验证原始上游响应
+- **DNSSEC 必须协议兼容**,不能因客户端请求 DNSSEC 就直接绕过整个优化流程
+- 正确支持 DO/CD/AD/OPT、DNSKEY、DS、RRSIG、NSEC/NSEC3 等 DNSSEC 数据和状态语义
+- SuperDoH 是 **DNSSEC-aware / DNSSEC-preserving proxy**,不是递归 DNSSEC 验证器;密码学验证由可信递归上游负责
+- 未修改的数据正常保留上游 DNSSEC 数据及 AD 状态
 - 被修改/替换/合成的 RRset:删除对应无效 RRSIG,清除不能再成立的 AD 状态,**不伪造 Secure**
-- 未修改的数据正常保留 DNSSEC 数据
-- 目标:完整支持 DNSSEC 协议与验证能力;不是要求修改第三方数据后还能用第三方权威私钥完成端到端签名验证
+- 不要求也不允许在没有目标 Zone 私钥的情况下为修改后的第三方 RRset 重新签名
 
 ### 7.2 EDNS / ECS(Q23)
 

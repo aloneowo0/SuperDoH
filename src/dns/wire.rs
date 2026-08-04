@@ -22,18 +22,20 @@ const MAX_RESPONSE_SECTION_RECORDS: u16 = 256;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DnsError {
-    message: &'static str,
+    message: String,
 }
 
 impl DnsError {
-    pub(crate) const fn new(message: &'static str) -> Self {
-        Self { message }
+    pub(crate) fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+        }
     }
 }
 
 impl fmt::Display for DnsError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(self.message)
+        formatter.write_str(&self.message)
     }
 }
 
@@ -74,13 +76,6 @@ pub struct Message {
     pub answers: Vec<ResourceRecord>,
     pub authorities: Vec<ResourceRecord>,
     pub additionals: Vec<ResourceRecord>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SvcbRecord {
-    pub priority: u16,
-    pub target: String,
-    pub params: Vec<(u16, Vec<u8>)>,
 }
 
 fn read_u16(data: &[u8], cursor: &mut usize) -> Result<u16> {
@@ -369,103 +364,13 @@ fn canonical_rdata(data: &[u8], start: usize, end: usize, rr_type: u16) -> Resul
                 data.get(cursor..end)
                     .ok_or(DnsError::new("truncated SVCB parameter"))?,
             );
-            parse_svcb_rdata(&output)?;
-            Ok(output)
+            super::svcb::canonicalize(&output)
         }
         _ => data
             .get(start..end)
             .ok_or(DnsError::new("truncated DNS RDATA"))
             .map(ToOwned::to_owned),
     }
-}
-
-/// Parses canonical SVCB/HTTPS RDATA into priority, target, and ordered parameters.
-///
-/// # Errors
-///
-/// Returns an error for a truncated, compressed, or unordered SVCB RDATA value.
-pub fn parse_svcb_rdata(rdata: &[u8]) -> Result<SvcbRecord> {
-    if rdata.len() < 3 {
-        return Err(DnsError::new("truncated SVCB RDATA"));
-    }
-    let priority = u16::from_be_bytes([rdata[0], rdata[1]]);
-    let mut cursor = 2;
-    let target = decode_uncompressed_name(rdata, &mut cursor, rdata.len())?;
-    let mut params = Vec::new();
-    let mut previous = None;
-    while cursor < rdata.len() {
-        let key = read_u16(rdata, &mut cursor)?;
-        if previous.is_some_and(|previous| key <= previous) {
-            return Err(DnsError::new("SVCB parameters are not strictly ordered"));
-        }
-        previous = Some(key);
-        let length = usize::from(read_u16(rdata, &mut cursor)?);
-        let end = cursor
-            .checked_add(length)
-            .ok_or(DnsError::new("SVCB offset overflow"))?;
-        params.push((
-            key,
-            rdata
-                .get(cursor..end)
-                .ok_or(DnsError::new("truncated SVCB parameter"))?
-                .to_vec(),
-        ));
-        cursor = end;
-    }
-    Ok(SvcbRecord {
-        priority,
-        target,
-        params,
-    })
-}
-
-/// Rebuilds SVCB/HTTPS RDATA after replacing a parameter, rejecting `AliasMode` and invalid mandatory lists.
-///
-/// # Errors
-///
-/// Returns an error for malformed SVCB RDATA, invalid mandatory semantics, or an oversized value.
-pub fn replace_svcb_param(rdata: &[u8], key: u16, value: &[u8]) -> Result<Option<Vec<u8>>> {
-    if value.is_empty() {
-        return Err(DnsError::new("SVCB parameter value is empty"));
-    }
-    let mut record = parse_svcb_rdata(rdata)?;
-    if record.priority == 0 {
-        return Ok(None);
-    }
-    record.params.retain(|(existing, _)| *existing != key);
-    record.params.push((key, value.to_vec()));
-    record.params.sort_by_key(|(existing, _)| *existing);
-    if let Some((_, mandatory)) = record.params.iter().find(|(existing, _)| *existing == 0) {
-        if mandatory.len() % 2 != 0 {
-            return Err(DnsError::new("invalid SVCB mandatory parameter"));
-        }
-        for mandatory_key in mandatory
-            .chunks_exact(2)
-            .map(|item| u16::from_be_bytes([item[0], item[1]]))
-        {
-            if mandatory_key == 0
-                || !record
-                    .params
-                    .iter()
-                    .any(|(existing, _)| *existing == mandatory_key)
-            {
-                return Err(DnsError::new("SVCB mandatory parameter is missing"));
-            }
-        }
-    }
-    let mut output = Vec::new();
-    output.extend_from_slice(&record.priority.to_be_bytes());
-    output.extend_from_slice(&encode_name(&record.target)?);
-    for (parameter_key, parameter_value) in record.params {
-        write_u16(&mut output, parameter_key);
-        write_u16(
-            &mut output,
-            u16::try_from(parameter_value.len())
-                .map_err(|_| DnsError::new("SVCB parameter exceeds 65535 octets"))?,
-        );
-        output.extend_from_slice(&parameter_value);
-    }
-    Ok(Some(output))
 }
 
 /// Expands domain-bearing RDATA into its canonical, uncompressed form.
@@ -745,11 +650,6 @@ pub fn servfail(id: u16, question: &Question, ede_code: u16, ede_text: &str) -> 
 ///
 /// # Errors
 ///
-/// Returns an error when the SVCB RDATA is malformed.
-pub fn parse_svcb_params(rdata: &[u8]) -> Result<Vec<(u16, Vec<u8>)>> {
-    Ok(parse_svcb_rdata(rdata)?.params)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -904,21 +804,5 @@ mod tests {
         overlong.push(0);
         let mut cursor = 0;
         assert!(decode_name(&overlong, &mut cursor).is_err());
-    }
-
-    #[test]
-    fn edits_service_mode_and_preserves_mandatory_consistency() {
-        let rdata = [0, 1, 0, 0, 0, 0, 2, 0, 5, 0, 5, 0, 3, b'o', b'l', b'd'];
-        let updated = match replace_svcb_param(&rdata, 5, b"new") {
-            Ok(Some(value)) => value,
-            Ok(None) => panic!("service mode must be editable"),
-            Err(error) => panic!("valid service record must edit: {error}"),
-        };
-        let parsed = match parse_svcb_rdata(&updated) {
-            Ok(value) => value,
-            Err(error) => panic!("updated SVCB must parse: {error}"),
-        };
-        assert_eq!(parsed.params, vec![(0, vec![0, 5]), (5, b"new".to_vec())]);
-        assert_eq!(replace_svcb_param(&[0, 0, 0], 5, b"new"), Ok(None));
     }
 }

@@ -1,9 +1,9 @@
 use std::net::IpAddr;
 
-use crate::dns::wire::{TYPE_A, TYPE_AAAA};
+use crate::dns::wire::{TYPE_A, TYPE_AAAA, TYPE_HTTPS};
 use crate::{
     config,
-    dns::{self, Cidr, ResourceRecord},
+    dns::{self, Cidr},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,6 +75,11 @@ pub(crate) fn region_for(country: &str) -> Option<&'static config::RegionConfig>
     config::REGION_CONFIG
         .iter()
         .find(|region| region.name.eq_ignore_ascii_case(country))
+        .or_else(|| {
+            config::REGION_CONFIG
+                .iter()
+                .find(|region| region.name == "*")
+        })
 }
 
 #[must_use]
@@ -134,14 +139,15 @@ pub(crate) fn owner_for_ip(ip: IpAddr) -> Option<Owner> {
 
 #[must_use]
 pub(crate) fn owner_for_response(wire: &[u8], qtype: u16) -> Option<Owner> {
-    if !matches!(qtype, TYPE_A | TYPE_AAAA) {
-        return None;
-    }
-    let message = dns::parse_message(wire).ok()?;
+    let ips = match qtype {
+        TYPE_A | TYPE_AAAA => dns::proto::answer_ips(wire, qtype),
+        TYPE_HTTPS => dns::proto::https_hint_ips(wire),
+        _ => return None,
+    };
     let mut owner = None;
     let mut found = false;
-    for record in &message.answers {
-        let Some(ip) = ip_from_record(record) else {
+    for ip in ips {
+        let Some(ip) = ip_from_bytes(&ip) else {
             continue;
         };
         found = true;
@@ -159,15 +165,7 @@ pub(crate) fn owner_for_response(wire: &[u8], qtype: u16) -> Option<Owner> {
 
 #[must_use]
 pub(crate) fn ips_for_type(wire: &[u8], qtype: u16) -> Vec<Vec<u8>> {
-    let Ok(message) = dns::parse_message(wire) else {
-        return Vec::new();
-    };
-    message
-        .answers
-        .iter()
-        .filter(|record| record.rr_type == qtype)
-        .filter_map(|record| dns::extract_ip_bytes(record).map(ToOwned::to_owned))
-        .collect()
+    dns::proto::answer_ips(wire, qtype)
 }
 
 #[must_use]
@@ -176,7 +174,7 @@ pub(crate) fn is_blocked(ip: IpAddr) -> bool {
         if (range.family == 4 && !ip.is_ipv4()) || (range.family == 6 && !ip.is_ipv6()) {
             return false;
         }
-        config_cidr(range.address, range.prefix).is_some_and(|cidr| cidr.contains(ip))
+        config_cidr(range.address, range.prefix).is_some_and(|cidr| cidr.contains(&ip))
     })
 }
 
@@ -204,24 +202,16 @@ fn owner_in_ranges(ip: IpAddr, ranges: &[&str], owner: Owner) -> Option<Owner> {
     ranges
         .iter()
         .filter_map(|range| parse_cidr(range))
-        .any(|range| range.contains(ip))
+        .any(|range| range.contains(&ip))
         .then_some(owner)
 }
 
-fn ip_from_record(record: &ResourceRecord) -> Option<IpAddr> {
-    dns::extract_ip_bytes(record).and_then(ip_from_bytes)
-}
-
 fn parse_cidr(value: &str) -> Option<Cidr> {
-    let (address, prefix) = value.split_once('/')?;
-    config_cidr(address, prefix.parse().ok()?)
+    value.parse().ok()
 }
 
 fn config_cidr(address: &str, prefix: u8) -> Option<Cidr> {
-    Some(Cidr {
-        network: address.parse().ok()?,
-        prefix,
-    })
+    format!("{address}/{prefix}").parse().ok()
 }
 
 fn normalize_name(name: &str) -> String {
@@ -253,6 +243,23 @@ mod tests {
             Err(error) => panic!("test response must build: {error}"),
         };
         assert_eq!(owner_for_response(&body, TYPE_A), None);
+    }
+
+    #[test]
+    fn classifies_https_from_service_mode_hints() {
+        let service = vec![
+            0, 1, // priority = ServiceMode
+            0, // target = root
+            0, 4, // ipv4hint
+            0, 4, // length
+            1, 1, 1, 1,
+        ];
+        let body = crate::dns::build_response(1, "example.com", TYPE_HTTPS, &[service], 60, 0x8180);
+        let body = match body {
+            Ok(body) => body,
+            Err(error) => panic!("test HTTPS response must build: {error}"),
+        };
+        assert_eq!(owner_for_response(&body, TYPE_HTTPS), Some(Owner::Cf));
     }
 
     #[test]

@@ -222,7 +222,12 @@ async fn process_query_inner(
                 else {
                     return Ok(finish(ctx, primary.body, "unclassified"));
                 };
-                (owner, "response_ip")
+                let source = if query.question.qtype == dns::wire::TYPE_HTTPS {
+                    "response_hint"
+                } else {
+                    "response_ip"
+                };
+                (owner, source)
             }
         };
     ctx.owner = Some(owner.label().to_owned());
@@ -289,6 +294,27 @@ async fn process_query_inner(
     };
     update_upstreams(ctx, &trace);
 
+    let (remove_ipv4_hint, remove_ipv6_hint) =
+        hint_removal_policy(owner, source, region, query.question.qtype);
+    let body = if let Some(updated) =
+        response::normalize_https_hints(&body, remove_ipv4_hint, remove_ipv6_hint)?
+    {
+        ctx.optimization_applied = true;
+        logger::log_event(
+            ctx,
+            LogLevel::Info,
+            "https_hints_removed",
+            serde_json::json!({
+                "owner": owner.label(),
+                "ipv4": remove_ipv4_hint,
+                "ipv6": remove_ipv6_hint,
+            }),
+        );
+        updated
+    } else {
+        body
+    };
+
     let body = if region.ech && matches!(owner, classify::Owner::Cf | classify::Owner::Meta) {
         let output = ech::inject(
             &body,
@@ -308,6 +334,37 @@ async fn process_query_inner(
     let client_ecs = client_ecs(&query)?;
     let body = dns::normalize_response(&body, client_ecs.as_ref())?;
     Ok(finish(ctx, body, "completed"))
+}
+
+fn hint_removal_policy(
+    owner: classify::Owner,
+    classification_source: &str,
+    region: &config::RegionConfig,
+    qtype: u16,
+) -> (bool, bool) {
+    if qtype != dns::wire::TYPE_HTTPS {
+        return (false, false);
+    }
+
+    match owner {
+        classify::Owner::Cf if classification_source == "domain_remap" => {
+            (!region.preferred_cf.is_empty(), true)
+        }
+        classify::Owner::Cf => {
+            let enabled = !region.preferred_cf.is_empty();
+            (enabled, enabled)
+        }
+        classify::Owner::Cft => {
+            let enabled = !region.preferred_cft.is_empty();
+            (enabled, enabled)
+        }
+        classify::Owner::Vercel => {
+            let enabled = !region.preferred_vrc.is_empty();
+            (enabled, enabled)
+        }
+        classify::Owner::Meta => (true, true),
+        classify::Owner::Google => (false, false),
+    }
 }
 
 #[derive(Clone)]
