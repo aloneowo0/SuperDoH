@@ -35,7 +35,9 @@ Fork 仓库 → 在 Cloudflare 连接 GitHub（Workers Builds）
 4. 打开首页 **「配置」tab** → 图形向导选择上游、地区、ECH 等 → **生成 `superdoh.config.js`** → 下载 → 覆盖仓库根目录文件 → 提交
 5. **第二次部署自动触发** — `configured: 1`，Worker 进入正式运行模式
 
-> 也可本地部署：`npm install && npm run build && npm run deploy`（需 [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) 已登录）
+Workers Builds 的 **Build command** 使用 `npm run build`，**Deploy command** 使用 `npx wrangler versions upload`。构建脚本会在缺少工具链时自动安装固定版本的 Rust 1.88.0、rustfmt、`wasm32-unknown-unknown` 和 `worker-build` 0.8.5，然后生成配置并编译 Worker；部署阶段只上传已生成的产物。
+
+> 也可本地部署：`npm install && npm run build && npm run deploy`（需 [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) 已登录；Windows 请先自行安装 rustup）
 
 详细配置说明、API 端点、分流策略、架构等见 [DOCUMENTATION.md](DOCUMENTATION.md)。
 

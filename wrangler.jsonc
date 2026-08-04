@@ -3,9 +3,6 @@
   "name": "super-doh-rs",
   "main": "build/worker/shim.mjs",
   "compatibility_date": "2026-08-01",
-  "build": {
-    "command": "node scripts/build-config.cjs && cargo install -q worker-build@^0.8 && worker-build --release --no-panic-recovery"
-  },
   "observability": {
     "enabled": true
   }

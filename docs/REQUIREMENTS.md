@@ -226,7 +226,7 @@ remap Domain 命中的 AAAA **最终语义必须 NODATA**。如果"构建前删�
 ### 8.1 配置源(R2)
 
 - 仓库根目录 `superdoh.config.js`(JS 格式 `export default`,唯一人类可编辑源)
-- 构建流程:`npm run build`(构建脚本)→ 读取配置 → 生成 **Rust 版 config**(对应原版 `src/config.js` → `src/config.rs`)
+- 构建流程:`npm run build`→ 必要时准备固定 Rust 1.88.0/rustfmt/wasm32/worker-build 0.8.5 → 读取配置并生成 **Rust 版 config**(对应原版 `src/config.js` → `src/config.rs`)→ 编译 `build/worker/*`;Deploy command 只上传产物,不重复构建
 - 构建时远程抓取:GeoIP CIDR(8 类)、Cealing-Host Google 代理列表
 - `configured: 0/1` 双模式语义保留(0=首次配置模式,1=正式运行)
 

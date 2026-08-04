@@ -3,9 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-config.cjs",
+    "build": "node scripts/build-worker.cjs",
+    "build:config": "node scripts/build-config.cjs",
     "predeploy": "npm run build",
-    "deploy": "npx wrangler deploy",
-    "dev": "npx wrangler dev"
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "4.118.0"
   }
 }

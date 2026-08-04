@@ -24,6 +24,7 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 | `src/lib.rs` | ~60 | **Worker 入口**。`#[event(fetch)]` + Router:注册 `/`、`/en`、`/health`、`/config.json`、静态资源、`/dns-query`、兜底路由(伪装 fallback)。ENTRANCE 前缀剥离也在这 |
 | `src/config.rs` | ~700 | **构建生成物**(gitignored)。全部运行时常量:UPSTREAMS、FAST_TIMEOUT_MS=200、MIX_TIMEOUT_MS=200、TTL、ECS 前缀、GEOIP_* 八类 CIDR、REGION_CONFIG(remap/优选域名/ECH)、META_ECH_MAP、前端死参 |
 | `scripts/build-config.cjs` | ~660 | **构建脚本**(Node)。读 superdoh.config.js → 抓 GeoIP 8 类 + Cealing-Host → 生成 config.rs。configured 0/1 双模式,下载带 HTTPS/大小校验 |
+| `scripts/build-worker.cjs` | ~190 | **统一 Worker 构建入口**。缺失时引导安装 Rust 1.88.0、rustfmt、wasm32 target、worker-build 0.8.5，再生成 config.rs 并编译 `build/worker/*`；部署阶段不重复构建 |
 
 ## dns/ — 协议层(纯 Rust,无 worker 依赖)
 
