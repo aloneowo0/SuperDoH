@@ -20,6 +20,7 @@ use crate::{
 mod classify;
 mod ech;
 mod google;
+mod https;
 pub mod logger;
 mod meta;
 mod prefer;
@@ -196,6 +197,25 @@ async fn process_query_inner(
         return Ok(finish(ctx, body, "servfail"));
     };
     if primary.classification != Classification::Positive {
+        if primary.classification == Classification::Negative(dns::NegativeKind::NoData)
+            && query.question.qtype == dns::wire::TYPE_HTTPS
+            && let Some(region) = region
+            && let Some(body) = https::synthesize_nodata(
+                &primary.body,
+                &query,
+                region,
+                client_ip,
+                runtime_upstreams,
+                &trace,
+                ctx,
+            )
+            .await?
+        {
+            update_upstreams(ctx, &trace);
+            let client_ecs = client_ecs(&query)?;
+            let body = dns::normalize_response(&body, client_ecs.as_ref())?;
+            return Ok(finish(ctx, body, "completed"));
+        }
         return Ok(finish(ctx, primary.body, "negative"));
     }
     let Some(region) = region else {
@@ -319,7 +339,7 @@ async fn process_query_inner(
         let output = ech::inject(
             &body,
             &query,
-            owner,
+            ech::InjectionMode::Existing(owner),
             client_ip,
             runtime_upstreams,
             &trace,

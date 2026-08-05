@@ -26,16 +26,41 @@ thread_local! {
     static CF_ECH_CACHE: RefCell<Option<CachedEch>> = const { RefCell::new(None) };
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum InjectionMode {
+    Existing(Owner),
+    Synthesize { owner: Owner, ttl: u32 },
+}
+
+impl InjectionMode {
+    const fn owner(self) -> Owner {
+        match self {
+            Self::Existing(owner) | Self::Synthesize { owner, .. } => owner,
+        }
+    }
+
+    const fn synthesis_ttl(self) -> Option<u32> {
+        match self {
+            Self::Existing(_) => None,
+            Self::Synthesize { ttl, .. } => Some(ttl),
+        }
+    }
+}
+
 pub(crate) async fn inject(
     original: &[u8],
     query: &ParsedQuery,
-    owner: Owner,
+    mode: InjectionMode,
     client_ip: Option<std::net::IpAddr>,
     runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &UpstreamTrace,
     ctx: &mut RequestCtx,
 ) -> Result<Vec<u8>, PolicyError> {
-    if !dns::proto::has_https_service_mode(original) {
+    let owner = mode.owner();
+    let synthesize_ttl = mode.synthesis_ttl();
+    let has_service_mode = dns::proto::has_https_service_mode(original);
+    let can_synthesize = synthesize_ttl.is_some() && query.question.qtype == dns::wire::TYPE_HTTPS;
+    if !has_service_mode && !can_synthesize {
         logger::log_event(
             ctx,
             LogLevel::Debug,
@@ -53,21 +78,42 @@ pub(crate) async fn inject(
     let Some(ech) = ech else {
         return Ok(original.to_vec());
     };
-    let Some(updated) = inject_config(original, &ech)? else {
+
+    let updated = if has_service_mode {
+        inject_config(original, &ech)?
+    } else if let Some(ttl) = synthesize_ttl {
+        let rdata = dns::svcb::service_mode_with_ech(&ech)?;
+        Some(response::synthetic_https(query, rdata, ttl)?)
+    } else {
+        None
+    };
+    let Some(updated) = updated else {
         logger::log_event(
             ctx,
             LogLevel::Debug,
             "ech_skipped",
-            serde_json::json!({"owner": owner.label(), "reason": "no_safe_https_rr"}),
+            serde_json::json!({
+                "owner": owner.label(),
+                "reason": if synthesize_ttl.is_some() {
+                    "https_synthesis_unavailable"
+                } else {
+                    "no_safe_https_rr"
+                }
+            }),
         );
         return Ok(original.to_vec());
     };
     ctx.optimization_applied = true;
+    let synthesized = synthesize_ttl.is_some() && !has_service_mode;
     logger::log_event(
         ctx,
         LogLevel::Info,
-        "ech_injected",
-        serde_json::json!({"owner": owner.label()}),
+        if synthesized {
+            "https_synthesized"
+        } else {
+            "ech_injected"
+        },
+        serde_json::json!({"owner": owner.label(), "ech": true}),
     );
     Ok(updated)
 }

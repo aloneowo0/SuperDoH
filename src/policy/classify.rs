@@ -263,7 +263,7 @@ mod tests {
     }
 
     #[test]
-    fn meta_negative_responses_are_not_synthesized() {
+    fn meta_non_https_negative_responses_are_not_synthesized() {
         use crate::dns::wire::{CLASS_IN, serialize_message};
         use crate::dns::{
             Classification, Header, Message, NegativeKind, Question, build_response,

@@ -57,7 +57,8 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 | `policy/prefer.rs` | ~120 | **优选替换**(CF/CFT/Vercel)。fast 解析优选域名 + expectedOwner 验收 → 替换原始 IP(TTL 60) |
 | `policy/meta.rs` | ~180 | **Meta 增强**。mix 二次解析 + 静态路由表(EXACT 21 条 + WILDCARD 8 条)+ 去重 + owner/黑名单过滤 → IP 加入(TTL 300);无候选 → SERVFAIL 不伪造 |
 | `policy/google.rs` | ~80 | **Google 合并**。Cealing-Host 代理 IP 优先 + 真实 IP 兜底(去重,Happy Eyeballs best-effort) |
-| `policy/ech.rs` | ~250 | **ECH 注入**。CF 动态(cloudflare-ech.com 用 fast 获取 + 10min 缓存 + 1h stale)、Meta 按 META_ECH_MAP 查表;调用 dns::svcb 安全修改(仅 ServiceMode、不生成非法 RR) |
+| `policy/https.rs` | ~190 | **HTTPS NODATA 合成策略**。Domain 规则直接证明 owner；否则顺序执行 A/AAAA side probe，证据一致后仅允许 CF/有可靠映射的 Meta 进入合成，避免额外并发突破 Worker 6 连接限制 |
+| `policy/ech.rs` | ~270 | **ECH 增强/合成**。CF 动态(cloudflare-ech.com 用 fast 获取 + 10min 缓存 + 1h stale)、Meta 按 META_ECH_MAP 查表；已有 ServiceMode 安全修改，无 ServiceMode 时仅在 HTTPS NODATA 合成路径构造最小合法 ServiceMode |
 | `policy/remap.rs` | ~30 | **remap AAAA 屏蔽**。命中 remap 的 AAAA 语义必须 NODATA(更早短路) |
 | `policy/response.rs` | ~200 | **响应构建**。IP 替换(精确删被改 RRset 的 RRSIG + 清 AD)、合成响应按客户端 OPT/DO/CD 重建、65535 完整 RR 边界裁剪 + TC |
 | `policy/logger.rs` | ~130 | **结构化 JSON 日志**。requestId、事件、分级;qname 默认脱敏(debug 才完整);失败类型/上游记录 |

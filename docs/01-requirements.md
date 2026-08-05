@@ -39,8 +39,8 @@ flowchart TD
     G -->|Vercel| K[Vercel 优选]
 
     F --> H
-    H --> L[加入 ECH]
-    I --> M[加入 ECH]
+    H --> L[增强 / 合成 HTTPS<br/>加入 ECH]
+    I --> M[增强 / 合成 HTTPS<br/>加入 ECH]
 
     L --> N{带有 Domain 命中标记?}
     N -->|是| O[移除 AAAA 结果]
@@ -60,7 +60,7 @@ flowchart TD
 1. **Domain 归属优先于 IP 归属**:域名命中规则(remap 列表 / Google 代理规则 / Meta 域名规则)时不再做 IP 分类(Q21:Domain 分类补齐 Meta)
 2. **Domain 命中的 CF/X/Pixiv**(remap)→ 走 CF 分流(优选)+ **打"来自 Domain 命中"标记**
 3. **Domain 未命中** → 按响应 IP 归属分类:CF → CF 优选;Meta → **mix 二次解析后 IP 加入**;CFT → 优选;Vercel → Vercel 优选
-4. **CF 优选与 Meta IP 都进入 ECH 注入**(CF 动态 ECH / Meta 静态 ECH)
+4. **CF 优选与 Meta IP 都进入 HTTPS 增强 / 合成 + ECH**(CF 动态 ECH / Meta 静态 ECH):已有兼容 ServiceMode RR 时安全修改;没有 HTTPS RR 时允许在满足 HTTPS 合成条件后生成完整、合法的 ServiceMode HTTPS RR
 5. **"来自 Domain 命中"标记** → 构建包前**移除 AAAA 结果**(remap 域名屏蔽 v6)
 6. Google → 代理 IP 直接加入,不经过 ECH
 7. 所有路径汇聚 → 构建包 → 输出
@@ -74,7 +74,7 @@ flowchart TD
 | CF 优选 | `preferredAnswer`(解析 preferredCf) |
 | CFT / Vercel 优选 | `preferredAnswer`(preferredCft / preferredVrc) |
 | Meta IP 加入 | `metaResolve`(静态路由 + 收集)→ 新版:**mix 二次解析**(收集更多 Meta IP)+ IP 加入;Meta AAAA 正常增强(A/AAAA 对等,Q20) |
-| 加入 ECH | `injectECH`(CF 动态 / Meta 静态) |
+| HTTPS 增强 / 合成 + ECH | `injectECH`(CF 动态 / Meta 静态);新版扩展为已有 RR 安全修改 + 无 RR 时条件合成 |
 | 移除 AAAA | 原版为 remap 域名 AAAA 提前拦截 NODATA |
 
 **待确认差异点**:原版在请求入口提前拦截 remap AAAA;流程图改为"构建包前移除"。语义等价(remap 域名最终无 AAAA),Rust 版实现位置待定(可两者取一)。
@@ -139,9 +139,16 @@ flowchart TD
 
 config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`、`hardTimeoutMs`、`metaHardTimeoutMs`、`metaCollectWindowMs`、`metaMaxIps`、`preferredTimeoutMs`)在配置中**原样保留**(即使部分在新版流程中已无实际作用);`/config.json` 按前端契约返回全字段。前端零改动。
 
-### Q2. ECH 注入触发条件 ✅ 已回答
+### Q2. ECH 注入 / HTTPS 合成触发条件 ✅ 已回答;2026-08-05 修订
 
-**回答:可以**——流程走到"加入 ECH"节点即尝试注入:**响应里有 HTTPS(65)记录就注入,没有就跳过**(与 Q3"一样的流程"一致;不区分查询类型,统一尝试)。
+**最新裁决:去掉“必须已有 HTTPS RR”限制。**流程走到 HTTPS 增强节点时:
+
+1. **已有兼容 ServiceMode HTTPS(65) RR** → 在原 RR 上安全增强:保留可兼容参数,按地址策略同步处理 hints,加入/替换 ECH。
+2. **没有兼容 ServiceMode HTTPS RR**(包括标准 HTTPS NODATA) → 不再直接跳过;当 owner 能被明确证明且该 owner 有可靠 ECH 来源时,允许**合成完整、合法、可用的 ServiceMode HTTPS RR**。
+3. **NXDOMAIN 永不复活**;无法明确 owner、ECH 来源不可用、记录语义无法安全构造时均 fail-open,返回原始结果。
+4. 该能力属于地区优化 / ECH 策略;`configured:0`、`regions` 为空或未命中地区时仍不合成。
+
+“尽力 ECH”因此定义为:**能安全增强就增强;缺少 HTTPS RR 时能安全构造就构造;无法确认则保持原 DNS 语义。**
 
 ### Q2b. 设计原则:模仿正常 DNS 分发服务(已确认)
 
@@ -156,7 +163,7 @@ config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`�
 
 ### Q3. 非 A/AAAA 查询路径 ✅ 已回答
 
-**回答:非 A/AAAA 与 A/AAAA 走完全一样的流程、一样的优化**(统一走 R3 地区优化流程,不做区分)。即 HTTPS(65)查询同样经过 Domain/IP 归属判定 → 优选/替换 → 加入 ECH。
+**回答:非 A/AAAA 与 A/AAAA 走完全一样的流程、一样的优化**(统一走 R3 地区优化流程,不做区分)。即 HTTPS(65)查询同样经过 Domain/IP 归属判定 → 优选/替换 → HTTPS 增强或条件合成 → 加入 ECH。
 
 ### Q4. Google 分支语义 ✅ 已回答
 
@@ -259,7 +266,12 @@ nonexistent.facebook.com 命中 Meta 后缀但上游返回 NXDOMAIN,若仍进 mi
 
 **建议**:只有主查询得到与 QTYPE 匹配的语义正答案才执行地址优化;NXDOMAIN/NODATA 一律保留。
 
-**裁决**:**同意**。NXDOMAIN/NODATA 不得因为 Domain 命中、mix 或静态 IP 被"复活"。只有主查询存在可优化的正答案时才继续执行对应优化。
+**裁决(2026-08-05 修订)**:一般规则仍为 **NXDOMAIN/NODATA 不得被 Domain 命中、mix 或静态 IP 随意“复活”**;但增加一个严格限定的 **HTTPS NODATA 合成例外**:
+
+- **NXDOMAIN 永远保持 NXDOMAIN**,任何策略不得合成。
+- A/AAAA/其他 QTYPE 的 NODATA 仍保持 NODATA。
+- 仅当原请求为 **HTTPS(65)**、名称存在但没有兼容 ServiceMode RR、owner 有明确证据且有可靠 ECH 来源时,策略层可把 HTTPS NODATA 转为合成的正 HTTPS RR。
+- 合成前若原负响应含 SOA / NSEC / NSEC3 / RRSIG 等“HTTPS 不存在”证明,最终响应不得保留与新正 RRset 矛盾的否定证明;必须清 AD,删除失效签名/否定证明并按客户端 OPT/DO/CD 正确重建。
 
 ### Q16. preferred 与 CF ECH 需在 fast 胜出前执行专用验收(🟡 高)
 
@@ -291,7 +303,15 @@ priority 0 AliasMode 记录注入 ECH 无效(客户端忽略 SvcParams);原始 i
 
 **建议**:AliasMode 只跟随目标不添参数;只改兼容的 ServiceMode 记录;替换 A/AAAA 时同步重写/移除对应 hints 并更新 mandatory;保留未知 SvcParam/顺序,解析失败原样返回。
 
-**裁决**:HTTPS RR 按 DNS/SVCB/HTTPS 规范正确处理 AliasMode、ServiceMode、mandatory、hints、ECH。**不允许为了优化生成非法 RR**。无法安全修改时该项 no-op / 保留原数据。
+**裁决(2026-08-05 修订)**:HTTPS RR 按 DNS/SVCB/HTTPS 规范正确处理 AliasMode、ServiceMode、mandatory、hints、ECH。**不允许为了优化生成非法 RR**。同时允许在 Q2 的 HTTPS 合成条件成立时，从无兼容 ServiceMode RR 的响应中构造新的 ServiceMode RR，规则如下:
+
+- **AliasMode 不直接塞 SvcParams**;若响应存在 CNAME/Alias 链,先确定最终有效 owner/target,合成 RR 必须放在协议上允许承载 ServiceMode 的名称上,不得与 CNAME 所在 owner 冲突。
+- 合成记录默认 `SvcPriority=1`、`TargetName=.`;`.` 的有效目标即该 RR owner。
+- `ech` 只来自已验证的 owner 对应来源(CF 动态 / Meta 映射),不得跨 owner 复用。
+- **不凭空宣称未知能力**:没有可信来源时不伪造 `alpn`、`port`、`no-default-alpn` 或未知 SvcParam。无 `alpn` 时按 HTTPS/SVCB 标准默认 ALPN 语义处理。
+- 合成 RR 默认**不携带 `ipv4hint` / `ipv6hint`**;地址继续由 SuperDoH 的 A/AAAA 地区优化路径提供,避免 hints 绕过 preferred/remap 策略。若未来要写入 hints,必须来自同一轮已确认的优化地址并遵守对应 AAAA 屏蔽策略。
+- `mandatory` 仅在真实需要时生成,且必须与实际存在的 SvcParam 完全一致;不得出现空 mandatory 或引用不存在 key。
+- 无法构造自洽 ServiceMode 时 fail-open / 保留原数据。
 
 ### Q20. Meta AAAA 跟随类型缺"可达性"依据(🟡 高)
 
@@ -305,9 +325,22 @@ mix 跟随原类型收集公共 Meta IPv6 会恢复原版刻意禁用的 v6,而�
 
 Domain 对照表含 isMetaDomain,但流程图 Domain 类型只有 Google 和 CF/X/Pixiv——Meta HTTPS 无普通 IP Answer 时无法进 Meta 分支;且 Q3"所有类型→加入 ECH"与流程图只有 CF/Meta 进 ECH 冲突(CFT/Vercel/UNKNOWN 无 ECH 来源)。
 
-**建议**:明确 Domain 分支为 Google/CF-remap/Meta/unmatched;ECH 仅 region.ech=true 且 owner 为 CF/Meta 且有兼容 ServiceMode 记录;CFT/Vercel/UNKNOWN 跳过。
+**建议(历史)**:明确 Domain 分支为 Google/CF-remap/Meta/unmatched;ECH 仅 region.ech=true 且 owner 为 CF/Meta 且有兼容 ServiceMode 记录;CFT/Vercel/UNKNOWN 跳过。
 
-**裁决**:**Domain 分类补齐 Meta**。Domain 命中 Meta 时进入 Meta 对应策略,不应因为 HTTPS 没有普通 A/AAAA Answer 就无法识别 Meta。ECH 是否执行仍取决于对应策略是否有 ECH 来源;不能理解成"所有 QTYPE / 所有 owner 都强行注入 ECH"。
+**裁决(2026-08-05 补充)**:**Domain 分类补齐 Meta**。Domain 命中 Meta 时进入 Meta 对应策略。ECH/HTTPS 合成仍只对有可靠 ECH 来源的 owner 执行,不能理解成“所有 QTYPE / 所有 owner 都强行注入 ECH”。
+
+对于 **HTTPS 响应无 ServiceMode/hints** 且 Domain 规则未直接确定 owner 的情况,为支持完整 HTTPS 合成,允许策略层进行**专用 side A/AAAA owner probe**:
+
+- side probe 只用于 HTTPS 合成的 owner 证明与地址事实获取,不是 fast/mix 算法的一部分,也不得递归触发 HTTPS 合成。
+- A/AAAA 结果必须得到单一、明确 owner;混合 owner、未知 owner、查询失败均不合成。
+- Domain 明确命中(remap/Meta 映射等)时不需要 side probe。
+- CFT/Vercel/UNKNOWN 当前没有 ECH 来源,即使 probe 能分类也不为 ECH 目的合成 HTTPS RR。
+
+**合成 TTL 补充(2026-08-05)**:
+
+- CF 合成 HTTPS RR TTL 上限 **60s**,且不得超过当前动态 ECHConfig 的有效期/stale 截止时间。
+- Meta 合成 HTTPS RR TTL 上限 **300s**,受静态 ECH 映射自身维护/失效策略约束。
+- 合成 HTTPS RR 不得比其关键 ECH/地址依据缓存得更久;有效期无法可靠确定时取更短 TTL。
 
 ### Q22. Meta 静态 ECH 不能安全注入所有 Meta 后缀(🟡 高)
 

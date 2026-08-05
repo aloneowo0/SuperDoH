@@ -22,35 +22,48 @@ pub(crate) fn servfail(query: &ParsedQuery, text: &str) -> Result<Vec<u8>, Polic
     synthetic_response(query, 2, 0, Some(text))
 }
 
+pub(crate) fn synthetic_https(
+    query: &ParsedQuery,
+    rdata: Vec<u8>,
+    ttl: u32,
+) -> Result<Vec<u8>, PolicyError> {
+    if query.question.qtype != dns::wire::TYPE_HTTPS {
+        return Err(PolicyError::Build(
+            "synthetic HTTPS response requires an HTTPS question",
+        ));
+    }
+
+    let additionals = mirrored_opt(query, None)?;
+    let message = Message {
+        header: Header {
+            id: query.id,
+            flags: reply_flags(query, 0),
+            qd_count: 1,
+            an_count: 1,
+            ns_count: 0,
+            ar_count: u16::from(additionals.is_some()),
+        },
+        questions: vec![query.question.clone()],
+        answers: vec![ResourceRecord {
+            name: query.question.name.clone(),
+            rr_type: dns::wire::TYPE_HTTPS,
+            class: CLASS_IN,
+            ttl,
+            rdata,
+        }],
+        authorities: vec![],
+        additionals: additionals.into_iter().collect(),
+    };
+    serialize_response(&message)
+}
+
 fn synthetic_response(
     query: &ParsedQuery,
     rcode: u16,
     _ttl: u32,
     ede_text: Option<&str>,
 ) -> Result<Vec<u8>, PolicyError> {
-    let additionals = query
-        .edns
-        .as_ref()
-        .map(|opt| {
-            let mut rdata = Vec::new();
-            if let Some(text) = ede_text {
-                let mut ede = crate::config::SERVFAIL_EDE_CODE.to_be_bytes().to_vec();
-                ede.extend_from_slice(text.as_bytes());
-                let ede_length = u16::try_from(ede.len())
-                    .map_err(|_| PolicyError::Build("EDE text too long"))?;
-                rdata.extend_from_slice(&15_u16.to_be_bytes());
-                rdata.extend_from_slice(&ede_length.to_be_bytes());
-                rdata.extend_from_slice(&ede);
-            }
-            Ok::<ResourceRecord, PolicyError>(ResourceRecord {
-                name: String::new(),
-                rr_type: dns::wire::TYPE_OPT,
-                class: opt.udp_payload,
-                ttl: (u32::from(opt.version) << 16) | if opt.do_bit { 0x8000 } else { 0 },
-                rdata,
-            })
-        })
-        .transpose()?;
+    let additionals = mirrored_opt(query, ede_text)?;
     let message = Message {
         header: Header {
             id: query.id,
@@ -66,6 +79,35 @@ fn synthetic_response(
         additionals: additionals.into_iter().collect(),
     };
     serialize_response(&message)
+}
+
+fn mirrored_opt(
+    query: &ParsedQuery,
+    ede_text: Option<&str>,
+) -> Result<Option<ResourceRecord>, PolicyError> {
+    query
+        .edns
+        .as_ref()
+        .map(|opt| {
+            let mut rdata = Vec::new();
+            if let Some(text) = ede_text {
+                let mut ede = crate::config::SERVFAIL_EDE_CODE.to_be_bytes().to_vec();
+                ede.extend_from_slice(text.as_bytes());
+                let ede_length = u16::try_from(ede.len())
+                    .map_err(|_| PolicyError::Build("EDE text too long"))?;
+                rdata.extend_from_slice(&15_u16.to_be_bytes());
+                rdata.extend_from_slice(&ede_length.to_be_bytes());
+                rdata.extend_from_slice(&ede);
+            }
+            Ok(ResourceRecord {
+                name: String::new(),
+                rr_type: dns::wire::TYPE_OPT,
+                class: opt.udp_payload,
+                ttl: (u32::from(opt.version) << 16) | if opt.do_bit { 0x8000 } else { 0 },
+                rdata,
+            })
+        })
+        .transpose()
 }
 
 pub(crate) fn replace_ips(
@@ -416,6 +458,42 @@ mod tests {
             Err(error) => panic!("SERVFAIL must parse: {error}"),
         };
         assert!(failure.additionals.is_empty());
+    }
+
+    #[test]
+    fn synthetic_https_is_positive_and_contains_only_the_new_rrset() {
+        let mut request = query();
+        request.question.qtype = dns::wire::TYPE_HTTPS;
+        request.edns = Some(crate::dns::OptRecord {
+            udp_payload: 1232,
+            extended_rcode: 0,
+            version: 0,
+            do_bit: true,
+            options: vec![],
+        });
+        let ech = [0, 5, 0xfe, 0x0d, 0, 1, 1];
+        let rdata = match dns::svcb::service_mode_with_ech(&ech) {
+            Ok(value) => value,
+            Err(error) => panic!("synthetic HTTPS RDATA must build: {error}"),
+        };
+        let wire = match synthetic_https(&request, rdata, 60) {
+            Ok(value) => value,
+            Err(error) => panic!("synthetic HTTPS response must build: {error}"),
+        };
+        let parsed = match parse_message(&wire) {
+            Ok(value) => value,
+            Err(error) => panic!("synthetic HTTPS response must parse: {error}"),
+        };
+        assert_eq!(parsed.header.flags & FLAG_AD, 0);
+        assert!(parsed.authorities.is_empty());
+        assert_eq!(parsed.answers.len(), 1);
+        assert_eq!(parsed.answers[0].rr_type, dns::wire::TYPE_HTTPS);
+        assert_eq!(parsed.answers[0].ttl, 60);
+        assert_eq!(
+            dns::svcb::ech_config(&parsed.answers[0].rdata),
+            Ok(Some(ech.to_vec()))
+        );
+        assert_eq!(parsed.additionals.len(), 1);
     }
 
     #[test]

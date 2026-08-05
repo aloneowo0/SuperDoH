@@ -58,7 +58,7 @@ flowchart TD
     G -->|Vercel| K[Vercel 优选]
 
     F --> H
-    H --> L[尝试注入 ECH]
+    H --> L[增强 / 合成 HTTPS<br/>尝试注入 ECH]
     I --> L
 
     L --> N{带有 Domain 命中标记?}
@@ -89,7 +89,7 @@ flowchart TD
 1. **Domain 归属优先于 IP 归属**:域名命中规则(remap 列表 / Google 代理规则 / Meta 域名规则)时不再做 IP 分类
 2. **Domain 命中的 CF/X/Pixiv**(remap)→ CF 优选 + 打"来自 Domain 命中"标记
 3. **Domain 未命中** → 按响应 IP 归属分类:CF → CF 优选;Meta → mix 二次解析后 IP 加入;CFT → 优选;Vercel → Vercel 优选
-4. **ECH 注入**:走到"尝试注入 ECH"节点即尝试——响应里有 HTTPS(65)记录就注入,没有就跳过(Q2);是否执行取决于对应策略是否有 ECH 来源(CF 动态 / Meta 静态),不是所有 owner 都强行注入(Q21)
+4. **HTTPS 增强 / 合成 + ECH**:已有兼容 ServiceMode HTTPS(65) RR 时安全修改并注入;没有兼容 ServiceMode RR(含 HTTPS NODATA)时,若 owner 可被明确证明且有可靠 ECH 来源,允许合成完整合法的 ServiceMode HTTPS RR;NXDOMAIN、owner 不明确或 ECH 不可用时保持原结果(Q2/Q15/Q19/Q21)
 5. **remap AAAA 屏蔽**:带有"来自 Domain 命中"标记的 AAAA,最终语义必须 NODATA(Q14)
 6. Google → 代理 IP + 真实 IP 合并,不经过 ECH
 7. 所有路径汇聚 → 构建包 → 输出
@@ -148,7 +148,7 @@ Domain 分类补齐 Meta(Q21):Domain 命中 Meta 时进入 Meta 策略,不应因
 
 按响应 IP 归属分类(CF / Meta / CFT / Vercel / 其他)。**混合 owner 或无法明确 owner 时,默认不做基于 IP owner 的整体替换**(Q17);Domain 明确命中的强制规则不受此限制。
 
-HTTPS(65) 响应没有普通 A/AAAA Answer 时,可直接使用其 ServiceMode `ipv4hint` / `ipv6hint` 作为响应内 IP 归属依据(Q11/Q19);AliasMode、无 hints、混合 owner 或无法明确归属时不做基于 IP owner 的自动分类,不额外引入 side A/AAAA 探测。
+HTTPS(65) 响应没有普通 A/AAAA Answer 时,优先使用其 ServiceMode `ipv4hint` / `ipv6hint` 作为响应内 IP 归属依据(Q11/Q19)。若没有兼容 ServiceMode/hints 且 Domain 规则也无法直接确定 owner,为 HTTPS 合成允许策略层执行**专用 side A/AAAA owner probe**:仅用于证明 owner / 获取地址事实,不得递归触发 HTTPS 合成;只有 A/AAAA 证据得到单一明确 owner 时才继续,混合/未知/失败则不合成(Q21 修订)。
 
 ### 6.3 优选替换(CF / CFT / Vercel)
 
@@ -169,16 +169,21 @@ HTTPS(65) 响应没有普通 A/AAAA Answer 时,可直接使用其 ServiceMode `i
 - **合并 + Happy Eyeballs**:Cealing-Host 代理 IP 优先 + 真实 IP 兜底合并(Q4)
 - 代理 IP 排前只作为 **best-effort**,不承诺客户端一定按 RR wire 顺序连接(Q26)
 
-### 6.6 ECH 注入
+### 6.6 HTTPS 增强 / 合成与 ECH
 
 | 来源 | 说明 |
 |---|---|
 | CF 动态 | `cloudflare-ech.com` HTTPS RR 查询(用 fast);缓存 10min + 1h stale 兜底(Q10 #9),失效策略可配置(Q22) |
 | Meta 静态 | 独立策略配置;ECHConfig 与域名的映射做成**可配置/可维护数据,不写死进通用算法**(Q22) |
 
-- HTTPS RR 按 DNS/SVCB/HTTPS 规范正确处理 AliasMode、ServiceMode、mandatory、hints、ECH;**不允许为了优化生成非法 RR**;无法安全修改时 no-op / 保留原数据(Q19)
-- 当地区 A/AAAA 地址策略会改变实际连接目标时,HTTPS ServiceMode 中对应的 `ipv4hint` / `ipv6hint` 必须同步重写或移除,避免客户端绕过优选或 remap AAAA 屏蔽。当前实现选择**移除对应 hints 并同步维护 mandatory**,让客户端回到既有 A/AAAA 优化路径,不为 HTTPS 额外增加 side A/AAAA lookup(Q19/Q24)
-- 走到注入节点即尝试:有 HTTPS 记录就注入,没有就跳过(Q2)
+- **已有 ServiceMode**:按 DNS/SVCB/HTTPS 规范正确处理 AliasMode、ServiceMode、mandatory、hints、ECH;保留兼容参数并安全加入/替换 ECH;无法安全修改时 no-op / 保留原数据(Q19)
+- 当地区 A/AAAA 地址策略会改变实际连接目标时,HTTPS ServiceMode 中对应的 `ipv4hint` / `ipv6hint` 必须同步重写或移除,避免客户端绕过优选或 remap AAAA 屏蔽。已有 ServiceMode 的 hints 维护本身**不额外增加 side A/AAAA lookup**;HTTPS 合成所需的专用 owner probe 是 Q21 修订定义的独立步骤(Q19/Q21/Q24)
+- **无兼容 ServiceMode / HTTPS NODATA**:不再直接跳过。仅在 `region.ech=true`、owner 明确且存在可靠 ECH 来源时允许合成 HTTPS ServiceMode(Q2 修订)。
+- **负响应边界**:NXDOMAIN 永不合成;一般 NODATA 不复活。仅 HTTPS(65) NODATA 可在上述严格条件下转为正 HTTPS RR。若原响应含 SOA/NSEC/NSEC3/RRSIG 等否定证明,合成后删除与新 RRset 矛盾的否定证明/失效签名并清 AD,按客户端 OPT/DO/CD 重建(Q15 修订)。
+- **合成 RR 基线**(Q19 修订):`SvcPriority=1`,`TargetName=.`;若存在 CNAME/Alias 链,在最终协议允许的 owner 上合成,不得与 CNAME 同 owner 冲突。
+- **SvcParams 最小可信原则**:必须包含经 owner 策略验证的 `ech`;没有可信来源时不伪造 `alpn`、`port`、`no-default-alpn` 或未知参数。无 `alpn` 时使用 HTTPS/SVCB 标准默认 ALPN 语义。`mandatory` 只在实际需要时生成并保持自洽。
+- **合成 RR 默认不写 IP hints**:`ipv4hint` / `ipv6hint` 由 A/AAAA 地区优化路径替代,避免绕过 preferred/remap AAAA 策略。未来若写 hints,必须来自同一轮已确认的优化地址并符合地址族策略。
+- **fail-open**:owner 不明确、ECH 获取/映射失败、ServiceMode 无法自洽构造时不合成,返回原始 DNS 结果。
 
 ### 6.7 remap AAAA 屏蔽(Q14)
 
@@ -208,11 +213,20 @@ remap Domain 命中的 AAAA **最终语义必须 NODATA**。如果"构建前删�
 ### 7.3 RCODE 与负响应(Q12 / Q15)
 
 - fast 区分 positive / negative / invalid;负响应可暂存兜底
-- **NXDOMAIN/NODATA 不得因为 Domain 命中、mix 或静态 IP 被"复活"**;只有主查询存在可优化的正答案时才继续优化
+- **NXDOMAIN 永不被优化策略复活**。
+- A/AAAA/其他 QTYPE 的 NODATA 保持 NODATA。
+- **唯一例外是 HTTPS(65) NODATA 合成**:名称存在、owner 有明确证据、地区 ECH 策略启用且对应 ECH 来源可用时,可按 6.6 合成正 HTTPS ServiceMode RR;否则保持原负响应。
+- HTTPS NODATA 转正后不得保留与新 HTTPS RRset 冲突的 SOA/NSEC/NSEC3/RRSIG 否定证明;清 AD 并按客户端 EDNS/DNSSEC 状态重建。
 
 ### 7.4 TTL(Q27)
 
-已确认策略 TTL:**mix 300,preferred 60**(不因 review 改变)。实现层可在不改变策略上限的前提下,规范处理明显超出源数据有效期的异常缓存行为。
+已确认地址策略 TTL:**mix 300,preferred 60**(不因 review 改变)。实现层可在不改变策略上限的前提下,规范处理明显超出源数据有效期的异常缓存行为。
+
+HTTPS 合成新增 TTL 规则:
+
+- CF 合成 HTTPS RR 的 TTL 上限为 **60s**,并且不得超过当前所用动态 ECHConfig 的剩余有效期;使用 stale ECH 时也不得超过 stale 截止时间。
+- Meta 合成 HTTPS RR 的 TTL 上限为 **300s**,同时受对应静态 ECH 映射自身的维护/失效策略约束。
+- 若无法得到可信的 ECH 有效期边界,使用更短 TTL 而不是延长缓存;不得让合成 HTTPS RR 比其关键 ECH/地址依据活得更久。
 
 ### 7.5 响应构建(Q25 / Q28)
 

@@ -3,7 +3,7 @@
 use hickory_proto::{
     op::Message,
     rr::{
-        RData,
+        Name, RData,
         rdata::svcb::{EchConfigList, Mandatory, SVCB, SvcParamKey, SvcParamValue},
     },
     serialize::binary::BinEncodable,
@@ -12,6 +12,31 @@ use hickory_proto::{
 use super::wire::{DnsError, Result, TYPE_HTTPS};
 
 pub const PARAM_ECH: u16 = 5;
+
+/// Builds a minimal RFC 9460 `ServiceMode` HTTPS RDATA carrying only ECH.
+///
+/// Priority 1 plus a root target means the owner name is the effective service target. Optional
+/// ALPN, port and address hints are intentionally omitted rather than guessed.
+///
+/// # Errors
+///
+/// Returns an error when ECH is empty or the resulting HTTPS RDATA cannot be encoded.
+pub fn service_mode_with_ech(ech: &[u8]) -> Result<Vec<u8>> {
+    if ech.is_empty() {
+        return Err(DnsError::new("SVCB ECH parameter is empty"));
+    }
+
+    SVCB::new(
+        1,
+        Name::root(),
+        vec![(
+            SvcParamKey::from(PARAM_ECH),
+            SvcParamValue::EchConfigList(EchConfigList(ech.to_vec())),
+        )],
+    )
+    .to_bytes()
+    .map_err(|error| DnsError::new(error.to_string()))
+}
 
 /// Validates and canonicalizes HTTPS/SVCB RDATA through Hickory.
 pub(crate) fn canonicalize(rdata: &[u8]) -> Result<Vec<u8>> {
@@ -170,6 +195,23 @@ mod tests {
 
         let alias = [0, 0, 1, b'x', 0];
         assert_eq!(replace_ech(&alias, &ech), Ok(None));
+    }
+
+    #[test]
+    fn builds_minimal_service_mode_with_ech() {
+        let ech = [0, 5, 0xfe, 0x0d, 0, 1, 1];
+        let rdata = match service_mode_with_ech(&ech) {
+            Ok(value) => value,
+            Err(error) => panic!("synthetic ServiceMode must encode: {error}"),
+        };
+        let parsed = match parse_https_rdata(&rdata) {
+            Ok(value) => value,
+            Err(error) => panic!("synthetic ServiceMode must parse: {error}"),
+        };
+        assert_eq!(parsed.svc_priority, 1);
+        assert_eq!(parsed.target_name, Name::root());
+        assert_eq!(ech_config(&rdata), Ok(Some(ech.to_vec())));
+        assert_eq!(parsed.svc_params.len(), 1);
     }
 
     #[test]
