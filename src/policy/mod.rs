@@ -1,21 +1,12 @@
 //! DNS policy orchestration for the Worker runtime.
 
-use core::fmt;
-use core::time::Duration;
-
-use futures_util::{
-    future::{Either, LocalBoxFuture, select},
-    pin_mut,
-};
-use worker::{AbortController, Fetch, Headers, Method, Request, RequestInit};
-
 use crate::dns::wire::{CLASS_IN, TYPE_A, TYPE_AAAA};
 use crate::{
-    algo::{self, DeadlineTimer, QueryOutcome, Upstream, fast::FastOptions, mix::MixOptions},
     config,
     dns::{self, Classification, Question},
     http::RuntimeUpstream,
 };
+use core::fmt;
 
 mod classify;
 mod ech;
@@ -387,106 +378,6 @@ fn hint_removal_policy(
     }
 }
 
-#[derive(Clone)]
-struct RuntimeWorkerUpstream<'a> {
-    config: &'a RuntimeUpstream,
-    expected: Question,
-    query_id: u16,
-    client_ip: Option<std::net::IpAddr>,
-    client_sent_ecs: bool,
-    blocked: Vec<dns::Cidr>,
-}
-
-impl<'a> RuntimeWorkerUpstream<'a> {
-    fn new(
-        config: &'a RuntimeUpstream,
-        query: &ParsedQuery,
-        client_ip: Option<std::net::IpAddr>,
-    ) -> Self {
-        Self {
-            config,
-            expected: query.question.clone(),
-            query_id: query.id,
-            client_ip,
-            client_sent_ecs: query.client_sent_ecs,
-            blocked: classify::blocked_cidrs(),
-        }
-    }
-}
-
-impl Upstream for RuntimeWorkerUpstream<'_> {
-    type Error = PolicyError;
-    type Query<'a>
-        = LocalBoxFuture<'a, Result<QueryOutcome, Self::Error>>
-    where
-        Self: 'a;
-
-    fn query<'a>(
-        &'a self,
-        body: &'a [u8],
-        cancellation: algo::CancellationToken,
-    ) -> Self::Query<'a> {
-        let client_ecs = if self.client_sent_ecs {
-            dns::query_ecs(body).map_err(PolicyError::from)
-        } else {
-            Ok(None)
-        };
-        let body = prepare_runtime_upstream_query(body, self.config.ecs, self.client_ip);
-        let expected = self.expected.clone();
-        let query_id = self.query_id;
-        let blocked = self.blocked.clone();
-        let url = self.config.url.clone();
-
-        Box::pin(async move {
-            let body = body?;
-            let client_ecs = client_ecs?;
-            let request = runtime_dns_request(&url, &body)?;
-            let controller = AbortController::default();
-            let signal = controller.signal();
-            let fetch = Fetch::Request(request);
-            let operation = async move {
-                let mut response = fetch
-                    .send_with_signal(&signal)
-                    .await
-                    .map_err(|error| PolicyError::Transport(error.to_string()))?;
-                if response.status_code() != 200 {
-                    return Err(PolicyError::Transport(
-                        "DNS upstream returned non-200 status".to_owned(),
-                    ));
-                }
-                response
-                    .bytes()
-                    .await
-                    .map_err(|error| PolicyError::Transport(error.to_string()))
-            };
-            let cancelled = cancellation.cancelled();
-            pin_mut!(operation, cancelled);
-            let response_body = match select(operation, cancelled).await {
-                Either::Left((result, _)) => result?,
-                Either::Right(((), _)) => {
-                    controller.abort();
-                    return Err(PolicyError::Cancelled);
-                }
-            };
-            let response_body = dns::normalize_response(&response_body, client_ecs.as_ref())?;
-            let classification =
-                dns::classify_response(&response_body, query_id, &expected, &blocked);
-            Ok(QueryOutcome::new(response_body, classification))
-        })
-    }
-}
-
-#[derive(Clone, Copy)]
-struct RuntimeWorkerTimer;
-
-impl DeadlineTimer for RuntimeWorkerTimer {
-    type Wait = worker::Delay;
-
-    fn wait(&self, duration: Duration) -> Self::Wait {
-        worker::Delay::from(duration)
-    }
-}
-
 async fn fast_query<F>(
     body: &[u8],
     query: &ParsedQuery,
@@ -495,21 +386,17 @@ async fn fast_query<F>(
     runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &upstream::UpstreamTrace,
     accept: F,
-) -> Option<QueryOutcome>
+) -> Option<crate::algo::QueryOutcome>
 where
-    F: Fn(&QueryOutcome) -> bool,
+    F: Fn(&crate::algo::QueryOutcome) -> bool,
 {
-    let Some(runtime_upstreams) = runtime_upstreams else {
-        return upstream::fast_query(body, query, client_ip, foreign_only, trace, accept).await;
-    };
-    let upstreams = configured_runtime_upstreams(runtime_upstreams, query, client_ip, foreign_only);
-    algo::fast::race(
-        &upstreams,
+    upstream::fast_query(
         body,
-        FastOptions {
-            deadline: Duration::from_millis(u64::from(config::FAST_TIMEOUT_MS)),
-        },
-        &RuntimeWorkerTimer,
+        query,
+        client_ip,
+        foreign_only,
+        runtime_upstreams,
+        trace,
         accept,
     )
     .await
@@ -522,67 +409,7 @@ async fn mix_query(
     runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &upstream::UpstreamTrace,
 ) -> Vec<Vec<u8>> {
-    let Some(runtime_upstreams) = runtime_upstreams else {
-        return upstream::mix_query(body, query, client_ip, trace).await;
-    };
-    let upstreams = configured_runtime_upstreams(runtime_upstreams, query, client_ip, false);
-    algo::mix::collect(
-        &upstreams,
-        body,
-        MixOptions {
-            deadline: Duration::from_millis(u64::from(config::MIX_TIMEOUT_MS)),
-        },
-        &RuntimeWorkerTimer,
-    )
-    .await
-}
-
-fn configured_runtime_upstreams<'a>(
-    runtime_upstreams: &'a [RuntimeUpstream],
-    query: &ParsedQuery,
-    client_ip: Option<std::net::IpAddr>,
-    foreign_only: bool,
-) -> Vec<RuntimeWorkerUpstream<'a>> {
-    let maximum = if config::AUTO_CONCURRENCY == 0 {
-        runtime_upstreams.len()
-    } else {
-        config::AUTO_CONCURRENCY.min(runtime_upstreams.len())
-    };
-    runtime_upstreams
-        .iter()
-        .filter(|upstream| !foreign_only || is_foreign_runtime_upstream(&upstream.name))
-        .take(maximum)
-        .map(|upstream| RuntimeWorkerUpstream::new(upstream, query, client_ip))
-        .collect()
-}
-
-fn is_foreign_runtime_upstream(name: &str) -> bool {
-    name != "dnspod" && name != "alidns"
-}
-
-fn prepare_runtime_upstream_query(
-    body: &[u8],
-    use_ecs: bool,
-    client_ip: Option<std::net::IpAddr>,
-) -> Result<Vec<u8>, PolicyError> {
-    if use_ecs {
-        dns::prepare_query(body, client_ip, config::ECS_PREFIX4, config::ECS_PREFIX6)
-            .map_err(PolicyError::from)
-    } else {
-        dns::remove_ecs(body).map_err(PolicyError::from)
-    }
-}
-
-fn runtime_dns_request(url: &str, body: &[u8]) -> Result<Request, PolicyError> {
-    let headers = Headers::new();
-    headers
-        .set("content-type", "application/dns-message")
-        .map_err(|error| PolicyError::Transport(error.to_string()))?;
-    let mut init = RequestInit::new();
-    init.with_method(Method::Post).with_headers(headers);
-    let bytes = worker::js_sys::Uint8Array::from(body);
-    init.with_body(Some(bytes.into()));
-    Request::new_with_init(url, &init).map_err(|error| PolicyError::Transport(error.to_string()))
+    upstream::mix_query(body, query, client_ip, runtime_upstreams, trace).await
 }
 
 fn begin_request(ctx: &mut RequestCtx, client_country: &str) {
@@ -697,36 +524,5 @@ mod tests {
         let parsed = parse_query(&query("use-application-dns.net", TYPE_A));
         assert!(parsed.is_ok());
         assert!(parsed.is_ok_and(|value| is_doh_canary(&value)));
-    }
-
-    #[test]
-    fn selects_custom_upstreams_for_fast_and_mix_races() {
-        let parsed = match parse_query(&query("example.com", TYPE_A)) {
-            Ok(parsed) => parsed,
-            Err(error) => panic!("test query must parse: {error}"),
-        };
-        let mut upstreams = config::UPSTREAMS
-            .iter()
-            .map(|upstream| RuntimeUpstream {
-                name: upstream.name.to_owned(),
-                url: upstream.url.to_owned(),
-                ecs: upstream.ecs,
-            })
-            .collect::<Vec<_>>();
-        upstreams.insert(
-            0,
-            RuntimeUpstream {
-                name: "custom".to_owned(),
-                url: "https://resolver.example/dns-query".to_owned(),
-                ecs: true,
-            },
-        );
-
-        let selected = configured_runtime_upstreams(&upstreams, &parsed, None, false);
-        assert!(
-            selected
-                .iter()
-                .any(|upstream| upstream.config.name == "custom")
-        );
     }
 }

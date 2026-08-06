@@ -85,11 +85,42 @@ flowchart TD
 
 原 AUTO 1 竞速阶段,重新设计并**改名为 `fast`(曾暂名 mix)**:
 
-- **单纯竞速**:所有上游并发查询,谁先返回有效结果用谁——**无 ECS 保护窗、无暂存、无排序**(原版 `ecsProtectMs` 保护窗逻辑删除)
-- **硬超时 200ms**:超时后无有效结果的处理逻辑待定(原版:servfail + EDE 22;原定 800ms 已改为 200ms)
+- **单纯竞速**:全部启用上游作为候选,按 `upstreamConcurrency` 滑动窗口查询,谁先返回有效结果用谁——**无 ECS 保护窗、无暂存、无排序**(原版 `ecsProtectMs` 保护窗逻辑删除)
+- **硬超时 300ms**:超时后无有效结果返回 SERVFAIL + EDE 22。原定 200ms 在 DNS-over-TCP + DoH 异构窗口的冷启动页面并发测试中仍有少量失败,2026-08-06 调整为 300ms;mix 继续独立保持 200ms。
 - **ECS/EDNS 不区分优先级**:不再区分 ECS 上游/非 ECS 上游的响应优先级
 - **能使用 EDNS 的就用**:支持 ECS 的上游(`ecs: true`)注入 EDNS Client Subnet,不支持的就不注入(注入与否按上游能力)
 - 竞速结果交给地区优化流程(R3)做归属判断
+
+#### R4.1 上游传输层(2026-08-05 新增,已确认)
+
+客户端入口仍仅提供 DoH(`/dns-query`);本节只描述 **Worker → 递归解析器** 的上游传输。
+
+- 预设上游配置使用显式对象:`{ enabled: boolean, transport: "doh" | "tcp" }`。
+- `transport: "doh"` 使用该厂商预设的 HTTPS URL。
+- `transport: "tcp"` 使用该厂商预设的明文 DNS TCP 地址与端口 53;fast / mix 算法不得感知或分叉业务逻辑,只依赖统一 `Upstream` 查询接口。
+- `upstreamConcurrency` 表示**同时在飞的上游查询窗口**,不是候选截断数。全部启用上游均保留为候选;初始只启动窗口数量,每当一个上游完成/失败后再启动下一个,直到产生 winner、候选耗尽或 deadline 到达。
+- 基于页面级并发仿真,内置默认窗口调整为 `2`:窗口 3/4 会显著放大每个客户端 DNS 请求的 TCP/socket 数,Meta 负载下出现大量 SERVFAIL;窗口 2 保持双上游冗余且 90 次 Meta 并发测试无失败。
+- 内置默认候选仅启用 `google(tcp) → cloudflare_Public(doh) → quad9(tcp)`:窗口内首先形成一条 TCP + 一条 DoH 的异构竞速,Quad9 作为第三候选补位。AdGuard/OpenDNS/NextDNS 等保留为可选预设,不默认全开;该组合在 10 轮连续 Meta 并发测试中无 SERVFAIL。
+- DNS-over-TCP 按 RFC 7766 framing:请求和响应均为 `2-byte big-endian length + DNS message`;必须校验长度 `1..65535`,读取完整消息后再 normalize / classify。
+- 单次查询取消、fast winner、fast/mix deadline、传输错误时必须释放对应 fetch/socket;DoH fetch 使用 Abort-on-drop,TCP socket 使用关闭/丢弃语义,不得留下后台 loser。
+- ECS 注入仍由上游能力字段决定,与 transport 无关;选择 TCP 地址时优先使用能处理传入 ECS 的服务变体。
+- Cloudflare 预设保持 DoH-only:Workers raw TCP socket 禁止连接 Cloudflare IP ranges。
+- NextDNS 预设保持 DoH-only:明文 DNS IP 与用户配置/Linked IP 绑定,不存在可安全内置且等价于公共 DoH 的通用 TCP 地址。
+
+内置 TCP/53 主地址:
+
+| 预设 | TCP 地址 | ECS 取向 |
+|---|---|---|
+| google | `8.8.8.8:53` | 支持传入 ECS |
+| quad9 | `9.9.9.11:53` | 使用 Quad9 Secure + ECS 服务 |
+| adguard | `94.140.14.14:53` | 可处理 ECS,保持与默认过滤 DoH 服务一致 |
+| opendns | `208.67.222.222:53` | 支持 TCP;ECS 行为由解析器/权威白名单决定 |
+| yandex | `77.88.8.8:53` | 不依赖 ECS |
+| dnspod | `119.29.29.29:53` | 部分域名可处理 ECS,不保证所有域名非 `/0` |
+| alidns | `223.5.5.5:53` | 可处理 ECS |
+| 360 | `101.226.4.6:53` | 不依赖 ECS |
+| cloudflare_Public | — | DoH-only |
+| nextdns | — | DoH-only |
 
 **已裁决(2026-08-03)**:
 - `/dns-query` 为唯一 DoH 端点(单上游端点已删除,Q8);常量命名按 fast 语义(如 `FAST_PROVIDER = 'fast'`,实现层决定)
@@ -116,7 +147,7 @@ flowchart TD
 
 **mix 算法(已定义,调用点已指定)**:
 - **语义**:向多个 DNS 厂商(上游)发送请求,收集所有返回结果并**合并去重**,获取尽可能多的 IP(Q18:mix 为纯算法,只做并发查询→收集→合并→去重,不含任何过滤/归属判断)
-- **硬超时 200ms**(与 fast 一致)
+- **硬超时 200ms**(独立于 fast 的 300ms;mix 只负责短窗口收集更多 IP)
 - **调用点**:R3 流程中 **Meta IP 归属确认后**的二次解析——位于"IP 归属判定为 Meta"之后、"IP 加入"之前(即 mix 收集到的 Meta IP 供 IP 加入使用)
   - 对应 R3 流程:`G{IP 归属} →|Meta| [mix 二次解析] → I[IP 加入]`
   - 原版对应:`metaResolve`(800ms 硬超时 + 50ms 收集窗 + 静态路由表 merge)
@@ -133,11 +164,14 @@ flowchart TD
 
 > 模拟构建结论:R3 核心流程逻辑自洽可走通;存在 1 个阻塞性冲突、2 个流程缺失、1 个语义未定义,以及参数缺失若干。以下逐块列出,回答后逐块标记 ✅。
 
-### Q1. 前端字段冲突 ✅ 已回答(2026-08-03)
+### Q1. 配置 / 前端契约 ✅ 已回答;2026-08-05 修订
 
-**回答:选项 ①——字段原样保留**(死参数兼容前端)。
+**最新裁决:新版不兼容旧 JS 配置字段。**本项目已整体重构,配置契约允许随新版算法重新设计;不得为了兼容旧前端保留死参数。
 
-config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`、`hardTimeoutMs`、`metaHardTimeoutMs`、`metaCollectWindowMs`、`metaMaxIps`、`preferredTimeoutMs`)在配置中**原样保留**(即使部分在新版流程中已无实际作用);`/config.json` 按前端契约返回全字段。前端零改动。
+- 删除旧 AUTO/Meta 流程遗留字段:`autoConcurrency`、`ecsProtectMs`、`hardTimeoutMs`、`metaHardTimeoutMs`、`metaCollectWindowMs`、`metaMaxIps`、`preferredTimeoutMs`。
+- fast / mix 共用并发参数更名为 `upstreamConcurrency`。
+- 新版直接暴露实际生效参数:`fastTimeoutMs`、`mixTimeoutMs`、`mixTtl`、`preferredTtl`、`servfailEdeCode`、`cfEchCacheTtlMs`、`cfEchStaleTtlMs`。
+- `/config.json` 与 `config-wizard.js` 同步采用新版字段;前端允许随 Rust 重构修改,不承担旧版字段兼容责任。
 
 ### Q2. ECH 注入 / HTTPS 合成触发条件 ✅ 已回答;2026-08-05 修订
 
@@ -169,9 +203,9 @@ config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`�
 
 **回答:合并 + Happy Eyeballs**——Cealing-Host 代理 IP 优先 + 真实 IP 兜底合并(与原版一致;代理 IP 排前,浏览器 Happy Eyeballs 先试代理)。
 
-### Q5. fast 200ms 风险确认 ✅ 已回答
+### Q5. fast deadline 风险确认 ✅ 已回答;2026-08-06 修订
 
-**回答:维持 200ms,参数可调**(做成配置项)。
+**回答:默认 300ms,参数可调。**DNS-over-TCP 已显著降低冷建链成本,但 `fetch/socket → 完整 DNS body → normalize/classify` 的阶段预算在 workerd 冷启动和页面并发下仍需要超过 200ms。A/B 中 300ms 冷启动完整矩阵及连续 Meta 压测均无 SERVFAIL;mix 保持 200ms。
 
 ### Q6. mix 结果 Meta 过滤 ✅ 已回答
 
@@ -193,8 +227,8 @@ config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`�
 
 | # | 参数 | 新版结论 |
 |---|---|---|
-| 1 | fast 并发上游数 | **与 #2 合并**(详见下方待确认) |
-| 2 | mix 并发上游数 | **与 #1 合并**——fast/mix 共用一个并发参数(如沿用 `autoConcurrency`) |
+| 1 | fast 并发上游数 | **与 #2 合并**为 `upstreamConcurrency`;语义为滑动并发窗口,默认 2 |
+| 2 | mix 并发上游数 | **与 #1 合并**——fast/mix 共用 `upstreamConcurrency`,全部启用上游仍为候选 |
 | 3 | mix 合并去重后 IP 上限 | **无限制**(收集到的去重 IP 全部保留;原 metaMaxIps 概念废弃) |
 | 4 | mix 结果 TTL | 300(默认) |
 | 5 | 优选替换 TTL | 60(默认) |
@@ -208,7 +242,7 @@ config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`�
 
 **全局原则(已确认):所有参数均可配置(可调),不硬编码。**
 
-**"12参数合并"读法确认(2026-08-03)**:**读法 A**——第 1、2 项(fast/mix 并发数)合并为一个参数,fast 与 mix 共用同一并发配置(如沿用 `autoConcurrency` 命名,默认 6)。
+**"12参数合并"读法确认(2026-08-06 修订)**:第 1、2 项(fast/mix 并发数)合并为 `upstreamConcurrency`;其语义是同时在飞的滑动窗口而非候选截断。基于 TCP/页面并发仿真默认调整为 2。
 
 | # | 参数 | 新版结论 |
 |---|---|---|
@@ -358,13 +392,11 @@ ECHConfig 与服务器集群/public_name 绑定,isMetaDomain 命中不代表该 
 
 **裁决**:ECS 按 RFC 正确实现即可:避免重复 ECS、不扩大客户端主动提供的前缀、正确处理 /0。**属于协议实现问题,不再作为需求问题询问**。
 
-### Q24. losers 不显式 abort 会让后续阶段在连接队列超时(🟡 高)
+### Q24. loser 传输资源释放 ✅ 已解决(2026-08-06)
 
-main fast 6 连接第一个胜出,若 Rust 只 drop Futures 不 abort 其余 fetch,后续 preferred/mix 又发 6 个——Cloudflare 限 6 个"等待响应头"连接,第 7 个排队,200ms 阶段预算含排队时间。
+早期 runtime DoH 路径只在 cancellation future 被再次 poll 时才调用 `AbortController.abort()`,而 fast 随后直接 drop pending futures,导致行为与静态路径不一致。
 
-**建议**:每个 fetch 绑定显式 AbortSignal,winner/deadline/客户端断开都立即 abort losers;非 200 响应 body 要 cancel;最多 6 个等待 headers 的有界调度;明确 200ms 是阶段还是端到端预算;限总 subrequest 数。
-
-**裁决**:winner/deadline 后及时取消 loser,并遵守 Worker 并发连接限制。**属于实现要求,不再询问**。
+**实现裁决**:删除重复 runtime transport,统一走 `policy/upstream.rs`;DoH 使用 Abort-on-drop,TCP socket 在正常完成/取消时显式 close,drop 时异步触发 close。fast/mix 使用默认 2 的滑动窗口,避免每个客户端 DNS 请求同时放大为 6 条传输连接。
 
 ### Q25. "无 IP 上限"最终撞 DNS 消息硬边界(🟡 中)
 

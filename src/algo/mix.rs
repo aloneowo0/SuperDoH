@@ -19,12 +19,14 @@ pub const DEFAULT_DEADLINE: Duration = Duration::from_millis(200);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MixOptions {
     pub deadline: Duration,
+    pub max_concurrency: usize,
 }
 
 impl Default for MixOptions {
     fn default() -> Self {
         Self {
             deadline: DEFAULT_DEADLINE,
+            max_concurrency: MAX_CONCURRENT_UPSTREAMS,
         }
     }
 }
@@ -48,7 +50,8 @@ where
         .collect();
     let mut pending = FuturesUnordered::new();
     let mut next_upstream = 0;
-    while next_upstream < upstreams.len() && next_upstream < MAX_CONCURRENT_UPSTREAMS {
+    let max_concurrency = concurrency_limit(options.max_concurrency, upstreams.len());
+    while next_upstream < upstreams.len() && next_upstream < max_concurrency {
         pending.push(upstreams[next_upstream].query(body, cancellations[next_upstream].clone()));
         next_upstream += 1;
     }
@@ -78,6 +81,15 @@ where
     }
 
     ips
+}
+
+fn concurrency_limit(configured: usize, upstream_count: usize) -> usize {
+    let configured = if configured == 0 {
+        upstream_count
+    } else {
+        configured
+    };
+    configured.min(MAX_CONCURRENT_UPSTREAMS).min(upstream_count)
 }
 
 fn append_ips(outcome: &QueryOutcome, ips: &mut Vec<Vec<u8>>, seen: &mut HashSet<Vec<u8>>) {

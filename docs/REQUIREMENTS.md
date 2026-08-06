@@ -248,8 +248,8 @@ HTTPS 合成新增 TTL 规则:
 
 | # | 参数 | 结论 |
 |---|---|---|
-| 1 | fast 并发上游数 | **与 #2 合并**为一个参数(如沿用 `autoConcurrency`,默认 6) |
-| 2 | mix 并发上游数 | 同上,fast/mix 共用 |
+| 1 | fast 并发上游数 | **与 #2 合并**为 `upstreamConcurrency`,滑动窗口默认 2 |
+| 2 | mix 并发上游数 | 同上,fast/mix 共用;全部启用上游仍为候选,完成一个后补充下一个 |
 | 3 | mix IP 上限 | **无限制**(去重全保留;metaMaxIps 废弃) |
 | 4 | mix 结果 TTL | 300 |
 | 5 | 优选替换 TTL | 60 |
@@ -263,18 +263,33 @@ HTTPS 合成新增 TTL 规则:
 
 **全局原则:所有参数均可配置(可调),不硬编码。**
 
-### 8.3 前端字段兼容(Q1)
+### 8.3 新版配置契约(Q1,2026-08-05 修订)
 
-config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`、`hardTimeoutMs`、`metaHardTimeoutMs`、`metaCollectWindowMs`、`metaMaxIps`、`preferredTimeoutMs`)在配置中**原样保留**(即使部分在新版流程中已无实际作用);`/config.json` 按前端契约返回全字段。前端零改动。
+- **不兼容旧 JS 配置字段**,不保留无实际作用的死参数。
+- 删除:`autoConcurrency`、`ecsProtectMs`、`hardTimeoutMs`、`metaHardTimeoutMs`、`metaCollectWindowMs`、`metaMaxIps`、`preferredTimeoutMs`。
+- 新版算法字段:`upstreamConcurrency`、`fastTimeoutMs`、`mixTimeoutMs`、`mixTtl`、`preferredTtl`、`servfailEdeCode`、`cfEchCacheTtlMs`、`cfEchStaleTtlMs`。
+- `/config.json` 与配置向导只暴露新版实际生效字段;构建器不接受上述旧字段的别名或旧环境变量。
+
+### 8.4 上游 transport(2026-08-05 新增)
+
+- 预设上游配置格式:`provider: { enabled: true|false, transport: "doh"|"tcp" }`。
+- 前端每个支持 TCP 的厂商块同时提供“启用”和“TCP”复选框;TCP 未选中时使用 DoH。
+- Cloudflare 与 NextDNS 显示为 DoH-only,不提供 TCP 开关。
+- 构建器把每个启用上游编译为统一结构:`name + transport + doh_url + tcp_host + tcp_port + ecs`。
+- fast / mix 不区分 DoH/TCP;transport 层完成请求 framing、读取、取消和资源释放。
+- TCP DNS 使用 2 字节大端长度前缀,拒绝 0 长度和超过 65535 字节的响应。
+- TCP 地址由预设提供,普通用户不需要输入 IP;当前内置主地址见 `docs/01-requirements.md` R4.1。
+- `upstreamConcurrency` 是 fast/mix 的**最大同时在飞数**,不得在 transport 构建阶段用 `.take()` 截断候选。默认 2;算法按配置顺序补充后续候选。
+- 初始候选顺序与启用集:`google(tcp)`、`cloudflare_Public(doh)`、`quad9(tcp)`;其余预设默认关闭但可在向导中启用。
 
 ---
 
 ## 9. 前端(R1)
 
-- 原项目 `frontend/`(index.html、en.html、css/style.css、js/resolver.js、js/config-wizard.js)**逐字节复用,零修改**
+- 原项目 `frontend/` 的页面与样式可复用,但 `config-wizard.js` 按新版 Rust 配置契约维护,**不要求兼容旧字段**
 - 构建时打包进 Worker(替代 JS 版 `src/templates.js` 内嵌机制)
 - 首页动态注入逻辑保留(`__HOST__`、`__UPSTREAM_LIST__`、`__CONFIGURED_VALUE__` 等占位符替换),在 Rust 侧实现
-- 配置向导(config-wizard.js)为纯浏览器端逻辑,直接复用
+- 配置向导(config-wizard.js)为纯浏览器端逻辑,输出新版 `superdoh.config.js`
 
 ## 10. 端点(Q8)
 
@@ -293,7 +308,7 @@ config-wizard.js 固定生成的全部字段(`autoConcurrency`、`ecsProtectMs`�
 
 | 新版组件 | 原版实现 |
 |---|---|
-| fast 竞速 | `concurrentAll`(去 ECS 保护窗,200ms) |
+| fast 竞速 | `concurrentAll`(去 ECS 保护窗,300ms) |
 | mix 收集 | `metaResolve` 收集窗 + `resolvePreferred` 收集语义 |
 | Domain 归属 | `isCFDomain`(remap)/ `isMetaDomain` / `matchGoogleProxy` |
 | IP 归属 | `classifyResponse` / `detectOwner`(GeoIP CIDR) |

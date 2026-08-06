@@ -11,16 +11,16 @@
 
   // ── 预设上游 ─────────────────────────────────────────
   var PRESETS = {
-    google: { url: 'https://dns.google/dns-query', ecs: true },
-    cloudflare_Public: { url: 'https://cloudflare-dns.com/dns-query', ecs: false },
-    quad9: { url: 'https://dns11.quad9.net/dns-query', ecs: true },
-    adguard: { url: 'https://dns.adguard-dns.com/dns-query', ecs: true },
-    opendns: { url: 'https://dns.opendns.com/dns-query', ecs: true },
-    yandex: { url: 'https://common.dot.dns.yandex.net/dns-query', ecs: false },
-    dnspod: { url: 'https://sm2.doh.pub/dns-query', ecs: true },
-    alidns: { url: 'https://dns.alidns.com/dns-query', ecs: true },
-    '360': { url: 'https://doh.360.cn/dns-query', ecs: true },
-    nextdns: { url: 'https://dns.nextdns.io', ecs: true }
+    google: { dohUrl: 'https://dns.google/dns-query', tcpHost: '8.8.8.8', ecs: true },
+    cloudflare_Public: { dohUrl: 'https://cloudflare-dns.com/dns-query', tcpHost: '', ecs: false },
+    quad9: { dohUrl: 'https://dns11.quad9.net/dns-query', tcpHost: '9.9.9.11', ecs: true },
+    adguard: { dohUrl: 'https://dns.adguard-dns.com/dns-query', tcpHost: '94.140.14.14', ecs: true },
+    opendns: { dohUrl: 'https://dns.opendns.com/dns-query', tcpHost: '208.67.222.222', ecs: true },
+    yandex: { dohUrl: 'https://common.dot.dns.yandex.net/dns-query', tcpHost: '77.88.8.8', ecs: false },
+    dnspod: { dohUrl: 'https://sm2.doh.pub/dns-query', tcpHost: '119.29.29.29', ecs: true },
+    alidns: { dohUrl: 'https://dns.alidns.com/dns-query', tcpHost: '223.5.5.5', ecs: true },
+    '360': { dohUrl: 'https://doh.360.cn/dns-query', tcpHost: '101.226.4.6', ecs: false },
+    nextdns: { dohUrl: 'https://dns.nextdns.io', tcpHost: '', ecs: true }
   };
   var PRESET_ORDER = ['google', 'cloudflare_Public', 'quad9', 'adguard', 'opendns', 'yandex', 'dnspod', 'alidns', '360', 'nextdns'];
 
@@ -39,29 +39,33 @@
     toggleExpand: { zh: '展开 ▾', en: 'Expand ▾' },
     // Upstream section
     upstreamBadgeNoEcs: { zh: '无 ECS', en: 'No ECS' },
+    upstreamTcpLabel: { zh: 'TCP', en: 'TCP' },
+    upstreamDohOnly: { zh: '仅 DoH', en: 'DoH only' },
     securityHomepageNote: { zh: '伪装入口：设置 ENTRANCE 和 PROXY 环境变量后，只有访问 ENTRANCE 路径（如 /abc123）才显示主页，其他路径反向代理 PROXY 网站。两个变量都设置才生效。', en: 'Camouflage: set both ENTRANCE and PROXY env vars — only the ENTRANCE path (e.g. /abc123) shows the homepage; all other paths reverse-proxy to the PROXY URL. Both must be set to take effect.' },
     securityProxyNote: { zh: '示例：ENTRANCE=/abc123，PROXY=https://baidu.com → 访问 / 显示百度，访问 /abc123 显示主页，DoH 端点变为 /abc123/dns-query。', en: 'Example: ENTRANCE=/abc123, PROXY=https://baidu.com → visiting / shows baidu.com, visiting /abc123 shows homepage, DoH endpoint becomes /abc123/dns-query.' },
 
-    upstreamNote: { zh: '自定义上游：在 Cloudflare Dashboard → Worker → Variables 添加 CUSTOM_名称 = https://example.com/dns-query，即时生效。', en: 'Custom upstreams: add CUSTOM_<NAME>=https://... in Cloudflare Dashboard → Worker → Variables, takes effect instantly.' },
+    upstreamNote: { zh: '勾选 TCP 后使用厂商预设的 TCP/53 IP；Cloudflare 与 NextDNS 仅支持 DoH。自定义上游通过 CUSTOM_名称=https://... 注入，仅支持 DoH。', en: 'Enable TCP to use the preset vendor TCP/53 IP. Cloudflare and NextDNS are DoH-only. CUSTOM_<NAME>=https://... upstreams are also DoH-only.' },
     // Tuning fields
     ecsPrefix4Label: { zh: 'ECS IPv4 前缀', en: 'ECS IPv4 Prefix' },
     ecsPrefix4Hint: { zh: 'EDNS Client Subnet IPv4 掩码（通常 24）', en: 'EDNS Client Subnet IPv4 mask (usually 24)' },
     ecsPrefix6Label: { zh: 'ECS IPv6 前缀', en: 'ECS IPv6 Prefix' },
     ecsPrefix6Hint: { zh: 'EDNS Client Subnet IPv6 掩码（通常 56）', en: 'EDNS Client Subnet IPv6 mask (usually 56)' },
-    autoConcurrencyLabel: { zh: 'AUTO 并发数', en: 'AUTO Concurrency' },
-    autoConcurrencyHint: { zh: '竞速上游数（0=全部；Free 计划建议 4-6）', en: 'Number of racing upstreams (0=all; Free plan recommends 4-6)' },
-    ecsProtectMsLabel: { zh: 'ECS 保护 (ms)', en: 'ECS Protect (ms)' },
-    ecsProtectMsHint: { zh: 'ECS 注入保护窗口', en: 'ECS injection protection window' },
-    hardTimeoutMsLabel: { zh: '硬超时 (ms)', en: 'Hard Timeout (ms)' },
-    hardTimeoutMsHint: { zh: '单上游硬超时', en: 'Per-upstream hard timeout' },
-    metaHardTimeoutMsLabel: { zh: 'Meta 硬超时 (ms)', en: 'Meta Hard Timeout (ms)' },
-    metaHardTimeoutMsHint: { zh: 'Meta 查询硬超时', en: 'Meta query hard timeout' },
-    metaCollectWindowMsLabel: { zh: 'Meta 收集窗口 (ms)', en: 'Meta Collect Window (ms)' },
-    metaCollectWindowMsHint: { zh: 'Meta 应答收集窗口', en: 'Meta answer collection window' },
-    metaMaxIpsLabel: { zh: 'Meta 最大 IP', en: 'Meta Max IPs' },
-    metaMaxIpsHint: { zh: 'Meta 最多保留 IP 数', en: 'Max IPs kept by Meta' },
-    preferredTimeoutMsLabel: { zh: 'Preferred 超时 (ms)', en: 'Preferred Timeout (ms)' },
-    preferredTimeoutMsHint: { zh: 'Preferred 上游超时', en: 'Preferred upstream timeout' },
+    upstreamConcurrencyLabel: { zh: '上游并发数', en: 'Upstream Concurrency' },
+    upstreamConcurrencyHint: { zh: 'fast / mix 共用的同时在飞窗口；全部启用上游仍为候选，0=最多 6', en: 'Shared in-flight window for fast / mix; all enabled upstreams remain candidates, 0=up to 6' },
+    fastTimeoutMsLabel: { zh: 'fast 超时 (ms)', en: 'fast Timeout (ms)' },
+    fastTimeoutMsHint: { zh: '主竞速、HTTPS owner 探测与动态 ECH 获取的阶段超时', en: 'Stage timeout for primary racing, HTTPS owner probes, and dynamic ECH fetches' },
+    mixTimeoutMsLabel: { zh: 'mix 超时 (ms)', en: 'mix Timeout (ms)' },
+    mixTimeoutMsHint: { zh: 'Meta A/AAAA 二次收集合并阶段超时', en: 'Timeout for Meta A/AAAA secondary collection and merge' },
+    mixTtlLabel: { zh: 'mix TTL (秒)', en: 'mix TTL (s)' },
+    mixTtlHint: { zh: 'mix 合并后 A/AAAA 应答 TTL', en: 'TTL for A/AAAA answers rebuilt from mix results' },
+    preferredTtlLabel: { zh: '优选 TTL (秒)', en: 'Preferred TTL (s)' },
+    preferredTtlHint: { zh: 'CF / CFT / Vercel 优选替换后的 TTL', en: 'TTL after CF / CFT / Vercel preferred replacement' },
+    servfailEdeCodeLabel: { zh: 'SERVFAIL EDE Code', en: 'SERVFAIL EDE Code' },
+    servfailEdeCodeHint: { zh: '超时或无可用上游时附带的 Extended DNS Error code', en: 'Extended DNS Error code attached when no usable upstream is available' },
+    cfEchCacheTtlMsLabel: { zh: 'CF ECH 缓存 (ms)', en: 'CF ECH Cache (ms)' },
+    cfEchCacheTtlMsHint: { zh: 'Cloudflare 动态 ECHConfig 正常缓存时间', en: 'Fresh cache lifetime for Cloudflare dynamic ECHConfig' },
+    cfEchStaleTtlMsLabel: { zh: 'CF ECH stale (ms)', en: 'CF ECH Stale (ms)' },
+    cfEchStaleTtlMsHint: { zh: '动态 ECH 获取失败时旧配置允许继续使用的时间', en: 'How long stale dynamic ECHConfig may be reused after refresh failure' },
     blockedCidrsLabel: { zh: '应答 IP 黑名单 (CIDR，空格分隔)', en: 'Answer IP Blocklist (CIDR, space-separated)' },
     blockedCidrsHint: { zh: '每项须为合法 CIDR，如 127.0.0.0/8 或 ::1/128', en: 'Each entry must be a valid CIDR, e.g. 127.0.0.0/8 or ::1/128' },
     logLevelLabel: { zh: '日志级别', en: 'Log Level' },
@@ -115,23 +119,23 @@
     // Generated config comments
     cfgHeaderTitle: { zh: 'SuperDoH 用户配置文件', en: 'SuperDoH User Config File' },
     cfgHeaderDesc1: { zh: '这是 SuperDoH 唯一的人类可编辑配置源。', en: 'This is the only human-editable config source for SuperDoH.' },
-    cfgHeaderDesc2: { zh: 'scripts/build-config.cjs 读取本文件 → 生成 src/config.js（机器产物）→ 打包进 Worker。', en: 'scripts/build-config.cjs reads this file → generates src/config.js (machine product) → bundled into the Worker.' },
+    cfgHeaderDesc2: { zh: 'scripts/build-config.cjs 读取本文件 → 生成 src/config.rs（机器产物）→ 打包进 Worker。', en: 'scripts/build-config.cjs reads this file → generates src/config.rs (machine product) → bundled into the Worker.' },
     cfgHeaderDesc3: { zh: '改完本文件后必须重新部署（Workers Builds 会自动触发）才生效。', en: 'After editing this file you must redeploy (Workers Builds triggers automatically) for it to take effect.' },
     cfgHeaderConfigured1: { zh: 'configured: 1 = 正式运行模式。Worker 使用下面你填写的配置。', en: 'configured: 1 = production mode. Worker uses the config you fill in below.' },
     cfgHeaderConfigured0: { zh: '   0 = 首次配置模式（Worker 用内置默认跑，首页「配置」tab 显示向导）。', en: '   0 = first-time setup mode (Worker runs with built-in defaults, homepage "Config" tab shows the wizard).' },
     cfgHeaderFormatTitle: { zh: '格式说明：', en: 'Format notes:' },
-    cfgHeaderFormat1: { zh: '   - upstreams: 预设名设 true 启用；自定义上游通过 Workers 环境变量注入（CUSTOM_<NAME>=https://...）', en: '   - upstreams: set preset name to true to enable; custom upstreams injected via Workers env vars (CUSTOM_<NAME>=https://...)' },
+    cfgHeaderFormat1: { zh: '   - upstreams: 每个预设使用 { enabled, transport }；transport 为 "doh" 或 "tcp"', en: '   - upstreams: each preset uses { enabled, transport }; transport is "doh" or "tcp"' },
     cfgHeaderFormat2: { zh: '   - regions: 空对象 = 不启用地区优化；每地区一块，键为 ISO 国家码或 * (全球通配)；实际匹配由 request.cf.country 决定', en: '   - regions: empty object = no region optimization; each entry is one region, key is ISO country code or * (global wildcard); matched by request.cf.country' },
     cfgHeaderFormat3: { zh: '   - geoipUrl / cealingHostUrl: 构建时自动抓取大列表的源，普通用户无需改', en: '   - geoipUrl / cealingHostUrl: sources auto-fetched at build time for large lists; ordinary users need not change' },
     cfgCommentUpstreams: { zh: '── 上游', en: '── Upstreams' },
     cfgCommentTuning: { zh: '── ECS / DNS 调优', en: '── ECS / DNS Tuning' },
     cfgCommentBlockedCidrs: { zh: '应答 IP 黑名单（CIDR，空格分隔）', en: 'Answer IP blocklist (CIDR, space-separated)' },
-    cfgCommentAutoConcurrency: { zh: 'AUTO 竞速并发上游数（0 = 全部上游；Free 计划建议 4-6）', en: 'AUTO racing concurrency (0 = all upstreams; Free plan recommends 4-6)' },
-    cfgCommentMsNoChange: { zh: '以下均为毫秒，通常无需改动', en: 'All values below are in ms; usually no changes needed' },
+    cfgCommentUpstreamConcurrency: { zh: 'fast / mix 共用的滑动并发窗口（0 = 最多 6；全部启用上游仍作为候选）', en: 'Shared fast / mix sliding concurrency window (0 = up to 6; all enabled upstreams remain candidates)' },
+    cfgCommentRustParams: { zh: '── 新版 Rust 解析参数', en: '── Rust Resolver Parameters' },
     cfgCommentLogLevel: { zh: '日志级别：debug / info / warn / error / none', en: 'Log level: debug / info / warn / error / none' },
     cfgCommentRegions: { zh: '── 地区优化', en: '── Region Optimization' },
     cfgCommentBuildFetch: { zh: '── 构建时远程抓取', en: '── Build-time Remote Fetch' },
-    cfgCommentGeoip: { zh: 'GeoIP CIDR 列表源（8 个分类，构建时自动抓取并编译进 config.js）', en: 'GeoIP CIDR list source (8 categories, auto-fetched at build time and compiled into config.js)' },
+    cfgCommentGeoip: { zh: 'GeoIP CIDR 列表源（8 个分类，构建时自动抓取并编译进 config.rs）', en: 'GeoIP CIDR list source (8 categories, auto-fetched at build time and compiled into config.rs)' },
     cfgCommentCealing: { zh: 'Cealing-Host Google 代理列表源（regions.*.google=true 时抓取）', en: 'Cealing-Host Google proxy source (fetched when regions.*.google=true)' },
     cfgCommentSkipCealing: { zh: '设为 false 可跳过 Cealing-Host 抓取', en: 'Set to false to skip Cealing-Host fetch' }
   };
@@ -142,13 +146,14 @@
     ecsPrefix4: 24,
     ecsPrefix6: 56,
     blockedCidrs: '127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128',
-    autoConcurrency: 6,
-    ecsProtectMs: 20,
-    hardTimeoutMs: 800,
-    metaHardTimeoutMs: 800,
-    metaCollectWindowMs: 50,
-    metaMaxIps: 4,
-    preferredTimeoutMs: 300,
+    upstreamConcurrency: 2,
+    fastTimeoutMs: 300,
+    mixTimeoutMs: 200,
+    mixTtl: 300,
+    preferredTtl: 60,
+    servfailEdeCode: 22,
+    cfEchCacheTtlMs: 600000,
+    cfEchStaleTtlMs: 3600000,
     logLevel: 'info',
     geoipUrl: 'https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/',
     cealingHostUrl: 'https://gitlab.com/SpaceTimee/Cealing-Host/raw/main/Cealing-Host.json',
@@ -159,13 +164,14 @@
   var TUNING_FIELDS = [
     { key: 'ecsPrefix4', label: t('ecsPrefix4Label'), hint: t('ecsPrefix4Hint') },
     { key: 'ecsPrefix6', label: t('ecsPrefix6Label'), hint: t('ecsPrefix6Hint') },
-    { key: 'autoConcurrency', label: t('autoConcurrencyLabel'), hint: t('autoConcurrencyHint') },
-    { key: 'ecsProtectMs', label: t('ecsProtectMsLabel'), hint: t('ecsProtectMsHint') },
-    { key: 'hardTimeoutMs', label: t('hardTimeoutMsLabel'), hint: t('hardTimeoutMsHint') },
-    { key: 'metaHardTimeoutMs', label: t('metaHardTimeoutMsLabel'), hint: t('metaHardTimeoutMsHint') },
-    { key: 'metaCollectWindowMs', label: t('metaCollectWindowMsLabel'), hint: t('metaCollectWindowMsHint') },
-    { key: 'metaMaxIps', label: t('metaMaxIpsLabel'), hint: t('metaMaxIpsHint') },
-    { key: 'preferredTimeoutMs', label: t('preferredTimeoutMsLabel'), hint: t('preferredTimeoutMsHint') }
+    { key: 'upstreamConcurrency', label: t('upstreamConcurrencyLabel'), hint: t('upstreamConcurrencyHint') },
+    { key: 'fastTimeoutMs', label: t('fastTimeoutMsLabel'), hint: t('fastTimeoutMsHint') },
+    { key: 'mixTimeoutMs', label: t('mixTimeoutMsLabel'), hint: t('mixTimeoutMsHint') },
+    { key: 'mixTtl', label: t('mixTtlLabel'), hint: t('mixTtlHint') },
+    { key: 'preferredTtl', label: t('preferredTtlLabel'), hint: t('preferredTtlHint') },
+    { key: 'servfailEdeCode', label: t('servfailEdeCodeLabel'), hint: t('servfailEdeCodeHint') },
+    { key: 'cfEchCacheTtlMs', label: t('cfEchCacheTtlMsLabel'), hint: t('cfEchCacheTtlMsHint') },
+    { key: 'cfEchStaleTtlMs', label: t('cfEchStaleTtlMsLabel'), hint: t('cfEchStaleTtlMsHint') }
   ];
 
   // ── 注入样式 ─────────────────────────────────────────
@@ -198,6 +204,9 @@
     '.sw-upstream-info{flex:1;min-width:0}',
     '.sw-upstream-name{font-weight:700;color:#333;font-size:.9rem}',
     '.sw-upstream-url{font-family:"SF Mono",Menlo,monospace;font-size:.78rem;color:#666;word-break:break-all}',
+    '.sw-upstream-transport{display:flex;align-items:center;gap:.3rem;white-space:nowrap;font-size:.78rem;color:#555}',
+    '.sw-upstream-transport input[type=checkbox]{margin:0;width:16px;height:16px}',
+    '.sw-upstream-transport-disabled{color:#999;font-size:.75rem;white-space:nowrap}',
     '.sw-badge{display:inline-block;font-size:.68rem;padding:.1rem .4rem;border-radius:3px;font-weight:700;margin-left:.4rem;vertical-align:middle}',
     '.sw-badge-ecs{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}',
     '.sw-badge-noecs{background:#fce4ec;color:#c62828;border:1px solid #f48fb1}',
@@ -425,25 +434,42 @@
     // 预设上游
     var upGrid = el('div', { class: 'sw-upstream-grid' });
     PRESET_ORDER.forEach(function (name) {
-      var p = PRESETS[name], checked = false, found;
+      var p = PRESETS[name], checked = false, tcpChecked = false, found;
       if (cfg && cfg.upstreams) {
-        // 只读模式切回编辑时，根据 /config.json 判断预设是否启用
         found = cfg.upstreams.find(function (u) { return u.name === name; });
-        if (found) checked = true;
+        if (found) {
+          checked = true;
+          tcpChecked = found.transport === 'tcp';
+        }
       } else {
-        // 默认：google + cloudflare_Public
-        checked = (name === 'google' || name === 'cloudflare_Public');
+        checked = (name === 'google' || name === 'cloudflare_Public' || name === 'quad9');
+        tcpChecked = (name === 'google' || name === 'quad9');
       }
-      var row = el('div', { class: 'sw-upstream' }, [
+      var children = [
         el('input', { type: 'checkbox', id: 'sw-up-' + name, 'data-preset': name, checked: checked ? 'checked' : null }),
         el('div', { class: 'sw-upstream-info' }, [
           el('div', {}, [
             el('span', { class: 'sw-upstream-name', text: name }),
             el('span', { class: 'sw-badge ' + (p.ecs ? 'sw-badge-ecs' : 'sw-badge-noecs'), text: p.ecs ? 'ECS' : t('upstreamBadgeNoEcs') })
           ]),
-          el('div', { class: 'sw-upstream-url', text: p.url })
+          el('div', {
+            class: 'sw-upstream-url',
+            text: p.dohUrl + (p.tcpHost ? '  |  TCP ' + p.tcpHost + ':53' : '')
+          })
         ])
-      ]);
+      ];
+      if (p.tcpHost) {
+        children.push(el('label', { class: 'sw-upstream-transport', for: 'sw-tcp-' + name }, [
+          el('input', {
+            type: 'checkbox', id: 'sw-tcp-' + name, 'data-preset-tcp': name,
+            checked: tcpChecked ? 'checked' : null
+          }),
+          document.createTextNode(t('upstreamTcpLabel'))
+        ]));
+      } else {
+        children.push(el('span', { class: 'sw-upstream-transport-disabled', text: t('upstreamDohOnly') }));
+      }
+      var row = el('div', { class: 'sw-upstream' }, children);
       upGrid.appendChild(row);
     });
     body.appendChild(upGrid);
@@ -742,13 +768,14 @@
       ecsPrefix4: 0,
       ecsPrefix6: 0,
       blockedCidrs: '',
-      autoConcurrency: 0,
-      ecsProtectMs: 0,
-      hardTimeoutMs: 0,
-      metaHardTimeoutMs: 0,
-      metaCollectWindowMs: 0,
-      metaMaxIps: 0,
-      preferredTimeoutMs: 0,
+      upstreamConcurrency: 0,
+      fastTimeoutMs: 0,
+      mixTimeoutMs: 0,
+      mixTtl: 0,
+      preferredTtl: 0,
+      servfailEdeCode: 0,
+      cfEchCacheTtlMs: 0,
+      cfEchStaleTtlMs: 0,
       logLevel: 'info',
       regions: {},
       geoipUrl: '',
@@ -761,7 +788,11 @@
     PRESET_ORDER.forEach(function (name) {
       var cb = document.getElementById('sw-up-' + name);
       if (cb && cb.checked) {
-        config.upstreams[name] = true;
+        var tcp = document.getElementById('sw-tcp-' + name);
+        config.upstreams[name] = {
+          enabled: true,
+          transport: tcp && tcp.checked ? 'tcp' : 'doh'
+        };
         enabledCount++;
       }
     });
@@ -882,10 +913,12 @@
     lines.push('  upstreams: {');
     // 预设按 PRESET_ORDER 输出（启用的），未启用的注释
     PRESET_ORDER.forEach(function (name) {
-      if (config.upstreams[name] === true) {
-        lines.push('    ' + (isIdent(name) ? name : JSON.stringify(name)) + ': true,');
+      var value = config.upstreams[name];
+      var key = isIdent(name) ? name : JSON.stringify(name);
+      if (value && value.enabled === true) {
+        lines.push('    ' + key + ': { enabled: true, transport: ' + JSON.stringify(value.transport) + ' },');
       } else {
-        lines.push('    // ' + name + ': false,');
+        lines.push('    // ' + key + ': { enabled: false, transport: ' + JSON.stringify(PRESETS[name].tcpHost ? 'tcp' : 'doh') + ' },');
       }
     });
     lines.push('  },');
@@ -895,15 +928,17 @@
     lines.push('  ecsPrefix6: ' + config.ecsPrefix6 + ',');
     lines.push('  // ' + t('cfgCommentBlockedCidrs'));
     lines.push('  blockedCidrs: ' + JSON.stringify(config.blockedCidrs) + ',');
-    lines.push('  // ' + t('cfgCommentAutoConcurrency'));
-    lines.push('  autoConcurrency: ' + config.autoConcurrency + ',');
-    lines.push('  // ' + t('cfgCommentMsNoChange'));
-    lines.push('  ecsProtectMs: ' + config.ecsProtectMs + ',');
-    lines.push('  hardTimeoutMs: ' + config.hardTimeoutMs + ',');
-    lines.push('  metaHardTimeoutMs: ' + config.metaHardTimeoutMs + ',');
-    lines.push('  metaCollectWindowMs: ' + config.metaCollectWindowMs + ',');
-    lines.push('  metaMaxIps: ' + config.metaMaxIps + ',');
-    lines.push('  preferredTimeoutMs: ' + config.preferredTimeoutMs + ',');
+    lines.push('  // ' + t('cfgCommentUpstreamConcurrency'));
+    lines.push('  upstreamConcurrency: ' + config.upstreamConcurrency + ',');
+    lines.push('');
+    lines.push('  // ' + t('cfgCommentRustParams') + ' ────────────────────────────');
+    lines.push('  fastTimeoutMs: ' + config.fastTimeoutMs + ',');
+    lines.push('  mixTimeoutMs: ' + config.mixTimeoutMs + ',');
+    lines.push('  mixTtl: ' + config.mixTtl + ',');
+    lines.push('  preferredTtl: ' + config.preferredTtl + ',');
+    lines.push('  servfailEdeCode: ' + config.servfailEdeCode + ',');
+    lines.push('  cfEchCacheTtlMs: ' + config.cfEchCacheTtlMs + ',');
+    lines.push('  cfEchStaleTtlMs: ' + config.cfEchStaleTtlMs + ',');
     lines.push('  // ' + t('cfgCommentLogLevel'));
     lines.push('  logLevel: ' + JSON.stringify(config.logLevel) + ',');
     lines.push('');

@@ -13,18 +13,20 @@ use crate::{
     dns::Classification,
 };
 
-pub const DEFAULT_DEADLINE: Duration = Duration::from_millis(200);
+pub const DEFAULT_DEADLINE: Duration = Duration::from_millis(300);
 
 /// Runtime-independent settings for [`race`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FastOptions {
     pub deadline: Duration,
+    pub max_concurrency: usize,
 }
 
 impl Default for FastOptions {
     fn default() -> Self {
         Self {
             deadline: DEFAULT_DEADLINE,
+            max_concurrency: MAX_CONCURRENT_UPSTREAMS,
         }
     }
 }
@@ -51,7 +53,8 @@ where
         .collect();
     let mut pending = FuturesUnordered::new();
     let mut next_upstream = 0;
-    while next_upstream < upstreams.len() && next_upstream < MAX_CONCURRENT_UPSTREAMS {
+    let max_concurrency = concurrency_limit(options.max_concurrency, upstreams.len());
+    while next_upstream < upstreams.len() && next_upstream < max_concurrency {
         pending.push(upstreams[next_upstream].query(body, cancellations[next_upstream].clone()));
         next_upstream += 1;
     }
@@ -93,6 +96,15 @@ where
     }
 
     negative
+}
+
+fn concurrency_limit(configured: usize, upstream_count: usize) -> usize {
+    let configured = if configured == 0 {
+        upstream_count
+    } else {
+        configured
+    };
+    configured.min(MAX_CONCURRENT_UPSTREAMS).min(upstream_count)
 }
 
 fn cancel_all(cancellations: &[CancellationToken]) {

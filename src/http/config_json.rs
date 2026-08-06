@@ -11,7 +11,7 @@ use crate::{
 #[derive(Serialize)]
 struct UpstreamResponse<'a> {
     name: &'a str,
-    url: &'static str,
+    transport: &'static str,
     ecs: bool,
 }
 
@@ -34,20 +34,22 @@ struct ConfigResponse<'a> {
     upstreams: Vec<UpstreamResponse<'a>>,
     #[serde(rename = "foreignUpstreams")]
     foreign_upstreams: &'a [String],
-    #[serde(rename = "autoConcurrency")]
-    auto_concurrency: usize,
-    #[serde(rename = "ecsProtectMs")]
-    ecs_protect_ms: u32,
-    #[serde(rename = "hardTimeoutMs")]
-    hard_timeout_ms: u32,
-    #[serde(rename = "metaHardTimeoutMs")]
-    meta_hard_timeout_ms: u32,
-    #[serde(rename = "metaCollectWindowMs")]
-    meta_collect_window_ms: u32,
-    #[serde(rename = "metaMaxIps")]
-    meta_max_ips: usize,
-    #[serde(rename = "preferredTimeoutMs")]
-    preferred_timeout_ms: u32,
+    #[serde(rename = "upstreamConcurrency")]
+    upstream_concurrency: usize,
+    #[serde(rename = "fastTimeoutMs")]
+    fast_timeout_ms: u32,
+    #[serde(rename = "mixTimeoutMs")]
+    mix_timeout_ms: u32,
+    #[serde(rename = "mixTtl")]
+    mix_ttl: u32,
+    #[serde(rename = "preferredTtl")]
+    preferred_ttl: u32,
+    #[serde(rename = "servfailEdeCode")]
+    servfail_ede_code: u16,
+    #[serde(rename = "cfEchCacheTtlMs")]
+    cf_ech_cache_ttl_ms: u32,
+    #[serde(rename = "cfEchStaleTtlMs")]
+    cf_ech_stale_ttl_ms: u32,
     #[serde(rename = "ecsPrefix4")]
     ecs_prefix4: u8,
     #[serde(rename = "ecsPrefix6")]
@@ -94,13 +96,14 @@ pub fn serve(runtime: &RuntimeConfig) -> Result<Response> {
         configured: config::CONFIGURED,
         upstreams,
         foreign_upstreams: &runtime.foreign_upstreams,
-        auto_concurrency: config::AUTO_CONCURRENCY,
-        ecs_protect_ms: config::ECS_PROTECT_MS,
-        hard_timeout_ms: config::HARD_TIMEOUT_MS,
-        meta_hard_timeout_ms: config::META_HARD_TIMEOUT_MS,
-        meta_collect_window_ms: config::META_COLLECT_WINDOW_MS,
-        meta_max_ips: config::META_MAX_IPS,
-        preferred_timeout_ms: config::PREFERRED_TIMEOUT_MS,
+        upstream_concurrency: config::UPSTREAM_CONCURRENCY,
+        fast_timeout_ms: config::FAST_TIMEOUT_MS,
+        mix_timeout_ms: config::MIX_TIMEOUT_MS,
+        mix_ttl: config::MIX_TTL,
+        preferred_ttl: config::PREFERRED_TTL,
+        servfail_ede_code: config::SERVFAIL_EDE_CODE,
+        cf_ech_cache_ttl_ms: config::CF_ECH_CACHE_TTL_MS,
+        cf_ech_stale_ttl_ms: config::CF_ECH_STALE_TTL_MS,
         ecs_prefix4: config::ECS_PREFIX4,
         ecs_prefix6: config::ECS_PREFIX6,
         blocked_cidrs,
@@ -117,7 +120,10 @@ pub fn serve(runtime: &RuntimeConfig) -> Result<Response> {
 fn upstream_response(upstream: &crate::http::RuntimeUpstream) -> UpstreamResponse<'_> {
     UpstreamResponse {
         name: &upstream.name,
-        url: "",
+        transport: match upstream.transport {
+            crate::http::RuntimeUpstreamTransport::Doh { .. } => "doh",
+            crate::http::RuntimeUpstreamTransport::Tcp { .. } => "tcp",
+        },
         ecs: upstream.ecs,
     }
 }
@@ -125,7 +131,7 @@ fn upstream_response(upstream: &crate::http::RuntimeUpstream) -> UpstreamRespons
 #[cfg(test)]
 mod tests {
     use super::{ConfigResponse, upstream_response};
-    use crate::http::RuntimeUpstream;
+    use crate::http::{RuntimeUpstream, RuntimeUpstreamTransport};
 
     #[test]
     fn serializes_the_complete_wizard_contract() {
@@ -133,13 +139,14 @@ mod tests {
             configured: 1,
             upstreams: vec![],
             foreign_upstreams: &[],
-            auto_concurrency: 6,
-            ecs_protect_ms: 20,
-            hard_timeout_ms: 800,
-            meta_hard_timeout_ms: 800,
-            meta_collect_window_ms: 50,
-            meta_max_ips: 4,
-            preferred_timeout_ms: 300,
+            upstream_concurrency: 2,
+            fast_timeout_ms: 300,
+            mix_timeout_ms: 200,
+            mix_ttl: 300,
+            preferred_ttl: 60,
+            servfail_ede_code: 22,
+            cf_ech_cache_ttl_ms: 600_000,
+            cf_ech_stale_ttl_ms: 3_600_000,
             ecs_prefix4: 24,
             ecs_prefix6: 56,
             blocked_cidrs: String::new(),
@@ -154,13 +161,14 @@ mod tests {
             "configured",
             "upstreams",
             "foreignUpstreams",
-            "autoConcurrency",
-            "ecsProtectMs",
-            "hardTimeoutMs",
-            "metaHardTimeoutMs",
-            "metaCollectWindowMs",
-            "metaMaxIps",
-            "preferredTimeoutMs",
+            "upstreamConcurrency",
+            "fastTimeoutMs",
+            "mixTimeoutMs",
+            "mixTtl",
+            "preferredTtl",
+            "servfailEdeCode",
+            "cfEchCacheTtlMs",
+            "cfEchStaleTtlMs",
             "ecsPrefix4",
             "ecsPrefix6",
             "blockedCidrs",
@@ -173,10 +181,12 @@ mod tests {
     }
 
     #[test]
-    fn redacts_runtime_upstream_urls() {
+    fn exposes_transport_without_endpoint_details() {
         let upstream = RuntimeUpstream {
             name: "custom".to_owned(),
-            url: "https://user:secret@resolver.example/dns-query?key=secret".to_owned(),
+            transport: RuntimeUpstreamTransport::Doh {
+                url: "https://user:secret@resolver.example/dns-query?key=secret".to_owned(),
+            },
             ecs: true,
         };
         let value = match serde_json::to_value(upstream_response(&upstream)) {
@@ -186,7 +196,8 @@ mod tests {
 
         assert_eq!(value["name"], "custom");
         assert_eq!(value["ecs"], true);
-        assert_eq!(value["url"], "");
+        assert_eq!(value["transport"], "doh");
+        assert!(value.get("url").is_none());
         assert!(!value.to_string().contains("secret"));
     }
 }

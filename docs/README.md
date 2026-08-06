@@ -6,7 +6,7 @@
 
 ## 功能特性
 
-- **多上游并发竞速** — Google、Cloudflare、Quad9、AdGuard、OpenDNS、NextDNS 等预设上游并行查询，最快响应优先返回
+- **多传输上游竞速** — 预设上游可分别选择 DoH 或 DNS-over-TCP；全部启用上游作为候选，按滑动并发窗口竞速
 - **两阶段 AUTO 流程** — AUTO 1 多上游分类查询，识别 CDN 归属；AUTO 2 按归属对优选域名进行二次最优解析
 - **CDN 感知路由** — 识别 Cloudflare、CloudFront、Vercel、Meta 等 CDN 响应，替换为地区可达的优选 IP
 - **ECH 外置 SNI 注入** — CF 动态获取 ECH 公钥 + Meta 静态 ECH 配置，在 HTTPS RR 响应中注入加密 SNI，绕过 GFW SNI DPI
@@ -42,9 +42,9 @@ Fork 仓库 → 在 Cloudflare 连接 GitHub（Workers Builds）
 ## 已知限制
 
 > [!WARNING]
-> - **Meta ECH 是静态的** — `META_ECH_B64` 硬编码于 `ech.js`，不随 Meta 服务器轮换自动更新。ECH 公钥过期后需手动更新。
+> - **Meta ECH 映射是静态策略数据** — 构建器把 `metaEchMap` 编译进 Worker，不随 Meta 服务器轮换自动更新；映射失效时需更新配置/构建数据。
 > - **ECH 注入会修改 DNS 响应** — HTTPS RR 重建时清除 AD 位并删除覆盖 type 65 的 RRSIG，不保留原响应的 DNSSEC 签名。对普通浏览器 DoH 无影响，但 DNSSEC 验证客户端会丢弃修改后的响应。
-> - **Workers Free 计划 6 连接限制** — Free 计划仅有 6 个同时出站 TCP 连接。超过 6 个上游会导致排队等待，拖慢 DNS 响应。建议启用上游数不超过 6，并为 AUTO 2 优选解析预留槽位（`autoConcurrency` 设为 4）。
+> - **Workers 出站连接限制** — 单次 fast/mix 的同时在飞数量由 `upstreamConcurrency` 控制，默认 2；过高窗口会放大页面级 socket 压力。Cloudflare 与 NextDNS 预设保持 DoH-only。
 > - **地区优化依赖 `request.cf.country`** — `wrangler dev` 或非 Cloudflare 环境下该字段为空，地区优化路径不会触发。需通过线上 Worker 验证地区优化行为。
 
 ## 致谢

@@ -27,10 +27,16 @@ pub mod doh;
 pub mod health;
 pub mod home;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RuntimeUpstreamTransport {
+    Doh { url: String },
+    Tcp { host: String, port: u16 },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeUpstream {
     pub name: String,
-    pub url: String,
+    pub transport: RuntimeUpstreamTransport,
     pub ecs: bool,
 }
 
@@ -125,7 +131,15 @@ fn runtime_config(env: &Env) -> RuntimeConfig {
         .iter()
         .map(|upstream| RuntimeUpstream {
             name: upstream.name.to_owned(),
-            url: upstream.url.to_owned(),
+            transport: match upstream.transport {
+                config::UpstreamTransport::Doh => RuntimeUpstreamTransport::Doh {
+                    url: upstream.doh_url.to_owned(),
+                },
+                config::UpstreamTransport::Tcp => RuntimeUpstreamTransport::Tcp {
+                    host: upstream.tcp_host.to_owned(),
+                    port: upstream.tcp_port,
+                },
+            },
             ecs: upstream.ecs,
         })
         .collect();
@@ -152,7 +166,7 @@ fn runtime_config(env: &Env) -> RuntimeConfig {
 
         let custom = RuntimeUpstream {
             name: name.clone(),
-            url,
+            transport: RuntimeUpstreamTransport::Doh { url },
             ecs: true,
         };
         merge_runtime_upstream(&mut upstreams, custom);
@@ -443,8 +457,9 @@ fn rewrite_proxy_location(
 #[cfg(test)]
 mod tests {
     use super::{
-        RuntimeUpstream, forbidden_proxy_address, internal_path, merge_runtime_upstream,
-        normalize_entrance, parse_proxy_target, stripped_proxy_response_header, valid_custom_name,
+        RuntimeUpstream, RuntimeUpstreamTransport, forbidden_proxy_address, internal_path,
+        merge_runtime_upstream, normalize_entrance, parse_proxy_target,
+        stripped_proxy_response_header, valid_custom_name,
     };
     use std::net::IpAddr;
 
@@ -500,14 +515,18 @@ mod tests {
     fn prioritizes_runtime_custom_upstreams() {
         let mut upstreams = vec![RuntimeUpstream {
             name: "google".to_owned(),
-            url: "https://dns.google/dns-query".to_owned(),
+            transport: RuntimeUpstreamTransport::Doh {
+                url: "https://dns.google/dns-query".to_owned(),
+            },
             ecs: true,
         }];
         merge_runtime_upstream(
             &mut upstreams,
             RuntimeUpstream {
                 name: "custom".to_owned(),
-                url: "https://resolver.example/dns-query".to_owned(),
+                transport: RuntimeUpstreamTransport::Doh {
+                    url: "https://resolver.example/dns-query".to_owned(),
+                },
                 ecs: true,
             },
         );

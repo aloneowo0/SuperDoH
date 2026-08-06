@@ -6,11 +6,13 @@ use futures_util::{
     future::{Either, LocalBoxFuture, select},
     pin_mut,
 };
-use worker::{AbortController, Fetch, Headers, Method, Request, RequestInit};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use worker::{AbortController, Fetch, Headers, Method, Request, RequestInit, Socket};
 
 use crate::{
     algo::{self, DeadlineTimer, QueryOutcome, Upstream, fast::FastOptions, mix::MixOptions},
     config, dns,
+    http::{RuntimeUpstream, RuntimeUpstreamTransport},
 };
 
 use super::{ParsedQuery, PolicyError, classify};
@@ -36,9 +38,17 @@ impl UpstreamTrace {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum TransportEndpoint {
+    Doh(String),
+    Tcp { host: String, port: u16 },
+}
+
 #[derive(Clone)]
 pub(crate) struct WorkerUpstream {
-    config: &'static config::Upstream,
+    name: String,
+    endpoint: TransportEndpoint,
+    ecs: bool,
     expected: dns::Question,
     query_id: u16,
     client_ip: Option<std::net::IpAddr>,
@@ -48,14 +58,47 @@ pub(crate) struct WorkerUpstream {
 }
 
 impl WorkerUpstream {
-    fn new(
+    fn from_config(
         config: &'static config::Upstream,
         query: &ParsedQuery,
         client_ip: Option<std::net::IpAddr>,
         trace: UpstreamTrace,
     ) -> Self {
         Self {
-            config,
+            name: config.name.to_owned(),
+            endpoint: match config.transport {
+                config::UpstreamTransport::Doh => TransportEndpoint::Doh(config.doh_url.to_owned()),
+                config::UpstreamTransport::Tcp => TransportEndpoint::Tcp {
+                    host: config.tcp_host.to_owned(),
+                    port: config.tcp_port,
+                },
+            },
+            ecs: config.ecs,
+            expected: query.question.clone(),
+            query_id: query.id,
+            client_ip,
+            client_sent_ecs: query.client_sent_ecs,
+            blocked: classify::blocked_cidrs(),
+            trace,
+        }
+    }
+
+    fn from_runtime(
+        config: &RuntimeUpstream,
+        query: &ParsedQuery,
+        client_ip: Option<std::net::IpAddr>,
+        trace: UpstreamTrace,
+    ) -> Self {
+        Self {
+            name: config.name.clone(),
+            endpoint: match &config.transport {
+                RuntimeUpstreamTransport::Doh { url } => TransportEndpoint::Doh(url.clone()),
+                RuntimeUpstreamTransport::Tcp { host, port } => TransportEndpoint::Tcp {
+                    host: host.clone(),
+                    port: *port,
+                },
+            },
+            ecs: config.ecs,
             expected: query.question.clone(),
             query_id: query.id,
             client_ip,
@@ -114,52 +157,180 @@ impl Upstream for WorkerUpstream {
         } else {
             Ok(None)
         };
-        let body = prepare_upstream_query(body, self.config.ecs, self.client_ip);
-        let name = self.config.name;
+        let body = prepare_upstream_query(body, self.ecs, self.client_ip);
+        let name = self.name.clone();
         let trace = self.trace.clone();
         let expected = self.expected.clone();
         let query_id = self.query_id;
         let blocked = self.blocked.clone();
-        let url = self.config.url;
+        let endpoint = self.endpoint.clone();
 
         Box::pin(async move {
             let body = body?;
             let client_ecs = client_ecs?;
-            let request = dns_request(url, &body)?;
-            let controller = AbortController::default();
-            let signal = controller.signal();
-            let mut abort_on_drop = AbortOnDrop::new(controller);
-            let fetch = Fetch::Request(request);
-            let operation = async move {
-                let mut response = fetch
-                    .send_with_signal(&signal)
-                    .await
-                    .map_err(|error| PolicyError::Transport(error.to_string()))?;
-                if response.status_code() != 200 {
-                    return Err(PolicyError::Transport(
-                        "DNS upstream returned non-200 status".to_owned(),
-                    ));
-                }
-                let response_body = read_dns_response_body(&mut response).await?;
-                Ok::<Vec<u8>, PolicyError>(response_body)
-            };
-            let cancelled = cancellation.cancelled();
-            pin_mut!(operation, cancelled);
-            let response_body = match select(operation, cancelled).await {
-                Either::Left((result, _)) => result?,
-                Either::Right(((), operation)) => {
-                    drop(operation);
-                    return Err(PolicyError::Cancelled);
+            let response_body = match endpoint {
+                TransportEndpoint::Doh(url) => query_doh(&url, &body, cancellation).await?,
+                TransportEndpoint::Tcp { host, port } => {
+                    query_tcp(&host, port, &body, cancellation).await?
                 }
             };
-            abort_on_drop.disarm();
             let response_body = dns::normalize_response(&response_body, client_ecs.as_ref())?;
             let classification =
                 dns::classify_response(&response_body, query_id, &expected, &blocked);
-            trace.record(name);
+            trace.record(&name);
             Ok(QueryOutcome::new(response_body, classification))
         })
     }
+}
+
+async fn query_doh(
+    url: &str,
+    body: &[u8],
+    cancellation: algo::CancellationToken,
+) -> Result<Vec<u8>, PolicyError> {
+    let request = dns_request(url, body)?;
+    let controller = AbortController::default();
+    let signal = controller.signal();
+    let mut abort_on_drop = AbortOnDrop::new(controller);
+    let fetch = Fetch::Request(request);
+    let operation = async move {
+        let mut response = fetch
+            .send_with_signal(&signal)
+            .await
+            .map_err(|error| PolicyError::Transport(error.to_string()))?;
+        if response.status_code() != 200 {
+            return Err(PolicyError::Transport(
+                "DNS upstream returned non-200 status".to_owned(),
+            ));
+        }
+        read_dns_response_body(&mut response).await
+    };
+    let cancelled = cancellation.cancelled();
+    pin_mut!(operation, cancelled);
+    let response_body = match select(operation, cancelled).await {
+        Either::Left((result, _)) => result?,
+        Either::Right(((), operation)) => {
+            drop(operation);
+            return Err(PolicyError::Cancelled);
+        }
+    };
+    abort_on_drop.disarm();
+    Ok(response_body)
+}
+
+struct SocketOnDrop {
+    socket: Option<Socket>,
+}
+
+impl SocketOnDrop {
+    fn new(socket: Socket) -> Self {
+        Self {
+            socket: Some(socket),
+        }
+    }
+
+    fn socket_mut(&mut self) -> Result<&mut Socket, PolicyError> {
+        self.socket
+            .as_mut()
+            .ok_or_else(|| PolicyError::Transport("DNS TCP socket already closed".to_owned()))
+    }
+
+    async fn close(&mut self) {
+        if let Some(mut socket) = self.socket.take() {
+            let _ = socket.close().await;
+        }
+    }
+}
+
+impl Drop for SocketOnDrop {
+    fn drop(&mut self) {
+        let Some(mut socket) = self.socket.take() else {
+            return;
+        };
+        #[cfg(target_arch = "wasm32")]
+        wasm_bindgen_futures::spawn_local(async move {
+            let _ = socket.close().await;
+        });
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = &mut socket;
+        }
+    }
+}
+
+async fn query_tcp(
+    host: &str,
+    port: u16,
+    body: &[u8],
+    cancellation: algo::CancellationToken,
+) -> Result<Vec<u8>, PolicyError> {
+    let frame_length = tcp_request_length(body)?;
+    let socket = Socket::builder()
+        .connect(host, port)
+        .map_err(|error| PolicyError::Transport(error.to_string()))?;
+    let mut socket = SocketOnDrop::new(socket);
+    let result = {
+        let operation = async {
+            let stream = socket.socket_mut()?;
+            stream
+                .write_all(&frame_length)
+                .await
+                .map_err(|error| PolicyError::Transport(error.to_string()))?;
+            stream
+                .write_all(body)
+                .await
+                .map_err(|error| PolicyError::Transport(error.to_string()))?;
+            stream
+                .flush()
+                .await
+                .map_err(|error| PolicyError::Transport(error.to_string()))?;
+
+            let mut response_length = [0_u8; 2];
+            stream
+                .read_exact(&mut response_length)
+                .await
+                .map_err(|error| PolicyError::Transport(error.to_string()))?;
+            let response_length = tcp_response_length(response_length)?;
+            let mut response_body = vec![0_u8; response_length];
+            stream
+                .read_exact(&mut response_body)
+                .await
+                .map_err(|error| PolicyError::Transport(error.to_string()))?;
+            Ok::<Vec<u8>, PolicyError>(response_body)
+        };
+        let cancelled = cancellation.cancelled();
+        pin_mut!(operation, cancelled);
+        match select(operation, cancelled).await {
+            Either::Left((result, _)) => result,
+            Either::Right(((), operation)) => {
+                drop(operation);
+                Err(PolicyError::Cancelled)
+            }
+        }
+    };
+    socket.close().await;
+    result
+}
+
+fn tcp_request_length(body: &[u8]) -> Result<[u8; 2], PolicyError> {
+    let length = u16::try_from(body.len())
+        .map_err(|_| PolicyError::Transport("DNS TCP query exceeds 65535 bytes".to_owned()))?;
+    if length == 0 {
+        return Err(PolicyError::Transport(
+            "DNS TCP query cannot be empty".to_owned(),
+        ));
+    }
+    Ok(length.to_be_bytes())
+}
+
+fn tcp_response_length(prefix: [u8; 2]) -> Result<usize, PolicyError> {
+    let length = usize::from(u16::from_be_bytes(prefix));
+    if length == 0 {
+        return Err(PolicyError::Transport(
+            "DNS TCP upstream returned an empty frame".to_owned(),
+        ));
+    }
+    Ok(length)
 }
 
 async fn read_dns_response_body(response: &mut worker::Response) -> Result<Vec<u8>, PolicyError> {
@@ -231,18 +402,20 @@ pub(crate) async fn fast_query<F>(
     query: &ParsedQuery,
     client_ip: Option<std::net::IpAddr>,
     foreign_only: bool,
+    runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &UpstreamTrace,
     accept: F,
 ) -> Option<QueryOutcome>
 where
     F: Fn(&QueryOutcome) -> bool,
 {
-    let upstreams = configured_upstreams(query, client_ip, foreign_only, trace);
+    let upstreams = configured_upstreams(query, client_ip, foreign_only, runtime_upstreams, trace);
     algo::fast::race(
         &upstreams,
         body,
         FastOptions {
             deadline: Duration::from_millis(u64::from(config::FAST_TIMEOUT_MS)),
+            max_concurrency: config::UPSTREAM_CONCURRENCY,
         },
         &WorkerTimer,
         accept,
@@ -254,14 +427,16 @@ pub(crate) async fn mix_query(
     body: &[u8],
     query: &ParsedQuery,
     client_ip: Option<std::net::IpAddr>,
+    runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &UpstreamTrace,
 ) -> Vec<Vec<u8>> {
-    let upstreams = configured_upstreams(query, client_ip, false, trace);
+    let upstreams = configured_upstreams(query, client_ip, false, runtime_upstreams, trace);
     algo::mix::collect(
         &upstreams,
         body,
         MixOptions {
             deadline: Duration::from_millis(u64::from(config::MIX_TIMEOUT_MS)),
+            max_concurrency: config::UPSTREAM_CONCURRENCY,
         },
         &WorkerTimer,
     )
@@ -292,25 +467,28 @@ fn configured_upstreams(
     query: &ParsedQuery,
     client_ip: Option<std::net::IpAddr>,
     foreign_only: bool,
+    runtime_upstreams: Option<&[RuntimeUpstream]>,
     trace: &UpstreamTrace,
 ) -> Vec<WorkerUpstream> {
-    let maximum = upstream_limit(config::AUTO_CONCURRENCY, config::UPSTREAMS.len());
+    if let Some(runtime_upstreams) = runtime_upstreams {
+        return runtime_upstreams
+            .iter()
+            .filter(|upstream| !foreign_only || is_foreign_upstream(&upstream.name))
+            .map(|upstream| {
+                WorkerUpstream::from_runtime(upstream, query, client_ip, (*trace).clone())
+            })
+            .collect();
+    }
+
     config::UPSTREAMS
         .iter()
         .filter(|upstream| !foreign_only || config::FOREIGN_UPSTREAMS.contains(&upstream.name))
-        .take(maximum)
-        .map(|upstream| WorkerUpstream::new(upstream, query, client_ip, (*trace).clone()))
+        .map(|upstream| WorkerUpstream::from_config(upstream, query, client_ip, (*trace).clone()))
         .collect()
 }
 
-fn upstream_limit(auto_concurrency: usize, upstream_count: usize) -> usize {
-    if auto_concurrency == 0 {
-        upstream_count
-    } else {
-        auto_concurrency
-            .min(algo::MAX_CONCURRENT_UPSTREAMS)
-            .min(upstream_count)
-    }
+fn is_foreign_upstream(name: &str) -> bool {
+    name != "dnspod" && name != "alidns"
 }
 
 fn dns_request(url: &str, body: &[u8]) -> Result<Request, PolicyError> {
@@ -368,13 +546,53 @@ mod tests {
     }
 
     #[test]
-    fn zero_auto_concurrency_keeps_all_candidates() {
-        assert_eq!(upstream_limit(0, 8), 8);
+    fn tcp_framing_accepts_the_dns_wire_size_range() {
+        assert!(matches!(
+            tcp_request_length(&[]),
+            Err(PolicyError::Transport(message)) if message == "DNS TCP query cannot be empty"
+        ));
+        assert_eq!(tcp_request_length(&[0; 12]), Ok(12_u16.to_be_bytes()));
+        assert_eq!(
+            tcp_request_length(&vec![0; MAX_DNS_RESPONSE_SIZE]),
+            Ok(u16::MAX.to_be_bytes())
+        );
+        assert!(matches!(
+            tcp_request_length(&vec![0; MAX_DNS_RESPONSE_SIZE + 1]),
+            Err(PolicyError::Transport(message)) if message == "DNS TCP query exceeds 65535 bytes"
+        ));
+        assert!(tcp_response_length([0, 0]).is_err());
+        assert_eq!(tcp_response_length([0, 53]), Ok(53));
     }
 
     #[test]
-    fn auto_concurrency_is_capped_at_connection_limit() {
-        assert_eq!(upstream_limit(8, 9), algo::MAX_CONCURRENT_UPSTREAMS);
+    fn runtime_transport_selects_the_configured_tcp_endpoint() {
+        let wire = match build_query("example.com", 1, 7) {
+            Ok(wire) => wire,
+            Err(error) => panic!("query must build: {error}"),
+        };
+        let query = match super::super::parse_query(&wire) {
+            Ok(query) => query,
+            Err(error) => panic!("query must parse: {error}"),
+        };
+        let runtime = [RuntimeUpstream {
+            name: "quad9".to_owned(),
+            transport: RuntimeUpstreamTransport::Tcp {
+                host: "9.9.9.11".to_owned(),
+                port: 53,
+            },
+            ecs: true,
+        }];
+        let trace = UpstreamTrace::default();
+        let selected = configured_upstreams(&query, None, false, Some(&runtime), &trace);
+
+        assert_eq!(selected.len(), 1);
+        assert_eq!(
+            selected[0].endpoint,
+            TransportEndpoint::Tcp {
+                host: "9.9.9.11".to_owned(),
+                port: 53,
+            }
+        );
     }
 
     #[test]

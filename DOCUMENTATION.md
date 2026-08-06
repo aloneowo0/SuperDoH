@@ -139,20 +139,23 @@ CF 的 ECH 通过 `cloudflare-ech.com` 的 HTTPS RR 动态获取公钥，注入�
 ```js
 export default {
   configured: 1,            // 0=首次配置模式 / 1=正式运行
-  upstreams: {              // 预设名: true 启用
-    google: true,
-    cloudflare_Public: true,
+  upstreams: {              // 每个预设使用 { enabled, transport }
+    google: { enabled: true, transport: 'tcp' },
+    cloudflare_Public: { enabled: true, transport: 'doh' },
+    quad9: { enabled: true, transport: 'tcp' },
+    adguard: { enabled: false, transport: 'tcp' },
   },
   ecsPrefix4: 24,           // ECS IPv4 前缀长度
   ecsPrefix6: 56,           // ECS IPv6 前缀长度
   blockedCidrs: '127.0.0.0/8 0.0.0.0/32 ::/128 ::1/128',  // 应答 IP 黑名单
-  autoConcurrency: 6,       // AUTO 竞速并发数（0=全部）
-  ecsProtectMs: 20,        // ECS 保护窗（毫秒）
-  hardTimeoutMs: 800,       // 上游硬超时（毫秒）
-  metaHardTimeoutMs: 800,
-  metaCollectWindowMs: 50,
-  metaMaxIps: 4,
-  preferredTimeoutMs: 300,
+  upstreamConcurrency: 2,  // fast / mix 滑动并发窗口（0=最多 6）
+  fastTimeoutMs: 300,      // fast 阶段超时（毫秒）
+  mixTimeoutMs: 200,       // mix 阶段超时（毫秒）
+  mixTtl: 300,             // mix 重建响应 TTL（秒）
+  preferredTtl: 60,        // 优选替换 TTL（秒）
+  servfailEdeCode: 22,     // SERVFAIL 的 EDE code
+  cfEchCacheTtlMs: 600000,
+  cfEchStaleTtlMs: 3600000,
   logLevel: 'info',         // debug/info/warn/error/none
   regions: {               // 空对象=不启用地区优化；键为 ISO 国家码或 *（全球通配）
     CN: {
@@ -172,18 +175,18 @@ export default {
 
 ### 预设上游
 
-| 名称 | URL | ECS |
-|------|-----|:---:|
-| `google` | `https://dns.google/dns-query` | ✓ |
-| `cloudflare_Public` | `https://cloudflare-dns.com/dns-query` | ✗ |
-| `quad9` | `https://dns11.quad9.net/dns-query` | ✓ |
-| `adguard` | `https://dns.adguard-dns.com/dns-query` | ✓ |
-| `opendns` | `https://dns.opendns.com/dns-query` | ✓ |
-| `nextdns` | `https://dns.nextdns.io` | ✓ |
-| `yandex` | `https://common.dot.dns.yandex.net/dns-query` | ✗ |
-| `dnspod` | `https://sm2.doh.pub/dns-query` | ✓ |
-| `alidns` | `https://dns.alidns.com/dns-query` | ✓ |
-| `360` | `https://doh.360.cn/dns-query` | ✓ |
+| 名称 | DoH URL | TCP/53 预设 | ECS |
+|------|---------|---------------|:---:|
+| `google` | `https://dns.google/dns-query` | `8.8.8.8` | ✓ |
+| `cloudflare_Public` | `https://cloudflare-dns.com/dns-query` | —（DoH-only） | ✗ |
+| `quad9` | `https://dns11.quad9.net/dns-query` | `9.9.9.11` | ✓ |
+| `adguard` | `https://dns.adguard-dns.com/dns-query` | `94.140.14.14` | ✓ |
+| `opendns` | `https://dns.opendns.com/dns-query` | `208.67.222.222` | ✓ |
+| `nextdns` | `https://dns.nextdns.io` | —（DoH-only） | ✓ |
+| `yandex` | `https://common.dot.dns.yandex.net/dns-query` | `77.88.8.8` | ✗ |
+| `dnspod` | `https://sm2.doh.pub/dns-query` | `119.29.29.29` | ✓ |
+| `alidns` | `https://dns.alidns.com/dns-query` | `223.5.5.5` | ✓ |
+| `360` | `https://doh.360.cn/dns-query` | `101.226.4.6` | ✗ |
 
 ### 自定义上游（运行时环境变量）
 

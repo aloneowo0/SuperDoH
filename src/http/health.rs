@@ -11,10 +11,12 @@ struct HealthResponse<'a> {
     status: &'static str,
     configured: u8,
     upstreams: Vec<&'a str>,
-    #[serde(rename = "hardTimeoutMs")]
-    hard_timeout_ms: u32,
-    #[serde(rename = "ecsProtectMs")]
-    ecs_protect_ms: u32,
+    #[serde(rename = "upstreamConcurrency")]
+    upstream_concurrency: usize,
+    #[serde(rename = "fastTimeoutMs")]
+    fast_timeout_ms: u32,
+    #[serde(rename = "mixTimeoutMs")]
+    mix_timeout_ms: u32,
     region: Option<&'a str>,
     #[serde(rename = "regionConfig")]
     region_config: Option<serde_json::Value>,
@@ -60,8 +62,9 @@ pub fn serve(runtime: &RuntimeConfig) -> Result<Response> {
                     .map(|upstream| upstream.name.as_str()),
             )
             .collect(),
-        hard_timeout_ms: config::HARD_TIMEOUT_MS,
-        ecs_protect_ms: config::ECS_PROTECT_MS,
+        upstream_concurrency: config::UPSTREAM_CONCURRENCY,
+        fast_timeout_ms: config::FAST_TIMEOUT_MS,
+        mix_timeout_ms: config::MIX_TIMEOUT_MS,
         region: (!config::REGION.is_empty()).then_some(config::REGION),
         region_config: (!config::REGION_CONFIG.is_empty()).then_some(region_config),
         ech_enabled: config::REGION_CONFIG.iter().any(|region| region.ech),

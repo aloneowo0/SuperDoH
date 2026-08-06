@@ -372,6 +372,30 @@ mod tests {
     }
 
     #[test]
+    fn fast_replenishes_a_single_slot_from_all_candidates() {
+        let negative = MockUpstream::new(response(0x8183, &[]), 0);
+        let winner = MockUpstream::new(positive(9), 0);
+        let unused = MockUpstream::new(positive(10), 0);
+        let expected = winner.outcome.clone();
+
+        let result = run(fast::race(
+            &[negative.clone(), winner.clone(), unused.clone()],
+            &[0],
+            FastOptions {
+                deadline: fast::DEFAULT_DEADLINE,
+                max_concurrency: 1,
+            },
+            &PollTimer(8),
+            |_| true,
+        ));
+
+        assert_eq!(result, Some(expected));
+        assert_eq!(negative.cancellations.borrow().len(), 1);
+        assert_eq!(winner.cancellations.borrow().len(), 1);
+        assert!(unused.cancellations.borrow().is_empty());
+    }
+
+    #[test]
     fn mix_collects_all_positive_ips_without_duplicates() {
         let first = MockUpstream::new(
             response(0x8180, &[vec![192, 0, 2, 10], vec![192, 0, 2, 11]]),
@@ -420,6 +444,39 @@ mod tests {
                 .map(|upstream| upstream.cancellations.borrow().len())
                 .sum::<usize>(),
             MAX_CONCURRENT_UPSTREAMS
+        );
+    }
+
+    #[test]
+    fn mix_replenishes_a_single_slot_from_all_candidates() {
+        let upstreams = [
+            MockUpstream::new(positive(20), 0),
+            MockUpstream::new(positive(21), 0),
+            MockUpstream::new(positive(22), 0),
+        ];
+
+        let ips = run(mix::collect(
+            &upstreams,
+            &[0],
+            MixOptions {
+                deadline: mix::DEFAULT_DEADLINE,
+                max_concurrency: 1,
+            },
+            &PollTimer(8),
+        ));
+
+        assert_eq!(
+            ips,
+            vec![
+                vec![192, 0, 2, 20],
+                vec![192, 0, 2, 21],
+                vec![192, 0, 2, 22],
+            ]
+        );
+        assert!(
+            upstreams
+                .iter()
+                .all(|upstream| upstream.cancellations.borrow().len() == 1)
         );
     }
 

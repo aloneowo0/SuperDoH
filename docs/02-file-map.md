@@ -22,7 +22,7 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 | 文件 | 行数 | 职责 |
 |---|---|---|
 | `src/lib.rs` | ~60 | **Worker 入口**。`#[event(fetch)]` + Router:注册 `/`、`/en`、`/health`、`/config.json`、静态资源、`/dns-query`、兜底路由(伪装 fallback)。ENTRANCE 前缀剥离也在这 |
-| `src/config.rs` | ~700 | **构建生成物**(gitignored)。全部运行时常量:UPSTREAMS、FAST_TIMEOUT_MS=200、MIX_TIMEOUT_MS=200、TTL、ECS 前缀、GEOIP_* 八类 CIDR、REGION_CONFIG(remap/优选域名/ECH)、META_ECH_MAP、前端死参 |
+| `src/config.rs` | ~700 | **构建生成物**(gitignored)。全部运行时常量:UPSTREAMS、UPSTREAM_CONCURRENCY、FAST_TIMEOUT_MS、MIX_TIMEOUT_MS、TTL、ECS 前缀、EDE、ECH 缓存、GEOIP_* 八类 CIDR、REGION_CONFIG(remap/优选域名/ECH)、META_ECH_MAP |
 | `scripts/build-config.cjs` | ~660 | **构建脚本**(Node)。读 superdoh.config.js → 抓 GeoIP 8 类 + Cealing-Host → 生成 config.rs。configured 0/1 双模式,下载带 HTTPS/大小校验 |
 | `scripts/build-worker.cjs` | ~190 | **统一 Worker 构建入口**。缺失时引导安装 Rust 1.88.0、rustfmt、wasm32 target、worker-build 0.8.5，再生成 config.rs 并编译 `build/worker/*`；部署阶段不重复构建 |
 
@@ -53,7 +53,7 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 |---|---|---|
 | `policy/mod.rs` | ~300 | **编排核心**。`process_query` 入口:canary → fast 主查询 → 三态门控(Q15 不复活)→ Domain/IP 归属 → 分派 → ECH → 构包;日志/上游追踪汇总 |
 | `policy/classify.rs` | ~230 | **归属判定**。Domain 规则(remap 列表/Google 代理模式/Meta 后缀)+ IP 归属(GeoIP CIDR,混合 owner 返回 None)+ 黑名单 |
-| `policy/upstream.rs` | ~330 | **worker 侧上游实现**。实现 algo 的 trait:Fetch POST、按 ecs:true 注入 ECS、AbortOnDrop 取消、流式 65535 限长、6 连接并发调度 |
+| `policy/upstream.rs` | ~550 | **统一上游 transport**。实现 algo trait:DoH Fetch POST、DNS-over-TCP framing/socket、按 ecs:true 注入 ECS、取消/资源释放、65535 限长、6 连接并发调度 |
 | `policy/prefer.rs` | ~120 | **优选替换**(CF/CFT/Vercel)。fast 解析优选域名 + expectedOwner 验收 → 替换原始 IP(TTL 60) |
 | `policy/meta.rs` | ~180 | **Meta 增强**。mix 二次解析 + 静态路由表(EXACT 21 条 + WILDCARD 8 条)+ 去重 + owner/黑名单过滤 → IP 加入(TTL 300);无候选 → SERVFAIL 不伪造 |
 | `policy/google.rs` | ~80 | **Google 合并**。Cealing-Host 代理 IP 优先 + 真实 IP 兜底(去重,Happy Eyeballs best-effort) |
@@ -70,7 +70,7 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 | `http/mod.rs` | ~560 | **路由辅助 + 伪装 + 运行时配置**。ENTRANCE 前缀隔离、PROXY 反代(剥敏感头/hop-by-hop/Location 重写/URL 校验)、CUSTOM_* 环境变量合并运行时上游 |
 | `http/doh.rs` | ~300 | **/dns-query**。GET(dns= base64url 或 name&type)/ POST 解析、405/415/413/400、流式 65535 限长、canary NXDOMAIN、调用 policy::process_query、dns-json 转换、统一响应头(不暴露内部) |
 | `http/health.rs` | ~40 | **/health**。configured/上游/超时/地区 JSON |
-| `http/config_json.rs` | ~130 | **/config.json**。前端向导契约 16 字段(含死参),URL 脱敏 |
+| `http/config_json.rs` | ~130 | **/config.json**。新版 Rust 配置向导契约,只返回实际生效字段；上游 URL 脱敏 |
 | `http/home.rs` | ~110 | **首页**。include_str! 内嵌 frontend/ 五件套,占位符注入(`__HOST__` 等) |
 
 ## 一次请求的完整路径
@@ -78,7 +78,7 @@ lib.rs → http/* → policy::process_query → policy/* → algo/* + dns/*
 ```
 HTTP 请求 → http/doh.rs(校验 + canary)
   → policy::process_query(编排)
-    → fast 竞速(200ms,三态验证)→ 无地区配置直接返回
+    → fast 竞速(300ms,三态验证)→ 无地区配置直接返回
     → Domain 归属(remap/Google/Meta)→ 未命中 → IP 归属(GeoIP)
     → 分派:CF/CFT/Vercel 优选替换(TTL 60)| Meta mix+静态路由(TTL 300)| Google 合并
     → 尝试注入 ECH(CF 动态 / Meta 映射)

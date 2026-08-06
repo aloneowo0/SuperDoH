@@ -7,19 +7,39 @@ const { isIP } = require('net');
 const { spawnSync } = require('child_process');
 
 const PRESETS = {
-  google: { url: 'https://dns.google/dns-query', ecs: true },
-  cloudflare_Public: { url: 'https://cloudflare-dns.com/dns-query', ecs: false },
-  quad9: { url: 'https://dns11.quad9.net/dns-query', ecs: true },
-  adguard: { url: 'https://dns.adguard-dns.com/dns-query', ecs: true },
-  opendns: { url: 'https://dns.opendns.com/dns-query', ecs: true },
-  yandex: { url: 'https://common.dot.dns.yandex.net/dns-query', ecs: false },
-  dnspod: { url: 'https://sm2.doh.pub/dns-query', ecs: true },
-  alidns: { url: 'https://dns.alidns.com/dns-query', ecs: true },
-  360: { url: 'https://doh.360.cn/dns-query', ecs: true },
-  nextdns: { url: 'https://dns.nextdns.io', ecs: true },
+  google: { dohUrl: 'https://dns.google/dns-query', tcpHost: '8.8.8.8', tcpPort: 53, ecs: true },
+  cloudflare_Public: {
+    dohUrl: 'https://cloudflare-dns.com/dns-query', tcpHost: '', tcpPort: 0, ecs: false,
+  },
+  quad9: {
+    dohUrl: 'https://dns11.quad9.net/dns-query', tcpHost: '9.9.9.11', tcpPort: 53, ecs: true,
+  },
+  adguard: {
+    dohUrl: 'https://dns.adguard-dns.com/dns-query', tcpHost: '94.140.14.14', tcpPort: 53, ecs: true,
+  },
+  opendns: {
+    dohUrl: 'https://dns.opendns.com/dns-query', tcpHost: '208.67.222.222', tcpPort: 53, ecs: true,
+  },
+  yandex: {
+    dohUrl: 'https://common.dot.dns.yandex.net/dns-query', tcpHost: '77.88.8.8', tcpPort: 53, ecs: false,
+  },
+  dnspod: {
+    dohUrl: 'https://sm2.doh.pub/dns-query', tcpHost: '119.29.29.29', tcpPort: 53, ecs: true,
+  },
+  alidns: {
+    dohUrl: 'https://dns.alidns.com/dns-query', tcpHost: '223.5.5.5', tcpPort: 53, ecs: true,
+  },
+  360: {
+    dohUrl: 'https://doh.360.cn/dns-query', tcpHost: '101.226.4.6', tcpPort: 53, ecs: false,
+  },
+  nextdns: { dohUrl: 'https://dns.nextdns.io', tcpHost: '', tcpPort: 0, ecs: true },
 };
 
-const DEFAULT_UPSTREAM_KEYS = ['google', 'cloudflare_Public'];
+const DEFAULT_UPSTREAMS = [
+  ['google', 'tcp'],
+  ['cloudflare_Public', 'doh'],
+  ['quad9', 'tcp'],
+];
 
 const GEOIP_CATEGORIES = {
   CF: 'cloudflare',
@@ -193,24 +213,24 @@ function buildUpstreams(userConfig, env) {
   const userUpstreams = isRecord(userConfig.upstreams) ? userConfig.upstreams : {};
 
   for (const [name, value] of Object.entries(userUpstreams)) {
-    if (value === true) {
-      if (PRESETS[name]) {
-        upstreams[name] = { ...PRESETS[name] };
-      } else {
-        console.warn(`Unknown preset upstream: ${name} (skipped)`);
-      }
-    } else if (typeof value === 'string' && value.length > 0) {
-      if (!/^[a-z][a-z0-9_]*$/.test(name)) {
-        console.warn(`Skip invalid custom upstream name: ${name}`);
-        continue;
-      }
-      upstreams[name] = { url: value, ecs: true };
+    if (!isRecord(value) || value.enabled !== true) continue;
+    const preset = PRESETS[name];
+    if (!preset) {
+      console.warn(`Unknown preset upstream: ${name} (skipped)`);
+      continue;
     }
+    const transport = value.transport === 'tcp' ? 'tcp' : 'doh';
+    if (transport === 'tcp' && !preset.tcpHost) {
+      throw new Error(`${name} does not provide a universal DNS-over-TCP preset`);
+    }
+    upstreams[name] = { ...preset, transport };
   }
 
   for (const [name, preset] of Object.entries(PRESETS)) {
     const key = name.toUpperCase();
-    if (env[key] === 'true' && !upstreams[name]) upstreams[name] = { ...preset };
+    if (env[key] === 'true' && !upstreams[name]) {
+      upstreams[name] = { ...preset, transport: 'doh' };
+    }
     if (env[key] === 'false') delete upstreams[name];
   }
 
@@ -223,7 +243,13 @@ function buildUpstreams(userConfig, env) {
       console.warn(`Skip invalid custom upstream name from .env: ${key} → ${name}`);
       continue;
     }
-    upstreams[name] = { url, ecs: true };
+    upstreams[name] = {
+      dohUrl: url,
+      tcpHost: '',
+      tcpPort: 0,
+      ecs: true,
+      transport: 'doh',
+    };
   }
 
   return upstreams;
@@ -356,19 +382,15 @@ function resolveConfig(userConfig, env) {
   if (configured === 0) {
     return {
       configured,
-      upstreams: Object.fromEntries(DEFAULT_UPSTREAM_KEYS.map((key) => [key, { ...PRESETS[key] }])),
+      upstreams: Object.fromEntries(
+        DEFAULT_UPSTREAMS.map(([key, transport]) => [key, { ...PRESETS[key], transport }]),
+      ),
       metaEchMap: resolveMetaEchMap(userConfig.metaEchMap),
       ecsPrefix4: 24,
       ecsPrefix6: 56,
       blockedCidrs: DEFAULT_BLOCKED_CIDRS,
-      autoConcurrency: 6,
-      ecsProtectMs: 20,
-      hardTimeoutMs: 800,
-      metaHardTimeoutMs: 800,
-      metaCollectWindowMs: 50,
-      metaMaxIps: 4,
-      preferredTimeoutMs: 300,
-      fastTimeoutMs: 200,
+      upstreamConcurrency: 2,
+      fastTimeoutMs: 300,
       mixTimeoutMs: 200,
       mixTtl: 300,
       preferredTtl: 60,
@@ -392,17 +414,8 @@ function resolveConfig(userConfig, env) {
     ecsPrefix4: configNumber('ECS_PREFIX4', 'ecsPrefix4', 24, 0, 32),
     ecsPrefix6: configNumber('ECS_PREFIX6', 'ecsPrefix6', 56, 0, 128),
     blockedCidrs: env.BLOCKED_CIDRS || userConfig.blockedCidrs || DEFAULT_BLOCKED_CIDRS,
-    autoConcurrency: num(
-      env.AUTO_CONCURRENCY || env.MIX_CONCURRENCY,
-      num(userConfig.autoConcurrency, 6),
-    ),
-    ecsProtectMs: configNumber('ECS_PROTECT_MS', 'ecsProtectMs', 20),
-    hardTimeoutMs: configNumber('HARD_TIMEOUT_MS', 'hardTimeoutMs', 800),
-    metaHardTimeoutMs: configNumber('META_HARD_TIMEOUT_MS', 'metaHardTimeoutMs', 800),
-    metaCollectWindowMs: configNumber('META_COLLECT_WINDOW_MS', 'metaCollectWindowMs', 50),
-    metaMaxIps: configNumber('META_MAX_IPS', 'metaMaxIps', 4),
-    preferredTimeoutMs: configNumber('PREFERRED_TIMEOUT_MS', 'preferredTimeoutMs', 300),
-    fastTimeoutMs: configNumber('FAST_TIMEOUT_MS', 'fastTimeoutMs', 200),
+    upstreamConcurrency: configNumber('UPSTREAM_CONCURRENCY', 'upstreamConcurrency', 2),
+    fastTimeoutMs: configNumber('FAST_TIMEOUT_MS', 'fastTimeoutMs', 300),
     mixTimeoutMs: configNumber('MIX_TIMEOUT_MS', 'mixTimeoutMs', 200),
     mixTtl: configNumber('MIX_TTL', 'mixTtl', 300),
     preferredTtl: configNumber('PREFERRED_TTL', 'preferredTtl', 60),
@@ -494,7 +507,7 @@ function generateConfigRs(config, geoipCidrs, fetchedGoogleProxy) {
   const upstreamEntries = upstreams
     .map(
       ([name, upstream]) =>
-        `    Upstream {\n        name: ${rustString(name)},\n        url: ${rustString(upstream.url)},\n        ecs: ${upstream.ecs},\n    },`,
+        `    Upstream {\n        name: ${rustString(name)},\n        transport: UpstreamTransport::${upstream.transport === 'tcp' ? 'Tcp' : 'Doh'},\n        doh_url: ${rustString(upstream.dohUrl)},\n        tcp_host: ${rustString(upstream.tcpHost)},\n        tcp_port: ${rustInteger(upstream.tcpPort)},\n        ecs: ${upstream.ecs},\n    },`,
     )
     .join('\n');
   const metaEchMapEntries = metaEchEntries
@@ -527,10 +540,19 @@ function generateConfigRs(config, geoipCidrs, fetchedGoogleProxy) {
     })
     .join('\n');
 
-  return `#[derive(Debug, Clone, Copy)]
+  return `#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UpstreamTransport {
+    Doh,
+    Tcp,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub struct Upstream {
     pub name: &'static str,
-    pub url: &'static str,
+    pub transport: UpstreamTransport,
+    pub doh_url: &'static str,
+    pub tcp_host: &'static str,
+    pub tcp_port: u16,
     pub ecs: bool,
 }
 
@@ -567,7 +589,7 @@ pub struct RegionConfig {
 }
 
 pub const CONFIGURED: u8 = ${rustInteger(config.configured)};
-pub const AUTO_CONCURRENCY: usize = ${rustInteger(config.autoConcurrency)};
+pub const UPSTREAM_CONCURRENCY: usize = ${rustInteger(config.upstreamConcurrency)};
 pub const FAST_TIMEOUT_MS: u32 = ${rustInteger(config.fastTimeoutMs)};
 pub const MIX_TIMEOUT_MS: u32 = ${rustInteger(config.mixTimeoutMs)};
 pub const MIX_TTL: u32 = ${rustInteger(config.mixTtl)};
@@ -578,12 +600,6 @@ pub const SERVFAIL_EDE_CODE: u16 = ${rustInteger(config.servfailEdeCode)};
 pub const CF_ECH_CACHE_TTL_MS: u32 = ${rustInteger(config.cfEchCacheTtlMs)};
 pub const CF_ECH_STALE_TTL_MS: u32 = ${rustInteger(config.cfEchStaleTtlMs)};
 
-pub const ECS_PROTECT_MS: u32 = ${rustInteger(config.ecsProtectMs)};
-pub const HARD_TIMEOUT_MS: u32 = ${rustInteger(config.hardTimeoutMs)};
-pub const META_HARD_TIMEOUT_MS: u32 = ${rustInteger(config.metaHardTimeoutMs)};
-pub const META_COLLECT_WINDOW_MS: u32 = ${rustInteger(config.metaCollectWindowMs)};
-pub const META_MAX_IPS: usize = ${rustInteger(config.metaMaxIps)};
-pub const PREFERRED_TIMEOUT_MS: u32 = ${rustInteger(config.preferredTimeoutMs)};
 pub const AUTO_PROVIDER: &str = "auto";
 pub const LOG_LEVEL: &str = ${rustString(config.logLevel)};
 pub const REGION: &str = ${rustString(regionNames.join(','))};

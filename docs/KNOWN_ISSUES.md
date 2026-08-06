@@ -12,9 +12,9 @@
 
 `prepareQuery` 注入一次 ECS，同一请求体发给所有上游（含 `ecs:false` 的）。`ecs` 字段控制竞速优先级，不控制是否注入。这是特性，非 bug。
 
-## 自定义上游不进 AUTO 竞速
+## 上游滑动并发窗口
 
-`slice(0, AUTO_CONCURRENCY)` 按插入顺序截断，`CUSTOM_*` 环境变量注入的上游在末尾被排除。自定义上游只能通过 `/<provider>/dns-query` 单独访问。这是特性，非 bug。
+fast / mix 会保留全部启用上游作为候选，但任意时刻最多运行 `UPSTREAM_CONCURRENCY` 个查询；完成或失败一个后才补充下一个。运行时自定义上游仍优先位于候选列表前部。默认窗口为 2，用于避免页面级并发把每个 DNS 请求放大成过多 TCP/socket。
 
 ## /config.json 无鉴权
 
