@@ -1,0 +1,27 @@
+{
+  "name": "@superdoh/ech-probe",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./config": {
+      "types": "./config.d.ts",
+      "default": "./config.js"
+    }
+  },
+  "scripts": {
+    "test": "node test/node.mjs && node test/workerd.mjs",
+    "build:vendor": "node scripts/build-vendor.mjs",
+    "build:trust-store": "node scripts/build-trust-store.mjs"
+  },
+  "devDependencies": {
+    "asn1js": "3.0.6",
+    "esbuild": "0.25.12",
+    "miniflare": "4.20260730.0",
+    "pkijs": "3.4.1"
+  }
+}
