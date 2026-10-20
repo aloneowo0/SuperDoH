@@ -57,6 +57,12 @@ function record(value) {
 }
 /** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
 function action(value, countRecord) {
+  const { onError, ...body } = object(value);
+  if (onError !== undefined && onError !== 'fail' && onError !== 'continue') throw new Error();
+  return { ...actionValue(body, countRecord), onError: onError ?? 'fail' };
+}
+/** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
+function actionValue(value, countRecord) {
   const v = object(value);
   switch (v.type) {
     case 'answer': {

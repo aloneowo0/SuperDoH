@@ -14,3 +14,22 @@ result.originalQuery.questions.push({ name: 'changed.example', rtype: 1, class: 
 // @ts-expect-error Query types are numbers or names, not booleans.
 const invalid: Condition = { field: 'query.type', op: 'eq', value: false };
 void [response, termination, invalid];
+
+const optionalAction: Action = { type: 'setTtl', ttl: 30, onError: 'continue' };
+executeQuery(new Uint8Array(), {}, {
+  requestId: 'typed-request',
+  onEvent(event) {
+    const code: string = event.code;
+    const disposition: 'terminated' | 'rolled_back_continue' = event.disposition;
+    // @ts-expect-error Event identity is immutable.
+    event.requestId = 'changed';
+    // @ts-expect-error Nested event locations are immutable.
+    event.location.group = 'changed';
+    void [code, disposition];
+  },
+});
+// @ts-expect-error Failure policy is explicit, not an arbitrary string.
+const invalidPolicy: Action = { type: 'return', onError: 'ignore' };
+// @ts-expect-error Observers are functions rather than logger binding names.
+executeQuery(new Uint8Array(), {}, { onEvent: 'logger' });
+void [optionalAction, invalidPolicy];

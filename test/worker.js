@@ -4,11 +4,31 @@ import { executeQuery, RuleError } from '../src/index.js';
 export default {
   /** @param {Request} request @param {Record<string, unknown>} env */
   async fetch(request, env) {
+    /** @type {unknown[]} */
+    const events = [];
+    /** @type {unknown[][]} */
+    const logs = [];
+    const input = new Uint8Array(await request.arrayBuffer());
+    const mode = request.headers.get('x-test-observer');
+    const originalConsole = console.error;
+    // The synchronous public call cannot interleave another request here.
+    console.error = (...args) => { logs.push(args); };
     try {
-      const result = executeQuery(new Uint8Array(await request.arrayBuffer()), env);
+      const result = executeQuery(input, env, {
+        requestId: request.headers.get('x-test-request-id') ?? 'test-request',
+        onEvent: mode === 'default' ? undefined : event => {
+          events.push(event);
+          if (mode === 'throw') throw new Error('Bearer observer-secret https://user:password@private.test/path-key');
+          if (mode === 'reject') return Promise.reject(new Error('observer-secret'));
+          if (mode === 'input') input.fill(0);
+          if (mode === 'mutate') {
+            // @ts-expect-error Event metadata is deliberately read-only.
+            event.location.group = 'changed';
+          }
+        },
+      });
       if (request.headers.has('x-test-mutate-result')) {
         try {
-          // Deliberately violate the public read-only contract at runtime.
           // @ts-expect-error This is the behavior under test.
           result.originalQuery.questions[0].name = 'mutated.example';
         } catch (error) {
@@ -16,10 +36,16 @@ export default {
         }
         result.query.questions[0].name = 'mutable.example';
       }
-      return Response.json({ ...result, response: result.response && Array.from(result.response) });
+      if (request.headers.has('x-test-mutate-edns')) {
+        const option = result.query.additional[0].rdata;
+        if ('Opt' in option) option.Opt.options[0].data[0] = 99;
+      }
+      return Response.json({ ...result, response: result.response && Array.from(result.response), events, logs });
     } catch (error) {
       if (!(error instanceof RuleError)) throw error;
-      return Response.json({ code: error.code, message: error.message, location: error.location }, { status: 400 });
+      return Response.json({ code: error.code, message: error.message, location: error.location, events, logs }, { status: 400 });
+    } finally {
+      console.error = originalConsole;
     }
   },
 };
