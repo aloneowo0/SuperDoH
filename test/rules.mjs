@@ -2,10 +2,21 @@ import assert from 'node:assert/strict';
 import { test, after } from 'node:test';
 import { Miniflare } from 'miniflare';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+import path from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const bundle = await build({
+  entryPoints: [path.join(root, 'test/worker.js')], bundle: true, write: false,
+  format: 'esm', platform: 'browser', outfile: path.join(root, 'test/bundle.js'),
+  plugins: [{ name: 'wasm-external', setup(build) {
+    build.onResolve({ filter: /.wasm$/ }, args => ({
+      path: '../' + path.relative(root, path.resolve(args.resolveDir, args.path)).split(path.sep).join('/'), external: true,
+    }));
+  } }],
+});
 const options = bindings => ({
-  modules: true, modulesRoot: root, scriptPath: `${root}/test/worker.js`,
+  modules: true, modulesRoot: root, scriptPath: `${root}/test/bundle.js`, script: bundle.outputFiles[0].text,
   compatibilityDate: '2026-07-30', bindings,
   modulesRules: [
     { type: 'ESModule', include: ['**/*.js'], fallthrough: true },
@@ -216,7 +227,7 @@ test('unknown condition fields, references and errors in unreachable branches ar
     { field: 'query.name', op: 'regex', value: '[' },
     { field: 'query.name', op: 'exact', value: 'a..example' },
     { field: 'query.type', op: 'eq', value: 'NOT_A_TYPE' },
-    { field: 'client.asn', op: 'eq', value: 123 },
+    { field: 'client.unavailable', op: 'eq', value: 123 },
     { ref: 'missing-extension' },
     { list: 'missing-list' },
     { all: [] }, { any: [] }, { not: null },
@@ -450,4 +461,356 @@ test('configuration failures cannot be downgraded by optionality and diagnostic 
   assert.equal(badId.code, 'INVALID_OPTIONS');
   assert.equal(badId.logs.length, 1);
   assert.ok(!JSON.stringify(badId).includes('private.test'));
+});
+
+test('typed comparisons and membership select rule outputs, while missing values stay absent', async () => {
+  const result = await execute({ DNS_RULE_COMPARE: { order: 0, rules: [
+    { actions: [answer()] },
+    { when: { all: [
+      { field: 'query.type', op: 'in', value: ['A', 'AAAA'] },
+      { field: 'response.rcode', op: 'gte', value: 0 },
+      { field: 'query.name', op: 'ne', value: 'other.example' },
+    ] }, actions: [{ type: 'setTtl', ttl: 123 }] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(decode(result.response).records[0].ttl, 123);
+  for (const when of [
+    { field: 'response.rcode', op: 'ne', value: 3 },
+    { field: 'response.rcode', op: 'exists', value: true },
+  ]) {
+    const absent = await execute({ DNS_RULE_ABSENT: group([answer()], 0, when) });
+    assert.equal(absent.status, 200, JSON.stringify(absent));
+    assert.equal(absent.response, null);
+  }
+  const missing = await execute({ DNS_RULE_ABSENT: group([answer()], 0, { field: 'response.rcode', op: 'exists', value: false }) });
+  assert.equal(missing.status, 200, JSON.stringify(missing));
+  assert.equal(decode(missing.response).records[0].ttl, 60);
+});
+
+test('wildcards use whole labels and RE2 patterns search normalized DNS names', async () => {
+  const cases = [
+    ['wildcard', '*.EXAMPLE.com.', 'a.example.com', true],
+    ['wildcard', '*.example.com', 'example.com', false],
+    ['wildcard', '*.example.com', 'a.b.example.com', false],
+    ['wildcard', '**.example.com', 'example.com', true],
+    ['wildcard', '**.example.com', 'A.B.Example.COM.', true],
+    ['wildcard', '**.example.com', 'notexample.com', false],
+    ['wildcard', 'a.**.example.com', 'a.example.com', true],
+    ['wildcard', '**', '.', true],
+    ['regex', '^www[0-9]+\.example\.com$', 'WWW12.Example.COM.', true],
+    ['regex', '^www[0-9]+\.example\.com$', 'wwwx.example.com', false],
+    ['regex', '(a+)+$', `${'a'.repeat(60)}b.example`, false],
+  ];
+  for (const [op, value, name, hit] of cases) {
+    const result = await execute({ DNS_RULE_DOMAIN: group([answer()], 0, { field: 'query.name', op, value }) }, query(name));
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(result.response !== null, hit, `${op} ${value} ${name}`);
+  }
+});
+
+test('controlled client and edge properties combine IP CIDRs, ASN and country without enrichment', async () => {
+  const when = { all: [
+    { field: 'client.ip', op: 'cidr', value: '2001:db8::/32' },
+    { field: 'client.asn', op: 'in', value: [64512, 64513] },
+    { field: 'client.country', op: 'eq', value: 'DE' },
+    { field: 'edge.country', op: 'ne', value: 'DE' },
+    { field: 'edge.colo', op: 'eq', value: 'LHR' },
+    { field: 'client.region', op: 'exists', value: false },
+  ] };
+  const context = { client: { ip: '2001:db8::1', asn: 64512, country: 'DE' }, edge: { country: 'GB', colo: 'LHR' } };
+  for (const [input, hit] of [[context, true], [{ ...context, client: { ...context.client, ip: '2001:db9::1' } }, false], [{ edge: context.edge }, false]]) {
+    const result = await execute({ DNS_RULE_NETWORK: group([answer()], 0, when) }, query(), { 'x-test-context': JSON.stringify(input) });
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(result.response !== null, hit);
+  }
+});
+
+test('response quantifiers bind all predicates to one address and use only existing address attributes', async () => {
+  const where = { all: [
+    { field: 'item.ip', op: 'cidr', value: '192.0.2.0/24' },
+    { field: 'item.asn', op: 'eq', value: 64512 },
+    { field: 'item.country', op: 'eq', value: 'DE' },
+  ] };
+  const context = { addresses: { '192.0.2.1': { asn: 64512, country: 'GB' }, '198.51.100.2': { asn: 64513, country: 'DE' } } };
+  const records = [record(), record('198.51.100.2')];
+  for (const [attrs, quantifier, hit] of [
+    [context, 'any', false],
+    [{ addresses: { ...context.addresses, '192.0.2.1': { asn: 64512, country: 'DE' } } }, 'any', true],
+    [{ addresses: { ...context.addresses, '192.0.2.1': { asn: 64512, country: 'DE' } } }, 'all', false],
+    [{}, 'any', false],
+  ]) {
+    const result = await execute({ DNS_RULE_ADDRESSES: { order: 0, rules: [
+      { actions: [{ type: 'answer', records }] },
+      { when: { collection: 'response.addresses', quantifier, where }, actions: [{ type: 'setTtl', ttl: 222 }] },
+    ] } }, query(), { 'x-test-context': JSON.stringify(attrs) });
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(decode(result.response).records[0].ttl, hit ? 222 : 60);
+  }
+  for (const quantifier of ['any', 'all']) {
+    const result = await execute({ DNS_RULE_EMPTY: { order: 0, rules: [
+      { actions: [{ type: 'answer', records: [] }] },
+      { when: { collection: 'response.addresses', quantifier, where }, actions: [answer()] },
+    ] } });
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(decode(result.response).records.length, 0);
+  }
+});
+
+test('record owner and target stay distinct from current and original query names', async () => {
+  const result = await execute({ DNS_RULE_RECORDS: { order: 0, rules: [
+    { actions: [
+      { type: 'rewriteQuery', name: 'rewritten.example', queryType: 'AAAA' },
+      { type: 'answer', records: [{ name: 'owner.example', type: 'CNAME', ttl: 60, rdata: { Cname: { cname: 'Target.Example.' } } }, record()] },
+    ] },
+    { when: { all: [
+      { field: 'query.name', op: 'exact', value: 'rewritten.example' },
+      { field: 'query.type', op: 'eq', value: 'AAAA' },
+      { field: 'original.name', op: 'exact', value: 'example.com' },
+      { field: 'original.type', op: 'eq', value: 'A' },
+      { collection: 'response.records', quantifier: 'any', where: { all: [
+        { field: 'item.name', op: 'exact', value: 'OWNER.example.' },
+        { field: 'item.target', op: 'suffix', value: 'target.example' },
+        { field: 'item.type', op: 'eq', value: 'CNAME' },
+        { field: 'item.section', op: 'eq', value: 'answer' },
+        { field: 'item.ttl', op: 'gte', value: 60 },
+      ] } },
+    ] }, actions: [{ type: 'setTtl', ttl: 333 }] },
+    { when: { collection: 'response.records', quantifier: 'all', where: { field: 'item.target', op: 'exists', value: true } }, actions: [{ type: 'setTtl', ttl: 444 }] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  const decoded = decode(result.response);
+  assert.equal(decoded.records[0].name, 'owner.example');
+  assert.equal(decoded.records[0].ttl, 333);
+  assert.deepEqual(decoded.questions, [{ name: 'example.com', type: 1, class: 1 }]);
+});
+
+test('condition budgets bound compilation, collection visits and cumulative evaluation with visible failures', async () => {
+  const leaf = { field: 'query.type', op: 'eq', value: 'A' };
+  for (const [limits, when] of [
+    [{ maxConditionDepth: 1 }, { not: { not: leaf } }],
+    [{ maxConditionValues: 1 }, { field: 'query.type', op: 'in', value: ['A', 'AAAA'] }],
+    [{ maxPatternLength: 3 }, { field: 'query.name', op: 'regex', value: '^abcd$' }],
+  ]) {
+    const result = await execute({ DNS_LIMITS: limits, DNS_RULE_BUDGET: group([answer()], 0, when) });
+    assert.equal(result.code, 'RESOURCE_LIMIT', JSON.stringify(result));
+    assert.equal(result.events[0].event, 'execution_failed');
+  }
+  const rules = [{ when: leaf, actions: [answer()] }, { when: leaf, actions: [{ type: 'setTtl', ttl: 22, onError: 'continue' }] }];
+  for (const [steps, status] of [[1, 400], [2, 200]]) {
+    const result = await execute({ DNS_LIMITS: { maxConditionSteps: steps }, DNS_RULE_STEPS: { order: 0, rules } });
+    assert.equal(result.status, status, JSON.stringify(result));
+    if (status === 400) {
+      assert.equal(result.code, 'RESOURCE_LIMIT');
+      assert.equal(result.events[0].event, 'execution_failed');
+      assert.deepEqual(result.events[0].location, { group: 'DNS_RULE_STEPS', rule: 1 });
+      assert.equal(result.response, undefined);
+    } else assert.equal(decode(result.response).records[0].ttl, 22);
+  }
+  const collection = { collection: 'response.records', quantifier: 'all', where: { field: 'item.type', op: 'eq', value: 'A' } };
+  const result = await execute({ DNS_LIMITS: { maxConditionSteps: 4 }, DNS_RULE_SCAN: { order: 0, rules: [
+    { actions: [{ type: 'answer', records: [record(), record('192.0.2.2')] }] },
+    { when: collection, actions: [{ type: 'setTtl', ttl: 10, onError: 'continue' }] },
+  ] } });
+  assert.equal(result.code, 'RESOURCE_LIMIT', JSON.stringify(result));
+  assert.equal(result.events[0].event, 'execution_failed');
+  assert.equal(result.events[0].disposition, 'terminated');
+  const tooMany = await execute({ DNS_LIMITS: { maxContextAddresses: 1 } }, query(), { 'x-test-context': JSON.stringify({ addresses: { '192.0.2.1': {}, '192.0.2.2': {} } }) });
+  assert.equal(tooMany.code, 'RESOURCE_LIMIT', JSON.stringify(tooMany));
+});
+
+test('root wildcard and IPv4/IPv6 network boundaries produce explicit positive and negative answers', async () => {
+  const rootResult = await execute({ DNS_RULE_ROOT: group([answer()], 0, { field: 'query.name', op: 'wildcard', value: '.' }) }, query('.'));
+  assert.equal(rootResult.status, 200, JSON.stringify(rootResult));
+  assert.ok(rootResult.response);
+  const cases = [
+    ['192.0.2.255', 'cidr', '192.0.2.0/24', true],
+    ['192.0.3.0', 'cidr', '192.0.2.0/24', false],
+    ['192.0.2.1', 'cidr', '0.0.0.0/0', true],
+    ['192.0.2.1', 'cidr', '192.0.2.1/32', true],
+    ['192.0.2.2', 'cidr', '192.0.2.1/32', false],
+    ['2001:db8::ffff', 'cidr', '2001:db8::1/32', true],
+    ['2001:db9::', 'cidr', '2001:db8::/32', false],
+    ['::1', 'cidr', '::/0', true],
+    ['::1', 'cidr', '::1/128', true],
+    ['::2', 'cidr', '::1/128', false],
+    ['192.0.2.1', 'cidr', '::/0', false],
+    ['::ffff:192.0.2.1', 'eq', '0:0:0:0:0:ffff:c000:0201', true],
+    ['::ffff:192.0.2.1', 'eq', '192.0.2.1', false],
+    ['2001:0db8:0:0:0:0:0:1', 'in', ['2001:db8::1', '::1'], true],
+  ];
+  for (const [address, op, value, hit] of cases) {
+    const result = await execute({ DNS_RULE_IP: group([answer()], 0, { field: 'client.ip', op, value }) }, query(), { 'x-test-context': JSON.stringify({ client: { ip: address } }) });
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(result.response !== null, hit, `${address} ${op} ${value}`);
+  }
+});
+
+test('regex program size has an aggregate budget even for short counted repetitions', async () => {
+  const when = { any: [
+    { field: 'query.name', op: 'regex', value: 'a{8}' },
+    { field: 'query.name', op: 'regex', value: 'b{8}' },
+  ] };
+  const result = await execute({ DNS_LIMITS: { maxPatternInstructions: 15 }, DNS_RULE_REGEX: group([answer()], 0, when) });
+  assert.equal(result.code, 'RESOURCE_LIMIT', JSON.stringify(result));
+  assert.deepEqual(result.location, { group: 'DNS_RULE_REGEX', rule: 0 });
+});
+
+test('invalid typed predicates, scopes, patterns and networks fail before unreachable rules execute', async () => {
+  const invalid = [
+    { field: 'client.asn', op: 'eq', value: '64512' },
+    { field: 'client.country', op: 'gt', value: 1 },
+    { field: 'query.type', op: 'gt', value: 'A' },
+    { field: 'query.type', op: 'in', value: [] },
+    { field: 'query.type', op: 'in', value: ['A', false] },
+    { field: 'response.rcode', op: 'exists' },
+    { field: 'client.asn', op: 'exists', value: null },
+    { field: 'query.name', op: 'wildcard', value: 'w*.example' },
+    { field: 'query.name', op: 'wildcard', value: 'a..example' },
+    { field: 'query.name', op: 'regex', value: '(?=example)' },
+    { field: 'query.name', op: 'regex', value: '(a{1000}){1000}' },
+    ...['192.0.2.1/33', '::/129', '192.0.2.1/-1', '192.0.2.1/024', '192.0.2.1', '::/32/64'].map(value => ({ field: 'client.ip', op: 'cidr', value })),
+    ...['01.2.3.4', '256.2.3.4', '127.1', '2001:::1', '::ffff:999.0.2.1', 'fe80::1%eth0'].map(value => ({ field: 'client.ip', op: 'eq', value })),
+    { field: 'item.ip', op: 'exists', value: true },
+    { collection: 'response.records', quantifier: 'some', where: { field: 'item.name', op: 'exists', value: true } },
+    { collection: 'response.records', quantifier: 'any', where: { field: 'item.asn', op: 'eq', value: 1 } },
+    { collection: 'response.addresses', quantifier: 'any', where: { field: 'item.target', op: 'exists', value: false } },
+    { collection: 'response.addresses', quantifier: 'any', where: { collection: 'response.records', quantifier: 'any', where: { field: 'query.type', op: 'eq', value: 1 } } },
+  ];
+  for (const bad of invalid) {
+    const result = await execute({ DNS_RULE_INVALID: group([{ ...answer(), onError: 'continue' }], 0, { any: [{ field: 'query.type', op: 'eq', value: 'A' }, bad] }) });
+    assert.equal(result.code, 'INVALID_CONFIG', JSON.stringify(bad));
+    assert.equal(result.response, undefined);
+    assert.equal(result.events[0].event, 'execution_failed');
+    assert.deepEqual(result.location, { group: 'DNS_RULE_INVALID', rule: 0 });
+  }
+});
+
+test('invalid or throwing context fails visibly without exposing its original data', async () => {
+  const secret = 'https://user:password@private.test/path-key';
+  for (const context of [null, [], { client: { ip: secret } }, { client: { asn: '123' } }, { client: { country: null } },
+    { client: { unknown: secret } }, { addresses: { '::1': {}, '0:0:0:0:0:0:0:1': {} } }, { addresses: { '::1': { ip: '192.0.2.1' } } }]) {
+    const result = await execute({}, query(), { 'x-test-context': JSON.stringify(context) });
+    assert.equal(result.code, 'INVALID_CONTEXT', JSON.stringify(result));
+    assert.equal(result.events[0].event, 'execution_failed');
+    assert.ok(!JSON.stringify(result).includes(secret));
+  }
+  const thrown = await execute({}, query(), { 'x-test-context-mode': 'throw' });
+  assert.equal(thrown.code, 'INVALID_CONTEXT', JSON.stringify(thrown));
+  for (const marker of ['password', 'private.test', 'path-key']) assert.ok(!JSON.stringify(thrown).includes(marker));
+});
+
+test('later predicates use a private snapshot of controlled attributes despite observer mutation', async () => {
+  const result = await execute({ DNS_RULE_CONTEXT: { order: 0, rules: [
+    { actions: [{ type: 'return', onError: 'continue' }] },
+    { when: { field: 'client.asn', op: 'eq', value: 64512 }, actions: [answer()] },
+  ] } }, query(), { 'x-test-context': JSON.stringify({ client: { asn: 64512 } }), 'x-test-context-mode': 'mutate' });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.ok(result.response);
+});
+
+test('all supported alias targets are explicit record values, including literal service root targets', async () => {
+  const records = [
+    ['NS', { Ns: { nsdname: 'target.example' } }],
+    ['CNAME', { Cname: { cname: 'target.example' } }],
+    ['PTR', { Ptr: { ptrdname: 'target.example' } }],
+    ['DNAME', { Dname: { dname: 'target.example' } }],
+    ['MX', { Mx: { exchange: 'target.example', preference: 10 } }],
+    ['SRV', { Srv: { target: 'target.example', priority: 1, weight: 1, port: 443 } }],
+    ['SVCB', { Svcb: { target: 'target.example', priority: 1, params: [] } }],
+    ['HTTPS', { Https: { target: '.', priority: 1, params: [] } }],
+  ].map(([type, rdata]) => ({ name: 'owner.example', type, ttl: 60, rdata }));
+  const result = await execute({ DNS_RULE_TARGETS: { order: 0, rules: [
+    { actions: [{ type: 'answer', records }] },
+    { when: { collection: 'response.records', quantifier: 'all', where: { any: [
+      { field: 'item.target', op: 'exact', value: 'TARGET.example.' },
+      { all: [{ field: 'item.type', op: 'eq', value: 'HTTPS' }, { field: 'item.target', op: 'exact', value: '.' }] },
+    ] } }, actions: [{ type: 'setTtl', ttl: 555 }] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  const decoded = decode(result.response);
+  assert.equal(decoded.records.length, 8);
+  assert.ok(decoded.records.every(rr => rr.ttl === 555));
+});
+
+test('missing attributes never satisfy ordinary inequality, while exists and not are explicit', async () => {
+  for (const [when, hit] of [
+    [{ field: 'client.asn', op: 'ne', value: 0 }, false],
+    [{ field: 'client.asn', op: 'lte', value: 0 }, false],
+    [{ field: 'client.country', op: 'in', value: [''] }, 'invalid'],
+    [{ not: { field: 'client.asn', op: 'eq', value: 0 } }, true],
+    [{ field: 'client.asn', op: 'exists', value: false }, true],
+    [{ all: [{ field: 'client.asn', op: 'lt', value: 64513 }, { field: 'client.asn', op: 'lte', value: 64512 }, { field: 'client.asn', op: 'gt', value: 64511 }, { field: 'client.asn', op: 'gte', value: 64512 }] }, true],
+  ]) {
+    const numeric = 'all' in when;
+    const result = await execute({ DNS_RULE_MISSING: group([answer()], 0, when) }, query(), { 'x-test-context': JSON.stringify(numeric ? { client: { asn: 64512 } } : {}) });
+    if (hit === 'invalid') assert.equal(result.code, 'INVALID_CONFIG');
+    else {
+      assert.equal(result.status, 200, JSON.stringify(result));
+      assert.equal(result.response !== null, hit, JSON.stringify(when));
+    }
+  }
+});
+
+test('conservative default budgets reject excess work and explicit bounded increases permit it', async () => {
+  const leaf = { field: 'query.type', op: 'eq', value: 'A' };
+  let deep = leaf;
+  for (let i = 0; i < 17; i++) deep = { not: deep };
+  for (const [when, increase] of [
+    [deep, { maxConditionDepth: 17 }],
+    [{ field: 'query.type', op: 'in', value: Array(129).fill('A') }, { maxConditionValues: 129 }],
+    [{ field: 'query.name', op: 'regex', value: 'a'.repeat(257) }, { maxPatternLength: 257 }],
+    [{ any: Array.from({ length: 5 }, () => ({ field: 'query.name', op: 'regex', value: 'a{1000}' })) }, { maxPatternInstructions: 5010 }],
+  ]) {
+    const rule = group([answer()], 0, when);
+    assert.equal((await execute({ DNS_RULE_DEFAULT: rule })).code, 'RESOURCE_LIMIT');
+    const raised = await execute({ DNS_RULE_DEFAULT: rule, DNS_LIMITS: increase });
+    assert.equal(raised.status, 200, JSON.stringify(raised));
+  }
+  const records = Array.from({ length: 128 }, (_, i) => record(`192.0.2.${i}`));
+  const rule = { order: 0, rules: [{ actions: [{ type: 'answer', records }] }, ...Array.from({ length: 32 }, () => ({
+    when: { collection: 'response.addresses', quantifier: 'all', where: { field: 'item.ip', op: 'cidr', value: '192.0.2.0/24' } }, actions: [{ type: 'setTtl', ttl: 777 }],
+  }))] };
+  const exceeded = await execute({ DNS_RULE_WORK: rule, DNS_LIMITS: { maxGroupBytes: 65536 } });
+  assert.equal(exceeded.code, 'RESOURCE_LIMIT', JSON.stringify(exceeded));
+  assert.equal(exceeded.location.rule, 32);
+  const raised = await execute({ DNS_RULE_WORK: rule, DNS_LIMITS: { maxGroupBytes: 65536, maxConditionSteps: 8224 } });
+  assert.equal(raised.status, 200, JSON.stringify(raised));
+  assert.equal(decode(raised.response).records[127].ttl, 777);
+  const addresses = Object.fromEntries(Array.from({ length: 257 }, (_, i) => [`2001:db8::${i.toString(16)}`, {}]));
+  assert.equal((await execute({}, query(), { 'x-test-context': JSON.stringify({ addresses }) })).code, 'RESOURCE_LIMIT');
+  assert.equal((await execute({ DNS_LIMITS: { maxContextAddresses: 257 } }, query(), { 'x-test-context': JSON.stringify({ addresses }) })).status, 200);
+  for (const limits of [{ maxConditionDepth: 33 }, { maxConditionSteps: 131073 }, { maxConditionValues: 1025 }, { maxPatternLength: 1025 }, { maxPatternInstructions: 32769 }, { maxContextAddresses: 4097 }]) {
+    assert.equal((await execute({ DNS_LIMITS: limits })).code, 'INVALID_CONFIG');
+  }
+});
+
+test('a condition execution exception is redacted and terminates rather than becoming a nonmatch', async () => {
+  const result = await execute({ DNS_RULE_THROW: { order: 0, rules: [
+    { actions: [{ type: 'answer', records: [{ name: 'example.com', type: 'CNAME', ttl: 60, rdata: { Cname: { cname: 'private!target.example' } } }] }] },
+    { when: { not: { collection: 'response.records', quantifier: 'any', where: { field: 'item.target', op: 'suffix', value: 'example' } } }, actions: [{ type: 'setTtl', ttl: 888, onError: 'continue' }] },
+  ] } });
+  assert.equal(result.code, 'INVALID_STATE', JSON.stringify(result));
+  assert.equal(result.response, undefined);
+  assert.equal(result.events[0].event, 'execution_failed');
+  assert.deepEqual(result.events[0].location, { group: 'DNS_RULE_THROW', rule: 1 });
+  assert.equal(result.events[0].disposition, 'terminated');
+  assert.ok(!JSON.stringify(result).includes('private!target'));
+});
+
+test('IPv6 response addresses bind canonical attribution and all quantification requires actual items', async () => {
+  const result = await execute({ DNS_RULE_V6: { order: 0, rules: [
+    { actions: [{ type: 'answer', records: [{ name: 'example.com', type: 'AAAA', ttl: 60, rdata: { Aaaa: { addr: '2001:db8::1' } } }] }] },
+    { when: { collection: 'response.addresses', quantifier: 'all', where: { all: [
+      { field: 'item.ip', op: 'cidr', value: '2001:db8::/32' },
+      { field: 'item.asn', op: 'eq', value: 64512 },
+      { field: 'item.country', op: 'eq', value: 'DE' },
+    ] } }, actions: [{ type: 'setTtl', ttl: 999 }] },
+  ] } }, query(), { 'x-test-context': JSON.stringify({ addresses: { '2001:0db8:0:0:0:0:0:1': { asn: 64512, country: 'DE' }, '192.0.2.1': { asn: 1 } } }) });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(decode(result.response).records[0].ttl, 999);
+  for (const collection of ['response.records', 'response.addresses']) {
+    const absent = await execute({ DNS_RULE_ABSENT: group([answer()], 0, { collection, quantifier: 'all', where: { field: 'item.name', op: 'exists', value: true } }) });
+    assert.equal(absent.status, 200, JSON.stringify(absent));
+    assert.equal(absent.response, null);
+  }
 });

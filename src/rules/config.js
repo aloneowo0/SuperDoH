@@ -1,35 +1,10 @@
 import { within } from './limits.js';
-import { decodeRdata, encodeRdata, typeCode, TYPES } from '../../lib/dns-wasm/index.js';
+import { decodeRdata, encodeRdata, TYPES } from '../../lib/dns-wasm/index.js';
 import { RuleError } from './errors.js';
+import { object, fields, integer, domain, recordType } from './values.js';
+import { compileCondition } from './conditions.js';
+export { domain, recordType } from './values.js';
 
-/** @param {unknown} value @returns {Record<string, unknown>} */
-function object(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error();
-  return /** @type {Record<string, unknown>} */ (value);
-}
-/** @param {unknown} value @param {string[]} allowed @returns {Record<string, unknown>} */
-function fields(value, allowed) {
-  const result = object(value);
-  if (Object.keys(result).some(key => !allowed.includes(key))) throw new Error();
-  return result;
-}
-/** @param {unknown} value @param {number} max @returns {number} */
-function integer(value, max) {
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > max) throw new Error();
-  return value;
-}
-/** @param {unknown} value @returns {number} */
-export function recordType(value) {
-  return integer(typeof value === 'string' ? typeCode(value) : value, 65535);
-}
-/** @param {unknown} value @returns {string} */
-export function domain(value) {
-  if (typeof value !== 'string' || value.length > 254) throw new Error();
-  const normalized = value.replace(/\.$/, '').toLowerCase();
-  if (value === '.') return '.';
-  if (!normalized || normalized.length > 253 || normalized.split('.').some(label => !/^[a-z0-9_-]{1,63}$/.test(label))) throw new Error();
-  return normalized;
-}
 /** @param {unknown} value @param {unknown} canonical */
 function knownFields(value, canonical) {
   if (Array.isArray(value)) {
@@ -84,44 +59,11 @@ function actionValue(value, countRecord) {
     default: throw new Error();
   }
 }
-/** @param {unknown} value @param {() => void} countNode @param {number} [depth] @returns {import('./types.js').Condition} */
-function condition(value, countNode, depth = 0) {
-  countNode();
-  if (depth > 16) throw new Error();
-  const v = object(value);
-  for (const key of ['all', 'any']) {
-    if (key in v) {
-      fields(v, [key]);
-      const children = v[key];
-      if (!Array.isArray(children) || children.length === 0) throw new Error();
-      const parsed = children.map(child => condition(child, countNode, depth + 1));
-      return key === 'all' ? { all: parsed } : { any: parsed };
-    }
-  }
-  if ('not' in v) {
-    fields(v, ['not']);
-    return { not: condition(v.not, countNode, depth + 1) };
-  }
-  fields(v, ['field', 'op', 'value']);
-  if ((v.field === 'query.name' || v.field === 'original.name') && (v.op === 'exact' || v.op === 'suffix' || v.op === 'subdomain')) {
-    return { field: v.field, op: v.op, value: domain(v.value) };
-  }
-  if ((v.field === 'query.type' || v.field === 'original.type') && v.op === 'eq') {
-    return { field: v.field, op: 'eq', value: recordType(v.value) };
-  }
-  if (v.field === 'response.exists' && v.op === 'eq' && typeof v.value === 'boolean') {
-    return { field: v.field, op: 'eq', value: v.value };
-  }
-  if (v.field === 'response.rcode' && v.op === 'eq') {
-    return { field: v.field, op: 'eq', value: integer(v.value, 15) };
-  }
-  throw new Error();
-}
 /** @param {Record<string, unknown>} env @param {import('./limits.js').Limits} limits @returns {import('./types.js').Group[]} */
 export function loadGroups(env, limits) {
   const entries = Object.entries(env).filter(([name]) => name.startsWith('DNS_RULE_'));
   within(entries.length, limits.maxGroups);
-  let totalBytes = 0, rules = 0, actions = 0, records = 0, nodes = 0;
+  let totalBytes = 0, rules = 0, actions = 0, records = 0, nodes = 0, patternInstructions = 0;
   return entries.map(([name, raw]) => {
     /** @type {import('./errors.js').Location} */
     const location = { group: /^[A-Za-z0-9_]{1,128}$/.test(name) ? name : '<invalid>' };
@@ -142,7 +84,7 @@ export function loadGroups(env, limits) {
         location.rule = ruleIndex;
         delete location.action;
         const r = fields(rawRule, ['when', 'actions']);
-        const when = r.when === undefined ? undefined : condition(r.when, () => within(++nodes, limits.maxConditionNodes, location));
+        const when = r.when === undefined ? undefined : compileCondition(r.when, () => within(++nodes, limits.maxConditionNodes, location), limits, size => within(patternInstructions += size, limits.maxPatternInstructions, location));
         if (!Array.isArray(r.actions) || r.actions.length === 0) throw new Error();
         actions += r.actions.length;
         within(actions, limits.maxActions, location);

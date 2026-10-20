@@ -33,3 +33,25 @@ const invalidPolicy: Action = { type: 'return', onError: 'ignore' };
 // @ts-expect-error Observers are functions rather than logger binding names.
 executeQuery(new Uint8Array(), {}, { onEvent: 'logger' });
 void [optionalAction, invalidPolicy];
+
+const networkCondition: Condition = { all: [
+  { field: 'client.ip', op: 'cidr', value: '2001:db8::/32' },
+  { field: 'client.country', op: 'in', value: ['DE', 'GB'] },
+  { collection: 'response.addresses', quantifier: 'any', where: { all: [
+    { field: 'item.ip', op: 'cidr', value: '192.0.2.0/24' },
+    { field: 'item.asn', op: 'gt', value: 64512 },
+  ] } },
+] };
+executeQuery(new Uint8Array(), {}, { context: {
+  client: { ip: '::1', asn: 64512 }, edge: { colo: 'LHR' },
+  addresses: { '192.0.2.1': { country: 'DE' } },
+} });
+// @ts-expect-error Item predicates require a collection binding.
+const unboundItem: Condition = { field: 'item.ip', op: 'eq', value: '::1' };
+// @ts-expect-error Record items do not have address attribution fields.
+const wrongScope: Condition = { collection: 'response.records', quantifier: 'any', where: { field: 'item.asn', op: 'eq', value: 1 } };
+// @ts-expect-error Text properties cannot use numeric comparisons.
+const wrongComparison: Condition = { field: 'client.country', op: 'gt', value: 1 };
+// @ts-expect-error Numeric membership cannot contain booleans.
+const wrongMember: Condition = { field: 'client.asn', op: 'in', value: [true] };
+void [networkCondition, unboundItem, wrongScope, wrongComparison, wrongMember];

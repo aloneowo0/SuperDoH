@@ -3,10 +3,12 @@ import { RuleError } from './errors.js';
 const defaults = Object.freeze({
   maxQueryBytes: 4096, maxResponseBytes: 16384, maxGroupBytes: 5120, maxConfigBytes: 65536,
   maxGroups: 32, maxRules: 256, maxActions: 1024, maxRecords: 256, maxConditionNodes: 1024,
+  maxConditionDepth: 16, maxConditionSteps: 8192, maxConditionValues: 128, maxPatternLength: 256, maxPatternInstructions: 4096, maxContextAddresses: 256,
 });
 const ceilings = Object.freeze({
   maxQueryBytes: 65535, maxResponseBytes: 65535, maxGroupBytes: 65536, maxConfigBytes: 262144,
   maxGroups: 64, maxRules: 8192, maxActions: 32768, maxRecords: 4096, maxConditionNodes: 8192,
+  maxConditionDepth: 32, maxConditionSteps: 131072, maxConditionValues: 1024, maxPatternLength: 1024, maxPatternInstructions: 32768, maxContextAddresses: 4096,
 });
 /** @typedef {{ -readonly [K in keyof typeof defaults]: number }} Limits */
 /** @param {unknown} raw @returns {Limits} */

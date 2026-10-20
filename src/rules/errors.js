@@ -12,6 +12,7 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  INVALID_CONTEXT: 'Invalid matching context.',
   INVALID_CONFIG: 'Invalid or unsupported rule configuration.',
   INVALID_OPTIONS: 'Invalid execution diagnostics options.',
   INVALID_QUERY: 'Invalid or unsupported DNS query.',
@@ -59,7 +60,7 @@ export function createReporter(options) {
   /** @type {import('./types.js').ExecutionOptions['onEvent']} */
   let observer;
   try {
-    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent')) throw new Error();
+    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent' && k !== 'context')) throw new Error();
     if (options.requestId !== undefined && (typeof options.requestId !== 'string' || !/^[A-Za-z0-9_.:-]{1,128}$/.test(options.requestId))) throw new Error();
     if (options.onEvent !== undefined && typeof options.onEvent !== 'function') throw new Error();
     observer = options.onEvent;

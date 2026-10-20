@@ -6,14 +6,32 @@ type ActionValue =
   | { type: 'stop' | 'return' }
   | { type: 'rewriteQuery'; name?: string; queryType?: number | string };
 export type Action = ActionValue & { onError?: 'fail' | 'continue' };
-export type Condition =
-  | { all: Condition[] } | { any: Condition[] } | { not: Condition }
-  | { field: 'query.name' | 'original.name'; op: 'exact' | 'suffix' | 'subdomain'; value: string }
-  | { field: 'query.type' | 'original.type'; op: 'eq'; value: number | string }
-  | { field: 'response.exists'; op: 'eq'; value: boolean }
-  | { field: 'response.rcode'; op: 'eq'; value: number };
+type Compare<F, V> = { field: F; op: 'eq' | 'ne'; value: V } | { field: F; op: 'in'; value: V[] };
+type Presence<F> = { field: F; op: 'exists'; value: boolean };
+type NamePredicate<F> = Compare<F, string> | Presence<F>
+  | { field: F; op: 'exact' | 'suffix' | 'subdomain' | 'wildcard' | 'regex'; value: string };
+type NumberPredicate<F> = Compare<F, number> | Presence<F>
+  | { field: F; op: 'lt' | 'lte' | 'gt' | 'gte'; value: number };
+type TypePredicate<F> = Compare<F, number | string> | Presence<F>;
+type TextPredicate<F> = Compare<F, string> | Presence<F>;
+type IpPredicate<F> = Compare<F, string> | Presence<F> | { field: F; op: 'cidr'; value: string };
+type GlobalPredicate =
+  | NamePredicate<'query.name' | 'original.name'>
+  | TypePredicate<'query.type' | 'original.type'>
+  | NumberPredicate<'response.rcode' | 'client.asn' | 'edge.asn'>
+  | TextPredicate<'client.country' | 'client.region' | 'client.city' | 'client.colo' | 'edge.country' | 'edge.region' | 'edge.city' | 'edge.colo'>
+  | IpPredicate<'client.ip' | 'edge.ip'>
+  | Compare<'response.exists', boolean> | Presence<'response.exists'>;
+type RecordPredicate = NamePredicate<'item.name'> | TypePredicate<'item.type'> | NumberPredicate<'item.ttl'>
+  | Compare<'item.section', 'answer' | 'authority' | 'additional'> | Presence<'item.section'>;
+export type RecordCondition = { all: RecordCondition[] } | { any: RecordCondition[] } | { not: RecordCondition } | GlobalPredicate | RecordPredicate | NamePredicate<'item.target'>;
+export type AddressCondition = { all: AddressCondition[] } | { any: AddressCondition[] } | { not: AddressCondition } | GlobalPredicate | RecordPredicate
+  | IpPredicate<'item.ip'> | NumberPredicate<'item.asn'> | TextPredicate<'item.country' | 'item.region' | 'item.city'>;
+export type Condition = { all: Condition[] } | { any: Condition[] } | { not: Condition } | GlobalPredicate
+  | { collection: 'response.records'; quantifier: 'any' | 'all'; where: RecordCondition }
+  | { collection: 'response.addresses'; quantifier: 'any' | 'all'; where: AddressCondition };
 export interface Rule { when?: Condition; actions: Action[] }
-export interface Group { name: string; order: number; rules: Rule[] }
+export interface Group { name: string; order: number; rules: Array<{ when?: import('./conditions.js').Predicate; actions: Action[] }> }
 
 export type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
 export interface ExecutionResult {
@@ -36,7 +54,16 @@ export interface FailureEvent {
   readonly disposition: 'terminated' | 'rolled_back_continue';
   readonly rolledBack: boolean;
 }
+export interface NetworkAttributes {
+  ip?: string; asn?: number; country?: string; region?: string; city?: string; colo?: string;
+}
+export interface MatchingContext {
+  client?: NetworkAttributes;
+  edge?: NetworkAttributes;
+  addresses?: Record<string, Pick<NetworkAttributes, 'asn' | 'country' | 'region' | 'city'>>;
+}
 export interface ExecutionOptions {
+  context?: DeepReadonly<MatchingContext>;
   requestId?: string;
   onEvent?: (event: FailureEvent) => void;
 }

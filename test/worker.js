@@ -13,11 +13,17 @@ export default {
     const originalConsole = console.error;
     // The synchronous public call cannot interleave another request here.
     console.error = (...args) => { logs.push(args); };
+    const contextMode = request.headers.get('x-test-context-mode');
     try {
+      const context = request.headers.has('x-test-context') ? JSON.parse(request.headers.get('x-test-context') ?? '') : undefined;
+      // This getter deliberately fails inside the public context validation boundary.
+      const suppliedContext = contextMode === 'throw' ? Object.defineProperty({}, 'client', { enumerable: true, get() { throw new Error('https://user:password@private.test/path-key'); } }) : context;
       const result = executeQuery(input, env, {
         requestId: request.headers.get('x-test-request-id') ?? 'test-request',
+        context: suppliedContext,
         onEvent: mode === 'default' ? undefined : event => {
           events.push(event);
+          if (contextMode === 'mutate') context.client.asn = 64513;
           if (mode === 'throw') throw new Error('Bearer observer-secret https://user:password@private.test/path-key');
           if (mode === 'reject') return Promise.reject(new Error('observer-secret'));
           if (mode === 'input') input.fill(0);

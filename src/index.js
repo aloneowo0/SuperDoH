@@ -3,6 +3,7 @@ import { RuleError, createReporter, normalizeFailure } from './rules/errors.js';
 export { RuleError } from './rules/errors.js';
 import { loadGroups, recordType, domain } from './rules/config.js';
 import { matches } from './rules/conditions.js';
+import { loadContext } from './rules/context.js';
 import { buildResponse, parseMessage, encodeMessage, matchResponse, TYPES, FLAGS, getEdns } from '../lib/dns-wasm/index.js';
 
 /** @template T @param {T} value @returns {T} */
@@ -50,6 +51,7 @@ export function executeQuery(queryWire, env, options = {}) {
   const location = {};
   try {
     const limits = loadLimits(env.DNS_LIMITS);
+    const context = loadContext(options.context, limits);
     within(queryWire.byteLength, limits.maxQueryBytes);
     const originalWire = queryWire.slice();
     let parsed;
@@ -66,6 +68,8 @@ export function executeQuery(queryWire, env, options = {}) {
     /** @type {{ query: import('../lib/dns-wasm/index.js').DnsMessage, response: import('../lib/dns-wasm/index.js').DnsMessage | null }} */
     let state = { query: structuredClone(originalQuery), response: null };
     const groups = loadGroups(env, limits);
+    let conditionSteps = 0;
+    const spend = () => within(++conditionSteps, limits.maxConditionSteps, location);
     /** @type {'completed' | 'stopped' | 'returned'} */
     let termination = 'completed';
     pipeline: for (const group of groups) {
@@ -74,7 +78,7 @@ export function executeQuery(queryWire, env, options = {}) {
         location.rule = ruleIndex;
         delete location.action;
         actionType = undefined;
-        if (!matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response)) continue;
+        if (!matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend)) continue;
         for (const [actionIndex, action] of rule.actions.entries()) {
           location.action = actionIndex;
           actionType = action.type;

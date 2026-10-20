@@ -11,10 +11,14 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",
+    "esbuild": "0.28.2",
     "miniflare": "4.20260730.0",
     "typescript": "~5.9.3"
   },
   "exports": {
     ".": "./src/index.js"
+  },
+  "dependencies": {
+    "re2js": "2.8.8"
   }
 }
