@@ -29,7 +29,7 @@ class TestLog extends Log { constructor() { super(LogLevel.ERROR); } log(text) {
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/tcp-bundle.js'), script: activeBundle.outputFiles[0].text,
   outboundService: { network: { allow: ['private'], tlsOptions: { trustBrowserCas: false, trustedCertificates: trustRoot ? [fixtures.rootPem] : [] } } },
-  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings, log: new TestLog(),
+  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },
@@ -202,4 +202,26 @@ test('a stalled TLS handshake is bounded and never retries as plaintext', async 
     for (let i = 0; i < 40 && sockets.size; i++) await new Promise(resolve => setTimeout(resolve, 5));
     assert.equal(sockets.size, 0);
   } finally { for (const socket of sockets) socket.destroy(); server.close(); await once(server, 'close'); }
+});
+
+test('native transport caches only original DNS and still executes rules on a hit', async () => {
+  await serverTest((socket, wire) => socket.write(frame(responseWire(wire))), async ({ port, requests }) => {
+    await setup(port, { DNS_CACHE: { read: true, write: true }, DNS_RULE_MAIN: group([request, { type: 'setTtl', ttl: 17 }]) });
+    assert.equal((await post()).records[0].ttl, 17);
+    const wire = query(); wire[0] = 1; wire[1] = 2;
+    const hit = await post(wire);
+    assert.equal(hit.id, 258);
+    assert.equal(hit.records[0].ttl, 17);
+    assert.equal(requests.length, 1);
+  });
+});
+
+test('a cached TLS answer never bypasses a changed authentication identity', async () => {
+  await serverTest((socket, wire) => socket.write(frame(responseWire(wire))), async ({ port, requests }) => {
+    await setup(port, { DNS_CACHE: { read: true, write: true } });
+    assert.equal((await post()).flags & 15, 0);
+    await setup(port, { DNS_CACHE: { read: true, write: true }, DNS_UPSTREAMS: { primary: { transport: 'tls', address: '127.0.0.1', port, serverName: 'wrong.invalid' } } });
+    assert.equal((await post()).flags & 15, 2);
+    assert.equal(requests.length, 1);
+  });
 });

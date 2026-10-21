@@ -1,10 +1,12 @@
 import type { DnsRecord } from '../../lib/dns-wasm/index.js';
 export type RecordConfig = Omit<DnsRecord, 'rtype' | 'class' | 'data'> & { type: string | number; class?: number };
+export interface CachePolicy { read: boolean; write: boolean; maxTtl: number; }
 type ActionValue =
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number }
   | { type: 'stop' | 'return' }
-  | { type: 'queryUpstream'; upstream: string }
+  | { type: 'queryUpstream'; upstream: string; cache?: Partial<CachePolicy> }
+  | ({ type: 'setCache' } & Partial<CachePolicy>)
   | { type: 'rewriteQuery'; name?: string; queryType?: number | string };
 export type Action = ActionValue & { onError?: 'fail' | 'continue' };
 type Compare<F, V> = { field: F; op: 'eq' | 'ne'; value: V } | { field: F; op: 'in'; value: V[] };

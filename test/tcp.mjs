@@ -23,7 +23,7 @@ const logs = [];
 class TestLog extends Log { constructor() { super(LogLevel.ERROR); } log(text) { logs.push(text); } }
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/tcp-bundle.js'), script: activeBundle.outputFiles[0].text,
-  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings, log: new TestLog(),
+  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },
@@ -213,4 +213,16 @@ test('an unavailable TCP listener is an observable optional action failure, not 
   assert.equal(result.flags & 15, 0, logs.join('\n'));
   assert.deepEqual(result.records[0].data, [192, 0, 2, 1]);
   assert.ok(logs.join('\n').includes('rolled_back_continue'));
+});
+
+test('native transport caches only original DNS and still executes rules on a hit', async () => {
+  await serverTest((socket, wire) => socket.write(frame(responseWire(wire))), async ({ port, requests }) => {
+    await setup(port, { DNS_CACHE: { read: true, write: true }, DNS_RULE_MAIN: group([request, { type: 'setTtl', ttl: 17 }]) });
+    assert.equal((await post()).records[0].ttl, 17);
+    const wire = query(); wire[0] = 1; wire[1] = 2;
+    const hit = await post(wire);
+    assert.equal(hit.id, 258);
+    assert.equal(hit.records[0].ttl, 17);
+    assert.equal(requests.length, 1);
+  });
 });

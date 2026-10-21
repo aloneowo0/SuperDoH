@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #26–#29）
+# 环境变量规则执行器（JSON-only / #15、#26–#29）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；缓存、外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -342,7 +342,8 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | --- | --- |
 | `DNS_RULE_*` | 既有环境变量规则组 |
 | `DNS_LIMITS` | 可选资源边界 JSON/JSON 文本 |
-| `DNS_UPSTREAMS` | 可选命名 HTTPS 上游 JSON/JSON 文本，不能自行触发网络 |
+| `DNS_UPSTREAMS` | 可选命名 HTTPS/TCP/TLS 上游 JSON/JSON 文本，不能自行触发网络 |
+| `DNS_CACHE` | 可选默认缓存策略 JSON/JSON 文本，字段 read、write、maxTtl；不触发上游请求 |
 | `DNS_PATH_KEY` | 可选 Workers Secret；未设置时公开，设置后启用路径密钥 |
 
 未配置密钥时路径为 `/dns-query`。配置密钥后仅接受 `/<key>/dns-query`，旧的公开路径也关闭。key 格式为 1–128 个 ASCII 字母、数字、下划线、连字符，使用高熵值；空串、null、其他类型或非法字符是配置错误，不当作“未配置”。根据 URL pathname 精确匹配，不接受尾斜杠或 percent-encoded 密钥拼写；平台/代理可能先做 URL 规范化，不能把路径规范化当作额外认证手段。密钥比较使用 SHA-256 摘要及固定长度 timingSafeEqual，不用普通字符串比较秘密。
@@ -357,7 +358,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 - POST：`Content-Type: application/dns-message`，body 为 DNS wire；不接受 URL 查询参数。请求体按流限量读取，Content-Length 仅作提前拒绝优化，不作为唯一限制。
 - Accept 省略或允许 application/dns-message 时可用，支持媒体范围和 q 值；明确拒绝 dns-message 时 406。无效 DoH/DNS 输入 400，不支持的方法 405（含 Allow），POST 超限 413、GET 超限 414、媒体类型错误 415。读取未完成便超时/取消返回 408。
 - 有效查询的执行、配置或上游失败：HTTP 200，`Content-Type: application/dns-message`，相关 DNS SERVFAIL；不返回此前部分成功答案。不把合法 NXDOMAIN/NODATA 当失败。
-- 正常与错误响应均 `Cache-Control: no-store`；T5 未提供 HTTP/DNS 缓存。所有 DNS 响应经过同一 finalize 编码、大小和 matchResponse 校验。正常响应受 maxResponseBytes 限制，SERVFAIL 单独使用固定 **512 字节**协议错误预算，不带 OPT/EDNS，避免极小或无效响应限额令合法查询无法取得相关错误报文。
+- 正常与错误响应均 `Cache-Control: no-store`；HTTP 入口不缓存最终答案；#15 仅在显式上游动作内缓存原始响应。所有 DNS 响应经过同一 finalize 编码、大小和 matchResponse 校验。正常响应受 maxResponseBytes 限制，SERVFAIL 单独使用固定 **512 字节**协议错误预算，不带 OPT/EDNS，避免极小或无效响应限额令合法查询无法取得相关错误报文。
 
 ### 显式命名 HTTPS 上游（#27）
 
@@ -385,7 +386,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 }
 ```
 
-一次 HTTPS 动作只向指定上游发一次 POST wire 查询，不重试、切换上游或跟随重定向。目标只来自部署配置，客户端不能指定地址或上传配置。先校验 HTTP、媒体、消息大小、DNS/EDNS 版本及实际出站 ID/Question 对应性，再以新响应替换当前响应。所有协议有效且可表示的完整 RCODE 均算请求成功，包括 SERVFAIL、REFUSED、NXDOMAIN、NODATA；业务是否满意由下一条规则判断。HTTP 200 本身不等于 DNS 有效。
+一次 HTTPS 动作未命中可用缓存时只向指定上游发一次 POST wire 查询，不重试、切换上游或跟随重定向。目标只来自部署配置，客户端不能指定地址或上传配置。先校验 HTTP、媒体、消息大小、DNS/EDNS 版本及实际出站 ID/Question 对应性，再以新响应替换当前响应。所有协议有效且可表示的完整 RCODE 均算请求成功，包括 SERVFAIL、REFUSED、NXDOMAIN、NODATA；业务是否满意由下一条规则判断。HTTP 200 本身不等于 DNS 有效。
 
 仅定义上游不联网；正常结束/stop 没有响应时报 NO_RESPONSE 并返回相关 SERVFAIL，绝不补查。return 没响应仍按动作失败处理，可选时可继续。没有显式请求动作时，即使配置了上游也不会访问它。
 
@@ -467,13 +468,13 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 
 maxUpstreams 默认 16、硬上限 64；命名上游表及所有规则组各受 maxGroupBytes，并共同累计 maxConfigBytes。所有规则条件共同累计节点、正则指令和执行步骤。Secret URL 另受单 URL 2048 字符边界。
 
-maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读取；maxNetworkRequests（默认 2）在所有显式动作之间累计，失败也计数，DNS 回滚不重置；upstreamTimeoutMs 覆盖单次 headers/body 等待并受总 deadline 约束。更长顺序回退必须在硬上限内显式配置预算，不偷偷增加次数。客户端 Request.signal 与可信 options.signal 合并传播。
+maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读取；maxNetworkRequests（默认 2）在所有显式动作之间累计实际上游请求，缓存命中不计数，出站失败也计数，DNS 回滚不重置；upstreamTimeoutMs 覆盖单次 headers/body 等待并受总 deadline 约束。更长顺序回退必须在硬上限内显式配置预算，不偷偷增加次数。客户端 Request.signal 与可信 options.signal 合并传播。
 
 结束、失败或取消时清理计时器/监听器，取消未消费 body/reader，消费迟到 Promise 拒绝；合作式取消不保证远端立即停止。迟到完成不能提交回滚候选或污染其他请求。Node callback-service 对远端流 cancel 回调传播的可观测性有限，不据此声称远端所有资源释放或线上配额合格。
 
 响应先对应当前出站查询校验，再恢复原始客户端 ID/Question/RD/CD。未经改写数据保留适用 AD/RRSIG（不代表本服务执行 DNSSEC 密码学校验）；TTL 修改清 AD 并仅移除被改 RRset 的失效签名；rewriteQuery 后的上游响应保守清 AD/全部 RRSIG；TSIG/SIG0 消息认证重新编码后不能沿用。当前基础动作不改 EDNS，保留对未来出站 EDNS 差异的防御：必要时清除不适用 OPT，扩展 RCODE 只能用原客户端 OPT 重建最小无 flags/options OPT，无法安全表示则 UPSTREAM_INVALID，绝不降为 NOERROR。提前返回、可选回滚与 SERVFAIL 都经过统一协议收尾。
 
-本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。安全原始响应缓存、外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
+本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。原始响应缓存见后文；外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
 
 ### 普通 TCP 命名上游（#28）
 
@@ -485,7 +486,7 @@ maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读�
 
 `address` 是独立的 ASCII DNS 主机名、严格 IPv4 或不带括号的 IPv6，不接受 URL、端口后缀、IPv6 zone 或路径；国际域名需先转 ASCII。`port` 省略时为 53，显式值必须为 1–65535 的整数，null 和数字字符串不接受。TCP 项不接受 url/urlSecret，HTTPS 项不接受 address/port；未使用的坏定义也在执行前失败。目标仅来自部署者配置，不从客户端请求拼接。
 
-这是**明文 DNS over TCP**，不是 DoT。每个显式请求动作创建一个连接，发送带两字节长度前缀的 DNS 报文，只取得一份对应响应后关闭连接；不池化、不管线化、不重试、不切其他传输或上游。与 HTTPS 共用完整 RCODE、报文/实际查询对应性、EDNS、记录预算及统一客户端收尾；请求、失败结果及 JSON lastAction 分支语义相同。
+这是**明文 DNS over TCP**，不是 DoT。每个未命中缓存的显式请求动作创建一个连接，发送带两字节长度前缀的 DNS 报文，只取得一份对应响应后关闭连接；不池化、不管线化、不重试、不切其他传输或上游。与 HTTPS 共用完整 RCODE、报文/实际查询对应性、EDNS、记录预算及统一客户端收尾；请求、失败结果及 JSON lastAction 分支语义相同。
 
 前缀和正文可以分段到达；收到完整帧即完成，不等待服务器 EOF。前缀声明不足 DNS 头、超过响应预算、截断、同一读块中超出首帧的数据或不对应响应均拒绝。完整首帧之后不继续等候额外消息，关闭连接后到达的数据不参与当前请求。maxResponseBytes 限制 DNS 正文，不含两个分帧字节。
 
@@ -511,3 +512,52 @@ TLS 是标准 DNS over TLS，默认端口 **853**，不等同明文 TCP。addres
 握手、写入和读取共同使用单次 upstreamTimeoutMs，并受整体执行 deadline 和跨传输请求次数约束；握手失败、超时和取消均关闭连接。分帧、完整 RCODE、协议对应性、最近动作结果、回滚和最终 DNSSEC/EDNS 收尾与 TCP/HTTPS 共用。
 
 TLS 回归在真实 workerd 正式 DoH 入口连接受控 Node TLS DNS 服务。测试网络单独配置既有证书夹具的根信任，未向生产配置添加测试 CA，未关闭校验。覆盖正确身份、错误身份、不信任根、拆分响应、失败/扩展 RCODE、可选回滚、取消清理，以及原始 TCP 对端不完成 TLS 握手时的有界失败与不降级。通过这些测试不等于公网目标可达或线上 CPU/连接配额合格；平台底层诊断与外部代理日志仍需部署者另行审查。
+
+
+## 原始上游响应缓存（#15）
+
+默认开启读取和写入，缓存上限 **300 秒**。可配置 DNS_CACHE（JSON 对象或 JSON 文本）：
+
+```json
+{ "read": true, "write": true, "maxTtl": 300 }
+```
+
+read/write 必须为布尔值；maxTtl 必须为 **0–86400 的整数秒**。缺省字段继承默认值；0 禁止本次策略下的读取和写入。未知字段、非法数值和不可达分支中的非法策略均在联网前失败，不接受任意缓存键、延长 DNS 安全 TTL、过期容忍或后台刷新配置。策略上限限制的是本地复用期限，不是 setTtl，不会把答案 TTL 改成配置的上限。
+
+### JSON 优先级与隔离
+
+```json
+{
+  "order": 0,
+  "rules": [{
+    "actions": [
+      { "type": "setCache", "read": true, "write": true, "maxTtl": 120 },
+      { "type": "queryUpstream", "upstream": "primary", "cache": { "read": false } },
+      { "type": "queryUpstream", "upstream": "primary" }
+    ]
+  }]
+}
+```
+
+优先级为**本次 queryUpstream.cache > 之前成功执行的 setCache > DNS_CACHE > 默认值**，逐字段覆盖。setCache 只影响当前执行中之后的请求，受匹配条件和顺序控制；动作局部覆盖不改变规则策略，也不会泄漏到下一次 HTTP 请求。上例第一次动作强制向上游请求并按继承策略写入，第二次可以命中原始响应。read:false 仅绕过读取，write:false 仅禁止新写入，不删除此前缓存；要完全禁用设置二者均为 false，或 maxTtl:0。
+
+只保存校验后的上游 DNS 原始语义，必要的 HTTP Age 和负缓存 SOA TTL 规范化在用户动作之前完成；不保存 setTtl、answer、rewriteQuery 收尾或将来的 ECH 改写后的最终答案。缓存命中是成功的 queryUpstream，照常更新 lastAction，并继续执行后续规则。每次读取解析为独立对象，恢复本次 ID/Question，最后仍经过统一协议/DNSSEC 收尾。直接 answer 不读写上游缓存。
+
+### 安全复用与期限
+
+- 使用独立 Workers Cache API 命名空间 superdoh-original-v1，而非入口前缓存；每个 HTTP 请求都会执行规则。最终 HTTP 答案继续 no-store。
+- 键为命名上游名称、完整解析后连接身份（含 HTTPS Secret 实际地址、TCP 端口、TLS serverName）和出站查询 wire（仅清零 ID）的 SHA-256。类型、类、名称大小写、RD/CD、EDNS 大小、DO 和完整 ECS 均隔离；Secret 轮换自然换键。缓存键只含固定版本路径及摘要，不含明文 DNS 名称或敏感 URL。
+- 按整份消息最短的普通记录 TTL、策略上限、适用 SOA 最小值、RRSIG 元数据时间窗及 HTTPS 新鲜度取保守交集。OPT 的 ttl 是协议位，不作为 DNS TTL 递减。命中按原始接收时刻递减普通记录 TTL，不刷新插入时间；存储耗时不能延长期限。RRSIG 适用性检查不代表执行 DNSSEC 密码学校验。
+- NXDOMAIN/NODATA 必须具有覆盖原始出站问题域名、同类的 SOA，按 min(SOA.ttl, SOA.minimum) 负缓存并规范化 SOA TTL；无证明、跨区别名的复杂负答案保守绕过，不猜测安全期限。
+- SERVFAIL/REFUSED 等故障 RCODE、TC 截断、零 TTL、高位异常 TTL、消息认证、ANY/区传送/密钥协商类查询不缓存。普通无状态 EDNS 和合法 ECS 可复用；COOKIE、未知/有连接状态的 EDNS 选项、多个选项或 ECS 返回身份不对应时保守绕过。ECS 仅复用完全相同查询，不跨网段扩大命中范围。
+- HTTPS fetch 显式 cache:no-store，不依赖隐式 HTTP 缓存。响应 Age/Date 对 DNS TTL 减龄；HTTP max-age/s-maxage/Expires 只能进一步缩短期限。no-store/private/no-cache、Set-Cookie、任何 Vary 或不可判定 Age 禁止新缓存，不用 DNS TTL 绕过来源限制。
+
+### 缺失、错误与资源边界
+
+未命中、过期、被平台清理或禁用存储而返回 miss 时，执行**同一显式动作**的一次真实上游请求，不查询其他来源、不重试、不取旧数据顶替。Cache API 本身可以静默不保留对象，不承诺写入后必命中。实际 API 拒绝/数据解码失败产生脱敏 CACHE_FAILED；尺寸/记录上限及超时保留 RESOURCE_LIMIT、EXECUTION_TIMEOUT、REQUEST_CANCELLED。必需动作终止，可选动作记录 action_failed 并仅回滚自身 DNS 候选；最近动作结果可供下一条 JSON 规则处理，绝不悄悄切换成网络重试。普通 miss/保守绕过不是错误，不输出含查询或键的逐次命中日志。
+
+Cache API 读写、摘要及读取 body 共用执行总 deadline；实际出站才消耗 maxNetworkRequests，单次网络等待仍受 upstreamTimeoutMs 约束。缓存写入作为外部副作用不能因后续动作验证失败或取消而保证撤销；迟到缓存结果不提交 DNS 状态。缓存仅为数据中心本地、可随时清理的加速层，不是数据库，不保证跨地区或全球一致，不合并并发请求。
+
+测试使用真实 workerd 的公开 DoH HTTP 入口、出站次数、受控 HTTP Age 和有界实际等待验证 TTL/过期；另有真实本地 TCP/TLS 命中及 TLS 身份变化测试。协议预算回归显式关闭缓存，避免把命中误认为真实网络覆盖。未添加测试专用生产时钟/缓存注入 API；这些本地测试不是线上免费 CPU、生产 Cache API 可达性或公网证书互操作验收。
+
+参考：[Workers Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/)、[本地缓存边界](https://developers.cloudflare.com/workers/reference/how-the-cache-works/)。

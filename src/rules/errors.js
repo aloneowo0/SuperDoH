@@ -12,6 +12,7 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  CACHE_FAILED: 'DNS cache operation failed.',
   ACCESS_DENIED: 'The requested endpoint is not available.',
   INVALID_HTTP: 'Invalid DoH HTTP request.',
   EXECUTION_TIMEOUT: 'DNS execution deadline exceeded.',

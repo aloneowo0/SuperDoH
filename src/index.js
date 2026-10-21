@@ -1,3 +1,4 @@
+import { loadCachePolicy } from './rules/cache-policy.js';
 import { createConfigBudget } from './rules/config-budget.js';
 import { loadUpstreams } from './doh/upstreams.js';
 import { createBudget } from './doh/budget.js';
@@ -79,6 +80,7 @@ export async function executeQuery(queryWire, env, options = {}) {
     let state = { query: structuredClone(originalQuery), response: null };
     const configBudget = createConfigBudget(limits);
     const upstreams = loadUpstreams(env, limits, configBudget);
+    let cache = loadCachePolicy(env.DNS_CACHE, configBudget);
     const transport = createUpstream(limits, execution);
     const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
@@ -116,8 +118,12 @@ export async function executeQuery(queryWire, env, options = {}) {
               break pipeline;
             }
             const candidate = structuredClone(state);
+            let nextCache = cache;
             if (action.type === 'queryUpstream') {
-              candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query), candidate.query, originalQuery);
+              candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query, { ...cache, ...action.cache }, action.upstream), candidate.query, originalQuery);
+            } else if (action.type === 'setCache') {
+              const { type, onError, ...policy } = action;
+              nextCache = { ...cache, ...policy };
             } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
             } else if (action.type === 'setTtl') {
@@ -140,6 +146,7 @@ export async function executeQuery(queryWire, env, options = {}) {
               finalizeResponse(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
             }
             state = structuredClone(candidate);
+            cache = nextCache;
             lastAction = freeze({ success: true, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex } });
           } catch (error) {
             const failure = failureAt(error, location);

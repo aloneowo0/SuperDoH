@@ -117,3 +117,12 @@ const tlsSource: import('../src/rules/types.js').UpstreamConfig = { transport: '
 // @ts-expect-error TLS does not expose an authentication downgrade.
 const insecureTls: import('../src/rules/types.js').UpstreamConfig = { transport: 'tls', address: 'resolver.example', verifyCertificate: false };
 void [tlsSource, insecureTls];
+
+const cachePolicy: import('../src/rules/types.js').CachePolicy = { read: true, write: false, maxTtl: 60 };
+const cacheAction: Action = { type: 'setCache', read: false, maxTtl: 0 };
+const requestCache: Action = { type: 'queryUpstream', upstream: 'primary', cache: { write: false } };
+// @ts-expect-error Cache keys are derived from source and DNS identity, never caller supplied.
+const unsafeCacheKey: Action = { type: 'queryUpstream', upstream: 'primary', cache: { key: 'same' } };
+// @ts-expect-error Cache flags are booleans, not strings.
+const badCacheFlag: Action = { type: 'setCache', read: 'yes' };
+void [cachePolicy, cacheAction, requestCache, unsafeCacheKey, badCacheFlag];

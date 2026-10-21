@@ -1,3 +1,4 @@
+import { cacheKey, readCache, writeCache, normalizeNegative, reusable, ageMessage, httpFreshness, reusableResponse } from './cache.js';
 import { encodeMessage, getEdns, matchResponse, parseMessage } from '../../lib/dns-wasm/index.js';
 import { RuleError } from '../rules/errors.js';
 import { createBudget } from './budget.js';
@@ -31,11 +32,11 @@ function cancelBody(body) {
 /**
  * @param {import('../rules/limits.js').Limits & { maxNetworkRequests: number, upstreamTimeoutMs: number }} limits
  * @param {ReturnType<typeof createBudget>} budget
- * @returns {(target: import('../rules/types.js').ResolvedUpstream | undefined, query: import('../../lib/dns-wasm/index.js').DnsMessage) => Promise<import('../../lib/dns-wasm/index.js').DnsMessage>}
+ * @returns {(target: import('../rules/types.js').ResolvedUpstream | undefined, query: import('../../lib/dns-wasm/index.js').DnsMessage, policy: import('../rules/types.js').CachePolicy, sourceName: string) => Promise<import('../../lib/dns-wasm/index.js').DnsMessage>}
  */
 export function createUpstream(limits, budget) {
   let attempts = 0;
-  return async function upstream(target, query) {
+  return async function upstream(target, query, policy, sourceName) {
     budget.check();
     if (!target) throw new RuleError('NO_UPSTREAM', 'No DNS upstream is configured.');
 
@@ -47,6 +48,10 @@ export function createUpstream(limits, budget) {
       if (error instanceof RuleError) throw error;
       throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream query is invalid.');
     }
+
+    const key = reusable(query, true) && policy.maxTtl > 0 && (policy.read || policy.write) ? await budget.run(() => cacheKey(target, query, sourceName)) : undefined;
+    const hit = key && policy.read ? await readCache(key, query, policy.maxTtl, limits, budget) : undefined;
+    if (hit) return hit;
 
     const child = createBudget(limits.upstreamTimeoutMs, budget.signal, 'UPSTREAM_TIMEOUT');
     /** @type {Response | undefined} */
@@ -64,6 +69,7 @@ export function createUpstream(limits, budget) {
           headers: { Accept: 'application/dns-message', 'Content-Type': 'application/dns-message' },
           body: queryWire,
           redirect: 'manual',
+          cache: 'no-store',
           signal: child.signal,
         });
         const responsePromise = fetch(request);
@@ -107,6 +113,7 @@ export function createUpstream(limits, budget) {
       }
       child.check();
 
+      const receivedAt = Date.now();
       let parsed;
       try {
         matchResponse(responseWire, queryWire);
@@ -119,11 +126,17 @@ export function createUpstream(limits, budget) {
       const recordCount = parsed.answers.length + parsed.authority.length + parsed.additional.length;
       if (recordCount > limits.maxRecords) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.');
 
+      const canReuse = reusableResponse(query, parsed);
       try {
-        return parseMessage(encodeMessage(parsed, { strip_message_authentication: true }));
+        parsed = parseMessage(encodeMessage(parsed, { strip_message_authentication: true }));
       } catch {
         throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response is invalid.');
       }
+      normalizeNegative(parsed);
+      const freshness = response ? httpFreshness(response.headers) : { age: 0, maxTtl: Infinity };
+      ageMessage(parsed, freshness.age);
+      if (key && policy.write && canReuse) await writeCache(key, parsed, Math.min(policy.maxTtl, freshness.maxTtl), receivedAt, budget);
+      return ageMessage(parsed, Math.max(0, Math.floor((Date.now() - receivedAt) / 1000)));
     } catch (error) {
       if (error instanceof RuleError) throw error;
       throw new RuleError('UPSTREAM_FAILED', 'The DNS upstream request failed.');

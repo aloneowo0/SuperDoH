@@ -1,3 +1,4 @@
+import { cachePolicy } from './cache-policy.js';
 import { createConfigBudget } from './config-budget.js';
 import { within } from './limits.js';
 import { decodeRdata, encodeRdata, TYPES } from '../../lib/dns-wasm/index.js';
@@ -54,8 +55,12 @@ function actionValue(value, countRecord) {
       if (v.name === undefined && v.queryType === undefined) throw new Error();
       return { type: 'rewriteQuery', name: v.name === undefined ? undefined : domain(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
     case 'queryUpstream':
-      fields(v, ['type', 'upstream']);
-      return { type: 'queryUpstream', upstream: upstreamName(v.upstream) };
+      fields(v, ['type', 'upstream', 'cache']);
+      return { type: 'queryUpstream', upstream: upstreamName(v.upstream), cache: v.cache === undefined ? undefined : cachePolicy(v.cache) };
+    case 'setCache': {
+      const { type, ...policy } = v;
+      return { type: 'setCache', ...cachePolicy(policy) };
+    }
     case 'stop':
     case 'return':
       fields(v, ['type']);

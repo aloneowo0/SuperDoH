@@ -28,7 +28,7 @@ const calls = [];
 let upstream = async request => new Response(responseWire(new Uint8Array(await request.arrayBuffer())), { headers: { 'Content-Type': 'application/dns-message' } });
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: `${root}/test/doh-bundle.js`, script: activeBundle.outputFiles[0].text,
-  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings, log: new TestLog(),
+  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },
@@ -38,7 +38,10 @@ const options = bindings => ({
   ],
   outboundService: async request => {
     calls.push({ url: request.url, method: request.method, headers: Object.fromEntries(request.headers) });
-    return upstream(request);
+    const response = await upstream(request);
+    // Keep these transport/record fixtures at zero HTTP age; cache tests cover aging separately.
+    if (!response.headers.has('date')) response.headers.set('date', new Date(Date.now() + 60_000).toUTCString());
+    return response;
   },
 });
 const mf = new Miniflare(options({}));
