@@ -780,3 +780,13 @@ cacheTtl 默认 0，显式设置 1..86400 秒才复用探测结果。缓存身�
 普通回归通过真实 workerd 公共 DoH 入口连接受控本地 TCP 服务，验证单次连接、TLS 收包上限、超时、取消、清理和原答案保留；另保留通用 ECH Node/workerd 离线握手回归。`npm run test:ech-interop` 是独立本地 ECH-capable OpenSSL 的真实成功/证书失败/缓存路径验收，要求设置 ECH_PROBE_OPENSSL。它不放入默认测试后假装通过，不在缺少程序时以 skip 伪装成功。
 
 当前 Windows 环境的 OpenSSL 3.5.5 不提供 ech 命令或 s_server -ech_key，历史 Linux ECH OpenSSL 路径也不存在，因此独立 OpenSSL 成功互操作尚未执行，#22 的该项验收仍阻塞；提供了可运行脚本，但不能宣称这等同成功互操作。主动探测的证书验证与完整握手是重型路径，elapsedMs/网络等待/后台执行均不能证明线上免费 CPU 合格；#25 仍需另行授权部署与实测。
+
+## 可选 DNS JSON 查询接口（#23）
+
+DNS_JSON 默认为关闭；仅接受布尔 true/false 或精确字符串 "true"/"false"，其他值为 INVALID_CONFIG。开启后，在与标准 DoH 相同的路径（含相同可选路径 Secret）使用 GET ?name=example.com&type=A&cd=false。name 必填；type 可省略为 A，也可为 DNS 类型名称或 0..65535 十进制代码；cd 可省略为 false，仅接受 true/false。名称及类型继续受标准 DNS 查询校验和大小约束，重复参数、未知参数或混入 dns= 均拒绝；参数名按 URL 解码后判断。
+
+输出媒体类型 application/dns-json，使用通用 DNS 库 toDnsJson 对**最终 wire 响应**格式化：Status 为完整扩展 RCODE，TC/RD/RA/AD/CD 为布尔标志；Question 包含 name/type/class；Answer/Authority/Additional 记录包含 name/type/class/TTL/data（DNS 展示文本，包括未知类型的 RFC 3597 形式）。不声称不同供应商的 JSON 额外字段天然兼容。Accept 缺省或允许该类型时可用；显式 q=0 不被忽略。
+
+这是输入/输出适配，不是第二套解析器：JSON 输入先生成受限 wire query，随后复用同一配置、规则顺序、上游/缓存、平台元数据、动作状态、失败回滚、协议及 DNSSEC 收尾。没有隐式默认上游。合法 NXDOMAIN 保持 HTTP 200 / Status 3；合法 DNS 查询在规则执行中失败或无答案保持 HTTP 200 / Status 2，不伪造成功记录。非法参数/HTTP 使用对应 400/405/406/414 等状态和 {error:{code,message}} 脱敏 JSON；配置不合法且尚未取得有效查询时为 HTTP 500。所有响应 no-store。
+
+JSON 风格请求在功能关闭时为 404；JSON 查询只允许 GET（405 的 Allow 为 GET），不新增 POST JSON body 接口。标准 wire GET/POST 不变，且 JSON 开启不改变 wire 的 Accept 语义。路径认证在 JSON 参数解析、配置和网络工作前执行；未授权统一返回不含密钥的 404，不使用客户端上传的配置或认证请求头。应用日志不输出密钥路径或原始查询参数。
