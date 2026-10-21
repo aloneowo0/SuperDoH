@@ -1,0 +1,27 @@
+{
+  "DNS_RULE_ECH_DIRECT": {
+    "order": 0,
+    "rules": [
+      {
+        "actions": [
+          {
+            "type": "answer",
+            "records": [
+              {
+                "name": "example.com",
+                "type": "HTTPS",
+                "ttl": 60,
+                "rdata": { "Https": { "priority": 1, "target": ".", "params": [] } }
+              }
+            ]
+          },
+          {
+            "type": "loadEch",
+            "config": "AD7+DQA6AQAgACABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fIAAEAAEAAQALZXhhbXBsZS5jb20AAA=="
+          },
+          { "type": "applyEch" }
+        ]
+      }
+    ]
+  }
+}

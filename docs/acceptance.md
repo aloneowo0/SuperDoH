@@ -1,0 +1,56 @@
+# Acceptance matrix and verification status
+
+This matrix maps the current implementation surface to its local verification commands. A listed command is a reproducible check, not a claim that it was run for a particular release. Run in the repository root with Node.js 22+ and the locked dependencies. Workerd tests use the configured compatibility date and do not enable `nodejs_compat`.
+
+## Local matrix
+
+| Acceptance area | Command / suite | Observable scope |
+| --- | --- | --- |
+| JSON rule validation, stable order, conditions, state and failures | `npm run test:rules` (`test/rules.mjs`) | Public execution results, sorted groups, full preflight, resource limits, conditions, errors and rollback. |
+| Standard DoH GET/POST, path authorization, upstream and DNS response semantics | `npm run test:doh` (`test/doh.mjs`) | Production `src/worker.js` HTTP entry, DNS wire output, no implicit requests, source failure, RCODE and DNSSEC cleanup. |
+| TCP and authenticated TLS sources | `npm run test:tcp` (`test/tcp.mjs`); `npm run test:tls` (`test/tls.mjs`) | Workerd public DoH entry connected to controlled local protocol servers; framing, identity checks, timeouts, cleanup and shared request budgets. |
+| Original upstream cache | `npm run test:cache` (`test/cache.mjs`) | Identity isolation, TTL/HTTP freshness, cache hits that still run rules, bypass and failure behavior. |
+| Record changes and metadata separation | `npm run test:records` (`test/records.mjs`); `npm run test:metadata` (`test/metadata.mjs`) | DNSSEC/EDNS effects, rollback and controlled platform client/edge attributes. |
+| Response-address attribution | `npm run test:attribution` (`test/attribution.mjs`) | Explicit lookup through the public DoH entry, same-address conditions, validated mapping, shared budgets, cache and rollback. |
+| Maintained domain lists | `npm run test:lists` (`test/domain-lists.mjs`) | Inline/external text/JSON, complete replacement, due refresh, failure invalidation, recovery and bounded isolate state. Test time is controlled by the test harness, not a production clock hook. |
+| ECH direct/HTTPS lookup/application and probe behavior | `npm run test:ech` (`test/ech.mjs`); `npm run test:ech-probe` (`test/ech-probe.mjs`) | ECH actions through the Worker boundary with controlled sources, validation, failure/rollback and resource behavior. |
+| DNS/ECH library regression | `npm run test:libraries` | DNS WASM smoke and generic operations plus ECH Node/workerd offline suites. |
+| Checked-in examples and composed source/cache/ECH flow | `npm run test:acceptance` (`test/acceptance.mjs`) | Executes checked-in JSON configurations and combines maintained lists, attribution, original caching, ECH and JSON; unsupported probe sources fail closed. Independent successful probe interop remains blocked below. |
+| Types and combined default regression | `npm run typecheck`; `npm test` | TypeScript checks and the standard script sequence in `package.json`. |
+| Opt-in JSON query adapter | `npm run test:json` (`test/json.mjs`) | `DNS_JSON` gating, `name`/`type`/`cd`, authentication, JSON errors and same-pipeline behavior. The script is part of the default npm test sequence. |
+
+The public JSON adapter is enabled only by `DNS_JSON=true` (or the exact string `"true"`) and accepts one GET at the standard `/dns-query` path with `name`, optional `type`, and optional `cd`. It calls the DNS library's `toDnsJson`; this is not a promise of compatibility with a particular public provider's extra JSON fields. A valid DNS failure is represented by the DNS status; malformed HTTP/query parameters use the HTTP JSON error object. Wire-format and JSON entry paths share execution, authorization and response cleanup.
+
+## Recorded local verification (2026-10-21)
+
+The final integrated `npm test` run exited with code 0: typechecking, 211 application tests, 130 DNS library tests and 104 ECH library offline tests passed, with no application tests skipped. The independent ECH/OpenSSL test is opt-in and was **not** included in these passing totals.
+
+Wrangler 4.151.3 local `deploy --dry-run` also succeeded (2,000.24 KiB bundle, 477.28 KiB gzip); no upload or deployment occurred. Binding types were regenerated with `wrangler types --include-runtime=false`. Independent Standards and Spec reviews found no remaining concrete defects in the local #24 deliverable; full acceptance remains partial for the blockers below.
+
+## Independent ECH handshake
+
+`test/ech-interop.mjs` and `npm run test:ech-interop` are opt-in. The test generates an ECH key with OpenSSL, starts a local TLS/ECH server using `s_server -ech_key`, and sends requests through the public workerd DoH entry. It uses the library's local test certificate fixture. It is an independent **local** handshake, not proof of interoperability with a public resolver or remote production endpoint.
+
+Run only with an existing ECH-capable OpenSSL build:
+
+```sh
+ECH_PROBE_OPENSSL=/path/to/ech-capable/openssl \
+LD_LIBRARY_PATH=/path/to/that/build \
+npm run test:ech-interop
+```
+
+Current environment status: `ECH_PROBE_OPENSSL` is unset. `command -v openssl` resolves to OpenSSL 3.5.5 from the MinGW installation; it has no `ech` subcommand and its `s_server` has no `-ech_key`. The historical `/tmp/opencode/openssl-ech/apps/openssl` referenced by `META_ECH_HANDOFF.md` is not present. Therefore independent ECH handshake success is **not** claimed here; no OpenSSL build/install was attempted.
+
+## Outstanding acceptance
+
+- **#22 ECH interoperability:** the opt-in test and command exist, but the required ECH-capable OpenSSL executable is unavailable in the current environment. This check is blocked, not passed.
+- **#25 online free-plan acceptance:** no online CPU measurement, deployment, remote DoH interoperability or account-specific free-plan verification was authorized or performed. Local workerd and controlled-source test results cannot substitute for those checks.
+- **Platform/resource caveats:** upstream reachability, Secrets/variable limits and Worker resource availability depend on the deployed account and environment. Application `DNS_LIMITS` values are resource bounds, not free-plan CPU guarantees.
+
+The `.example` and `.test` names in `examples/*.json` are illustrative inputs for controlled harnesses, not live services. Replace them with sources you operate before deployment; these examples do not establish public reachability or online data accuracy.
+
+## Build validation
+
+`npx wrangler deploy --dry-run` validates the browser-target production bundle locally without upload; this is not a deployment or free-plan CPU test. `wrangler types --include-runtime=false` regenerates the checked-in binding declarations. The production configuration uses `keep_vars: true` so ordinary Dashboard-managed runtime variables survive code deployment; Workers Builds build-only variables remain separate, and ordinary deployments do not delete Secrets. See [configuration preservation](https://developers.cloudflare.com/workers/wrangler/configuration/) and [build/runtime variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
+
+The bounded, authorization-gated procedure for remaining online work is in [online-acceptance.md](online-acceptance.md). It is preparation only, not an executed result or permission to deploy.

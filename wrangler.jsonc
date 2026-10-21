@@ -2,6 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "superdoh",
   "main": "src/worker.js",
+  // Runtime JSON variables are managed in the Dashboard; do not erase them on code deploy.
+  "keep_vars": true,
   // Keep the public entry aligned with the pinned workerd behavior tests.
   "compatibility_date": "2026-07-30",
   "compatibility_flags": ["enable_request_signal"],

@@ -1,0 +1,23 @@
+{
+  "LIST_URL": "https://lists.example/managed-domains.txt",
+  "DNS_UPSTREAMS": {
+    "primary": { "transport": "https", "url": "https://resolver.example/dns-query" }
+  },
+  "DNS_DOMAIN_LISTS": {
+    "selected": {
+      "urlSecret": "LIST_URL",
+      "format": "text",
+      "refreshIntervalMs": 60000
+    }
+  },
+  "DNS_RULE_DOMAIN_LIST": {
+    "order": 0,
+    "rules": [
+      { "actions": [ { "type": "queryUpstream", "upstream": "primary" } ] },
+      {
+        "when": { "field": "query.name", "op": "inListSuffix", "value": "selected" },
+        "actions": [ { "type": "setTtl", "ttl": 30 } ]
+      }
+    ]
+  }
+}

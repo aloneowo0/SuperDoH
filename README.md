@@ -1,54 +1,84 @@
 # SuperDoH
 
-> 轻量级 DNS-over-HTTPS 代理，部署在 Cloudflare Workers。
+SuperDoH is a single-configuration DNS-over-HTTPS Worker. Its production behavior is configured with runtime environment bindings and declarative JSON rule groups. There is no built-in upstream, automatic routing, user-supplied JavaScript/TypeScript, configuration UI, or browser-based policy wizard.
 
-多上游并发竞速、CDN 归属分流、优选域名替换、ECH 外置 SNI 注入、Meta 静态 IP 路由——一套方案解决 DNS 解析加速与绕过。
+## What it does
 
-## 功能特性
+- Serves standard RFC 8484 DNS wire-format requests at `/dns-query` over HTTPS (GET or POST).
+- Runs ordered `DNS_RULE_*` rule groups. Conditions inspect the current query/response and trusted client, edge, or explicitly enriched response-address properties.
+- Uses explicitly named HTTPS, TCP, or TLS upstreams only when a `queryUpstream` or `queryEch` action asks for one.
+- Supports an opt-in DNS JSON GET adapter through `DNS_JSON=true`; it uses the same rule pipeline as wire-format requests.
+- Provides explicit DNS response-address attribution, maintained domain lists, and ECH acquisition/application actions. These do not run implicitly during condition matching.
 
-- **多上游并发竞速** — Google、Cloudflare、Quad9、AdGuard、OpenDNS、NextDNS 等预设上游并行查询，最快响应优先返回
-- **两阶段 AUTO 流程** — AUTO 1 多上游分类查询，识别 CDN 归属；AUTO 2 按归属对优选域名进行二次最优解析
-- **CDN 感知路由** — 识别 Cloudflare、CloudFront、Vercel、Meta 等 CDN 响应，替换为地区可达的优选 IP
-- **ECH 外置 SNI 注入** — CF 动态获取 ECH 公钥 + Meta 静态 ECH 配置，在 HTTPS RR 响应中注入加密 SNI，绕过 GFW SNI DPI
-- **AAAA 阻塞** — 对 remap 域名直接返回 AAAA NODATA，避免 Happy Eyeballs 被 v6 超时拖慢
-- **ECS 注入** — EDNS Client Subnet 携带客户端 IP 前缀，获取就近解析结果；隐私保护前缀可配
-- **Chrome DoH Canary 拦截** — `use-application-dns.net` 返回 NXDOMAIN，关闭 Chrome 原生 DoH
-- **结构化 JSON 日志** — 全链路 requestId 追踪，支持 debug/info/warn/error 分级
-- **双响应格式** — 同时支持 RFC 8484 wire-format（`application/dns-message`）和 JSON（`application/dns-json`）
-- **图形化配置向导** — 首页内置配置 UI，浏览器内完成全部配置，无需手写配置文件
-- **伪装入口** — 设置 `ENTRANCE` + `PROXY` 环境变量后，非秘密路径反向代理到指定网站，仅秘密路径显示主页
-- **自定义上游** — 通过 Workers 环境变量 `CUSTOM_<NAME>` 运行时注入自定义 DoH 上游，即时生效无需重新部署
+The detailed runtime contract, fields, resource limits and failure semantics are in [docs/rules.md](docs/rules.md). Historical behavior and configuration changes are in [docs/migration.md](docs/migration.md); the verification matrix and current blockers are in [docs/acceptance.md](docs/acceptance.md).
 
-## 部署
+## Runtime configuration
 
+Configuration belongs in the Worker environment, not in request parameters or a checked-in JavaScript file. Each `DNS_RULE_*` variable is a complete JSON binding object with an integer `order` and an ordered `rules` array. Groups execute by ascending `order`, then by binding name; rules and their actions execute in array order. All configured branches and references are validated before execution, including unreachable rules.
+
+Common bindings:
+
+| Binding | Purpose |
+| --- | --- |
+| `DNS_RULE_*` | Ordered conditions and actions |
+| `DNS_UPSTREAMS` | Named HTTPS, TCP, or TLS connections; definitions alone do not send requests |
+| `DNS_CACHE` | Default policy for cached original upstream responses |
+| `DNS_LIMITS` | Bounded request, configuration, list, source and execution budgets |
+| `DNS_ADDRESS_SOURCES` | Trusted JSON mappings for explicit response-address attribution |
+| `DNS_DOMAIN_LISTS` | Inline or HTTPS-maintained domain data |
+| `DNS_JSON` | Opt-in DNS JSON GET endpoint; disabled unless true |
+| `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` |
+
+Sensitive URLs should use a Secret binding and reference its **binding name** through `urlSecret`. The JSON examples use reserved `.example` hostnames and non-secret placeholder values for controlled test setups; replace them with sources you operate before deployment. Never commit real credentials or a real path key.
+
+Small complete binding-object examples:
+
+- [Explicit sequential fallback](examples/fallback.json)
+- [Platform client-country selection](examples/client-selection.json)
+- [Response-address attribution and matching](examples/attribution.json)
+- [Maintained external domain list](examples/domain-list.json)
+- [Direct ECHConfigList loading and application](examples/ech-direct.json)
+- [ECH lookup from a DNS HTTPS answer](examples/ech-query.json)
+- [Authenticated TLS ECH probe and application](examples/ech-probe.json)
+
+There is no hidden default upstream. If a rule pipeline produces no response, the request fails with DNS SERVFAIL; it does not silently query a configured source. An explicit upstream action makes one request to the named source, and only JSON conditions decide whether later actions run.
+
+## HTTP API
+
+The default API accepts standard DNS wire requests:
+
+- `GET /dns-query?dns=<canonical-base64url>` with an acceptable `Accept: application/dns-message` header.
+- `POST /dns-query` with `Content-Type: application/dns-message` and a DNS wire body.
+
+The optional JSON adapter is off by default. Set the normal environment binding `DNS_JSON` to boolean `true` (or the exact string `"true"`) and send a GET with `Accept: application/dns-json`, for example:
+
+```text
+GET /dns-query?name=www.example.com&type=A&cd=false
+Accept: application/dns-json
 ```
-Fork 仓库 → 在 Cloudflare 连接 GitHub（Workers Builds）
-  → 第一次部署（configured:0，内置默认跑）
-  → 首页「配置」tab 图形向导 → 选上游/地区/ECH → 生成配置
-  → 覆盖 superdoh.config.js → push
-  → 自动第二次部署（configured:1）→ 正式运行
+
+`name` is required; `type` is an optional DNS type name or decimal code (default A); `cd` is optional and accepts only `true` or `false`. Duplicate, unknown or mixed wire/JSON query parameters are rejected. The response uses `application/dns-json` and the DNS library's `toDnsJson` representation; this is not a provider-specific JSON compatibility guarantee. A valid DNS failure is represented in its DNS status, while invalid HTTP/JSON parameters use an HTTP error object. Both entry formats share the same rules, cache, actions, authorization and DNSSEC cleanup.
+
+If `DNS_PATH_KEY` is configured as a Secret, both entry formats use the same exact path form `/<configured-key>/dns-query`; the secret value is not a query parameter or request header. Authentication happens before reading a query or doing configuration/network work.
+
+## Deploying with Cloudflare Workers Builds
+
+1. Connect the repository in the Cloudflare Dashboard under Workers Builds. The repository root contains `wrangler.jsonc`, whose entry is `src/worker.js`.
+2. Configure the project install/build/deploy commands for the checked-in Wrangler configuration (for example, install with `npm ci` and deploy with `npx wrangler deploy` where the Build environment is authorized). There is no application configuration download step or UI-generated file.
+3. Add ordinary JSON bindings and Secret bindings in the Worker's Dashboard/Workers Builds environment settings. Use separate Production and Preview values as appropriate. Keep these values in the Worker environment, not in Git; code builds do not need to embed the bindings.
+4. The checked-in Wrangler config sets `keep_vars: true` to retain Dashboard-managed runtime variables on code deployment. Build-only variables are separate and are **not** available to the running Worker. Secrets are not deleted by ordinary deployments. After connecting a build or changing environments, verify that ordinary variables and Secrets remain configured for the intended Worker environment. Preview and Production may have different values. Do not put Secret values in `wrangler.jsonc`, these examples, command-line arguments or build logs.
+5. Test a controlled source and the expected Worker route before directing clients to it. This repository does not claim a deployment or online free-plan CPU acceptance.
+
+The project plans around a 5,120-byte per-variable configuration budget and a 64-binding ordinary-variable/Secret budget; Cloudflare platform and account limits remain authoritative. Keep rule groups small and use a named external domain-list source for larger data rather than packing the list into a rule binding.
+
+## Local checks
+
+```sh
+npm ci
+npm run typecheck
+npm test
 ```
 
-1. **Fork** 本仓库
-2. 在 **Cloudflare Dashboard** → Workers Builds 连接你的 GitHub fork
-3. **第一次部署** — `superdoh.config.js` 默认 `configured: 0`，Worker 用内置默认（Cloudflare + Google + AUTO，无地区优化）运行
-4. 打开首页 **「配置」tab** → 图形向导选择上游、地区、ECH 等 → **生成 `superdoh.config.js`** → 下载 → 覆盖仓库根目录文件 → 提交
-5. **第二次部署自动触发** — `configured: 1`，Worker 进入正式运行模式
+`npm test` runs the standard type, workerd, DNS and ECH library regression suites. The opt-in independent ECH/OpenSSL handshake requires an ECH-capable OpenSSL build; the available system OpenSSL 3.5.5 does not provide the required `ech` command or `s_server -ech_key`. See [docs/acceptance.md](docs/acceptance.md) for this blocker and outstanding online acceptance.
 
-> 也可本地部署：`npm install && npm run build && npm run deploy`（需 [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) 已登录）
-
-详细配置说明、API 端点、分流策略、架构等见 [DOCUMENTATION.md](DOCUMENTATION.md)。
-
-## 已知限制
-
-> [!WARNING]
-> - **Meta ECH 是静态的** — `META_ECH_B64` 硬编码于 `ech.js`，不随 Meta 服务器轮换自动更新。ECH 公钥过期后需手动更新。
-> - **ECH 注入会修改 DNS 响应** — HTTPS RR 重建时清除 AD 位并删除覆盖 type 65 的 RRSIG，不保留原响应的 DNSSEC 签名。对普通浏览器 DoH 无影响，但 DNSSEC 验证客户端会丢弃修改后的响应。
-> - **Workers Free 计划 6 连接限制** — Free 计划仅有 6 个同时出站 TCP 连接。超过 6 个上游会导致排队等待，拖慢 DNS 响应。建议启用上游数不超过 6，并为 AUTO 2 优选解析预留槽位（`autoConcurrency` 设为 4）。
-> - **地区优化依赖 `request.cf.country`** — `wrangler dev` 或非 Cloudflare 环境下该字段为空，地区优化路径不会触发。需通过线上 Worker 验证地区优化行为。
-
-## 致谢
-
-- [Total-ECH](https://github.com/RememberOurPromise/Total-ECH) — ECH 配置获取与 HTTPS RR 注入方案的核心参考
-- [Sheas Cealer](https://github.com/SpaceTimee/Sheas-Cealer) — 域前置实践与 Cealing-Host 规则维护，本项目 Google 代理配置的自动拉取来源
-- [Loyalsoldier/geoip](https://github.com/Loyalsoldier/geoip) — GeoIP CIDR 数据源
+Platform references: [runtime/build variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [Wrangler variable preservation](https://developers.cloudflare.com/workers/wrangler/configuration/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).

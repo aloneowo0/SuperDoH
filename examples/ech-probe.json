@@ -1,0 +1,36 @@
+{
+  "DNS_RULE_ECH_PROBE": {
+    "order": 0,
+    "rules": [
+      {
+        "actions": [
+          {
+            "type": "answer",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": "HTTPS",
+                "ttl": 60,
+                "rdata": { "Https": { "priority": 1, "target": ".", "params": [] } }
+              }
+            ]
+          },
+          {
+            "type": "probeEch",
+            "options": {
+              "hostname": "example.test",
+              "port": 443,
+              "serverName": "example.test",
+              "alpn": ["h2"],
+              "timeoutMs": 8000,
+              "maxBytes": 65536,
+              "verifyCertificate": true,
+              "cacheTtl": 60
+            }
+          },
+          { "type": "applyEch", "where": { "field": "item.name", "op": "eq", "value": "www.example.com" } }
+        ]
+      }
+    ]
+  }
+}

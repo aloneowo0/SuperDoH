@@ -1,0 +1,44 @@
+{
+  "DNS_UPSTREAMS": {
+    "primary": { "transport": "https", "url": "https://resolver.example/dns-query" }
+  },
+  "DNS_ADDRESS_SOURCES": {
+    "geo": {
+      "url": "https://geo.example/lookup",
+      "ipParam": "ip",
+      "params": { "format": "json" },
+      "fields": {
+        "ip": ["ip"],
+        "asn": ["network", "asn"],
+        "country": ["location", "country"],
+        "region": ["location", "region"],
+        "city": ["location", "city"]
+      },
+      "cacheTtl": 60
+    }
+  },
+  "DNS_RULE_ATTRIBUTION": {
+    "order": 0,
+    "rules": [
+      {
+        "actions": [
+          { "type": "queryUpstream", "upstream": "primary" },
+          { "type": "enrichAddresses", "source": "geo" }
+        ]
+      },
+      {
+        "when": {
+          "collection": "response.addresses",
+          "quantifier": "any",
+          "where": {
+            "all": [
+              { "field": "item.asn", "op": "eq", "value": 64512 },
+              { "field": "item.country", "op": "eq", "value": "DE" }
+            ]
+          }
+        },
+        "actions": [ { "type": "setTtl", "ttl": 30 } ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "DNS_UPSTREAMS": {
+    "primary": { "transport": "https", "url": "https://primary.example/dns-query" },
+    "backup": { "transport": "https", "url": "https://backup.example/dns-query" }
+  },
+  "DNS_RULE_FALLBACK": {
+    "order": 0,
+    "rules": [
+      {
+        "actions": [
+          { "type": "queryUpstream", "upstream": "primary", "onError": "continue" }
+        ]
+      },
+      {
+        "when": {
+          "any": [
+            { "field": "lastAction.success", "op": "eq", "value": false },
+            {
+              "all": [
+                { "field": "lastAction.success", "op": "eq", "value": true },
+                { "field": "response.rcode", "op": "in", "value": [2, 5] }
+              ]
+            }
+          ]
+        },
+        "actions": [ { "type": "queryUpstream", "upstream": "backup" } ]
+      }
+    ]
+  }
+}

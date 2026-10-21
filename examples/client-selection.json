@@ -1,0 +1,29 @@
+{
+  "DNS_UPSTREAMS": {
+    "northAmerica": { "transport": "https", "url": "https://na-resolver.example/dns-query" },
+    "europe": { "transport": "https", "url": "https://eu-resolver.example/dns-query" }
+  },
+  "DNS_RULE_CLIENT": {
+    "order": 0,
+    "rules": [
+      {
+        "when": {
+          "all": [
+            { "field": "query.name", "op": "suffix", "value": "example.com" },
+            { "field": "client.country", "op": "in", "value": ["US", "CA"] }
+          ]
+        },
+        "actions": [ { "type": "queryUpstream", "upstream": "northAmerica" } ]
+      },
+      {
+        "when": {
+          "all": [
+            { "field": "query.name", "op": "suffix", "value": "example.com" },
+            { "field": "client.country", "op": "in", "value": ["DE", "FR", "GB"] }
+          ]
+        },
+        "actions": [ { "type": "queryUpstream", "upstream": "europe" } ]
+      }
+    ]
+  }
+}

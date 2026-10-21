@@ -1,0 +1,28 @@
+{
+  "ECH_SOURCE_URL": "https://resolver.example/dns-query",
+  "DNS_UPSTREAMS": {
+    "echSource": { "transport": "https", "urlSecret": "ECH_SOURCE_URL" }
+  },
+  "DNS_RULE_ECH_QUERY": {
+    "order": 0,
+    "rules": [
+      {
+        "actions": [
+          {
+            "type": "answer",
+            "records": [
+              {
+                "name": "www.example.com",
+                "type": "HTTPS",
+                "ttl": 60,
+                "rdata": { "Https": { "priority": 1, "target": ".", "params": [] } }
+              }
+            ]
+          },
+          { "type": "queryEch", "name": "ech.example", "upstream": "echSource" },
+          { "type": "applyEch", "where": { "field": "item.name", "op": "eq", "value": "www.example.com" } }
+        ]
+      }
+    ]
+  }
+}
