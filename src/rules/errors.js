@@ -1,4 +1,4 @@
-/** @typedef {{ group?: string, rule?: number, action?: number }} Location */
+/** @typedef {{ group?: string, rule?: number, action?: number, source?: string }} Location */
 
 export class RuleError extends Error {
   /** @param {string} code @param {string} message @param {Location} [location] @param {import('./types.js').FailureReason} [reason] */
@@ -12,6 +12,9 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  ATTRIBUTION_TIMEOUT: 'Address attribution request timed out.',
+  ATTRIBUTION_FAILED: 'Address attribution request failed.',
+  ATTRIBUTION_INVALID: 'Invalid address attribution response.',
   CACHE_FAILED: 'DNS cache operation failed.',
   ACCESS_DENIED: 'The requested endpoint is not available.',
   INVALID_HTTP: 'Invalid DoH HTTP request.',
@@ -34,6 +37,7 @@ function safeLocation(location) {
   /** @type {Location} */
   const result = {};
   if (typeof location.group === 'string' && (/^[A-Za-z0-9_]{1,128}$/.test(location.group) || location.group === '<invalid>')) result.group = location.group;
+  if (typeof location.source === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(location.source)) result.source = location.source;
   for (const key of /** @type {const} */ (['rule', 'action'])) {
     const value = location[key];
     if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) result[key] = value;

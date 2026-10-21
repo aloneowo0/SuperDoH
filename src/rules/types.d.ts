@@ -9,6 +9,7 @@ type ActionValue =
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number; where?: RecordCondition }
   | { type: 'stop' | 'return' }
+  | { type: 'enrichAddresses'; source: string }
   | { type: 'queryUpstream'; upstream: string; cache?: Partial<CachePolicy> }
   | ({ type: 'setCache' } & Partial<CachePolicy>)
   | { type: 'rewriteQuery'; name?: string; queryType?: number | string };
@@ -63,7 +64,7 @@ export interface FailureEvent {
   readonly event: 'action_failed' | 'execution_failed' | 'observer_failed';
   readonly level: 'error';
   readonly requestId: string;
-  readonly location: Readonly<{ group?: string; rule?: number; action?: number }>;
+  readonly location: Readonly<{ group?: string; rule?: number; action?: number; source?: string }>;
   readonly actionType?: Action['type'];
   readonly code: string;
   readonly message: string;
@@ -96,3 +97,18 @@ export type UpstreamConfig = ({ transport: 'https' } & ({ url: string; urlSecret
   | { transport: 'tls'; address: string; port?: number; serverName?: string };
 export type ResolvedUpstream = { transport: 'https'; url: string } | { transport: 'tcp'; address: string; port: number }
   | { transport: 'tls'; address: string; port: number; serverName: string };
+
+export interface AddressSourceFields {
+  ip: string[];
+  asn?: string[];
+  country?: string[];
+  region?: string[];
+  city?: string[];
+}
+export type AddressSourceConfig = ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & {
+  ipParam: string;
+  params?: Record<string, string>;
+  fields: AddressSourceFields;
+  /** Explicit reuse cap in seconds; zero (the default) disables shared caching. */
+  cacheTtl?: number;
+};

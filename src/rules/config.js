@@ -68,6 +68,9 @@ function actionValue(value, countRecord) {
       fields(v, ['type', 'name', 'queryType']);
       if (v.name === undefined && v.queryType === undefined) throw new Error();
       return { type: 'rewriteQuery', name: v.name === undefined ? undefined : domain(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
+    case 'enrichAddresses':
+      fields(v, ['type', 'source']);
+      return { type: 'enrichAddresses', source: upstreamName(v.source) };
     case 'queryUpstream':
       fields(v, ['type', 'upstream', 'cache']);
       return { type: 'queryUpstream', upstream: upstreamName(v.upstream), cache: v.cache === undefined ? undefined : cachePolicy(v.cache) };

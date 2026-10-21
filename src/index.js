@@ -1,8 +1,10 @@
+import { loadAddressSources } from './rules/address-sources.js';
+import { createAttribution } from './doh/attribution.js';
 import { editRecords } from './rules/records.js';
 import { loadCachePolicy } from './rules/cache-policy.js';
 import { createConfigBudget } from './rules/config-budget.js';
 import { loadUpstreams } from './doh/upstreams.js';
-import { createBudget } from './doh/budget.js';
+import { createBudget, createNetworkAllowance } from './doh/budget.js';
 import { createUpstream } from './doh/upstream.js';
 import { parseQuery, finalizeResponse, invalidateResponse } from './doh/protocol.js';
 import { loadLimits, within } from './rules/limits.js';
@@ -82,11 +84,19 @@ export async function executeQuery(queryWire, env, options = {}) {
     const configBudget = createConfigBudget(limits);
     const upstreams = loadUpstreams(env, limits, configBudget);
     let cache = loadCachePolicy(env.DNS_CACHE, configBudget);
-    const transport = createUpstream(limits, execution);
+    const spendNetwork = createNetworkAllowance(limits.maxNetworkRequests, execution);
+    const transport = createUpstream(limits, execution, spendNetwork);
+    const sources = loadAddressSources(env, limits, configBudget);
+    const enrich = createAttribution(limits, execution, spendNetwork);
+    let properties = context;
     const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
       for (const [ruleIndex, rule] of group.rules.entries()) {
         for (const [actionIndex, action] of rule.actions.entries()) {
+          if (action.type === 'enrichAddresses') {
+            try { sources.resolve(action.source); }
+            catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex, source: action.source }); }
+          }
           if (action.type !== 'queryUpstream') continue;
           try { upstreams.resolve(action.upstream); }
           catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex }); }
@@ -105,12 +115,15 @@ export async function executeQuery(queryWire, env, options = {}) {
         execution.check();
         location.rule = ruleIndex;
         delete location.action;
+        delete location.source;
         actionType = undefined;
-        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend, lastAction)) continue;
+        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, properties, spend, lastAction)) continue;
         for (const [actionIndex, action] of rule.actions.entries()) {
           execution.check();
           location.action = actionIndex;
           actionType = action.type;
+          delete location.source;
+          if (action.type === 'enrichAddresses') location.source = action.source;
           try {
             if (action.type === 'stop' || action.type === 'return') {
               if (action.type === 'return' && !state.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
@@ -120,15 +133,23 @@ export async function executeQuery(queryWire, env, options = {}) {
             }
             const candidate = structuredClone(state);
             let nextCache = cache;
+            let nextProperties = properties;
             if (action.type === 'queryUpstream') {
               candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query, { ...cache, ...action.cache }, action.upstream), candidate.query, originalQuery);
+            } else if (action.type === 'enrichAddresses') {
+              if (!candidate.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.');
+              const enriched = await enrich(sources.resolve(action.source), candidate.response, action.source);
+              const addresses = new Map(properties.addresses);
+              for (const [key, attributes] of enriched) addresses.set(key, attributes);
+              within(addresses.size, limits.maxContextAddresses, location);
+              nextProperties = { ...properties, addresses };
             } else if (action.type === 'setCache') {
               const { type, onError, ...policy } = action;
               nextCache = { ...cache, ...policy };
             } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
             } else if (action.type === 'removeRecords' || action.type === 'replaceRecords' || action.type === 'addRecords' || action.type === 'setTtl') {
-              candidate.response = await editRecords(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties: context, spend, lastAction }, limits, location);
+              candidate.response = await editRecords(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties, spend, lastAction }, limits, location);
             } else if (action.type === 'rewriteQuery') {
               if (action.name !== undefined) candidate.query.questions[0].name = action.name;
               if (action.queryType !== undefined) candidate.query.questions[0].rtype = recordType(action.queryType);
@@ -139,6 +160,7 @@ export async function executeQuery(queryWire, env, options = {}) {
             }
             state = structuredClone(candidate);
             cache = nextCache;
+            properties = nextProperties;
             lastAction = freeze({ success: true, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex } });
           } catch (error) {
             const failure = failureAt(error, location);

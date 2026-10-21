@@ -1,6 +1,6 @@
 import { RuleError } from '../rules/errors.js';
 
-const SAFE_CODES = new Set(['EXECUTION_TIMEOUT', 'UPSTREAM_TIMEOUT', 'REQUEST_CANCELLED']);
+const SAFE_CODES = new Set(['EXECUTION_TIMEOUT', 'UPSTREAM_TIMEOUT', 'ATTRIBUTION_TIMEOUT', 'REQUEST_CANCELLED']);
 
 /** @param {unknown} reason @returns {RuleError} */
 function cancellationError(reason) {
@@ -76,4 +76,17 @@ export function createBudget(timeoutMs, parentSignal, timeoutCode = 'EXECUTION_T
   }
 
   return { signal: controller.signal, check, run, dispose };
+}
+
+/** A single allowance shared by all network actions, including failed optional ones.
+ * @param {number} maximum
+ * @param {ReturnType<typeof createBudget>} budget
+ */
+export function createNetworkAllowance(maximum, budget) {
+  let attempts = 0;
+  return () => {
+    budget.check();
+    if (attempts >= maximum) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.');
+    attempts += 1;
+  };
 }

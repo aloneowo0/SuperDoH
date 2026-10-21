@@ -1,14 +1,14 @@
 import { RuleError } from './errors.js';
 
 const defaults = Object.freeze({
-  maxUpstreams: 16,
+  maxUpstreams: 16, maxAddressSources: 16, maxAttributionAddresses: 16, maxAttributionBytes: 16384, attributionTimeoutMs: 1500,
   maxNetworkRequests: 2, maxExecutionTimeMs: 3000, upstreamTimeoutMs: 1500,
   maxQueryBytes: 4096, maxResponseBytes: 16384, maxGroupBytes: 5120, maxConfigBytes: 65536,
   maxGroups: 32, maxRules: 256, maxActions: 1024, maxRecords: 256, maxConditionNodes: 1024,
   maxConditionDepth: 16, maxConditionSteps: 8192, maxConditionValues: 128, maxPatternLength: 256, maxPatternInstructions: 4096, maxContextAddresses: 256,
 });
 const ceilings = Object.freeze({
-  maxUpstreams: 64,
+  maxUpstreams: 64, maxAddressSources: 64, maxAttributionAddresses: 256, maxAttributionBytes: 262144, attributionTimeoutMs: 10000,
   maxNetworkRequests: 16, maxExecutionTimeMs: 30000, upstreamTimeoutMs: 10000,
   maxQueryBytes: 65535, maxResponseBytes: 65535, maxGroupBytes: 65536, maxConfigBytes: 262144,
   maxGroups: 64, maxRules: 8192, maxActions: 32768, maxRecords: 4096, maxConditionNodes: 8192,

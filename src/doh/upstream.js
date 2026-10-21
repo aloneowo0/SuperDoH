@@ -1,7 +1,7 @@
 import { cacheKey, readCache, writeCache, normalizeNegative, reusable, ageMessage, httpFreshness, reusableResponse } from './cache.js';
 import { encodeMessage, getEdns, matchResponse, parseMessage } from '../../lib/dns-wasm/index.js';
 import { RuleError } from '../rules/errors.js';
-import { createBudget } from './budget.js';
+import { createBudget, createNetworkAllowance } from './budget.js';
 import { readBody } from './body.js';
 import { queryStream } from './dns-stream.js';
 
@@ -32,10 +32,10 @@ function cancelBody(body) {
 /**
  * @param {import('../rules/limits.js').Limits & { maxNetworkRequests: number, upstreamTimeoutMs: number }} limits
  * @param {ReturnType<typeof createBudget>} budget
+ * @param {() => void} [spendNetwork]
  * @returns {(target: import('../rules/types.js').ResolvedUpstream | undefined, query: import('../../lib/dns-wasm/index.js').DnsMessage, policy: import('../rules/types.js').CachePolicy, sourceName: string) => Promise<import('../../lib/dns-wasm/index.js').DnsMessage>}
  */
-export function createUpstream(limits, budget) {
-  let attempts = 0;
+export function createUpstream(limits, budget, spendNetwork = createNetworkAllowance(limits.maxNetworkRequests, budget)) {
   return async function upstream(target, query, policy, sourceName) {
     budget.check();
     if (!target) throw new RuleError('NO_UPSTREAM', 'No DNS upstream is configured.');
@@ -58,8 +58,7 @@ export function createUpstream(limits, budget) {
     let response;
     let bodyConsumed = false;
     try {
-      if (attempts >= limits.maxNetworkRequests) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.');
-      attempts += 1;
+      spendNetwork();
       let responseWire;
       if (target.transport !== 'https') {
         responseWire = await queryStream(target, queryWire, limits.maxResponseBytes, child);

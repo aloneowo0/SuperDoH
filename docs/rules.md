@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #15–#17、#26–#29）
+# 环境变量规则执行器（JSON-only / #15–#18、#26–#29）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付，真实请求元数据适配已在 #17 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付，真实请求元数据适配已在 #17 交付；响应地址归属补全已在 #18 交付；外部域名列表与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -22,7 +22,7 @@ try {
 }
 ```
 
-入口返回 `Promise<ExecutionResult>`，调用者必须 `await` 并处理拒绝（T4 将原同步入口迁移为异步）。仅显式上游查询动作执行网络 I/O；移除用户函数不改变网络异步契约。输入为 `Uint8Array` DNS 报文和 Workers 环境绑定对象；不读取文件、`process.env` 或请求中的配置。支持标准单问题 QUERY、根域或 ASCII 标签（字母、数字、连字符、下划线）；IDN 使用 punycode。拒绝响应报文、其他 opcode、截断查询、已有 Answer/Authority、非 OPT 的 Additional 和非零 EDNS 版本/扩展 RCODE。合法的 EDNS 0 查询可以处理，但此切片的自定义响应不回显请求的 OPT/ECS。
+入口返回 `Promise<ExecutionResult>`，调用者必须 `await` 并处理拒绝（T4 将原同步入口迁移为异步）。仅显式上游查询和响应地址归属补全动作执行网络 I/O；移除用户函数不改变网络异步契约。输入为 `Uint8Array` DNS 报文和 Workers 环境绑定对象；不读取文件、`process.env` 或请求中的配置。支持标准单问题 QUERY、根域或 ASCII 标签（字母、数字、连字符、下划线）；IDN 使用 punycode。拒绝响应报文、其他 opcode、截断查询、已有 Answer/Authority、非 OPT 的 Additional 和非零 EDNS 版本/扩展 RCODE。合法的 EDNS 0 查询可以处理，但此切片的自定义响应不回显请求的 OPT/ECS。
 
 规则正常结束是 `completed`；`stop` 是 `stopped`；`return` 是 `returned`。三者均经过统一输出收尾。
 
@@ -66,7 +66,7 @@ try {
 - 每条规则进入时只判断一次。后续动作读取当前状态；后续规则重新判断自己的条件。不隐式重跑规则。
 - 所有组、规则、动作及条件分支在执行前完整校验，即使在未命中或终止动作之后也不跳过错误配置。
 - 未知字段、动作、条件操作符和引用明确报错，不回退文件。无 `DNS_RULE_*` 变量可通过配置校验，但空流水线无响应，执行时以 NO_RESPONSE 失败。
-- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
+- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`、`DNS_CACHE`、`DNS_ADDRESS_SOURCES`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
 
 ### 条件
 
@@ -646,3 +646,77 @@ where 使用同一有界 all/any/not、比较、域名、RE2 正则与 IP CIDR �
 公开 workerd/DoH 回归通过标准 Miniflare cf 注入提供受控平台元数据，覆盖属性分离、同名伪装头、IPv4/IPv6/Pseudo IPv4、Worker 子请求、未知/缺失字段、GET/POST、逐来源 JSON 上游选择与缓存命中及脱敏错误。Miniflare 会合并合成默认 cf 数据，测试显式将不可用字段置 null，避免把本地默认美国元数据误认为来自被测请求；未为私有模块增加测试 API。这些是本地信任边界/规则验收，不是生产网络地理精度或线上免费 CPU 验收。
 
 参考：[Workers Request.cf](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties)、[CF-Connecting-IP 与 Worker 子请求](https://developers.cloudflare.com/fundamentals/reference/http-headers/#cf-connecting-ip)、[Pseudo IPv4](https://developers.cloudflare.com/network/pseudo-ipv4/)、[Worker 子请求 WAF 字段](https://developers.cloudflare.com/waf/custom-rules/use-cases/block-worker-subrequests/)。
+
+
+## 显式响应地址归属补全（#18）
+
+在已取得当前响应后，用 enrichAddresses 动作从明确配置的 HTTPS JSON 来源取得其中 A/AAAA 地址的 ASN、国家/地区、省级行政区或城市。它不修改 DNS 报文，不根据客户端或边缘属性猜测答案地址的归属；单独使用 item.asn / item.country 等条件绝不触发联网。没有默认厂商、全球归属库或用户函数适配。
+
+### 配置与示例
+
+DNS_ADDRESS_SOURCES 是命名来源对象，可为环境 JSON 或 JSON 文本；与规则共用配置字节预算。敏感来源地址放入 Secret，通过 urlSecret 引用，不写入仓库。以下来源使用保留示例域名，部署时替换成自己提供此契约的真实服务，并按服务实际 JSON 修改字段路径。
+
+~~~json
+{
+  "geo": {
+    "url": "https://geo.example/lookup",
+    "ipParam": "ip",
+    "params": { "format": "json" },
+    "fields": {
+      "ip": ["ip"],
+      "asn": ["network", "asn"],
+      "country": ["location", "country"],
+      "region": ["location", "region"],
+      "city": ["location", "city"]
+    },
+    "cacheTtl": 60
+  }
+}
+~~~
+
+例如查询 ?format=json&ip=192.0.2.9 时，来源返回：
+
+~~~json
+{ "ip": "192.0.2.9", "network": { "asn": 64512 }, "location": { "country": "DE" } }
+~~~
+
+以下 DNS_RULE_MAIN 使用已有命名上游 primary：
+
+~~~json
+{
+  "order": 0,
+  "rules": [
+    { "actions": [
+      { "type": "queryUpstream", "upstream": "primary" },
+      { "type": "enrichAddresses", "source": "geo" }
+    ] },
+    {
+      "when": { "collection": "response.addresses", "quantifier": "any", "where": { "all": [
+        { "field": "item.asn", "op": "eq", "value": 64512 },
+        { "field": "item.country", "op": "eq", "value": "DE" }
+      ] } },
+      "actions": [{ "type": "setTtl", "ttl": 30 }]
+    }
+  ]
+}
+~~~
+
+来源 url 与 urlSecret 必须且只能选一个；只允许 HTTPS、无用户信息/片段，不跟随重定向。静态 params 仅接受受限字符串键值；ipParam 每次写入实际目标地址。fields.ip 必填，并至少指定一个归属字段；映射是有界字符串路径数组，不是点表达式、模板或可执行选择器。只读取 JSON 对象自身属性，不执行原型链访问。所有来源和动作引用在执行前全量校验，未命中分支中的错误也拒绝。
+
+返回 IP 必须与被查地址等价；ASN 必须为 0..4294967295 的整数，不接受 AS64512 或数字字符串。地区/城市等必须为 1..128 字符的无控制字符文本。缺失的可选字段保持缺失，非法值（包括 null）产生 ATTRIBUTION_INVALID，不伪造默认 ASN/国家，也不隐式把省份名称转换成代码。字段含义、地区编码、精度、IPv6 覆盖与数据更新程度取决于配置来源；本适配不保证物理位置或认证准确性。
+
+### 当前状态、失败与资源
+
+遍历当前响应 Answer/Authority/Additional 的 A/AAAA，按规范化 IPv4/IPv6 去重后顺序查询。空响应不联网且成功；尚无响应则 NO_RESPONSE。属性始终绑定实际 IP，不允许第一个地址的 ASN 与另一个地址的国家拼成一次 where 命中。后续记录改写产生新地址时，不会为该新地址自动补全。
+
+全部地址成功后才提交本动作的属性；对于此次补全的地址，新属性替换旧属性，不能把旧国家与新 ASN 混合。必需失败终止并返回相关 SERVFAIL；onError:continue 丢弃本次全部部分结果，保留此前成功 DNS/归属状态，生成脱敏失败事件并保留失败 lastAction 供后续规则分支。已完成的来源请求与缓存写入是外部副作用，不声称回滚。日志通过 location.source 标识来源，错误区分 ATTRIBUTION_FAILED、ATTRIBUTION_INVALID、ATTRIBUTION_TIMEOUT、CACHE_FAILED 和共享资源/取消错误；不打印完整 URL、参数、Secret 或原始异常。
+
+默认 maxAddressSources=16、maxAttributionAddresses=16、maxAttributionBytes=16384、attributionTimeoutMs=1500，可通过 DNS_LIMITS 调整，硬上限分别为 64、256、262144、10000。地址数在来源请求前检查。归属与 DNS 上游请求共享 maxNetworkRequests（默认 2）及 maxExecutionTimeMs 总预算；实际出站才消耗额度，缓存命中不消耗网络次数。多地址补全需显式提高额度，不能通过可选失败或新动作重置。每次请求涵盖响应头和有界流读取，超时/取消后清理资源，不自动重试、回退或竞速。
+
+### 归属缓存
+
+cacheTtl 默认为 0（不跨请求缓存），可显式设置秒数上限，最大 86400。归属缓存独立于原始 DNS 缓存和 DNS TTL；配置读取的是来源提供的附加数据，不是认证证明。缓存身份涵盖完整来源身份、字段映射及规范化 IP 的摘要；Secret 地址变化自然隔离，不把敏感 URL 明文写入缓存键。
+
+只复用完整校验成功的属性，期限受显式 cacheTtl 和适用 HTTP 新鲜度共同限制，不缓存失败或把过期数据顶替新结果；缓存读回重新校验数据。来源返回 no-store/private/no-cache、Vary、Set-Cookie 等不安全共享缓存条件时不写入。Cache API 为本地、可清理的加速层，不保证全球一致或每次写入必命中；实际缓存错误明确报 CACHE_FAILED，不静默切换政策。可选失败后的部分已写缓存可能保留，但不进入本次处理状态。
+
+普通回归使用真实 workerd 公共 DoH 入口、受控 DNS/归属服务、独立 wire 解码及出站/日志观察，覆盖动作、后续匹配、状态回滚与缓存；不依赖公网归属服务，不将本地结果视为线上免费 CPU 或数据精度验收。

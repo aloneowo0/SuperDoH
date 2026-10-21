@@ -138,3 +138,14 @@ const functionSelector: Action = { type: 'removeRecords', where: () => true };
 // @ts-expect-error Record section names are explicit.
 const invalidRecordSection: Action = { type: 'addRecords', section: 'header', records: [] };
 void [removeAAAA, replaceAddress, selectiveTtl, extraRecords, implicitRemoval, functionSelector, invalidRecordSection];
+
+const enrichment: Action = { type: 'enrichAddresses', source: 'geo', onError: 'continue' };
+const addressSource: import('../src/rules/types.js').AddressSourceConfig = {
+  urlSecret: 'GEO_URL', ipParam: 'ip', cacheTtl: 60,
+  fields: { ip: ['query', 'ip'], asn: ['network', 'asn'], country: ['location', 'country'] },
+};
+// @ts-expect-error Address sources require a named JSON source, not a function.
+const invalidEnrichment: Action = { type: 'enrichAddresses', source: () => ({ asn: 1 }) };
+// @ts-expect-error Field mappings are paths, not executable selectors.
+const invalidMapping: import('../src/rules/types.js').AddressSourceFields = { ip: 'query.ip' };
+void [enrichment, addressSource, invalidEnrichment, invalidMapping];
