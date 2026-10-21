@@ -22,9 +22,6 @@ const messages = Object.freeze({
   UPSTREAM_FAILED: 'DNS upstream request failed.',
   UPSTREAM_INVALID: 'Invalid DNS upstream response.',
   NO_UPSTREAM: 'No DNS upstream is configured.',
-  EXTENSION_TIMEOUT: 'Trusted extension execution deadline exceeded.',
-  UNKNOWN_EXTENSION: 'Unknown trusted extension.',
-  INVALID_EXTENSION_PARAMS: 'Invalid trusted extension parameters.',
   INVALID_CONTEXT: 'Invalid matching context.',
   INVALID_CONFIG: 'Invalid or unsupported rule configuration.',
   INVALID_OPTIONS: 'Invalid execution diagnostics options.',
@@ -73,7 +70,7 @@ export function createReporter(options) {
   /** @type {import('./types.js').ExecutionOptions['onEvent']} */
   let observer;
   try {
-    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent' && k !== 'context' && k !== 'extensions' && k !== 'signal')) throw new Error();
+    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent' && k !== 'context' && k !== 'signal')) throw new Error();
     if (options.signal !== undefined && !(options.signal instanceof AbortSignal)) throw new Error();
     if (options.requestId !== undefined && (typeof options.requestId !== 'string' || !/^[A-Za-z0-9_.:-]{1,128}$/.test(options.requestId))) throw new Error();
     if (options.onEvent !== undefined && typeof options.onEvent !== 'function') throw new Error();

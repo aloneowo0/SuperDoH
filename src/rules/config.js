@@ -1,5 +1,4 @@
 import { createConfigBudget } from './config-budget.js';
-import { bindExtension } from './extensions.js';
 import { within } from './limits.js';
 import { decodeRdata, encodeRdata, TYPES } from '../../lib/dns-wasm/index.js';
 import { RuleError, normalizeFailure } from './errors.js';
@@ -21,7 +20,7 @@ function knownFields(value, canonical) {
   }
 }
 /** @param {unknown} value @returns {import('./types.js').RecordConfig} */
-export function validateRecord(value) {
+function validateRecord(value) {
   const rr = fields(value, ['name', 'type', 'class', 'ttl', 'rdata']);
   const rtype = recordType(rr.type);
   if (rtype === TYPES.OPT || rtype === TYPES.TSIG || rtype === TYPES.RRSIG || rtype === 24) throw new Error();
@@ -32,21 +31,16 @@ export function validateRecord(value) {
   if (!Object.hasOwn(data, 'Raw')) knownFields(data, decodeRdata(rtype, bytes));
   return { name: domain(rr.name), type: rtype, class: rr.class === undefined ? 1 : integer(rr.class, 65535), ttl: integer(rr.ttl, 0xffffffff), rdata: /** @type {import('../../lib/dns-wasm/index.js').Rdata} */ (data) };
 }
-/** @param {unknown} value @param {() => void} countRecord @param {import('./types.js').ExtensionRegistry} extensions @returns {import('./types.js').Action & { run?: import('./types.js').ActionHandler }} */
-function action(value, countRecord, extensions) {
+/** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
+function action(value, countRecord) {
   const { onError, ...body } = object(value);
   if (onError !== undefined && onError !== 'fail' && onError !== 'continue') throw new Error();
-  return { ...actionValue(body, countRecord, extensions), onError: onError ?? 'fail' };
+  return { ...actionValue(body, countRecord), onError: onError ?? 'fail' };
 }
-/** @param {unknown} value @param {() => void} countRecord @param {import('./types.js').ExtensionRegistry} extensions @returns {import('./types.js').Action & { run?: import('./types.js').ActionHandler }} */
-function actionValue(value, countRecord, extensions) {
+/** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
+function actionValue(value, countRecord) {
   const v = object(value);
   switch (v.type) {
-    case 'custom': {
-      fields(v, ['type', 'name', 'params']);
-      const { type, ...reference } = v;
-      return { type: 'custom', name: /** @type {string} */ (v.name), params: v.params, run: bindExtension(reference, extensions.actions) };
-    }
     case 'answer': {
       fields(v, ['type', 'records', 'rcode']);
       if (!Array.isArray(v.records)) throw new Error();
@@ -70,8 +64,8 @@ function actionValue(value, countRecord, extensions) {
     default: throw new Error();
   }
 }
-/** @param {Record<string, unknown>} env @param {import('./limits.js').Limits} limits @param {import('./types.js').ExtensionRegistry} [extensions] @param {ReturnType<typeof createConfigBudget>} [configBudget] @returns {import('./types.js').Group[]} */
-export function loadGroups(env, limits, extensions = {}, configBudget = createConfigBudget(limits)) {
+/** @param {Record<string, unknown>} env @param {import('./limits.js').Limits} limits @param {ReturnType<typeof createConfigBudget>} [configBudget] @returns {import('./types.js').Group[]} */
+export function loadGroups(env, limits, configBudget = createConfigBudget(limits)) {
   const entries = Object.entries(env).filter(([name]) => name.startsWith('DNS_RULE_'));
   within(entries.length, limits.maxGroups);
   let rules = 0, actions = 0, records = 0;
@@ -88,13 +82,13 @@ export function loadGroups(env, limits, extensions = {}, configBudget = createCo
         location.rule = ruleIndex;
         delete location.action;
         const r = fields(rawRule, ['when', 'actions']);
-        const when = r.when === undefined ? undefined : compileCondition(r.when, configBudget.node, limits, configBudget.pattern, 0, undefined, extensions);
+        const when = r.when === undefined ? undefined : compileCondition(r.when, configBudget.node, limits, configBudget.pattern);
         if (!Array.isArray(r.actions) || r.actions.length === 0) throw new Error();
         actions += r.actions.length;
         within(actions, limits.maxActions, location);
         return { when, actions: r.actions.map((rawAction, actionIndex) => {
           location.action = actionIndex;
-          return action(rawAction, () => within(++records, limits.maxRecords, location), extensions);
+          return action(rawAction, () => within(++records, limits.maxRecords, location));
         }) };
       }) };
     } catch (error) {

@@ -56,46 +56,17 @@ const wrongComparison: Condition = { field: 'client.country', op: 'gt', value: 1
 const wrongMember: Condition = { field: 'client.asn', op: 'in', value: [true] };
 void [networkCondition, unboundItem, wrongScope, wrongComparison, wrongMember];
 
+// @ts-expect-error User function factories are no longer exported.
 const { defineCondition, defineAction } = await import('../src/index.js');
-const customWhen: Condition = { custom: { name: 'minimumTtl', params: { ttl: 10 } } };
-const customAction: Action = { type: 'custom', name: 'setTtl', params: 30, onError: 'continue' };
-const customResult: Promise<import('../src/rules/types.js').ExecutionResult> = executeQuery(new Uint8Array(), {}, { extensions: {
-  conditions: {
-    minimumTtl: defineCondition((params: unknown) => {
-      if (typeof params !== 'number') throw new Error();
-      return params;
-    }, async (ctx, minimum) => {
-      const n: number = minimum;
-      const signal: AbortSignal = ctx.signal;
-      // @ts-expect-error Conditions cannot write the current query.
-      ctx.query.questions[0].name = 'bad.example';
-      if (ctx.response) {
-        // @ts-expect-error Conditions cannot mutate answer records.
-        ctx.response.answers[0].ttl = 1;
-      }
-      // @ts-expect-error Original data is deeply readonly.
-      ctx.originalQuery.questions[0].name = 'bad.example';
-      void signal;
-      return (ctx.response?.answers[0]?.ttl ?? 0) >= n;
-    }),
-  },
-  actions: {
-    setTtl: defineAction((params: unknown) => {
-      if (typeof params !== 'number') throw new Error();
-      return params;
-    }, async (ctx, ttl) => {
-      ctx.query.questions[0].name = 'allowed.example';
-      if (ctx.response) ctx.response.answers[0].ttl = ttl;
-      // @ts-expect-error Actions cannot mutate original data.
-      ctx.originalQuery.questions[0].name = 'bad.example';
-      // @ts-expect-error Matching context is not writable action state.
-      ctx.context.client.asn = 1;
-    }),
-  },
-} });
-// @ts-expect-error Condition functions must return booleans, not truthy values.
-defineCondition(() => 1, () => 'yes');
-void [customWhen, customAction, customResult];
+// @ts-expect-error Custom function references are not JSON conditions.
+const customWhen: Condition = { custom: { name: 'old' } };
+// @ts-expect-error Custom function references are not basic actions.
+const customAction: Action = { type: 'custom', name: 'old' };
+// @ts-expect-error User registries are not execution options.
+executeQuery(new Uint8Array(), {}, { extensions: {} });
+// @ts-expect-error Extension registry types have been removed.
+type RemovedRegistry = import('../src/rules/types.js').ExtensionRegistry;
+void [defineCondition, defineAction, customWhen, customAction];
 
 const upstreamAction: Action = { type: 'queryUpstream', onError: 'continue' };
 const { handleRequest } = await import('../src/worker.js');
@@ -106,7 +77,7 @@ void [upstreamAction, httpResponse];
 
 const groupQuery: Action = { type: 'queryUpstream', group: 'standard' };
 const sources: Record<string, import('../src/rules/types.js').UpstreamConfig> = { backup: { urlSecret: 'BACKUP_URL' } };
-const upstreamGroup: import('../src/rules/types.js').UpstreamGroupConfig = { members: ['backup'], accept: customWhen };
+const upstreamGroup: import('../src/rules/types.js').UpstreamGroupConfig = { members: ['backup'], accept: { field: 'response.rcode', op: 'eq', value: 0 } };
 // @ts-expect-error Group references must be names.
 const wrongGroup: Action = { type: 'queryUpstream', group: 1 };
 // @ts-expect-error An upstream cannot supply both URL sources.

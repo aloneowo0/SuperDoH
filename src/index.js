@@ -3,15 +3,13 @@ import { loadUpstreamGroups, queryGroup } from './doh/upstream-groups.js';
 import { createBudget } from './doh/budget.js';
 import { createUpstream } from './doh/upstream.js';
 import { parseQuery, finalizeResponse, invalidateResponse } from './doh/protocol.js';
-import { createExtensionRunner } from './rules/extensions.js';
-export { defineCondition, defineAction } from './rules/extensions.js';
 import { loadLimits, within } from './rules/limits.js';
 import { RuleError, createReporter, normalizeFailure } from './rules/errors.js';
 export { RuleError } from './rules/errors.js';
-import { loadGroups, recordType, domain, validateRecord } from './rules/config.js';
+import { loadGroups, recordType, domain } from './rules/config.js';
 import { matches } from './rules/conditions.js';
 import { loadContext } from './rules/context.js';
-import { buildResponse, parseMessage, encodeMessage, getRcode, TYPES, FLAGS } from '../lib/dns-wasm/index.js';
+import { buildResponse, parseMessage, encodeMessage, getRcode, TYPES } from '../lib/dns-wasm/index.js';
 
 /** @template T @param {T} value @returns {T} */
 function freeze(value) {
@@ -47,27 +45,8 @@ function upstreamForClient(response, current, original) {
   }
   return result;
 }
-/** @param {import('../lib/dns-wasm/index.js').DnsMessage} candidate @param {import('../lib/dns-wasm/index.js').DnsMessage | null} previous */
-function validateProtectedRecords(candidate, previous) {
-  const sections = /** @type {const} */ (['answers', 'authority', 'additional']);
-  const protectedType = (/** @type {number} */ type) => [TYPES.OPT, TYPES.RRSIG, 24, TYPES.TSIG].includes(type);
-  for (const section of sections) {
-    const remaining = new Map();
-    for (const record of previous?.[section] ?? []) {
-      if (!protectedType(record.rtype)) continue;
-      const key = JSON.stringify(record);
-      remaining.set(key, (remaining.get(key) ?? 0) + 1);
-    }
-    for (const record of candidate[section]) {
-      if (!protectedType(record.rtype)) continue;
-      const key = JSON.stringify(record), count = remaining.get(key) ?? 0;
-      if (!count) throw new Error();
-      remaining.set(key, count - 1);
-    }
-  }
-}
 /**
- * Execute environment rules; only trusted extensions may perform explicit I/O.
+ * Execute JSON rules sequentially; network actions share the request budget.
  * @param {Uint8Array} queryWire
  * @param {Record<string, unknown>} env
  * @param {import('./rules/types.js').ExecutionOptions} [options]
@@ -86,7 +65,6 @@ export async function executeQuery(queryWire, env, options = {}) {
     budget = createBudget(limits.maxExecutionTimeMs, options.signal);
     const execution = budget;
     execution.check();
-    const runExtension = createExtensionRunner(limits, execution.signal);
     const context = loadContext(options.context, limits);
     within(queryWire.byteLength, limits.maxQueryBytes);
     const originalWire = queryWire.slice();
@@ -100,9 +78,9 @@ export async function executeQuery(queryWire, env, options = {}) {
     /** @type {{ query: import('../lib/dns-wasm/index.js').DnsMessage, response: import('../lib/dns-wasm/index.js').DnsMessage | null }} */
     let state = { query: structuredClone(originalQuery), response: null };
     const configBudget = createConfigBudget(limits);
-    const upstreams = loadUpstreamGroups(env, limits, options.extensions, configBudget);
+    const upstreams = loadUpstreamGroups(env, limits, configBudget);
     const transport = createUpstream(limits, execution);
-    const groups = loadGroups(env, limits, options.extensions, configBudget);
+    const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
       for (const [ruleIndex, rule] of group.rules.entries()) {
         for (const [actionIndex, action] of rule.actions.entries()) {
@@ -114,20 +92,11 @@ export async function executeQuery(queryWire, env, options = {}) {
     }
     let conditionSteps = 0;
     const spend = () => { execution.check(); within(++conditionSteps, limits.maxConditionSteps, location); };
-    /** @param {import('./rules/types.js').ConditionHandler} handler @param {Record<string, string | number | boolean>} [item] */
-    const custom = async (handler, item) => invokeCondition(handler, state, item);
-    /** @param {import('./rules/types.js').ConditionHandler} handler @param {typeof state} view @param {Record<string, string | number | boolean>} [item] */
-    const invokeCondition = async (handler, view, item) => {
-      const value = await runExtension(signal => handler({ ...structuredClone(view), originalQuery: structuredClone(originalQuery), context: structuredClone(context.snapshot), signal, item: structuredClone(item) }));
-      if (typeof value !== 'boolean') throw new Error();
-      return value;
-    };
     /** @param {import('../lib/dns-wasm/index.js').DnsMessage} query @param {string} [groupName] */
     const queryUpstream = async (query, groupName) => {
       const group = upstreams.resolve(groupName);
       return queryGroup(group, query, transport, async (condition, response) => {
-        return await matches(condition, query.questions[0], originalQuery.questions[0], response, context, spend,
-          (handler, item) => invokeCondition(handler, { query, response }, item));
+        return await matches(condition, query.questions[0], originalQuery.questions[0], response, context, spend);
       }, (error, memberIndex, disposition) => {
         if (group && group.index !== -1) report(failureAt(error, location), actionType, false, { groupIndex: group.index, memberIndex, disposition });
       }, () => execution.check());
@@ -141,7 +110,7 @@ export async function executeQuery(queryWire, env, options = {}) {
         location.rule = ruleIndex;
         delete location.action;
         actionType = undefined;
-        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend, custom)) continue;
+        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend)) continue;
         for (const [actionIndex, action] of rule.actions.entries()) {
           execution.check();
           location.action = actionIndex;
@@ -155,28 +124,6 @@ export async function executeQuery(queryWire, env, options = {}) {
             const candidate = structuredClone(state);
             if (action.type === 'queryUpstream') {
               candidate.response = upstreamForClient(await queryUpstream(candidate.query, action.group), candidate.query, originalQuery);
-            } else if (action.type === 'custom' && action.run) {
-              const run = action.run;
-              const view = await runExtension(async signal => {
-                const view = { ...candidate, originalQuery: structuredClone(originalQuery), context: structuredClone(context.snapshot), signal };
-                await run(view);
-                return view;
-              });
-              candidate.query = view.query;
-              candidate.response = view.response;
-              const queryBytes = encodeMessage(candidate.query);
-              within(queryBytes.byteLength, limits.maxQueryBytes, location);
-              candidate.query = parseQuery(queryBytes);
-              if (candidate.response !== null) {
-                within(candidate.response.answers.length + candidate.response.authority.length + candidate.response.additional.length, limits.maxRecords, location);
-                for (const records of [candidate.response.answers, candidate.response.authority, candidate.response.additional]) {
-                  for (const { rtype, data, ...record } of records) {
-                    if (![TYPES.OPT, TYPES.RRSIG, 24, TYPES.TSIG].includes(rtype)) validateRecord({ ...record, type: rtype });
-                  }
-                }
-                validateProtectedRecords(candidate.response, state.response);
-                if (JSON.stringify(candidate.response) !== JSON.stringify(state.response)) candidate.response = invalidateResponse(candidate.response);
-              }
             } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
             } else if (action.type === 'setTtl') {

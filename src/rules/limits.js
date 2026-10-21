@@ -3,7 +3,6 @@ import { RuleError } from './errors.js';
 const defaults = Object.freeze({
   maxUpstreams: 16, maxUpstreamGroups: 16, maxUpstreamMembers: 64,
   maxNetworkRequests: 2, maxExecutionTimeMs: 3000, upstreamTimeoutMs: 1500,
-  maxExtensionCalls: 64, maxExtensionTimeMs: 100,
   maxQueryBytes: 4096, maxResponseBytes: 16384, maxGroupBytes: 5120, maxConfigBytes: 65536,
   maxGroups: 32, maxRules: 256, maxActions: 1024, maxRecords: 256, maxConditionNodes: 1024,
   maxConditionDepth: 16, maxConditionSteps: 8192, maxConditionValues: 128, maxPatternLength: 256, maxPatternInstructions: 4096, maxContextAddresses: 256,
@@ -11,7 +10,6 @@ const defaults = Object.freeze({
 const ceilings = Object.freeze({
   maxUpstreams: 64, maxUpstreamGroups: 64, maxUpstreamMembers: 256,
   maxNetworkRequests: 16, maxExecutionTimeMs: 30000, upstreamTimeoutMs: 10000,
-  maxExtensionCalls: 1024, maxExtensionTimeMs: 5000,
   maxQueryBytes: 65535, maxResponseBytes: 65535, maxGroupBytes: 65536, maxConfigBytes: 262144,
   maxGroups: 64, maxRules: 8192, maxActions: 32768, maxRecords: 4096, maxConditionNodes: 8192,
   maxConditionDepth: 32, maxConditionSteps: 131072, maxConditionValues: 1024, maxPatternLength: 1024, maxPatternInstructions: 32768, maxContextAddresses: 4096,

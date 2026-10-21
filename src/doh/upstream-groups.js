@@ -15,10 +15,9 @@ function upstreamName(value) {
 /**
  * @param {Record<string, unknown>} env
  * @param {import('../rules/limits.js').Limits} limits
- * @param {import('../rules/types.js').ExtensionRegistry | undefined} extensions
  * @param {ReturnType<typeof import('../rules/config-budget.js').createConfigBudget>} configBudget
  */
-export function loadUpstreamGroups(env, limits, extensions, configBudget) {
+export function loadUpstreamGroups(env, limits, configBudget) {
   try {
     const legacy = loadUpstream(env.DNS_UPSTREAM);
     const upstreams = new Map();
@@ -53,7 +52,7 @@ export function loadUpstreamGroups(env, limits, extensions, configBudget) {
         if (!url) throw new Error();
         return url;
       });
-      const accept = v.accept === undefined ? undefined : compileCondition(v.accept, configBudget.node, limits, configBudget.pattern, 0, undefined, extensions);
+      const accept = v.accept === undefined ? undefined : compileCondition(v.accept, configBudget.node, limits, configBudget.pattern);
       groups.set(key, { index: groups.size, urls, accept });
     }
     const defaultGroup = env.DNS_DEFAULT_UPSTREAM_GROUP === undefined ? undefined : upstreamName(env.DNS_DEFAULT_UPSTREAM_GROUP);

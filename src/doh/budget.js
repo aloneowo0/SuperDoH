@@ -1,6 +1,6 @@
 import { RuleError } from '../rules/errors.js';
 
-const SAFE_CODES = new Set(['EXECUTION_TIMEOUT', 'EXTENSION_TIMEOUT', 'UPSTREAM_TIMEOUT', 'REQUEST_CANCELLED']);
+const SAFE_CODES = new Set(['EXECUTION_TIMEOUT', 'UPSTREAM_TIMEOUT', 'REQUEST_CANCELLED']);
 
 /** @param {unknown} reason @returns {RuleError} */
 function cancellationError(reason) {

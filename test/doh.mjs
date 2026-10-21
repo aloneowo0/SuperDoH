@@ -17,7 +17,7 @@ const bundleWorker = entry => build({
   } }],
 });
 const bundle = await bundleWorker('src/worker.js');
-const extensionsBundle = await bundleWorker('test/doh-extensions-worker.js');
+const optionsBundle = await bundleWorker('test/doh-options-worker.js');
 let activeBundle = bundle;
 const logs = [];
 class TestLog extends Log {
@@ -45,8 +45,8 @@ const mf = new Miniflare(options({}));
 after(() => mf.dispose());
 const fixed = { type: 'answer', records: [{ name: 'example.com', type: 'A', ttl: 60, rdata: { A: { addr: '192.0.2.1' } } }] };
 const group = actions => ({ order: 0, rules: [{ actions }] });
-async function setup(bindings = {}, handler, extensions = false) {
-  activeBundle = extensions ? extensionsBundle : bundle;
+async function setup(bindings = {}, handler, callerOptions = false) {
+  activeBundle = callerOptions ? optionsBundle : bundle;
   calls.length = 0; logs.length = 0;
   upstream = handler ?? (async request => new Response(responseWire(new Uint8Array(await request.arrayBuffer())), { headers: { 'Content-Type': 'application/dns-message' } }));
   await mf.setOptions(options(bindings));
@@ -272,21 +272,6 @@ test('optional upstream timeouts do not cancel later built-in actions or reset t
   assert.equal(calls.length, 1);
 });
 
-test('code-composed asynchronous extensions and caller cancellation obey the overall request deadline', async () => {
-  await setup({ DNS_LIMITS: { maxExecutionTimeMs: 30, maxExtensionTimeMs: 1000 }, DNS_RULE_PAUSE: group([
-    { type: 'custom', name: 'pause', params: 100 }, fixed,
-  ]) }, undefined, true);
-  assert.equal((await dns(await post())).flags & 15, 2);
-  await new Promise(resolve => setTimeout(resolve, 20));
-  assert.ok(logs.join('').includes('EXECUTION_TIMEOUT'), logs.join(''));
-  await setup({ DNS_UPSTREAM: 'https://resolver.test/dns-query' }, async () => {
-    await new Promise(resolve => setTimeout(resolve, 200)); return new Response(null, { status: 503 });
-  }, true);
-  assert.equal((await dns(await post(undefined, query(), { 'x-test-cancel': 'true' }))).flags & 15, 2);
-  await new Promise(resolve => setTimeout(resolve, 20));
-  assert.ok(logs.join('').includes('REQUEST_CANCELLED'), logs.join(''));
-  assert.ok(!logs.join('').includes('private-cancel-reason'));
-});
 
 const signature = [0, 1, 8, 2, 0, 0, 0, 60, 119, 53, 148, 0, 59, 154, 202, 0, 0, 1, ...nameWire('example.com'), 1];
 const signedRecords = [
@@ -315,26 +300,6 @@ test('unmodified upstream answers retain AD and signatures; TTL edits invalidate
   }
 });
 
-test('custom actions inherit upstream signatures and OPT safely but cannot inject protected records', async () => {
-  for (const action of [
-    { type: 'custom', name: 'noop' },
-    { type: 'custom', name: 'ttl', params: 21 },
-    { type: 'custom', name: 'inject', onError: 'continue' },
-  ]) {
-    await setup({ DNS_UPSTREAM: 'https://resolver.test/dns-query', DNS_RULE_UP: group([{ type: 'queryUpstream' }, action]) }, signedUpstream, true);
-    const result = await dns(await post());
-    if (action.name === 'ttl') {
-      assert.equal(result.flags & 0x20, 0);
-      assert.equal(result.records.filter(rr => rr.type === 46).length, 0);
-      assert.equal(result.records[0].ttl, 21);
-    } else {
-      assert.equal(result.flags & 0x20, 0x20);
-      assert.equal(result.records.filter(rr => rr.type === 46).length, 2);
-      assert.equal(result.records[0].ttl, 60);
-    }
-    assert.equal(result.records.filter(rr => rr.type === 41).length, 1);
-  }
-});
 
 test('request-body waiting is bounded before DNS parsing and does not contact upstreams', async () => {
   await setup({ DNS_LIMITS: { maxExecutionTimeMs: 30 }, DNS_UPSTREAM: 'https://resolver.test/dns-query' });
@@ -360,20 +325,6 @@ test('the delivered Worker configuration disables automatic URL-bearing invocati
   assert.equal(config.observability.traces.enabled, false);
 });
 
-test('extension changes to outgoing EDNS cannot preserve AD, signatures or changed-query OPT metadata', async () => {
-  let outgoing;
-  await setup({ DNS_UPSTREAM: 'https://resolver.test/dns-query', DNS_RULE_UP: group([
-    { type: 'custom', name: 'edns' }, { type: 'queryUpstream' },
-  ]) }, async request => {
-    const wire = new Uint8Array(await request.arrayBuffer()); outgoing = decode(wire);
-    return new Response(responseWire(wire, { records: signedRecords }), { headers: { 'Content-Type': 'application/dns-message' } });
-  }, true);
-  const result = await dns(await post());
-  assert.equal(outgoing.records.find(rr => rr.type === 41).ttl, 0x8000);
-  assert.equal(result.flags & 0x20, 0);
-  assert.equal(result.records.filter(rr => rr.type === 46).length, 0);
-  assert.equal(result.records.filter(rr => rr.type === 41).length, 0);
-});
 
 const named = (accept) => ({
   DNS_UPSTREAMS: { primary: { url: 'https://primary.test/private?token=secret' }, backup: { urlSecret: 'BACKUP_URL' }, unused: { url: 'https://unused.test/dns-query' } },
@@ -513,27 +464,7 @@ test('exhausted groups retain each reason and respect required or optional actio
   }
 });
 
-test('registered adoption conditions receive isolated candidate, current and original queries', async () => {
-  const bindings = named({ custom: { name: 'candidate', params: 50 } });
-  bindings.DNS_RULE_UP = group([fixed, { type: 'rewriteQuery', name: 'alias.example' }, { type: 'queryUpstream' }, { type: 'return' }]);
-  await setup(bindings, request => upstreamReply(request, { records: [{ name: 'alias.example', type: 1, ttl: new URL(request.url).hostname === 'primary.test' ? 10 : 60, data: [192, 0, 2, 7] }] }), true);
-  const result = await dns(await post());
-  assert.equal(result.flags & 15, 0); assert.equal(calls.length, 2);
-  assert.deepEqual(result.records[0].data, [192, 0, 2, 7]); assert.equal(result.records[0].ttl, 60);
-  assert.deepEqual(result.questions, [{ name: 'example.com', type: 1, class: 1 }]);
-});
 
-test('adoption extension errors are not false matches and parameter errors precede network access', async () => {
-  for (const condition of [{ name: 'explode' }, { name: 'nonBoolean' }, { name: 'candidate', params: 'bad' }]) {
-    await setup(named({ custom: condition }), undefined, true);
-    assert.equal((await dns(await post())).flags & 15, 2);
-    assert.equal(calls.length, condition.params === 'bad' ? 0 : 1);
-    await new Promise(resolve => setTimeout(resolve, 20));
-    assert.ok(logs.join('').includes(condition.params === 'bad' ? 'INVALID_EXTENSION_PARAMS' : 'INVALID_STATE'));
-    assert.ok(!logs.join('').includes('private-adoption-exception'));
-    assert.ok(!logs.join('').includes('private-invalid-result'));
-  }
-});
 
 test('member timeout falls back while total deadline and caller cancellation terminate without more queries', async () => {
   for (const mode of ['headers', 'body', 'total', 'cancel']) {
@@ -553,20 +484,6 @@ test('member timeout falls back while total deadline and caller cancellation ter
   }
 });
 
-test('network and extension budgets are shared across members, actions and default queries', async () => {
-  for (const mode of ['network', 'actions', 'default', 'extension', 'extensionTime', 'steps']) {
-    const bindings = named(mode === 'extension' ? { custom: { name: 'slow', params: 0 } } : mode === 'extensionTime' ? { custom: { name: 'slow', params: 200 } } : { field: 'response.rcode', op: 'eq', value: 3 });
-    bindings.DNS_LIMITS = mode === 'extension' ? { maxExtensionCalls: 1 } : mode === 'extensionTime' ? { maxExtensionTimeMs: 50 } : mode === 'steps' ? { maxConditionSteps: 1 } : { maxNetworkRequests: 1 };
-    if (mode === 'actions') bindings.DNS_RULE_UP = group([fixed, { type: 'queryUpstream', onError: 'continue' }, { type: 'queryUpstream', onError: 'continue' }]);
-    if (mode === 'default') bindings.DNS_RULE_UP = group([{ type: 'queryUpstream', onError: 'continue' }]);
-    await setup(bindings, undefined, true);
-    const result = await dns(await post());
-    assert.equal(result.flags & 15, mode === 'actions' ? 0 : 2, mode);
-    assert.equal(calls.length, ['extension', 'steps'].includes(mode) ? 2 : 1, mode);
-    await new Promise(resolve => setTimeout(resolve, 20));
-    assert.ok(logs.join('').includes(mode === 'extensionTime' ? 'EXTENSION_TIMEOUT' : 'RESOURCE_LIMIT'), logs.join(''));
-  }
-});
 
 test('named source, group, member and shared configuration compilation limits are enforced before networking', async () => {
   for (const limits of [
@@ -616,25 +533,331 @@ test('sequential member waits share an absolute deadline instead of restarting i
   assert.ok(output.includes('UPSTREAM_TIMEOUT') && output.includes('EXECUTION_TIMEOUT'), output);
 });
 
-test('rewritten EDNS never loses an adopted extended RCODE during client finalization', async () => {
-  for (const clientEdns of [false, true]) for (const explicit of [false, true]) {
+
+test('removed extension limits are rejected instead of silently accepted', async () => {
+  for (const limits of [{ maxExtensionCalls: 1 }, { maxExtensionTimeMs: 100 }]) {
+    await setup({ DNS_LIMITS: limits, DNS_RULE_FIXED: group([fixed]) });
+    assert.equal((await dns(await post())).flags & 15, 2);
+    assert.equal(calls.length, 0);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    assert.ok(logs.join('').includes('INVALID_CONFIG'), logs.join(''));
+  }
+});
+
+test('asynchronous basic requests and trusted caller cancellation obey the overall deadline', async () => {
+  for (const cancel of [false, true]) {
+    await setup({ DNS_LIMITS: { maxExecutionTimeMs: cancel ? 1000 : 30, upstreamTimeoutMs: 1000 },
+      DNS_UPSTREAM: 'https://resolver.test/private?token=private-token',
+      DNS_RULE_UP: group([{ type: 'queryUpstream' }, fixed]),
+    }, async () => { await new Promise(resolve => setTimeout(resolve, 150)); throw new Error('private-upstream-reason'); }, cancel);
+    assert.equal((await dns(await post(undefined, query(), cancel ? { 'x-test-cancel': 'true' } : {}))).flags & 15, 2);
+    await new Promise(resolve => setTimeout(resolve, 180));
+    assert.equal(calls.length, 1);
+    assert.ok(logs.join('').includes(cancel ? 'REQUEST_CANCELLED' : 'EXECUTION_TIMEOUT'), logs.join(''));
+    assert.ok(!/private-cancel-reason|private-upstream-reason|private-token/.test(logs.join('')));
+  }
+});
+
+test('basic no-op and TTL actions preserve OPT and invalidate only actual DNS changes', async () => {
+  for (const ttl of [60, 21]) {
+    const records = signedRecords.filter(rr => rr.name !== 'other.example');
+    await setup({ DNS_UPSTREAM: 'https://resolver.test/dns-query', DNS_RULE_UP: group([
+      { type: 'queryUpstream' }, { type: 'setTtl', ttl }, { type: 'return' },
+    ]) }, request => upstreamReply(request, { records }));
+    const result = await dns(await post());
+    assert.equal(result.flags & 0x20, ttl === 60 ? 0x20 : 0);
+    assert.equal(result.records.filter(rr => rr.type === 46).length, ttl === 60 ? 1 : 0);
+    assert.equal(result.records[0].ttl, ttl);
+    assert.equal(result.records.filter(rr => rr.type === 41).length, 1);
+  }
+});
+
+test('basic query rewrites invalidate AD and signatures while preserving untouched client EDNS', async () => {
+  let outgoing;
+  await setup({ DNS_UPSTREAM: 'https://resolver.test/dns-query', DNS_RULE_UP: group([
+    { type: 'rewriteQuery', name: 'alias.example' }, { type: 'queryUpstream' }, { type: 'return' },
+  ]) }, async request => {
+    const wire = new Uint8Array(await request.arrayBuffer()); outgoing = decode(wire);
+    return new Response(responseWire(wire, { records: signedRecords }), { headers: { 'Content-Type': 'application/dns-message' } });
+  });
+  const wire = query(); wire[11] = 1;
+  const input = Uint8Array.from([...wire, 0, 0, 41, 4, 208, 0, 0, 128, 0, 0, 0]);
+  const result = await dns(await post(undefined, input));
+  assert.equal(outgoing.questions[0].name, 'alias.example');
+  assert.equal(outgoing.records.find(rr => rr.type === 41).ttl, 0x8000);
+  assert.equal(result.questions[0].name, 'example.com');
+  assert.equal(result.flags & 0x20, 0);
+  assert.equal(result.records.filter(rr => rr.type === 46).length, 0);
+  assert.equal(result.records.filter(rr => rr.type === 41).length, 1);
+});
+
+test('declarative adoption observes candidate, current and original query domains', async () => {
+  const bindings = named({ all: [
+    { field: 'query.name', op: 'eq', value: 'alias.example' },
+    { field: 'original.name', op: 'eq', value: 'example.com' },
+    { collection: 'response.records', quantifier: 'all', where: { field: 'item.ttl', op: 'gte', value: 50 } },
+  ] });
+  bindings.DNS_RULE_UP = group([fixed, { type: 'rewriteQuery', name: 'alias.example' }, { type: 'queryUpstream' }, { type: 'return' }]);
+  await setup(bindings, request => upstreamReply(request, { records: [{ name: 'alias.example', type: 1, ttl: new URL(request.url).hostname === 'primary.test' ? 10 : 60, data: [192, 0, 2, 7] }] }));
+  const result = await dns(await post());
+  assert.equal(result.flags & 15, 0); assert.equal(calls.length, 2);
+  assert.deepEqual(result.records[0].data, [192, 0, 2, 7]); assert.equal(result.records[0].ttl, 60);
+  assert.deepEqual(result.questions, [{ name: 'example.com', type: 1, class: 1 }]);
+});
+
+test('removed custom adoption references fail before source access, including unused groups', async () => {
+  for (const condition of [{ custom: { name: 'old', params: 'private-params' } }, { any: [
+    { field: 'response.exists', op: 'eq', value: true }, { custom: { name: 'old' } },
+  ] }]) {
+    const bindings = named();
+    bindings.DNS_UPSTREAM_GROUPS.unused = { members: ['unused'], accept: condition };
+    await setup(bindings);
+    assert.equal((await dns(await post())).flags & 15, 2);
+    assert.equal(calls.length, 0);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    assert.ok(logs.join('').includes('INVALID_CONFIG'));
+    assert.ok(!logs.join('').includes('private-params'));
+  }
+});
+
+test('network and condition budgets remain shared across members, actions and default queries', async () => {
+  for (const mode of ['network', 'actions', 'default', 'steps']) {
+    const bindings = named({ field: 'response.rcode', op: 'eq', value: 3 });
+    bindings.DNS_LIMITS = mode === 'steps' ? { maxConditionSteps: 1 } : { maxNetworkRequests: 1 };
+    if (mode === 'actions') bindings.DNS_RULE_UP = group([fixed, { type: 'queryUpstream', onError: 'continue' }, { type: 'queryUpstream', onError: 'continue' }]);
+    if (mode === 'default') bindings.DNS_RULE_UP = group([{ type: 'queryUpstream', onError: 'continue' }]);
+    await setup(bindings);
+    const result = await dns(await post());
+    assert.equal(result.flags & 15, mode === 'actions' ? 0 : 2, mode);
+    assert.equal(calls.length, mode === 'steps' ? 2 : 1, mode);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    assert.ok(logs.join('').includes('RESOURCE_LIMIT'), logs.join(''));
+  }
+});
+
+test('basic query rewrites preserve full upstream RCODE and original client correlation', async () => {
+  for (const end of [[], [{ type: 'stop' }], [{ type: 'return' }]]) {
     const bindings = named({ field: 'response.rcode', op: 'eq', value: 16 });
-    bindings.DNS_RULE_UP = group([{ type: 'custom', name: 'edns' }, ...(explicit ? [{ type: 'queryUpstream' }] : [])]);
-    await setup(bindings, request => upstreamReply(request, { rcode: 0, flags: 0x81b0, records: [
-      { name: '.', type: 41, class: 4096, ttl: 0x01008000, data: [0, 12, 0, 1, 0], section: 2 },
-    ] }), true);
-    const wire = query();
-    let input = wire;
-    if (clientEdns) {
-      wire[11] = 1;
-      input = Uint8Array.from([...wire, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 0]);
-    }
+    bindings.DNS_RULE_UP = group([{ type: 'rewriteQuery', name: 'alias.example' }, { type: 'queryUpstream' }, ...end]);
+    await setup(bindings, request => upstreamReply(request, { rcode: 0, records: [
+      { name: '.', type: 41, class: 1232, ttl: 0x01000000, data: [], section: 2 },
+    ] }));
+    const wire = query(); wire[11] = 1;
+    const input = Uint8Array.from([...wire, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 0]);
     const result = await dns(await post(undefined, input));
-    assert.equal(result.flags & 15, clientEdns ? 0 : 2);
-    assert.equal(result.flags & 0x20, 0); assert.equal(calls.length, 1);
-    if (clientEdns) {
-      assert.equal(result.records.length, 1); assert.equal(result.records[0].type, 41);
-      assert.equal(result.records[0].ttl, 0x01000000); assert.deepEqual(result.records[0].data, []);
-    } else assert.equal(result.records.length, 0);
+    assert.equal(result.id, 0x4242); assert.equal(result.questions[0].name, 'example.com');
+    assert.equal(result.flags & 0x110, 0x110); assert.equal(result.flags & 0x20, 0);
+    assert.equal(result.flags & 15, 0); assert.equal(calls.length, 1);
+    assert.equal(result.records[0].ttl >>> 24, 1);
+  }
+});
+
+test('public module exports and execution options no longer expose user registries', async () => {
+  await setup({ DNS_RULE_FIXED: group([fixed]) }, undefined, true);
+  const exports = await (await post(undefined, query(), { 'x-test-exports': '1' })).json();
+  assert.deepEqual(exports.sort(), ['RuleError', 'executeQuery']);
+  assert.equal((await post(undefined, query(), { 'x-test-registry': '1' })).status, 500);
+  assert.equal(calls.length, 0);
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.ok(logs.join('').includes('INVALID_OPTIONS'), logs.join(''));
+});
+
+test('unreachable custom actions and nested conditions are rejected before JSON actions or network', async () => {
+  const old = { custom: { name: 'ttlIs', params: 'private-params' } };
+  const yes = { field: 'query.type', op: 'eq', value: 'A' };
+  const no = { field: 'query.type', op: 'eq', value: 'AAAA' };
+  const conditions = [old, { any: [yes, old] }, { all: [no, old] }, { not: old },
+    { collection: 'response.records', quantifier: 'any', where: old },
+    { collection: 'response.addresses', quantifier: 'all', where: old }];
+  const rules = [
+    { when: no, actions: [{ type: 'custom', name: 'ttl', params: 'private-params', onError: 'continue' }] },
+    ...conditions.map(when => ({ when, actions: [fixed] })),
+  ];
+  for (const bad of rules) {
+    await setup({ DNS_UPSTREAM: 'https://unused.test/private-source', DNS_RULE_BAD: { order: 0, rules: [
+      { actions: [fixed, { type: 'return' }] }, bad,
+    ] } });
+    assert.equal((await dns(await post())).flags & 15, 2);
+    assert.equal(calls.length, 0);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    assert.ok(output.includes('INVALID_CONFIG') && output.includes('"rule":1'), output);
+    assert.ok(!/private-params|private-source/.test(output));
+  }
+});
+
+test('pure JSON generates, matches, rewrites and returns without user code or source access', async () => {
+  const bindings = { DNS_RULE_JSON: JSON.stringify({ order: 0, rules: [
+    { actions: [fixed, { type: 'rewriteQuery', name: 'changed.example' }] },
+    { when: { all: [
+      { field: 'query.name', op: 'eq', value: 'changed.example' },
+      { field: 'original.name', op: 'eq', value: 'example.com' },
+      { collection: 'response.records', quantifier: 'all', where: { all: [
+        { field: 'item.name', op: 'eq', value: 'example.com' },
+        { field: 'item.ttl', op: 'eq', value: 60 },
+      ] } },
+    ] }, actions: [{ type: 'setTtl', ttl: 23 }, { type: 'return' }] },
+    { actions: [{ type: 'queryUpstream' }] },
+  ] }) };
+  await setup(bindings);
+  for (let i = 0; i < 2; i++) {
+    const result = await dns(await post());
+    assert.equal(result.id, 0x4242); assert.equal(result.questions[0].name, 'example.com');
+    assert.equal(result.flags & 0x110, 0x110); assert.equal(result.flags & 0x20, 0);
+    assert.equal(result.records[0].ttl, 23);
+    assert.deepEqual(result.records[0].data, [192, 0, 2, 1]);
+  }
+  assert.equal(calls.length, 0);
+  assert.equal(logs.length, 0);
+});
+
+test('failed basic answer candidates roll back only themselves or terminate before later actions', async () => {
+  for (const optional of [false, true]) {
+    await setup({ DNS_LIMITS: { maxResponseBytes: 70 }, DNS_RULE_STATE: group([
+      fixed,
+      { type: 'answer', records: [fixed.records[0], { ...fixed.records[0], rdata: { A: { addr: '192.0.2.8' } } }], onError: optional ? 'continue' : 'fail' },
+      { type: 'setTtl', ttl: 17 }, { type: 'return' },
+    ]) });
+    const result = await dns(await post());
+    assert.equal(result.flags & 15, optional ? 0 : 2);
+    assert.equal(result.records.length, optional ? 1 : 0);
+    if (optional) { assert.equal(result.records[0].ttl, 17); assert.deepEqual(result.records[0].data, [192, 0, 2, 1]); }
+    assert.equal(calls.length, 0);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    assert.ok(output.includes('RESOURCE_LIMIT') && output.includes('"action":1'), output);
+    assert.ok(output.includes(optional ? 'rolled_back_continue' : 'terminated'), output);
+  }
+});
+
+test('failed basic query rewrites preserve prior current query, original question and nested EDNS', async () => {
+  let outgoing;
+  await setup({ DNS_LIMITS: { maxQueryBytes: 60 }, DNS_UPSTREAM: 'https://resolver.test/dns-query', DNS_RULE_STATE: { order: 0, rules: [
+    { actions: [{ type: 'rewriteQuery', name: 'good.example' },
+      { type: 'rewriteQuery', name: 'a'.repeat(50) + '.example', onError: 'continue' }] },
+    { when: { all: [{ field: 'query.name', op: 'eq', value: 'good.example' }, { field: 'original.name', op: 'eq', value: 'example.com' }] },
+      actions: [{ type: 'queryUpstream' }, { type: 'return' }] },
+  ] } }, async request => {
+    const bytes = new Uint8Array(await request.arrayBuffer()); outgoing = decode(bytes);
+    return upstreamReply(new Request(request, { body: bytes }));
+  });
+  const base = query(); base[11] = 1;
+  const input = Uint8Array.from([...base, 0, 0, 41, 4, 208, 0, 0, 0, 0, 0, 6, 253, 233, 0, 2, 1, 2]);
+  const before = input.slice();
+  const result = await dns(await post(undefined, input));
+  assert.deepEqual(input, before);
+  assert.equal(outgoing.questions[0].name, 'good.example');
+  assert.deepEqual(outgoing.records[0].data, [253, 233, 0, 2, 1, 2]);
+  assert.equal(result.questions[0].name, 'example.com');
+  assert.equal(result.id, 0x4242); assert.equal(result.flags & 0x110, 0x110);
+  assert.equal(calls.length, 1);
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.ok(logs.join('').includes('rolled_back_continue'));
+});
+
+test('late upstream success or rejection cannot overwrite committed answers or another request', async () => {
+  for (const reject of [false, true]) {
+    let attempt = 0;
+    await setup({ DNS_LIMITS: { upstreamTimeoutMs: 25, maxExecutionTimeMs: 1000 },
+      DNS_UPSTREAM: 'https://resolver.test/private?token=private-token', DNS_RULE_STATE: group([
+        fixed, { type: 'queryUpstream', onError: 'continue' }, { type: 'setTtl', ttl: 17 }, { type: 'return' },
+      ]),
+    }, async request => {
+      if (++attempt === 1) {
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        await new Promise(resolve => setTimeout(resolve, 120));
+        if (reject) throw new Error('private-late-rejection');
+        return new Response(responseWire(bytes, { records: [{ name: 'example.com', type: 1, ttl: 999, data: [192, 0, 2, 99] }] }), { headers: { 'Content-Type': 'application/dns-message' } });
+      }
+      return upstreamReply(request);
+    });
+    const firstResponse = await post();
+    const second = await dns(await post());
+    await new Promise(resolve => setTimeout(resolve, 150));
+    const first = await dns(firstResponse);
+    const third = await dns(await post());
+    assert.deepEqual(first.records[0].data, [192, 0, 2, 1]);
+    for (const result of [second, third]) assert.deepEqual(result.records[0].data, [192, 0, 2, 9]);
+    for (const result of [first, second, third]) {
+      assert.equal(result.records[0].ttl, 17); assert.equal(result.questions[0].name, 'example.com');
+    }
+    assert.equal(calls.length, 3);
+    const output = logs.join('');
+    assert.ok(output.includes('UPSTREAM_TIMEOUT') && output.includes('rolled_back_continue'), output);
+    assert.ok(!/private-token|private-late-rejection/.test(output));
+  }
+});
+
+test('response-finalization failure does not undo source access or the previously committed answer', async () => {
+  for (const optional of [false, true]) {
+    await setup({ DNS_LIMITS: { maxResponseBytes: 100 }, DNS_UPSTREAM: 'https://resolver.test/private?token=secret', DNS_RULE_STATE: group([
+      fixed, { type: 'queryUpstream', onError: optional ? 'continue' : 'fail' }, { type: 'setTtl', ttl: 14 }, { type: 'return' },
+    ]) }, request => upstreamReply(request, { records: Array.from({ length: 6 }, (_, i) => ({ name: 'example.com', type: 1, ttl: 999, data: [192, 0, 2, i] })) }));
+    const result = await dns(await post());
+    assert.equal(result.flags & 15, optional ? 0 : 2); assert.equal(calls.length, 1);
+    if (optional) { assert.equal(result.records[0].ttl, 14); assert.deepEqual(result.records[0].data, [192, 0, 2, 1]); }
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    assert.ok(output.includes('RESOURCE_LIMIT'), output);
+    assert.ok(output.includes(optional ? 'rolled_back_continue' : 'terminated'), output);
+    assert.ok(!/private|token=secret/.test(output));
+  }
+});
+
+test('JSON answers cannot inject protected records, invalid native fields or executable properties', async () => {
+  const records = [
+    ...[41, 46, 24, 250].map(type => ({ name: '.', type, ttl: 0, rdata: { Raw: [] } })),
+    { ...fixed.records[0], rdata: { A: { addr: '192.0.2.1', secret: 'private-field' } } },
+  ];
+  const actions = [
+    ...records.map(record => ({ type: 'answer', records: [record], onError: 'continue' })),
+    { type: 'setTtl', ttl: 1, run: 'private-function-body' },
+    { type: 'rewriteQuery', name: 'alias.example', additional: [] },
+  ];
+  for (const action of actions) {
+    await setup({ DNS_UPSTREAM: 'https://unused.test/dns-query', DNS_RULE_BAD: group([fixed, action]) });
+    assert.equal((await dns(await post())).flags & 15, 2);
+    assert.equal(calls.length, 0);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    assert.ok(output.includes('INVALID_CONFIG'), output);
+    assert.ok(!/private-field|private-function-body/.test(output));
+  }
+});
+
+test('declarative short circuit avoids irrelevant runtime errors but not configuration validation', async () => {
+  const target = { collection: 'response.records', quantifier: 'any', where: { field: 'item.target', op: 'suffix', value: 'example' } };
+  const yes = { field: 'query.type', op: 'eq', value: 'A' };
+  const no = { field: 'query.type', op: 'eq', value: 'AAAA' };
+  for (const [when, fails] of [[target, true], [{ not: target }, true], [{ any: [yes, target] }, false], [{ not: { all: [no, target] } }, false]]) {
+    await setup({ DNS_RULE_CONDITIONS: { order: 0, rules: [
+      { actions: [{ type: 'answer', records: [{ name: 'example.com', type: 'CNAME', ttl: 60, rdata: { Cname: { cname: 'private!target.example' } } }] }] },
+      { when, actions: [{ type: 'setTtl', ttl: 42 }] },
+    ] } });
+    const result = await dns(await post());
+    assert.equal(result.flags & 15, fails ? 2 : 0);
+    if (!fails) assert.equal(result.records[0].ttl, 42);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    if (fails) assert.ok(output.includes('INVALID_STATE') && output.includes('execution_failed'), output);
+    assert.ok(!output.includes('private!target'));
+    assert.equal(calls.length, 0);
+  }
+});
+
+test('trusted diagnostic observer failures cannot hide basic action rollback or termination', async () => {
+  for (const mode of ['throw', 'reject']) for (const optional of [false, true]) {
+    await setup({ DNS_RULE_LOG: group([
+      { type: 'setTtl', ttl: 1, onError: optional ? 'continue' : 'fail' }, fixed, { type: 'return' },
+    ]) }, undefined, true);
+    const result = await dns(await post(undefined, query(), { 'x-test-observer': mode }));
+    assert.equal(result.flags & 15, optional ? 0 : 2);
+    if (optional) assert.equal(result.records[0].ttl, 60);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    const output = logs.join('');
+    assert.ok(output.includes('observer_failed') && output.includes('action_failed') && output.includes('NO_RESPONSE'), output);
+    assert.ok(output.includes(optional ? 'rolled_back_continue' : 'terminated'), output);
+    assert.ok(!output.includes('private-observer'));
+    assert.equal(calls.length, 0);
   }
 });

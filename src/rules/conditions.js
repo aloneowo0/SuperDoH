@@ -1,11 +1,10 @@
 import { getRcode } from '../../lib/dns-wasm/index.js';
-import { bindExtension } from './extensions.js';
 import { within } from './limits.js';
 import { ip, cidr } from './ip.js';
 import { RE2JS } from 're2js';
 import { fields, domain, recordType, integer } from './values.js';
 
-/** @typedef {{ current: import('../../lib/dns-wasm/index.js').DnsQuestion, original: Readonly<import('../../lib/dns-wasm/index.js').DnsQuestion>, response: import('../../lib/dns-wasm/index.js').DnsMessage | null, spend: () => void, custom: (handler: import('./types.js').ConditionHandler, item?: Record<string, string | number | boolean>) => Promise<boolean>, item?: Record<string, string | number | boolean>, properties: ReturnType<typeof import('./context.js').loadContext> }} MatchContext */
+/** @typedef {{ current: import('../../lib/dns-wasm/index.js').DnsQuestion, original: Readonly<import('../../lib/dns-wasm/index.js').DnsQuestion>, response: import('../../lib/dns-wasm/index.js').DnsMessage | null, spend: () => void, item?: Record<string, string | number | boolean>, properties: ReturnType<typeof import('./context.js').loadContext> }} MatchContext */
 /** @typedef {(context: MatchContext) => boolean | Promise<boolean>} Predicate */
 const kinds = /** @type {Record<string, string>} */ ({
   'query.name': 'name', 'original.name': 'name', 'query.type': 'type', 'original.type': 'type',
@@ -41,27 +40,22 @@ function read(context, field) {
   const question = field.startsWith('original.') ? context.original : context.current;
   return field.endsWith('.type') ? question.rtype : domain(question.name);
 }
-/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} [depth] @param {string} [scope] @param {import('./types.js').ExtensionRegistry} [extensions] @returns {Predicate} */
-export function compileCondition(value, countNode, limits, countPattern, depth = 0, scope, extensions = {}) {
-  const predicate = compile(value, countNode, limits, countPattern, depth, scope, extensions);
+/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} [depth] @param {string} [scope] @returns {Predicate} */
+export function compileCondition(value, countNode, limits, countPattern, depth = 0, scope) {
+  const predicate = compile(value, countNode, limits, countPattern, depth, scope);
   return async context => { context.spend(); return predicate(context); };
 }
-/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} depth @param {string | undefined} scope @param {import('./types.js').ExtensionRegistry} [extensions] @returns {Predicate} */
-function compile(value, countNode, limits, countPattern, depth, scope, extensions = {}) {
+/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} depth @param {string | undefined} scope @returns {Predicate} */
+function compile(value, countNode, limits, countPattern, depth, scope) {
   countNode();
   within(depth, limits.maxConditionDepth);
-  const v = fields(value, ['all', 'any', 'not', 'field', 'op', 'value', 'collection', 'quantifier', 'where', 'custom']);
-  if ('custom' in v) {
-    fields(v, ['custom']);
-    const handler = bindExtension(v.custom, extensions.conditions);
-    return context => context.custom(handler, context.item);
-  }
+  const v = fields(value, ['all', 'any', 'not', 'field', 'op', 'value', 'collection', 'quantifier', 'where']);
   for (const key of ['all', 'any']) {
     if (key in v) {
       fields(v, [key]);
       const children = v[key];
       if (!Array.isArray(children) || !children.length) throw new Error();
-      const parsed = children.map(child => compileCondition(child, countNode, limits, countPattern, depth + 1, scope, extensions));
+      const parsed = children.map(child => compileCondition(child, countNode, limits, countPattern, depth + 1, scope));
       return async context => {
         for (const child of parsed) {
           const hit = await child(context);
@@ -74,14 +68,14 @@ function compile(value, countNode, limits, countPattern, depth, scope, extension
   }
   if ('not' in v) {
     fields(v, ['not']);
-    const child = compileCondition(v.not, countNode, limits, countPattern, depth + 1, scope, extensions);
+    const child = compileCondition(v.not, countNode, limits, countPattern, depth + 1, scope);
     return async context => !await child(context);
   }
   if ('collection' in v) {
     fields(v, ['collection', 'quantifier', 'where']);
     if (scope || (v.collection !== 'response.addresses' && v.collection !== 'response.records') || (v.quantifier !== 'any' && v.quantifier !== 'all')) throw new Error();
     const collection = v.collection;
-    const child = compileCondition(v.where, countNode, limits, countPattern, depth + 1, collection === 'response.records' ? 'records' : 'addresses', extensions);
+    const child = compileCondition(v.where, countNode, limits, countPattern, depth + 1, collection === 'response.records' ? 'records' : 'addresses');
     return async context => {
       let seen = false;
       if (!context.response) return false;
@@ -180,7 +174,7 @@ function recordTarget(data) {
   if ('Https' in data) return data.Https.target;
   return undefined;
 }
-/** @param {Predicate | undefined} condition @param {MatchContext['current']} current @param {MatchContext['original']} original @param {MatchContext['response']} response @param {MatchContext['properties']} properties @param {() => void} spend @param {MatchContext['custom']} custom */
-export function matches(condition, current, original, response, properties, spend, custom) {
-  return condition ? condition({ current, original, response, properties, spend, custom }) : true;
+/** @param {Predicate | undefined} condition @param {MatchContext['current']} current @param {MatchContext['original']} original @param {MatchContext['response']} response @param {MatchContext['properties']} properties @param {() => void} spend */
+export function matches(condition, current, original, response, properties, spend) {
+  return condition ? condition({ current, original, response, properties, spend }) : true;
 }

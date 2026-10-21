@@ -1,6 +1,8 @@
-# 环境变量规则执行器（T1 / #8、T2 / #9、T3 / #10、T4 / #11、T5 / #12）
+# 环境变量规则执行器（JSON-only / #26）
 
-本切片提供 `src/index.js` 的公共 `executeQuery(queryWire, env, options?)`，在 workerd 中组合现有 DNS WASM 库。`src/worker.js` 现提供标准 DoH GET/POST 入口、可选路径密钥及单个显式配置的 DoH 上游；尚无上游组、缓存、ECH 动作或线上免费套餐 CPU 验收。`test/worker.js` 仍只是旧规则测试适配器，不能作为生产入口部署。README 描述的是历史版本，不是此切片的可用功能清单。
+当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
+
+**分阶段迁移**：修订 #7 是目标规格，不是全部已实现声明。旧 #12/#13 的单上游默认补查、上游策略组及采用条件目前仍在；#27 负责移除这些政策、改为显式命名单上游并提供最近动作结果。本票没有新增自动回退、重试、补查或并发。不新增依赖这些旧政策的推荐配置；下文旧上游章节仅说明当前兼容行为。TCP/TLS、缓存、外部来源与 ECH 动作仍待后续票交付。未部署、未做线上免费 CPU 验收，README 的历史版本说明不作为本实现功能清单。
 
 ## 公共入口
 
@@ -19,7 +21,7 @@ try {
 }
 ```
 
-入口返回 `Promise<ExecutionResult>`，调用者必须 `await` 并处理拒绝（T4 将原同步入口迁移为异步）。上游查询动作和配置上游后的无响应收尾可以执行网络 I/O；受信任扩展也可显式执行异步工作。输入为 `Uint8Array` DNS 报文和 Workers 环境绑定对象；不读取文件、`process.env` 或请求中的配置。支持标准单问题 QUERY、根域或 ASCII 标签（字母、数字、连字符、下划线）；IDN 使用 punycode。拒绝响应报文、其他 opcode、截断查询、已有 Answer/Authority、非 OPT 的 Additional 和非零 EDNS 版本/扩展 RCODE。合法的 EDNS 0 查询可以处理，但此切片的自定义响应不回显请求的 OPT/ECS。
+入口返回 `Promise<ExecutionResult>`，调用者必须 `await` 并处理拒绝（T4 将原同步入口迁移为异步）。上游查询动作和配置上游后的无响应收尾可以执行网络 I/O；移除用户函数不改变网络异步契约。输入为 `Uint8Array` DNS 报文和 Workers 环境绑定对象；不读取文件、`process.env` 或请求中的配置。支持标准单问题 QUERY、根域或 ASCII 标签（字母、数字、连字符、下划线）；IDN 使用 punycode。拒绝响应报文、其他 opcode、截断查询、已有 Answer/Authority、非 OPT 的 Additional 和非零 EDNS 版本/扩展 RCODE。合法的 EDNS 0 查询可以处理，但此切片的自定义响应不回显请求的 OPT/ECS。
 
 规则正常结束是 `completed`；`stop` 是 `stopped`；`return` 是 `returned`。三者均经过统一输出收尾。
 
@@ -67,7 +69,7 @@ try {
 
 ### 条件
 
-条件以字段、操作符、值表达，结构全量预检并编译；每次规则进入时只求值一次。`all` / `any` 数组非空，分别 AND / OR；`not` 是布尔取反。执行可短路，校验不短路：未执行分支的未知字段、错误正则或错误参数仍使整个配置失败。内置条件没有网络、文件、DNS 查询、域名列表下载或归属补全等隐式副作用。命名扩展的显式异步工作见下文。
+条件以字段、操作符、值表达，结构全量预检并编译；每次规则进入时只求值一次。`all` / `any` 数组非空，分别 AND / OR；`not` 是布尔取反。执行可短路，校验不短路：未执行分支的未知字段、错误正则或错误参数仍使整个配置失败。内置条件没有网络、文件、DNS 查询、域名列表下载或归属补全等隐式副作用。不接受用户函数；异步联网仅由明确支持的网络动作承担。
 
 ```json
 { "all": [
@@ -169,7 +171,6 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 | type | 字段 | 行为 |
 | --- | --- | --- |
 | `queryUpstream` | 无 | 查询配置的单个 DoH 上游，以新响应替换当前响应；不合并、不隐式终止 |
-| `custom` | `name`、可选 `params` | 调用代码注册的受信任动作，沿用相同的有序执行、校验和失败契约 |
 | `answer` | `records`，可选 `rcode`（默认 0） | 以自定义响应替换当前响应；不隐式返回，不追加到旧答案。`records: []` 是合法空答案 |
 | `setTtl` | `ttl` | 修改当前响应各普通记录 TTL；无响应报错 |
 | `rewriteQuery` | `name` 和/或 `queryType` | 修改当前问题，仅影响后续动作及匹配，不修改原始查询，不自动重命名已有答案 |
@@ -192,16 +193,13 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 - `RESOURCE_LIMIT`：超出配置预算。
 - `INVALID_STATE`：动作产生无效工作状态或底层操作异常，原因仅保留安全分类。
 - `INVALID_OPTIONS`：执行选项不符合公开契约。
-- `UNKNOWN_EXTENSION`：引用未注册的条件或动作名称。
-- `INVALID_EXTENSION_PARAMS`：扩展参数解析/复制失败。
-- `EXTENSION_TIMEOUT`：扩展执行超过本次调用的共享截止时间。
 - `NO_UPSTREAM`：处理需要上游但未配置。
 - `UPSTREAM_FAILED` / `UPSTREAM_INVALID` / `UPSTREAM_TIMEOUT`：上游失败、无效响应或单次超时。
 - `EXECUTION_TIMEOUT` / `REQUEST_CANCELLED`：整体处理超时或取消。
 - `ACCESS_DENIED` / `INVALID_HTTP`：安全的 HTTP 边界诊断。
 - `INVALID_CONTEXT`：匹配上下文的结构、属性或地址键无效。
 
-不附加原始 JSON/库异常文本、配置值、凭据、路径密钥或完整报文。`RuleError.reason` 在适用时只提供固定的安全错误分类和说明，不附带任意原始 cause 或 stack。执行器记录结构化失败事件；调用者仍不得把 `env` 或完整 DNS 输入写入日志。本切片没有线上访问路径，也不自动发送日志到外部服务。
+不附加原始 JSON/库异常文本、配置值、凭据、路径密钥或完整报文。`RuleError.reason` 在适用时只提供固定的安全错误分类和说明，不附带任意原始 cause 或 stack。执行器记录结构化失败事件；调用者仍不得把 `env` 或完整 DNS 输入写入日志。默认日志使用 Worker 日志通道；不在应用中自动配置其他日志接收服务。
 
 ## 动作失败与回滚
 
@@ -226,8 +224,6 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 | maxNetworkRequests | 2 | 16 |
 | maxExecutionTimeMs | 3000 | 30000 |
 | upstreamTimeoutMs | 1500 | 10000 |
-| maxExtensionCalls | 64 | 1024 |
-| maxExtensionTimeMs | 100 | 5000 |
 | maxQueryBytes | 4096 | 65535 |
 | maxResponseBytes | 16384 | 65535 |
 | maxGroupBytes | 5120 | 65536 |
@@ -244,7 +240,7 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 | maxPatternInstructions | 4096 | 32768 |
 | maxContextAddresses | 256 | 4096 |
 
-`maxRecords` 计所有 answer 配置中的记录总数，同时限制自定义动作提交的当前响应记录总数；maxConfigBytes 计所有规则组及 DNS_UPSTREAMS/DNS_UPSTREAM_GROUPS 命名表，不计无关绑定；maxResponseBytes 在每个生成/修改响应动作提交前及统一收尾应用，stop/return 也不能绕过；rewriteQuery 提交前检查编码后的查询大小。规则组大小先检查再解析/编译，条件深度与总节点数均受限；平台 JSON 对象仍需序列化才能计数，因此可信部署配置本身不应包含异常巨大的对象。应用边界不能放宽 Cloudflare 平台变量大小/数量限制，也不证明任意规则规模满足免费套餐 CPU。
+`maxRecords` 计所有 answer 配置中的记录总数，同时限制上游响应记录总数（包括 Answer/Authority/Additional）；maxConfigBytes 计所有规则组及 DNS_UPSTREAMS/DNS_UPSTREAM_GROUPS 命名表，不计无关绑定；maxResponseBytes 在每个生成/修改响应动作提交前及统一收尾应用，stop/return 也不能绕过；rewriteQuery 提交前检查编码后的查询大小。规则组大小先检查再解析/编译，条件深度与总节点数均受限；平台 JSON 对象仍需序列化才能计数，因此可信部署配置本身不应包含异常巨大的对象。应用边界不能放宽 Cloudflare 平台变量大小/数量限制，也不证明任意规则规模满足免费套餐 CPU。
 
 条件深度根节点为 0，逻辑子项与集合 where 各增加一层。maxConditionValues 限制每个 in 的原始成员数，maxPatternLength 限制单个正则/通配符模式的 UTF-16 长度，maxPatternInstructions 限制全部组中 RE2 编译后指令数的总和（包括通配符）。这些检查在求值前覆盖所有分支。
 
@@ -286,81 +282,58 @@ const result = await executeQuery(queryWire, env, {
 - 接收器属于受信任代码，必须实际记录或处理传入事件；执行器不能检查一个正常返回的回调是否将事件保存到了外部。Host 的所有诊断通道都不可用时无法保证日志投递，但不会让诊断故障覆盖原 DNS 错误。
 - 不记录原始配置、DNS 报文、异常 stack 或任意 cause 文本。错误信息使用稳定安全消息，底层原因在适用时只提供 Error/TypeError/RangeError 等固定分类，不直接转储可能含凭据或 URL 的原异常。
 
-T2 回归通过同一公开 `executeQuery` 接口观察事件和 DNS 输出；“部分修改后失败”使用可选 answer 产生超限候选响应来验证，而不是添加测试专用动作。T4 增加随应用构建注册的命名条件和动作；T5 再增加单上游及正式 HTTP 入口，仍未提供自动线上日志服务。
+T2 回归通过同一公开 `executeQuery` 接口观察事件和 DNS 输出；“部分修改后失败”使用可选 answer 产生超限候选响应来验证，而不是添加测试专用动作。旧 T4 用户扩展已由 #26 移除；正式 HTTP 回归通过基础动作、受控网络与运行时脱敏日志维持安全覆盖。
 
-## 受信任命名扩展（T4 / #11）
+## JSON-only 迁移（#26）
 
-注册表是随应用构建的代码，经 `options.extensions` 提供；不是另一套文件规则配置或回退。名称区分大小写，格式为 `[A-Za-z][A-Za-z0-9_]{0,63}`；条件与动作有独立命名空间，只能引用自有键，不能通过 `toString` 等原型属性找到函数。环境 JSON 只携带名称与 JSON 参数，不携带函数体；执行器不接受请求上传代码、不使用 `eval`、动态函数构造、动态模块加载或字符串执行。
+旧 #11 按旧规格完成的历史保留；本版本不再提供用户函数注册或执行：
 
-```js
-import { executeQuery, defineCondition, defineAction } from './src/index.js';
+| 旧入口 | 当前行为 / 迁移方式 |
+| --- | --- |
+| defineCondition / defineAction 导出 | 已删除；不要导入或注册函数 |
+| ExecutionOptions.extensions 及 ExtensionRegistry / ExtensionDefinition / ActionContext / ConditionContext / ConditionHandler / ActionHandler 类型 | 已删除；旧选项即使为空也报 INVALID_OPTIONS |
+| custom 条件及 CustomCondition 类型 | INVALID_CONFIG；使用字段比较、all/any/not、记录/地址集合量词 |
+| type: custom 动作 | INVALID_CONFIG；使用 answer、setTtl、rewriteQuery、queryUpstream、stop、return |
+| maxExtensionCalls / maxExtensionTimeMs | INVALID_CONFIG；从 DNS_LIMITS 删除，不再有扩展执行预算或扩展专属错误码 |
+| 任意网络、EDNS 注入、代码参数解析器、通用异步任务 | 不提供替代函数或字符串执行入口；未有基础动作支持的能力不能伪装已交付 |
 
-// 参数解析器必须同步且有界；抛错即 INVALID_EXTENSION_PARAMS。
-// 返回值必须可 structuredClone；不要返回函数、Promise 或平台 I/O 对象。
-function parseTtl(raw) {
-  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 0 || raw > 0xffffffff) {
-    throw new Error('Invalid TTL');
-  }
-  return raw;
-}
+旧引用在全量配置编译时失败：包括 return 后的规则、不匹配分支、逻辑短路后的条件、集合 where 以及未使用上游组的 accept。onError: continue 不能掩盖配置错误；未知 run、函数体和未知字段也不作为可执行配置。只接受明确支持的 JSON 结构，不 eval、不调用任意函数、不循环或竞速。
 
-const extensions = {
-  conditions: {
-    ttlAtLeast: defineCondition(parseTtl, (ctx, minimum) =>
-      ctx.response !== null && ctx.response.answers.some(rr => rr.ttl >= minimum)),
-  },
-  actions: {
-    setAnswerTtl: defineAction(parseTtl, async (ctx, ttl) => {
-      // 异步工作须 await；fetch 等可取消操作须使用 ctx.signal。
-      if (!ctx.response) throw new Error('A response is required');
-      for (const rr of ctx.response.answers) rr.ttl = ttl;
-    }),
-  },
-};
-
-const result = await executeQuery(queryWire, env, { extensions });
-```
-
-例如一个 `DNS_RULE_EXT` 环境变量（先由内置动作生成答案，再用命名条件选择、命名动作修改）：
+例如将“生成答案 → 自定义 TTL 判断/改写 → 返回”改为单个 DNS_RULE_JSON 环境变量的 JSON 值：
 
 ```json
 {
   "order": 0,
   "rules": [
-    { "actions": [{ "type": "answer", "records": [
-      { "name": "example.com", "type": "A", "ttl": 60, "rdata": { "A": { "addr": "192.0.2.1" } } }
-    ] }] },
+    { "actions": [
+      { "type": "answer", "records": [
+        { "name": "example.com", "type": "A", "ttl": 60, "rdata": { "A": { "addr": "192.0.2.1" } } }
+      ] },
+      { "type": "rewriteQuery", "name": "changed.example" }
+    ] },
     { "when": { "all": [
-      { "field": "query.type", "op": "eq", "value": "A" },
-      { "custom": { "name": "ttlAtLeast", "params": 60 } }
+      { "field": "query.name", "op": "eq", "value": "changed.example" },
+      { "field": "original.name", "op": "eq", "value": "example.com" },
+      { "collection": "response.records", "quantifier": "all", "where": {
+        "field": "item.ttl", "op": "gte", "value": 60
+      } }
     ] }, "actions": [
-      { "type": "custom", "name": "setAnswerTtl", "params": 30, "onError": "continue" },
+      { "type": "setTtl", "ttl": 23 },
       { "type": "return" }
     ] }
   ]
 }
 ```
 
-### 上下文、参数与提交
+对 example.com 的请求生成一条 TTL 23 的 A 答案；当前查询改写后可匹配，客户端 ID/Question/RD/CD 仍按原始请求收尾，无需上游或用户函数。匹配不隐式联网；queryUpstream 仍异步执行。每个基础动作使用独立候选 DNS 状态，失败不污染此前答案；网络已经发出和脱敏失败事件不会因回滚消失。迟到网络成功/拒绝不能提交到后续状态或其他请求。
 
-- `defineCondition(parseParams, run)` 和 `defineAction(parseParams, run)` 让参数解析结果类型传递给执行函数；`run` 可以同步或返回 Promise。解析器在全量配置预检时运行，未知名称和坏参数即使在不可达分支也失败，不能通过 `onError: continue` 隐藏。
-- 两类函数都读取 `query`（当前完整查询）、`response`（当前完整响应或 null）、`originalQuery`、`context`、`signal`。原始查询和受控匹配上下文在类型上只读；每次调用收到与引擎隔离的深复制，不会通过共享引用污染调用者、其他请求或后续规则。
-- 条件上下文的 query/response 也是深只读类型。条件只以严格 boolean 表达匹配，不能以字符串、数字、undefined 等真值替代。抛错、Promise 拒绝或非布尔结果产生脱敏错误并终止；`not` 不吞错，all/any 按顺序 await 并短路。集合 where 内的扩展额外读取当前 `item` 快照，顶层没有 item。
-- 参数在绑定时复制，在每次执行时再次复制。参数解析器保留对象或复用可变对象，不会让正常的参数修改跨调用传播。扩展仍须自行限制参数解析后的数据规模与工作量。
-- 动作的 query/response 是可写候选状态，可修改或替换；只在成功且查询/响应协议和预算校验通过后提交，再次复制避免已提交状态被保留引用改写。自定义动作不得设置认证声明或构造签名记录。无效中间状态不能等后面的动作修好；可选失败丢弃本动作所有候选 DNS 修改，先前成功动作保留，产生 `action_failed` 回滚事件，必需失败则终止。
-- 回滚不能撤销扩展已发出的请求、日志或其他外部副作用。执行器不向扩展传递 env、访问密钥、原始请求对象或日志接收器。
+executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEvent 作为可信宿主集成/诊断选项，onEvent 不是 DNS 条件/动作注册表，普通部署者无需编写回调。最近动作结果是 #27 待交付功能，本票不以旧响应冒充其结果，也不新增该接口。
 
-### 异步预算与信任边界
-
-`maxExtensionCalls` 累计本次执行实际尝试的自定义条件和动作（失败调用也计入，集合内每个调用各计一次），超限为 `RESOURCE_LIMIT`；自定义条件也计入既有条件步骤预算。T5 将 `maxExtensionTimeMs` 明确为本次请求内所有扩展调用的累计活动时间（包括扩展内部 await），不按调用重置，不把独立上游动作或 HTTP 读体时间误扣为扩展时间；这些时间仍受请求整体 maxExecutionTimeMs 限制。超时产生 `EXTENSION_TIMEOUT`，按条件错误或动作必需/可选失败规则处理；预算耗尽后可以继续内置动作，不能再次执行自定义函数。
-
-执行器 await 返回的 Promise，并在截止时间拒绝等待、丢弃候选状态、取消 `signal`、消费迟到拒绝；每次调用结束也取消 signal，以便扩展清理不再需要的 I/O。扩展必须将 signal 传给可取消 API，并 await 其全部工作。忽略取消的异步代码可能继续运行，但拿到的隔离引用不能修改已经提交的 DNS 状态。
-
-**这不是沙箱。** 部署者注册的函数、参数解析器及其闭包都是受信任代码，可以访问其自行导入的依赖或闭包中的权限；执行器不能阻止扩展自行保存数据、发起网络请求或使用全局状态。同步死循环、无限微任务链或长时间 CPU 工作会阻止计时器调度，不能仅靠 `Promise.race`/Promise 超时安全中止。Workers 时钟与平台 CPU 限制也不能作为精确的同步抢占计时器。部署者必须保证同步工作有界，并自行评估扩展的 CPU、内存、网络次数和外部副作用；本地 workerd 预算测试不证明任意扩展符合线上免费配额。
+回归映射：旧任意函数状态修改改用真实 answer 超限与 rewriteQuery 超限验证原子回滚；旧延迟函数改用受控上游的迟到成功/拒绝、取消及总 deadline；旧自定义匹配改用当前/原始字段和记录量词；旧签名/OPT 注入改用禁止配置及基础 TTL/查询改写的 DNSSEC 收尾。代码参数解析与恶意闭包专有测试随被删除能力撤除，不承诺不存在的用户代码沙箱。通用 DNS/ECH 库及其测试不变。
 
 ## 标准 DoH 网络入口（T5 / #12）
 
-正式入口是 `src/worker.js` 的默认 fetch 导出；代码组合可导入 `handleRequest(request, env, options?)`，把受信任扩展注册表及诊断选项传入同一执行器。`package.json` 也导出 `superdoh/worker`。Worker 不接受请求携带规则、函数或上游 URL，不读文件配置。只支持 HTTPS wire-format DoH，不提供历史 README 中的 JSON DNS、UI、竞速或文件配置功能。
+正式入口是 `src/worker.js` 的默认 fetch 导出；代码组合可导入 `handleRequest(request, env, options?)`，把可信取消、上下文及诊断选项传入同一执行器（不含用户注册表）。`package.json` 也导出 `superdoh/worker`。Worker 不接受请求携带规则、函数或上游 URL，不读文件配置。只支持 HTTPS wire-format DoH，不提供历史 README 中的 JSON DNS、UI、竞速或文件配置功能。
 
 ### 环境绑定与路径
 
@@ -408,11 +381,11 @@ const result = await executeQuery(queryWire, env, { extensions });
 
 ### 预算、清理和 DNSSEC
 
-maxExecutionTimeMs 覆盖认证之后的输入读取、执行器、扩展等待和网络响应读取；maxNetworkRequests 累计显式/默认上游尝试；upstreamTimeoutMs 限制一次上游的 headers 和 body 等待，并受共享总 deadline 约束。客户端 Request.signal 与可信调用方 options.signal 统一传播；可选单次上游超时不取消整个请求，但整体 deadline 耗尽不能被可选动作放宽。
+maxExecutionTimeMs 覆盖认证之后的输入读取、执行器和网络响应读取；maxNetworkRequests 累计显式/默认上游尝试；upstreamTimeoutMs 限制一次上游的 headers 和 body 等待，并受共享总 deadline 约束。客户端 Request.signal 与可信调用方 options.signal 统一传播；可选单次上游超时不取消整个请求，但整体 deadline 耗尽不能被可选动作放宽。
 
 结束、失败或取消时清理计时器和监听器，取消未消费 body/reader，消费迟到的 Promise 拒绝；取消本身不作为必须无限等待的工作。AbortSignal 是合作式取消，不能保证远端服务器立即停止，也不能抢占同步死循环。测试通过真实 workerd 验证 bounded wait、超限流无需等待 EOF 和取消结果；Node callback-service 对远端流 cancel 回调传播的可观测性有限，不用它声称远端所有资源已释放。
 
-上游响应先对应**当前出站查询**校验，再恢复**原始客户端问题**收尾。查询比较包含完整 flags 及 OPT/EDNS 参数；若出站 EDNS 被扩展改变，则不将为不同参数生成的响应 OPT 透传给原客户端；T6 显式采用扩展 RCODE 时的最小 OPT 重建例外见下文。未经业务改写的上游保留适用 AD/RRSIG；这只是保留可信上游的声明，本服务不执行 DNSSEC 密码学校验。TSIG/SIG0 消息认证不能在重新编码后沿用，统一移除。TTL 修改清 AD，并只移除覆盖真正被修改 RRset 的 RRSIG；保留未改动 RRset 的适用签名。自定义动作可原样继承上游 RRSIG/OPT，但不能新增或修改这些受保护记录；实际响应改写按保守策略清 AD、移除全部 RRSIG。提前 stop/return、可选回滚及 SERVFAIL 都不能绕过统一协议收尾。
+上游响应先对应**当前出站查询**校验，再恢复**原始客户端问题**收尾。查询比较包含完整 flags 及 OPT/EDNS 参数；收尾保留对出站 EDNS 差异的防御检查；当前基础 rewriteQuery 不改 EDNS。若未来动作改变出站 EDNS，则不将为不同参数生成的响应 OPT 透传给原客户端；T6 显式采用扩展 RCODE 时的最小 OPT 重建例外见下文。未经业务改写的上游保留适用 AD/RRSIG；这只是保留可信上游的声明，本服务不执行 DNSSEC 密码学校验。TSIG/SIG0 消息认证不能在重新编码后沿用，统一移除。TTL 修改清 AD，并只移除覆盖真正被修改 RRset 的 RRSIG；保留未改动 RRset 的适用签名。answer 不能注入 OPT/RRSIG/TSIG/SIG；queryUpstream 可保留适用上游记录，rewriteQuery 后的上游响应按保守策略清 AD、移除全部 RRSIG。提前 stop/return、可选回滚及 SERVFAIL 都不能绕过统一协议收尾。
 
 本地测试的默认网络边界为受控上游，不发真实公共解析请求；没有部署、没有公网或线上免费套餐 CPU/连接数验收。开发依赖的 npm audit 仍有 3 项 high 告警，本票未自动强制升级或以功能回归代替依赖安全验收。
 
@@ -454,7 +427,7 @@ maxExecutionTimeMs 覆盖认证之后的输入读取、执行器、扩展等待�
 
 `BACKUP_DOH_URL` 是由部署者另行配置的 Secret，值为完整 HTTPS DoH URL。每个上游只能指定 `url` 或 `urlSecret` 之一；含令牌/敏感路径的 URL 应使用 Secret 引用，不写在普通 JSON、源码或报告中。URL 校验与 T5 相同；Secret 绑定名、上游名、组名均为 `[A-Za-z][A-Za-z0-9_]{0,63}`，引用区分大小写，不从对象原型查找。
 
-组的 `members` 是非空、有序的命名上游引用。单成员即单上游策略；多成员严格顺序等待，不并发、不自动重试同一成员。数组显式重复成员意味着显式再次尝试，仍消耗网络预算。不接受未知字段或 `strategy: "race"`。两个命名表的所有条目、条件与扩展参数都预检，包括未使用组；规则中不可达的错误组引用同样报错，不在错误配置时返回自定义答案掩盖问题。
+组的 `members` 是非空、有序的命名上游引用。单成员即单上游策略；多成员严格顺序等待，不并发、不自动重试同一成员。数组显式重复成员意味着显式再次尝试，仍消耗网络预算。不接受未知字段或 `strategy: "race"`。两个命名表的所有条目及声明式条件都预检，包括未使用组；规则中不可达的错误组引用同样报错，不在错误配置时返回自定义答案掩盖问题。
 
 规则动作使用 `{ "type": "queryUpstream", "group": "standard" }`，不同规则可复用同一组。`DNS_DEFAULT_UPSTREAM_GROUP` 是可选组名字符串：无 group 的动作及流水线结束/stop 后的无响应查询使用该组；不自动选择命名表第一项。没有默认配置时，显式组动作仍可使用，直接执行器仍可返回 null，HTTP 入口映射 SERVFAIL。
 
@@ -466,14 +439,7 @@ maxExecutionTimeMs 覆盖认证之后的输入读取、执行器、扩展等待�
 
 不设置 `accept` 时仅采用有效 NOERROR/NXDOMAIN（完整 RCODE 0/3），包括 NODATA 与空答案；默认拒绝 SERVFAIL/REFUSED 和其他 RCODE。`accept` **替换**默认策略，而不是额外 AND：部署者可显式采用其他协议有效 RCODE。仅写“存在 A”不会同时约束 RCODE，如需同时要求 NOERROR，请用 `all` 明确组合。`response.rcode` 读取含 EDNS 扩展位的完整 0–4095 RCODE，不只读头部低四位。若查询的 EDNS 被改写而收尾需要清除不适用的上游 OPT，扩展 RCODE 不能随之丢失：原客户端带 OPT 时重建仅携带扩展 RCODE、原客户端 payload size 且无 DO/其他 flags/options 的最小 OPT；原客户端没有 OPT 时该结果不能安全表达，按 UPSTREAM_INVALID 让动作失败（默认路径为 SERVFAIL），绝不把 RCODE 16 等错误降为 NOERROR。
 
-`accept` 复用既有 Condition：all/any/not、字段与集合条件、`{ "custom": { "name": "registeredCondition", "params": ... } }` 均可用。函数通过既有 `defineCondition` 和 `ExecutionOptions.extensions.conditions` 在代码侧注册；无新增字符串代码执行机制。条件所见：
-
-- query：实际出站当前查询；originalQuery：原始客户端查询。
-- response：刚通过底层验证的**候选上游响应**，不是此前动作的当前响应。
-- context：此前已验证的客户端/边缘/地址属性；不隐式做地址归属联网。
-- 集合 custom 条件的 item：本次量词绑定的记录/地址。
-
-受信任判断函数每次取得独立快照及 AbortSignal，不能通过修改快照影响候选提交或后续成员；参数仍同步解析并完整预检，返回值必须是 boolean，可异步。普通 false 表示拒绝并回退；抛异常、非法返回、扩展超时不是 false，不继续向下一个上游隐瞒条件错误，而是让查询动作失败，由必需/可选策略处理。这不是不可信代码沙箱。
+`accept` 仅支持声明式 Condition：all/any/not、字段和集合条件，不再接受 custom 引用。query/original 字段分别读取实际出站查询和原始客户端查询；response 字段和集合读取刚通过协议验证的候选响应，不是此前提交的旧响应；客户端/边缘/地址属性来自已验证上下文，不隐式联网。量词逐项绑定，匹配不修改候选。条件 false 表示旧政策的拒绝；条件求值异常或资源耗尽则让查询动作失败，不伪装未命中。
 
 ### 顺序回退、诊断与预算
 
@@ -494,6 +460,6 @@ maxExecutionTimeMs 覆盖认证之后的输入读取、执行器、扩展等待�
 | maxUpstreamGroups | 16 | 64 | 命名组数 |
 | maxUpstreamMembers | 64 | 256 | 所有组的成员引用总数 |
 
-两个命名 JSON 表各受 maxGroupBytes（默认 5120），并与所有规则组**共同**累计 maxConfigBytes；采用条件与规则条件共同累计节点及正则程序预算，执行时共同累计步骤。Secret URL 另受单 URL 2048 字符及上游数量边界。maxNetworkRequests（默认 2）在全部成员、显式动作和默认查询间共享，失败也计数；若配置更长回退链，必须在硬上限内显式配置足够次数，不偷偷提升预算。maxExecutionTimeMs 不因成员/组/动作重置；upstreamTimeoutMs 覆盖单成员 headers/body；扩展调用次数/活动时间独立累计且受整体取消约束。
+两个命名 JSON 表各受 maxGroupBytes（默认 5120），并与所有规则组**共同**累计 maxConfigBytes；采用条件与规则条件共同累计节点及正则程序预算，执行时共同累计步骤。Secret URL 另受单 URL 2048 字符及上游数量边界。maxNetworkRequests（默认 2）在全部成员、显式动作和默认查询间共享，失败也计数；若配置更长回退链，必须在硬上限内显式配置足够次数，不偷偷提升预算。maxExecutionTimeMs 不因成员/组/动作重置；upstreamTimeoutMs 覆盖单成员 headers/body。
 
 未采用响应已完成有界读取；失败/迟到响应仍按 T5 取消未消费 body、释放计时器/监听器并消费迟到拒绝。合作式取消及本地受控上游测试不证明远端立即停止或线上免费 CPU/连接配额合格。本票没有部署或访问公共解析服务。
