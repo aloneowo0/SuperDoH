@@ -103,13 +103,13 @@ export function loadGroups(env, limits, configBudget = createConfigBudget(limits
         location.rule = ruleIndex;
         delete location.action;
         const r = fields(rawRule, ['when', 'actions']);
-        const when = r.when === undefined ? undefined : compileCondition(r.when, configBudget.node, limits, configBudget.pattern);
+        const when = r.when === undefined ? undefined : compileCondition(r.when, configBudget.node, limits, configBudget.pattern, 0, undefined, configBudget.list);
         if (!Array.isArray(r.actions) || r.actions.length === 0) throw new Error();
         actions += r.actions.length;
         within(actions, limits.maxActions, location);
         return { when, actions: r.actions.map((rawAction, actionIndex) => {
           location.action = actionIndex;
-          return action(rawAction, () => within(++records, limits.maxRecords, location), value => compileCondition(value, configBudget.node, limits, configBudget.pattern, 0, 'records'));
+          return action(rawAction, () => within(++records, limits.maxRecords, location), value => compileCondition(value, configBudget.node, limits, configBudget.pattern, 0, 'records', configBudget.list));
         }) };
       }) };
     } catch (error) {

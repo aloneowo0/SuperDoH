@@ -17,6 +17,7 @@ export type Action = ActionValue & { onError?: 'fail' | 'continue' };
 type Compare<F, V> = { field: F; op: 'eq' | 'ne'; value: V } | { field: F; op: 'in'; value: V[] };
 type Presence<F> = { field: F; op: 'exists'; value: boolean };
 type NamePredicate<F> = Compare<F, string> | Presence<F>
+  | { field: F; op: 'inList' | 'inListSuffix'; value: string }
   | { field: F; op: 'exact' | 'suffix' | 'subdomain' | 'wildcard' | 'regex'; value: string };
 type NumberPredicate<F> = Compare<F, number> | Presence<F>
   | { field: F; op: 'lt' | 'lte' | 'gt' | 'gte'; value: number };
@@ -112,3 +113,5 @@ export type AddressSourceConfig = ({ url: string; urlSecret?: never } | { urlSec
   /** Explicit reuse cap in seconds; zero (the default) disables shared caching. */
   cacheTtl?: number;
 };
+
+export type DomainListConfig = { domains: string[] } | (({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; refreshIntervalMs: number });

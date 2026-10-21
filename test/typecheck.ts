@@ -149,3 +149,7 @@ const invalidEnrichment: Action = { type: 'enrichAddresses', source: () => ({ as
 // @ts-expect-error Field mappings are paths, not executable selectors.
 const invalidMapping: import('../src/rules/types.js').AddressSourceFields = { ip: 'query.ip' };
 void [enrichment, addressSource, invalidEnrichment, invalidMapping];
+
+const listCondition: Condition = { field: 'query.name', op: 'inList', value: 'selected' };
+const domainList: import('../src/rules/types.js').DomainListConfig = { urlSecret: 'LIST_URL', format: 'text', refreshIntervalMs: 60000 };
+void [listCondition, domainList];

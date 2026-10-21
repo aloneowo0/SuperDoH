@@ -1,9 +1,15 @@
+import { upstreamName } from './values.js';
 import { within } from './limits.js';
 
 /** @param {import('./limits.js').Limits} limits */
 export function createConfigBudget(limits) {
   let bytes = 0, nodes = 0, patterns = 0;
+  /** @type {Set<string>} */
+  const listReferences = new Set();
   return {
+    listReferences,
+    /** @param {unknown} name */
+    list(name) { listReferences.add(upstreamName(name)); },
     /** @param {unknown} raw */
     parse(raw) {
       const text = typeof raw === 'string' ? raw : JSON.stringify(raw);

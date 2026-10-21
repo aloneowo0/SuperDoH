@@ -1,3 +1,4 @@
+import { loadDomainLists } from './rules/domain-lists.js';
 import { loadAddressSources } from './rules/address-sources.js';
 import { createAttribution } from './doh/attribution.js';
 import { editRecords } from './rules/records.js';
@@ -89,6 +90,7 @@ export async function executeQuery(queryWire, env, options = {}) {
     const sources = loadAddressSources(env, limits, configBudget);
     const enrich = createAttribution(limits, execution, spendNetwork);
     let properties = context;
+    const domainLists = loadDomainLists(env, limits, configBudget);
     const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
       for (const [ruleIndex, rule] of group.rules.entries()) {
@@ -103,6 +105,8 @@ export async function executeQuery(queryWire, env, options = {}) {
         }
       }
     }
+    for (const name of configBudget.listReferences) domainLists.resolve(name);
+    properties = { ...properties, lists: await domainLists.prepare(configBudget.listReferences, execution, spendNetwork) };
     /** @type {import('./rules/types.js').ActionResult | undefined} */
     let lastAction;
     let conditionSteps = 0;

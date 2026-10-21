@@ -1,3 +1,4 @@
+import { RuleError } from './errors.js';
 import { getRcode } from '../../lib/dns-wasm/index.js';
 import { within } from './limits.js';
 import { ip, cidr } from './ip.js';
@@ -51,13 +52,13 @@ function read(context, field) {
   const question = field.startsWith('original.') ? context.original : context.current;
   return field.endsWith('.type') ? question.rtype : domain(question.name);
 }
-/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} [depth] @param {string} [scope] @returns {Predicate} */
-export function compileCondition(value, countNode, limits, countPattern, depth = 0, scope) {
-  const predicate = compile(value, countNode, limits, countPattern, depth, scope);
+/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} [depth] @param {string} [scope] @param {(name: unknown) => void} [referenceList] @returns {Predicate} */
+export function compileCondition(value, countNode, limits, countPattern, depth = 0, scope, referenceList = () => {}) {
+  const predicate = compile(value, countNode, limits, countPattern, depth, scope, referenceList);
   return async context => { context.spend(); return predicate(context); };
 }
-/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} depth @param {string | undefined} scope @returns {Predicate} */
-function compile(value, countNode, limits, countPattern, depth, scope) {
+/** @param {unknown} value @param {() => void} countNode @param {import('./limits.js').Limits} limits @param {(size: number) => void} countPattern @param {number} depth @param {string | undefined} scope @param {(name: unknown) => void} referenceList @returns {Predicate} */
+function compile(value, countNode, limits, countPattern, depth, scope, referenceList) {
   countNode();
   within(depth, limits.maxConditionDepth);
   const v = fields(value, ['all', 'any', 'not', 'field', 'op', 'value', 'collection', 'quantifier', 'where']);
@@ -66,7 +67,7 @@ function compile(value, countNode, limits, countPattern, depth, scope) {
       fields(v, [key]);
       const children = v[key];
       if (!Array.isArray(children) || !children.length) throw new Error();
-      const parsed = children.map(child => compileCondition(child, countNode, limits, countPattern, depth + 1, scope));
+      const parsed = children.map(child => compileCondition(child, countNode, limits, countPattern, depth + 1, scope, referenceList));
       return async context => {
         for (const child of parsed) {
           const hit = await child(context);
@@ -79,14 +80,14 @@ function compile(value, countNode, limits, countPattern, depth, scope) {
   }
   if ('not' in v) {
     fields(v, ['not']);
-    const child = compileCondition(v.not, countNode, limits, countPattern, depth + 1, scope);
+    const child = compileCondition(v.not, countNode, limits, countPattern, depth + 1, scope, referenceList);
     return async context => !await child(context);
   }
   if ('collection' in v) {
     fields(v, ['collection', 'quantifier', 'where']);
     if (scope || (v.collection !== 'response.addresses' && v.collection !== 'response.records') || (v.quantifier !== 'any' && v.quantifier !== 'all')) throw new Error();
     const collection = v.collection;
-    const child = compileCondition(v.where, countNode, limits, countPattern, depth + 1, collection === 'response.records' ? 'records' : 'addresses');
+    const child = compileCondition(v.where, countNode, limits, countPattern, depth + 1, collection === 'response.records' ? 'records' : 'addresses', referenceList);
     return async context => {
       let seen = false;
       if (!context.response) return false;
@@ -120,6 +121,26 @@ function compile(value, countNode, limits, countPattern, depth, scope) {
   const available = { ...kinds, ...itemKinds };
   if (typeof v.field !== 'string' || !Object.hasOwn(available, v.field)) throw new Error();
   const field = v.field, kind = available[field], op = v.op;
+  if (kind === 'name' && (op === 'inList' || op === 'inListSuffix')) {
+    if (typeof v.value !== 'string') throw new Error();
+    referenceList(v.value);
+    const name = v.value;
+    return context => {
+      const list = context.properties.lists.get(name);
+      if (!list) throw new RuleError('DOMAIN_LIST_UNAVAILABLE', 'The domain list is unavailable.', { source: name });
+      if ('error' in list) throw list.error;
+      const actual = read(context, field);
+      if (typeof actual !== 'string') return false;
+      let candidate = actual;
+      while (true) {
+        context.spend();
+        if (list.domains.has(candidate)) return true;
+        if (op === 'inList' || candidate === '.') return false;
+        const dot = candidate.indexOf('.');
+        candidate = dot < 0 ? '.' : candidate.slice(dot + 1);
+      }
+    };
+  }
   if (op === 'exists') {
     if (typeof v.value !== 'boolean') throw new Error();
     return context => (read(context, field) !== undefined) === v.value;

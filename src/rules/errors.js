@@ -12,6 +12,10 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  DOMAIN_LIST_TIMEOUT: 'Domain list source request timed out.',
+  DOMAIN_LIST_UNAVAILABLE: 'The domain list is unavailable.',
+  DOMAIN_LIST_FAILED: 'Domain list source request failed.',
+  DOMAIN_LIST_INVALID: 'Invalid domain list source data.',
   ATTRIBUTION_TIMEOUT: 'Address attribution request timed out.',
   ATTRIBUTION_FAILED: 'Address attribution request failed.',
   ATTRIBUTION_INVALID: 'Invalid address attribution response.',

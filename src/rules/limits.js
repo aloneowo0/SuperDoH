@@ -1,6 +1,7 @@
 import { RuleError } from './errors.js';
 
 const defaults = Object.freeze({
+  maxDomainLists: 16, maxDomainListEntries: 4096, maxDomainListBytes: 262144, domainListTimeoutMs: 1500, maxDomainListStateBytes: 4194304,
   maxUpstreams: 16, maxAddressSources: 16, maxAttributionAddresses: 16, maxAttributionBytes: 16384, attributionTimeoutMs: 1500,
   maxNetworkRequests: 2, maxExecutionTimeMs: 3000, upstreamTimeoutMs: 1500,
   maxQueryBytes: 4096, maxResponseBytes: 16384, maxGroupBytes: 5120, maxConfigBytes: 65536,
@@ -8,6 +9,7 @@ const defaults = Object.freeze({
   maxConditionDepth: 16, maxConditionSteps: 8192, maxConditionValues: 128, maxPatternLength: 256, maxPatternInstructions: 4096, maxContextAddresses: 256,
 });
 const ceilings = Object.freeze({
+  maxDomainLists: 64, maxDomainListEntries: 65536, maxDomainListBytes: 2097152, domainListTimeoutMs: 10000, maxDomainListStateBytes: 16777216,
   maxUpstreams: 64, maxAddressSources: 64, maxAttributionAddresses: 256, maxAttributionBytes: 262144, attributionTimeoutMs: 10000,
   maxNetworkRequests: 16, maxExecutionTimeMs: 30000, upstreamTimeoutMs: 10000,
   maxQueryBytes: 65535, maxResponseBytes: 65535, maxGroupBytes: 65536, maxConfigBytes: 262144,
