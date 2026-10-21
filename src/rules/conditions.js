@@ -4,11 +4,13 @@ import { ip, cidr } from './ip.js';
 import { RE2JS } from 're2js';
 import { fields, domain, recordType, integer } from './values.js';
 
-/** @typedef {{ current: import('../../lib/dns-wasm/index.js').DnsQuestion, original: Readonly<import('../../lib/dns-wasm/index.js').DnsQuestion>, response: import('../../lib/dns-wasm/index.js').DnsMessage | null, spend: () => void, item?: Record<string, string | number | boolean>, properties: ReturnType<typeof import('./context.js').loadContext> }} MatchContext */
+/** @typedef {{ current: import('../../lib/dns-wasm/index.js').DnsQuestion, original: Readonly<import('../../lib/dns-wasm/index.js').DnsQuestion>, response: import('../../lib/dns-wasm/index.js').DnsMessage | null, spend: () => void, lastAction?: import('./types.js').ActionResult, item?: Record<string, string | number | boolean>, properties: ReturnType<typeof import('./context.js').loadContext> }} MatchContext */
 /** @typedef {(context: MatchContext) => boolean | Promise<boolean>} Predicate */
 const kinds = /** @type {Record<string, string>} */ ({
   'query.name': 'name', 'original.name': 'name', 'query.type': 'type', 'original.type': 'type',
   'response.exists': 'boolean', 'response.rcode': 'rcode',
+  'lastAction.success': 'boolean', 'lastAction.actionType': 'text', 'lastAction.code': 'text',
+  'lastAction.group': 'text', 'lastAction.rule': 'number', 'lastAction.action': 'number',
   ...Object.fromEntries(['client', 'edge'].flatMap(prefix => [
     [prefix + '.ip', 'ip'], [prefix + '.asn', 'number'],
     ...['country', 'region', 'city', 'colo'].map(field => [prefix + '.' + field, 'text']),
@@ -28,6 +30,15 @@ function scalar(kind, value) {
 }
 /** @param {MatchContext} context @param {string} field @returns {string | number | boolean | undefined} */
 function read(context, field) {
+  if (field.startsWith('lastAction.')) {
+    const result = context.lastAction;
+    if (field === 'lastAction.success') return result?.success;
+    if (field === 'lastAction.actionType') return result?.actionType;
+    if (field === 'lastAction.code') return result?.code;
+    if (field === 'lastAction.group') return result?.location.group;
+    if (field === 'lastAction.rule') return result?.location.rule;
+    return result?.location.action;
+  }
   if (field.startsWith('item.')) return context.item?.[field.slice(5)];
   if (field.startsWith('client.') || field.startsWith('edge.')) {
     const [prefix, key] = field.split('.');
@@ -174,7 +185,7 @@ function recordTarget(data) {
   if ('Https' in data) return data.Https.target;
   return undefined;
 }
-/** @param {Predicate | undefined} condition @param {MatchContext['current']} current @param {MatchContext['original']} original @param {MatchContext['response']} response @param {MatchContext['properties']} properties @param {() => void} spend */
-export function matches(condition, current, original, response, properties, spend) {
-  return condition ? condition({ current, original, response, properties, spend }) : true;
+/** @param {Predicate | undefined} condition @param {MatchContext['current']} current @param {MatchContext['original']} original @param {MatchContext['response']} response @param {MatchContext['properties']} properties @param {() => void} spend @param {MatchContext['lastAction']} [lastAction] */
+export function matches(condition, current, original, response, properties, spend, lastAction) {
+  return condition ? condition({ current, original, response, properties, spend, lastAction }) : true;
 }

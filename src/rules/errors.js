@@ -16,8 +16,6 @@ const messages = Object.freeze({
   INVALID_HTTP: 'Invalid DoH HTTP request.',
   EXECUTION_TIMEOUT: 'DNS execution deadline exceeded.',
   REQUEST_CANCELLED: 'DNS execution was cancelled.',
-  UPSTREAM_REJECTED: 'DNS upstream response did not meet the adoption condition.',
-  UPSTREAM_EXHAUSTED: 'No member of the DNS upstream group produced an acceptable response.',
   UPSTREAM_TIMEOUT: 'DNS upstream request timed out.',
   UPSTREAM_FAILED: 'DNS upstream request failed.',
   UPSTREAM_INVALID: 'Invalid DNS upstream response.',
@@ -81,15 +79,14 @@ export function createReporter(options) {
     writeEvent(Object.freeze({ event: 'execution_failed', level: 'error', requestId, location: error.location, code: error.code, message: error.message, disposition: 'terminated', rolledBack: false }));
     throw error;
   }
-  /** @param {RuleError} error @param {import('./types.js').Action['type']} [actionType] @param {boolean} [continued] @param {{ groupIndex: number, memberIndex: number, disposition: 'fallback' | 'exhausted' | 'terminated' }} [upstream] */
-  return (error, actionType, continued = false, upstream) => {
+  /** @param {RuleError} error @param {import('./types.js').Action['type']} [actionType] @param {boolean} [continued] */
+  return (error, actionType, continued = false) => {
     const safe = normalizeFailure(error);
     /** @type {import('./types.js').FailureEvent} */
     const event = Object.freeze({
-      event: upstream ? 'upstream_failed' : actionType ? 'action_failed' : 'execution_failed', level: 'error', requestId,
+      event: actionType ? 'action_failed' : 'execution_failed', level: 'error', requestId,
       location: safe.location, actionType, code: safe.code, message: safe.message,
-      reason: safe.reason, disposition: upstream?.disposition ?? (continued ? 'rolled_back_continue' : 'terminated'), rolledBack: continued,
-      ...(upstream ? { upstream: Object.freeze({ groupIndex: upstream.groupIndex, memberIndex: upstream.memberIndex }) } : {}),
+      reason: safe.reason, disposition: continued ? 'rolled_back_continue' : 'terminated', rolledBack: continued,
     });
     if (!observer) { writeEvent(event); return; }
     const fallback = () => {

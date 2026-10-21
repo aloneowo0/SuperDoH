@@ -1,5 +1,5 @@
 import { createConfigBudget } from './rules/config-budget.js';
-import { loadUpstreamGroups, queryGroup } from './doh/upstream-groups.js';
+import { loadUpstreams } from './doh/upstreams.js';
 import { createBudget } from './doh/budget.js';
 import { createUpstream } from './doh/upstream.js';
 import { parseQuery, finalizeResponse, invalidateResponse } from './doh/protocol.js';
@@ -78,29 +78,22 @@ export async function executeQuery(queryWire, env, options = {}) {
     /** @type {{ query: import('../lib/dns-wasm/index.js').DnsMessage, response: import('../lib/dns-wasm/index.js').DnsMessage | null }} */
     let state = { query: structuredClone(originalQuery), response: null };
     const configBudget = createConfigBudget(limits);
-    const upstreams = loadUpstreamGroups(env, limits, configBudget);
+    const upstreams = loadUpstreams(env, limits, configBudget);
     const transport = createUpstream(limits, execution);
     const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
       for (const [ruleIndex, rule] of group.rules.entries()) {
         for (const [actionIndex, action] of rule.actions.entries()) {
-          if (action.type !== 'queryUpstream' || action.group === undefined) continue;
-          try { upstreams.resolve(action.group); }
+          if (action.type !== 'queryUpstream') continue;
+          try { upstreams.resolve(action.upstream); }
           catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex }); }
         }
       }
     }
+    /** @type {import('./rules/types.js').ActionResult | undefined} */
+    let lastAction;
     let conditionSteps = 0;
     const spend = () => { execution.check(); within(++conditionSteps, limits.maxConditionSteps, location); };
-    /** @param {import('../lib/dns-wasm/index.js').DnsMessage} query @param {string} [groupName] */
-    const queryUpstream = async (query, groupName) => {
-      const group = upstreams.resolve(groupName);
-      return queryGroup(group, query, transport, async (condition, response) => {
-        return await matches(condition, query.questions[0], originalQuery.questions[0], response, context, spend);
-      }, (error, memberIndex, disposition) => {
-        if (group && group.index !== -1) report(failureAt(error, location), actionType, false, { groupIndex: group.index, memberIndex, disposition });
-      }, () => execution.check());
-    };
     /** @type {'completed' | 'stopped' | 'returned'} */
     let termination = 'completed';
     pipeline: for (const group of groups) {
@@ -110,7 +103,7 @@ export async function executeQuery(queryWire, env, options = {}) {
         location.rule = ruleIndex;
         delete location.action;
         actionType = undefined;
-        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend)) continue;
+        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend, lastAction)) continue;
         for (const [actionIndex, action] of rule.actions.entries()) {
           execution.check();
           location.action = actionIndex;
@@ -118,12 +111,13 @@ export async function executeQuery(queryWire, env, options = {}) {
           try {
             if (action.type === 'stop' || action.type === 'return') {
               if (action.type === 'return' && !state.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
+              lastAction = freeze({ success: true, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex } });
               termination = action.type === 'stop' ? 'stopped' : 'returned';
               break pipeline;
             }
             const candidate = structuredClone(state);
             if (action.type === 'queryUpstream') {
-              candidate.response = upstreamForClient(await queryUpstream(candidate.query, action.group), candidate.query, originalQuery);
+              candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query), candidate.query, originalQuery);
             } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
             } else if (action.type === 'setTtl') {
@@ -146,8 +140,10 @@ export async function executeQuery(queryWire, env, options = {}) {
               finalizeResponse(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
             }
             state = structuredClone(candidate);
+            lastAction = freeze({ success: true, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex } });
           } catch (error) {
             const failure = failureAt(error, location);
+            lastAction = freeze({ success: false, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex }, code: failure.code });
             if (action.onError !== 'continue') throw failure;
             // Discard candidate state; earlier successful actions remain committed.
             report(failure, action.type, true);
@@ -156,15 +152,9 @@ export async function executeQuery(queryWire, env, options = {}) {
       }
     }
     execution.check();
-    if (state.response === null && upstreams.hasDefault) {
-      actionType = undefined;
-      delete location.action;
-      delete location.rule;
-      delete location.group;
-      state.response = upstreamForClient(await queryUpstream(state.query), state.query, originalQuery);
-    }
-    const wire = state.response ? finalizeResponse(state.response, originalQuery, originalWire, limits.maxResponseBytes, location) : null;
-    return { termination, response: wire, originalQuery, query: state.query };
+    if (state.response === null) throw new RuleError('NO_RESPONSE', 'No DNS response was produced.');
+    const wire = finalizeResponse(state.response, originalQuery, originalWire, limits.maxResponseBytes, location);
+    return { termination, response: wire, originalQuery, query: state.query, lastAction };
   } catch (error) {
     const failure = failureAt(error, location);
     report(failure, actionType);

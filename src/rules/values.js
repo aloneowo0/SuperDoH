@@ -28,3 +28,9 @@ export function domain(value) {
   if (!normalized || normalized.length > 253 || normalized.split('.').some(label => !/^[a-z0-9_-]{1,63}$/.test(label))) throw new Error();
   return normalized;
 }
+
+/** @param {unknown} value @returns {string} */
+export function upstreamName(value) {
+  if (typeof value !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value)) throw new Error();
+  return value;
+}

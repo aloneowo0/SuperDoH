@@ -4,7 +4,7 @@ import type { Action, Condition } from '../src/rules/types.js';
 const when: Condition = { field: 'query.name', op: 'suffix', value: 'example.com' };
 const action: Action = { type: 'answer', records: [{ name: 'example.com', type: 'A', ttl: 60, rdata: { A: { addr: '192.0.2.1' } } }] };
 const result = await executeQuery(new Uint8Array(), { DNS_RULE_A: { order: 0, rules: [{ when, actions: [action] }] } });
-const response: Uint8Array | null = result.response;
+const response: Uint8Array = result.response;
 const termination: 'completed' | 'stopped' | 'returned' = result.termination;
 result.query.questions[0].name = 'changed.example';
 // @ts-expect-error The original query is deeply read-only.
@@ -20,7 +20,7 @@ executeQuery(new Uint8Array(), {}, {
   requestId: 'typed-request',
   onEvent(event) {
     const code: string = event.code;
-    const disposition: 'terminated' | 'rolled_back_continue' | 'fallback' | 'exhausted' = event.disposition;
+    const disposition: 'terminated' | 'rolled_back_continue' = event.disposition;
     // @ts-expect-error Event identity is immutable.
     event.requestId = 'changed';
     // @ts-expect-error Nested event locations are immutable.
@@ -68,18 +68,42 @@ executeQuery(new Uint8Array(), {}, { extensions: {} });
 type RemovedRegistry = import('../src/rules/types.js').ExtensionRegistry;
 void [defineCondition, defineAction, customWhen, customAction];
 
-const upstreamAction: Action = { type: 'queryUpstream', onError: 'continue' };
+const upstreamAction: Action = { type: 'queryUpstream', upstream: 'A', onError: 'continue' };
 const { handleRequest } = await import('../src/worker.js');
 const httpResponse: Promise<Response> = handleRequest(new Request('https://example.test/dns-query'), {}, { signal: new AbortController().signal });
 // @ts-expect-error Cancellation must be an actual AbortSignal.
 executeQuery(new Uint8Array(), {}, { signal: 'cancel' });
 void [upstreamAction, httpResponse];
 
-const groupQuery: Action = { type: 'queryUpstream', group: 'standard' };
-const sources: Record<string, import('../src/rules/types.js').UpstreamConfig> = { backup: { urlSecret: 'BACKUP_URL' } };
-const upstreamGroup: import('../src/rules/types.js').UpstreamGroupConfig = { members: ['backup'], accept: { field: 'response.rcode', op: 'eq', value: 0 } };
-// @ts-expect-error Group references must be names.
-const wrongGroup: Action = { type: 'queryUpstream', group: 1 };
+const namedQuery: Action = { type: 'queryUpstream', upstream: 'standard' };
+const sources: Record<string, import('../src/rules/types.js').UpstreamConfig> = { backup: { transport: 'https', urlSecret: 'BACKUP_URL' } };
+// @ts-expect-error Policy group types have been removed.
+type RemovedGroup = import('../src/rules/types.js').UpstreamGroupConfig;
+// @ts-expect-error Legacy policy selection is not a request action.
+const oldGroup: Action = { type: 'queryUpstream', group: 'standard' };
+// @ts-expect-error Requests must explicitly name their source.
+const missingSource: Action = { type: 'queryUpstream' };
 // @ts-expect-error An upstream cannot supply both URL sources.
-const ambiguousUpstream: import('../src/rules/types.js').UpstreamConfig = { url: 'https://test/', urlSecret: 'SECRET' };
-void [groupQuery, sources, upstreamGroup, wrongGroup, ambiguousUpstream];
+const ambiguousUpstream: import('../src/rules/types.js').UpstreamConfig = { transport: 'https', url: 'https://test/', urlSecret: 'SECRET' };
+// @ts-expect-error TCP is not implemented by this ticket.
+const unsupportedTransport: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', url: 'https://test/' };
+void [namedQuery, sources, oldGroup, missingSource, ambiguousUpstream, unsupportedTransport];
+
+const recent: Condition = { all: [
+  { field: 'lastAction.success', op: 'eq', value: false },
+  { field: 'lastAction.code', op: 'in', value: ['UPSTREAM_FAILED', 'UPSTREAM_TIMEOUT'] },
+  { field: 'lastAction.action', op: 'gte', value: 0 },
+] };
+if (result.lastAction) {
+  const success: boolean = result.lastAction.success;
+  // @ts-expect-error Action results cannot be changed by callers.
+  result.lastAction.success = false;
+  // @ts-expect-error Action locations are deeply read-only.
+  result.lastAction.location.action = 2;
+  void success;
+}
+// @ts-expect-error Last-action boolean conditions do not accept text values.
+const badResultCondition: Condition = { field: 'lastAction.success', op: 'eq', value: 'false' };
+// @ts-expect-error Runtime results are not caller-supplied state.
+executeQuery(new Uint8Array(), {}, { lastAction: { success: true } });
+void [recent, badResultCondition];

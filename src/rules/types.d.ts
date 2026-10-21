@@ -4,7 +4,7 @@ type ActionValue =
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number }
   | { type: 'stop' | 'return' }
-  | { type: 'queryUpstream'; group?: string }
+  | { type: 'queryUpstream'; upstream: string }
   | { type: 'rewriteQuery'; name?: string; queryType?: number | string };
 export type Action = ActionValue & { onError?: 'fail' | 'continue' };
 type Compare<F, V> = { field: F; op: 'eq' | 'ne'; value: V } | { field: F; op: 'in'; value: V[] };
@@ -19,9 +19,11 @@ type IpPredicate<F> = Compare<F, string> | Presence<F> | { field: F; op: 'cidr';
 type GlobalPredicate =
   | NamePredicate<'query.name' | 'original.name'>
   | TypePredicate<'query.type' | 'original.type'>
-  | NumberPredicate<'response.rcode' | 'client.asn' | 'edge.asn'>
+  | NumberPredicate<'response.rcode' | 'client.asn' | 'edge.asn' | 'lastAction.rule' | 'lastAction.action'>
   | TextPredicate<'client.country' | 'client.region' | 'client.city' | 'client.colo' | 'edge.country' | 'edge.region' | 'edge.city' | 'edge.colo'>
   | IpPredicate<'client.ip' | 'edge.ip'>
+  | TextPredicate<'lastAction.actionType' | 'lastAction.code' | 'lastAction.group'>
+  | Compare<'lastAction.success', boolean> | Presence<'lastAction.success'>
   | Compare<'response.exists', boolean> | Presence<'response.exists'>;
 type RecordPredicate = NamePredicate<'item.name'> | TypePredicate<'item.type'> | NumberPredicate<'item.ttl'>
   | Compare<'item.section', 'answer' | 'authority' | 'additional'> | Presence<'item.section'>;
@@ -35,16 +37,23 @@ export interface Rule { when?: Condition; actions: Action[] }
 export interface Group { name: string; order: number; rules: Array<{ when?: import('./conditions.js').Predicate; actions: Action[] }> }
 
 export type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
+export interface ActionResult {
+  readonly success: boolean;
+  readonly actionType: Action['type'];
+  readonly location: Readonly<{ group: string; rule: number; action: number }>;
+  readonly code?: string;
+}
 export interface ExecutionResult {
+  readonly lastAction?: ActionResult;
   termination: 'completed' | 'stopped' | 'returned';
-  /** null means no response; NOERROR/NXDOMAIN with no records still have wire bytes. */
-  response: Uint8Array | null;
+  /** All successful executions have a response, including empty DNS answers. */
+  response: Uint8Array;
   originalQuery: DeepReadonly<import('../../lib/dns-wasm/index.js').ParsedMessage>;
   query: import('../../lib/dns-wasm/index.js').DnsMessage;
 }
 
 export interface FailureEvent {
-  readonly event: 'action_failed' | 'execution_failed' | 'observer_failed' | 'upstream_failed';
+  readonly event: 'action_failed' | 'execution_failed' | 'observer_failed';
   readonly level: 'error';
   readonly requestId: string;
   readonly location: Readonly<{ group?: string; rule?: number; action?: number }>;
@@ -52,8 +61,7 @@ export interface FailureEvent {
   readonly code: string;
   readonly message: string;
   readonly reason?: FailureReason;
-  readonly disposition: 'terminated' | 'rolled_back_continue' | 'fallback' | 'exhausted';
-  readonly upstream?: Readonly<{ groupIndex: number; memberIndex: number }>;
+  readonly disposition: 'terminated' | 'rolled_back_continue';
   readonly rolledBack: boolean;
 }
 export interface NetworkAttributes {
@@ -76,5 +84,4 @@ export interface FailureReason {
   readonly message: string;
 }
 
-export type UpstreamConfig = { url: string; urlSecret?: never } | { urlSecret: string; url?: never };
-export interface UpstreamGroupConfig { members: string[]; accept?: Condition }
+export type UpstreamConfig = { transport: 'https' } & ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never });

@@ -10,6 +10,6 @@
     "logs": { "invocation_logs": false },
     "traces": { "enabled": false }
   }
-  // DNS_RULE_*, DNS_LIMITS and DNS_UPSTREAM are deployment environment bindings.
+  // DNS_RULE_*, DNS_LIMITS and DNS_UPSTREAMS are deployment environment bindings.
   // DNS_PATH_KEY is an optional Secret; never put its value in this file.
 }

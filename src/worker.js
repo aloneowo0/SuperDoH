@@ -113,7 +113,6 @@ export async function handleRequest(request, env, options = {}) {
     executionStarted = true;
     const result = await executeQuery(wire, env, { ...options, signal: budget.signal });
     executionStarted = false;
-    if (result.response === null) throw new RuleError('NO_UPSTREAM', 'No DNS upstream is configured.');
     return new Response(result.response, { headers: { 'Content-Type': mediaType, 'Cache-Control': 'no-store' } });
   } catch (error) {
     const failure = error instanceof HttpError ? new RuleError('INVALID_HTTP', 'Invalid DoH HTTP request.') : normalizeFailure(error);

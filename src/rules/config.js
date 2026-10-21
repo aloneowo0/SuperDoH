@@ -2,7 +2,7 @@ import { createConfigBudget } from './config-budget.js';
 import { within } from './limits.js';
 import { decodeRdata, encodeRdata, TYPES } from '../../lib/dns-wasm/index.js';
 import { RuleError, normalizeFailure } from './errors.js';
-import { object, fields, integer, domain, recordType } from './values.js';
+import { object, fields, integer, domain, recordType, upstreamName } from './values.js';
 import { compileCondition } from './conditions.js';
 export { domain, recordType } from './values.js';
 
@@ -54,9 +54,8 @@ function actionValue(value, countRecord) {
       if (v.name === undefined && v.queryType === undefined) throw new Error();
       return { type: 'rewriteQuery', name: v.name === undefined ? undefined : domain(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
     case 'queryUpstream':
-      fields(v, ['type', 'group']);
-      if (v.group !== undefined && (typeof v.group !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(v.group))) throw new Error();
-      return { type: 'queryUpstream', group: /** @type {string | undefined} */ (v.group) };
+      fields(v, ['type', 'upstream']);
+      return { type: 'queryUpstream', upstream: upstreamName(v.upstream) };
     case 'stop':
     case 'return':
       fields(v, ['type']);

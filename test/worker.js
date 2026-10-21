@@ -41,6 +41,16 @@ export default {
           if (!(error instanceof TypeError)) throw error;
         }
         result.query.questions[0].name = 'mutable.example';
+        if (result.lastAction) {
+          try {
+            // @ts-expect-error Public action results are immutable.
+            result.lastAction.success = false;
+          } catch (error) { if (!(error instanceof TypeError)) throw error; }
+          try {
+            // @ts-expect-error Nested action locations are immutable.
+            result.lastAction.location.action = 99;
+          } catch (error) { if (!(error instanceof TypeError)) throw error; }
+        }
       }
       if (request.headers.has('x-test-mutate-edns')) {
         const option = result.query.additional[0].rdata;
