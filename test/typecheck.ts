@@ -126,3 +126,15 @@ const unsafeCacheKey: Action = { type: 'queryUpstream', upstream: 'primary', cac
 // @ts-expect-error Cache flags are booleans, not strings.
 const badCacheFlag: Action = { type: 'setCache', read: 'yes' };
 void [cachePolicy, cacheAction, requestCache, unsafeCacheKey, badCacheFlag];
+
+const removeAAAA: Action = { type: 'removeRecords', where: { field: 'item.type', op: 'eq', value: 'AAAA' } };
+const replaceAddress: Action = { type: 'replaceRecords', where: { field: 'item.ip', op: 'cidr', value: '192.0.2.0/24' }, records: [] };
+const selectiveTtl: Action = { type: 'setTtl', ttl: 7, where: { field: 'item.section', op: 'eq', value: 'authority' } };
+const extraRecords: Action = { type: 'addRecords', section: 'additional', records: [] };
+// @ts-expect-error Deletion requires an explicit selector.
+const implicitRemoval: Action = { type: 'removeRecords' };
+// @ts-expect-error Record actions cannot carry user callbacks.
+const functionSelector: Action = { type: 'removeRecords', where: () => true };
+// @ts-expect-error Record section names are explicit.
+const invalidRecordSection: Action = { type: 'addRecords', section: 'header', records: [] };
+void [removeAAAA, replaceAddress, selectiveTtl, extraRecords, implicitRemoval, functionSelector, invalidRecordSection];

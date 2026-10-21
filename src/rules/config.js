@@ -32,11 +32,12 @@ function validateRecord(value) {
   if (!Object.hasOwn(data, 'Raw')) knownFields(data, decodeRdata(rtype, bytes));
   return { name: domain(rr.name), type: rtype, class: rr.class === undefined ? 1 : integer(rr.class, 65535), ttl: integer(rr.ttl, 0xffffffff), rdata: /** @type {import('../../lib/dns-wasm/index.js').Rdata} */ (data) };
 }
-/** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
-function action(value, countRecord) {
+/** @param {unknown} value @param {() => void} countRecord @param {(value: unknown) => import('./conditions.js').Predicate} compileSelector @returns {import('./types.js').CompiledAction} */
+function action(value, countRecord, compileSelector) {
   const { onError, ...body } = object(value);
   if (onError !== undefined && onError !== 'fail' && onError !== 'continue') throw new Error();
-  return { ...actionValue(body, countRecord), onError: onError ?? 'fail' };
+  const parsed = actionValue(body, countRecord);
+  return { ...parsed, onError: onError ?? 'fail', ...('where' in parsed && parsed.where !== undefined ? { selector: compileSelector(parsed.where) } : {}) };
 }
 /** @param {unknown} value @param {() => void} countRecord @returns {import('./types.js').Action} */
 function actionValue(value, countRecord) {
@@ -47,9 +48,22 @@ function actionValue(value, countRecord) {
       if (!Array.isArray(v.records)) throw new Error();
       return { type: 'answer', records: v.records.map(rr => { countRecord(); return validateRecord(rr); }), rcode: v.rcode === undefined ? 0 : integer(v.rcode, 15) };
     }
+    case 'removeRecords':
+      fields(v, ['type', 'where']);
+      if (v.where === undefined) throw new Error();
+      return { type: 'removeRecords', where: /** @type {import('./types.js').RecordCondition} */ (v.where) };
+    case 'addRecords':
+    case 'replaceRecords': {
+      fields(v, v.type === 'replaceRecords' ? ['type', 'section', 'records', 'where'] : ['type', 'section', 'records']);
+      if (v.type === 'replaceRecords' && v.where === undefined) throw new Error();
+      if (v.section !== undefined && !['answer', 'authority', 'additional'].includes(/** @type {string} */ (v.section))) throw new Error();
+      if (!Array.isArray(v.records)) throw new Error();
+      const common = { section: /** @type {import('./types.js').RecordSection} */ (v.section ?? 'answer'), records: v.records.map(rr => { countRecord(); return validateRecord(rr); }) };
+      return v.type === 'replaceRecords' ? { ...common, type: 'replaceRecords', where: /** @type {import('./types.js').RecordCondition} */ (v.where) } : { ...common, type: 'addRecords' };
+    }
     case 'setTtl':
-      fields(v, ['type', 'ttl']);
-      return { type: 'setTtl', ttl: integer(v.ttl, 0xffffffff) };
+      fields(v, ['type', 'ttl', 'where']);
+      return { type: 'setTtl', ttl: integer(v.ttl, 0xffffffff), where: /** @type {import('./types.js').RecordCondition | undefined} */ (v.where) };
     case 'rewriteQuery':
       fields(v, ['type', 'name', 'queryType']);
       if (v.name === undefined && v.queryType === undefined) throw new Error();
@@ -92,7 +106,7 @@ export function loadGroups(env, limits, configBudget = createConfigBudget(limits
         within(actions, limits.maxActions, location);
         return { when, actions: r.actions.map((rawAction, actionIndex) => {
           location.action = actionIndex;
-          return action(rawAction, () => within(++records, limits.maxRecords, location));
+          return action(rawAction, () => within(++records, limits.maxRecords, location), value => compileCondition(value, configBudget.node, limits, configBudget.pattern, 0, 'records'));
         }) };
       }) };
     } catch (error) {

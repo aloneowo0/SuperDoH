@@ -97,7 +97,7 @@ function compile(value, countNode, limits, countPattern, depth, scope) {
           if (collection === 'response.addresses' && !address) continue;
           seen = true;
           /** @type {Record<string, string | number | boolean>} */
-          const item = { name: domain(record.name), type: record.rtype, ttl: record.ttl, section };
+          const item = recordItem(record, section);
           if (collection === 'response.addresses' && address) {
             const key = ip(address).key;
             Object.assign(item, context.properties.addresses.get(key), { ip: key });
@@ -115,7 +115,7 @@ function compile(value, countNode, limits, countPattern, depth, scope) {
   }
   fields(v, ['field', 'op', 'value']);
   /** @type {Record<string, string>} */
-  const itemKinds = scope === 'addresses' ? { 'item.ip': 'ip', 'item.asn': 'number', 'item.country': 'text', 'item.region': 'text', 'item.city': 'text', 'item.name': 'name', 'item.type': 'type', 'item.ttl': 'number', 'item.section': 'section' } : scope === 'records' ? { 'item.name': 'name', 'item.type': 'type', 'item.target': 'name', 'item.ttl': 'number', 'item.section': 'section' } : {};
+  const itemKinds = scope === 'addresses' ? { 'item.ip': 'ip', 'item.asn': 'number', 'item.country': 'text', 'item.region': 'text', 'item.city': 'text', 'item.name': 'name', 'item.type': 'type', 'item.ttl': 'number', 'item.section': 'section' } : scope === 'records' ? { 'item.ip': 'ip', 'item.name': 'name', 'item.type': 'type', 'item.target': 'name', 'item.ttl': 'number', 'item.section': 'section' } : {};
   /** @type {Record<string, string>} */
   const available = { ...kinds, ...itemKinds };
   if (typeof v.field !== 'string' || !Object.hasOwn(available, v.field)) throw new Error();
@@ -185,6 +185,17 @@ function recordTarget(data) {
   if ('Https' in data) return data.Https.target;
   return undefined;
 }
+/** @param {import('../../lib/dns-wasm/index.js').DnsRecord} record @param {string} section */
+export function recordItem(record, section) {
+  /** @type {Record<string, string | number | boolean>} */
+  const item = { name: domain(record.name), type: record.rtype, ttl: record.ttl, section };
+  const address = 'A' in record.rdata ? record.rdata.A.addr : 'Aaaa' in record.rdata ? record.rdata.Aaaa.addr : undefined;
+  if (address) item.ip = ip(address).key;
+  const target = recordTarget(record.rdata);
+  if (target !== undefined) item.target = domain(target);
+  return item;
+}
+
 /** @param {Predicate | undefined} condition @param {MatchContext['current']} current @param {MatchContext['original']} original @param {MatchContext['response']} response @param {MatchContext['properties']} properties @param {() => void} spend @param {MatchContext['lastAction']} [lastAction] */
 export function matches(condition, current, original, response, properties, spend, lastAction) {
   return condition ? condition({ current, original, response, properties, spend, lastAction }) : true;

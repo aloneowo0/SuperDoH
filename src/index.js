@@ -1,3 +1,4 @@
+import { editRecords } from './rules/records.js';
 import { loadCachePolicy } from './rules/cache-policy.js';
 import { createConfigBudget } from './rules/config-budget.js';
 import { loadUpstreams } from './doh/upstreams.js';
@@ -126,17 +127,8 @@ export async function executeQuery(queryWire, env, options = {}) {
               nextCache = { ...cache, ...policy };
             } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
-            } else if (action.type === 'setTtl') {
-              if (!candidate.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
-              /** @type {import('../lib/dns-wasm/index.js').DnsQuestion[]} */
-              const changed = [];
-              for (const records of [candidate.response.answers, candidate.response.authority, candidate.response.additional]) {
-                for (const rr of records) if (rr.rtype !== TYPES.OPT && rr.rtype !== TYPES.RRSIG && rr.rtype !== 24 && rr.ttl !== action.ttl) {
-                  changed.push({ name: rr.name, rtype: rr.rtype, class: rr.class });
-                  rr.ttl = action.ttl;
-                }
-              }
-              if (changed.length) candidate.response = invalidateResponse(candidate.response, changed);
+            } else if (action.type === 'removeRecords' || action.type === 'replaceRecords' || action.type === 'addRecords' || action.type === 'setTtl') {
+              candidate.response = await editRecords(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties: context, spend, lastAction }, limits, location);
             } else if (action.type === 'rewriteQuery') {
               if (action.name !== undefined) candidate.query.questions[0].name = action.name;
               if (action.queryType !== undefined) candidate.query.questions[0].rtype = recordType(action.queryType);

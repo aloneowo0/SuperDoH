@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #15、#26–#29）
+# 环境变量规则执行器（JSON-only / #15–#16、#26–#29）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -294,7 +294,7 @@ T2 回归通过同一公开 `executeQuery` 接口观察事件和 DNS 输出；�
 | defineCondition / defineAction 导出 | 已删除；不要导入或注册函数 |
 | ExecutionOptions.extensions 及 ExtensionRegistry / ExtensionDefinition / ActionContext / ConditionContext / ConditionHandler / ActionHandler 类型 | 已删除；旧选项即使为空也报 INVALID_OPTIONS |
 | custom 条件及 CustomCondition 类型 | INVALID_CONFIG；使用字段比较、all/any/not、记录/地址集合量词 |
-| type: custom 动作 | INVALID_CONFIG；使用 answer、setTtl、rewriteQuery、queryUpstream、stop、return |
+| type: custom 动作 | INVALID_CONFIG；使用 answer、setTtl、addRecords、removeRecords、replaceRecords、setCache、rewriteQuery、queryUpstream、stop、return |
 | maxExtensionCalls / maxExtensionTimeMs | INVALID_CONFIG；从 DNS_LIMITS 删除，不再有扩展执行预算或扩展专属错误码 |
 | 任意网络、EDNS 注入、代码参数解析器、通用异步任务 | 不提供替代函数或字符串执行入口；未有基础动作支持的能力不能伪装已交付 |
 
@@ -561,3 +561,58 @@ Cache API 读写、摘要及读取 body 共用执行总 deadline；实际出站�
 测试使用真实 workerd 的公开 DoH HTTP 入口、出站次数、受控 HTTP Age 和有界实际等待验证 TTL/过期；另有真实本地 TCP/TLS 命中及 TLS 身份变化测试。协议预算回归显式关闭缓存，避免把命中误认为真实网络覆盖。未添加测试专用生产时钟/缓存注入 API；这些本地测试不是线上免费 CPU、生产 Cache API 可达性或公网证书互操作验收。
 
 参考：[Workers Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/)、[本地缓存边界](https://developers.cloudflare.com/workers/reference/how-the-cache-works/)。
+
+
+## JSON 通用记录改写（#16）
+
+所有记录编辑要求已有当前响应；从头生成答案继续使用 answer。动作失败统一进入 NO_RESPONSE / INVALID_STATE / RESOURCE_LIMIT 等脱敏失败契约；onError:continue 仅丢弃本次编辑候选，不污染此前答案、原始查询或原始上游缓存。
+
+| 动作 | 参数 | 行为 |
+| --- | --- | --- |
+| addRecords | records，section? | 向指定节追加一次原生记录列表，默认 answer；空列表不改数据 |
+| removeRecords | where | 删除全部命中记录；必须显式选择，不存在隐式全删 |
+| replaceRecords | where，records，section? | 有命中时删除所有命中记录，并向指定节追加列表**一次**；无命中不插入；空列表等同删除 |
+| setTtl | ttl，where? | 未指定 where 时沿用全普通记录 TTL 编辑；指定时仅调整命中普通记录 |
+
+section 为 answer / authority / additional。records 使用与 answer 相同的原生记录模型、未知类型 Raw 表达和严格原生字段校验。列表中的名称必须明确填写，不插值、不调用函数、不额外解析目标。移动或替换不自动推导其他记录、补全 CNAME 链、合成 SOA 或查询另一个来源。
+
+### 选择器与后续条件
+
+where 使用同一有界 all/any/not、比较、域名、RE2 正则与 IP CIDR 条件语法，作用于每条记录：
+
+- item.name：记录所有者；item.target：明确的 CNAME/DNAME/NS/PTR/MX/SRV/SVCB/HTTPS 目标，与查询域名分离。
+- item.type / item.ttl / item.section：记录类型、TTL、所在节。
+- item.ip：仅 A/AAAA 有值，不隐式查询 ASN 或地理信息；也可用于 response.records 的 where。
+- query.* / original.* / response.rcode 等全局字段仍读取当前执行上下文；不支持在记录选择器内再嵌套集合量化。
+
+每次编辑先选择，再修改其候选记录；后续规则读取改写后的当前响应。所有动作选择器在完整配置预检中编译，共享条件节点、正则与运行步骤预算，不绕过 maxRecords/maxResponseBytes/执行 deadline。没有选择器的旧 setTtl 不新增条件求值费用。
+
+```json
+{
+  "order": 0,
+  "rules": [{
+    "actions": [
+      { "type": "queryUpstream", "upstream": "primary" },
+      { "type": "removeRecords", "where": { "field": "item.type", "op": "eq", "value": "AAAA" } },
+      {
+        "type": "replaceRecords",
+        "where": { "field": "item.ip", "op": "cidr", "value": "192.0.2.0/24" },
+        "records": [{ "name": "example.com", "type": "A", "ttl": 30, "rdata": { "A": { "addr": "203.0.113.7" } } }]
+      },
+      { "type": "setTtl", "ttl": 10, "where": { "field": "item.section", "op": "eq", "value": "answer" } }
+    ]
+  }]
+}
+```
+
+删除 NOERROR 响应的全部 AAAA 后保留 NOERROR/NODATA，而不谎报 NXDOMAIN，也不自动联网；已有 authority/additional/适用 OPT 保留。要动态决定新记录名称或地址，必须等待有明确基础动作支持，不能把示例静态记录当变量模板。
+
+### DNSSEC、保护记录与输出
+
+实际添加、删除、替换及 TTL 改动清除 AD，并按被删除/加入/修改的 name/type/class RRset 删除相关 RRSIG；未涉及的记录、签名及 EDNS 信息继续保留。replaceRecords 对命中 RRset 按显式替换处理，保守使其相关签名失效，不声称验证新内容的密码学等价性。无命中编辑、空添加、相同 TTL 不使原签名无故失效。
+
+不能直接添加/替换 OPT、RRSIG、TSIG、SIG 保护记录；removeRecords/replaceRecords 选中它们属于动作失败，不悄悄删除。setTtl 一贯跳过它们，OPT 的 ttl 不是记录存活时间。这里只提供普通记录编辑，**未提供 EDNS 写入动作**；已有完整扩展 RCODE 在记录编辑后仍保留。
+
+编辑在独立候选响应中进行，动作后的记录/大小校验、正常结束、return、stop 均走同一协议收尾。超限的可选添加/替换不会留下部分新增或删除，必需失败终止。上游缓存仍保存改写前数据，不因一次调用的编辑被污染。
+
+公开 DoH/workerd 回归覆盖原生 CNAME、地址选择、TXT/不透明记录和三个节、AAAA NODATA、后续条件可见、RRSIG/AD/扩展 RCODE、可选回滚、不可达配置预检、预算及真实原始缓存隔离；不增加用户函数、循环、隐式请求或部署。

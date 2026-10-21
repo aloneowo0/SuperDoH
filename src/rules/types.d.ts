@@ -1,9 +1,13 @@
 import type { DnsRecord } from '../../lib/dns-wasm/index.js';
 export type RecordConfig = Omit<DnsRecord, 'rtype' | 'class' | 'data'> & { type: string | number; class?: number };
 export interface CachePolicy { read: boolean; write: boolean; maxTtl: number; }
+export type RecordSection = 'answer' | 'authority' | 'additional';
 type ActionValue =
+  | { type: 'replaceRecords'; where: RecordCondition; section?: RecordSection; records: RecordConfig[] }
+  | { type: 'removeRecords'; where: RecordCondition }
+  | { type: 'addRecords'; section?: RecordSection; records: RecordConfig[] }
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
-  | { type: 'setTtl'; ttl: number }
+  | { type: 'setTtl'; ttl: number; where?: RecordCondition }
   | { type: 'stop' | 'return' }
   | { type: 'queryUpstream'; upstream: string; cache?: Partial<CachePolicy> }
   | ({ type: 'setCache' } & Partial<CachePolicy>)
@@ -29,14 +33,15 @@ type GlobalPredicate =
   | Compare<'response.exists', boolean> | Presence<'response.exists'>;
 type RecordPredicate = NamePredicate<'item.name'> | TypePredicate<'item.type'> | NumberPredicate<'item.ttl'>
   | Compare<'item.section', 'answer' | 'authority' | 'additional'> | Presence<'item.section'>;
-export type RecordCondition = { all: RecordCondition[] } | { any: RecordCondition[] } | { not: RecordCondition } | GlobalPredicate | RecordPredicate | NamePredicate<'item.target'>;
+export type RecordCondition = { all: RecordCondition[] } | { any: RecordCondition[] } | { not: RecordCondition } | GlobalPredicate | RecordPredicate | NamePredicate<'item.target'> | IpPredicate<'item.ip'>;
 export type AddressCondition = { all: AddressCondition[] } | { any: AddressCondition[] } | { not: AddressCondition } | GlobalPredicate | RecordPredicate
   | IpPredicate<'item.ip'> | NumberPredicate<'item.asn'> | TextPredicate<'item.country' | 'item.region' | 'item.city'>;
 export type Condition = { all: Condition[] } | { any: Condition[] } | { not: Condition } | GlobalPredicate
   | { collection: 'response.records'; quantifier: 'any' | 'all'; where: RecordCondition }
   | { collection: 'response.addresses'; quantifier: 'any' | 'all'; where: AddressCondition };
 export interface Rule { when?: Condition; actions: Action[] }
-export interface Group { name: string; order: number; rules: Array<{ when?: import('./conditions.js').Predicate; actions: Action[] }> }
+export interface Group { name: string; order: number; rules: Array<{ when?: import('./conditions.js').Predicate; actions: CompiledAction[] }> }
+export type CompiledAction = Action & { selector?: import('./conditions.js').Predicate };
 
 export type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
 export interface ActionResult {
