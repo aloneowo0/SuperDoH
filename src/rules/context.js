@@ -24,6 +24,8 @@ export function loadContext(raw, limits) {
     const value = raw === undefined ? {} : fields(raw, ['client', 'edge', 'addresses']);
     /** @type {Map<string, import('./types.js').NetworkAttributes>} */
     const addresses = new Map();
+    /** @type {NonNullable<import('./types.js').MatchingContext['addresses']>} */
+    const snapshotAddresses = {};
     if (value.addresses !== undefined) {
       const entries = Object.entries(object(value.addresses));
       within(entries.length, limits.maxContextAddresses);
@@ -31,14 +33,14 @@ export function loadContext(raw, limits) {
         const key = ip(address).key;
         if (addresses.has(key)) throw new Error();
         fields(rawAttributes, ['asn', 'country', 'region', 'city']);
-        addresses.set(key, attributes(rawAttributes));
+        const attrs = attributes(rawAttributes);
+        addresses.set(key, attrs);
+        snapshotAddresses[address] = attrs;
       }
     }
-    return {
-      addresses,
-      client: value.client === undefined ? {} : attributes(value.client),
-      edge: value.edge === undefined ? {} : attributes(value.edge),
-    };
+    const client = value.client === undefined ? {} : attributes(value.client);
+    const edge = value.edge === undefined ? {} : attributes(value.edge);
+    return { addresses, client, edge, snapshot: { client, edge, addresses: snapshotAddresses } };
   } catch (error) {
     if (error instanceof RuleError) throw error;
     throw new RuleError('INVALID_CONTEXT', 'Invalid matching context.');

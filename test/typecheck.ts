@@ -3,7 +3,7 @@ import type { Action, Condition } from '../src/rules/types.js';
 
 const when: Condition = { field: 'query.name', op: 'suffix', value: 'example.com' };
 const action: Action = { type: 'answer', records: [{ name: 'example.com', type: 'A', ttl: 60, rdata: { A: { addr: '192.0.2.1' } } }] };
-const result = executeQuery(new Uint8Array(), { DNS_RULE_A: { order: 0, rules: [{ when, actions: [action] }] } });
+const result = await executeQuery(new Uint8Array(), { DNS_RULE_A: { order: 0, rules: [{ when, actions: [action] }] } });
 const response: Uint8Array | null = result.response;
 const termination: 'completed' | 'stopped' | 'returned' = result.termination;
 result.query.questions[0].name = 'changed.example';
@@ -20,7 +20,7 @@ executeQuery(new Uint8Array(), {}, {
   requestId: 'typed-request',
   onEvent(event) {
     const code: string = event.code;
-    const disposition: 'terminated' | 'rolled_back_continue' = event.disposition;
+    const disposition: 'terminated' | 'rolled_back_continue' | 'fallback' | 'exhausted' = event.disposition;
     // @ts-expect-error Event identity is immutable.
     event.requestId = 'changed';
     // @ts-expect-error Nested event locations are immutable.
@@ -55,3 +55,60 @@ const wrongComparison: Condition = { field: 'client.country', op: 'gt', value: 1
 // @ts-expect-error Numeric membership cannot contain booleans.
 const wrongMember: Condition = { field: 'client.asn', op: 'in', value: [true] };
 void [networkCondition, unboundItem, wrongScope, wrongComparison, wrongMember];
+
+const { defineCondition, defineAction } = await import('../src/index.js');
+const customWhen: Condition = { custom: { name: 'minimumTtl', params: { ttl: 10 } } };
+const customAction: Action = { type: 'custom', name: 'setTtl', params: 30, onError: 'continue' };
+const customResult: Promise<import('../src/rules/types.js').ExecutionResult> = executeQuery(new Uint8Array(), {}, { extensions: {
+  conditions: {
+    minimumTtl: defineCondition((params: unknown) => {
+      if (typeof params !== 'number') throw new Error();
+      return params;
+    }, async (ctx, minimum) => {
+      const n: number = minimum;
+      const signal: AbortSignal = ctx.signal;
+      // @ts-expect-error Conditions cannot write the current query.
+      ctx.query.questions[0].name = 'bad.example';
+      if (ctx.response) {
+        // @ts-expect-error Conditions cannot mutate answer records.
+        ctx.response.answers[0].ttl = 1;
+      }
+      // @ts-expect-error Original data is deeply readonly.
+      ctx.originalQuery.questions[0].name = 'bad.example';
+      void signal;
+      return (ctx.response?.answers[0]?.ttl ?? 0) >= n;
+    }),
+  },
+  actions: {
+    setTtl: defineAction((params: unknown) => {
+      if (typeof params !== 'number') throw new Error();
+      return params;
+    }, async (ctx, ttl) => {
+      ctx.query.questions[0].name = 'allowed.example';
+      if (ctx.response) ctx.response.answers[0].ttl = ttl;
+      // @ts-expect-error Actions cannot mutate original data.
+      ctx.originalQuery.questions[0].name = 'bad.example';
+      // @ts-expect-error Matching context is not writable action state.
+      ctx.context.client.asn = 1;
+    }),
+  },
+} });
+// @ts-expect-error Condition functions must return booleans, not truthy values.
+defineCondition(() => 1, () => 'yes');
+void [customWhen, customAction, customResult];
+
+const upstreamAction: Action = { type: 'queryUpstream', onError: 'continue' };
+const { handleRequest } = await import('../src/worker.js');
+const httpResponse: Promise<Response> = handleRequest(new Request('https://example.test/dns-query'), {}, { signal: new AbortController().signal });
+// @ts-expect-error Cancellation must be an actual AbortSignal.
+executeQuery(new Uint8Array(), {}, { signal: 'cancel' });
+void [upstreamAction, httpResponse];
+
+const groupQuery: Action = { type: 'queryUpstream', group: 'standard' };
+const sources: Record<string, import('../src/rules/types.js').UpstreamConfig> = { backup: { urlSecret: 'BACKUP_URL' } };
+const upstreamGroup: import('../src/rules/types.js').UpstreamGroupConfig = { members: ['backup'], accept: customWhen };
+// @ts-expect-error Group references must be names.
+const wrongGroup: Action = { type: 'queryUpstream', group: 1 };
+// @ts-expect-error An upstream cannot supply both URL sources.
+const ambiguousUpstream: import('../src/rules/types.js').UpstreamConfig = { url: 'https://test/', urlSecret: 'SECRET' };
+void [groupQuery, sources, upstreamGroup, wrongGroup, ambiguousUpstream];

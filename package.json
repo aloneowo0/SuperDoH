@@ -7,16 +7,19 @@
     "typecheck": "tsc --noEmit",
     "test:rules": "node --test test/rules.mjs",
     "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs",
-    "test": "npm run typecheck && npm run test:rules && npm run test:libraries"
+    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:libraries",
+    "test:doh": "node --test test/doh.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",
     "esbuild": "0.28.2",
     "miniflare": "4.20260730.0",
-    "typescript": "~5.9.3"
+    "typescript": "~5.9.3",
+    "wrangler": "4.151.3"
   },
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./worker": "./src/worker.js"
   },
   "dependencies": {
     "re2js": "2.8.8"

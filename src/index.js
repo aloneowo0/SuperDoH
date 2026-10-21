@@ -1,10 +1,17 @@
+import { createConfigBudget } from './rules/config-budget.js';
+import { loadUpstreamGroups, queryGroup } from './doh/upstream-groups.js';
+import { createBudget } from './doh/budget.js';
+import { createUpstream } from './doh/upstream.js';
+import { parseQuery, finalizeResponse, invalidateResponse } from './doh/protocol.js';
+import { createExtensionRunner } from './rules/extensions.js';
+export { defineCondition, defineAction } from './rules/extensions.js';
 import { loadLimits, within } from './rules/limits.js';
 import { RuleError, createReporter, normalizeFailure } from './rules/errors.js';
 export { RuleError } from './rules/errors.js';
-import { loadGroups, recordType, domain } from './rules/config.js';
+import { loadGroups, recordType, domain, validateRecord } from './rules/config.js';
 import { matches } from './rules/conditions.js';
 import { loadContext } from './rules/context.js';
-import { buildResponse, parseMessage, encodeMessage, matchResponse, TYPES, FLAGS, getEdns } from '../lib/dns-wasm/index.js';
+import { buildResponse, parseMessage, encodeMessage, getRcode, TYPES, FLAGS } from '../lib/dns-wasm/index.js';
 
 /** @template T @param {T} value @returns {T} */
 function freeze(value) {
@@ -14,72 +21,129 @@ function freeze(value) {
   }
   return value;
 }
-/**
- * Validate a response without changing live action state.
- * @param {import('../lib/dns-wasm/index.js').DnsMessage} response
- * @param {import('../lib/dns-wasm/index.js').ParsedMessage} original
- * @param {Uint8Array} originalWire
- * @param {number} maximum
- * @param {import('./rules/errors.js').Location} location
- */
-function responseWire(response, original, originalWire, maximum, location) {
-  const output = structuredClone(response);
-  output.id = original.id;
-  output.questions = original.questions.map(q => ({ ...q }));
-  output.flags = (output.flags & ~(FLAGS.AD | FLAGS.RD | FLAGS.CD)) | (original.flags & (FLAGS.RD | FLAGS.CD));
-  const wire = encodeMessage(output);
-  within(wire.byteLength, maximum, location);
-  matchResponse(wire, originalWire);
-  return wire;
-}
 /** @param {unknown} error @param {import('./rules/errors.js').Location} location */
 function failureAt(error, location) {
   return normalizeFailure(error, location);
 }
+/** @param {import('../lib/dns-wasm/index.js').DnsMessage} a @param {import('../lib/dns-wasm/index.js').DnsMessage} b */
+function sameQuery(a, b) {
+  const first = a.questions[0], second = b.questions[0];
+  return domain(first.name) === domain(second.name) && first.rtype === second.rtype && first.class === second.class && a.flags === b.flags && JSON.stringify(a.additional) === JSON.stringify(b.additional);
+}
+/** @param {import('../lib/dns-wasm/index.js').DnsMessage} response @param {import('../lib/dns-wasm/index.js').DnsMessage} current @param {import('../lib/dns-wasm/index.js').DnsMessage} original */
+function upstreamForClient(response, current, original) {
+  if (sameQuery(current, original)) return response;
+  const result = invalidateResponse(response);
+  // Do not pass through EDNS metadata produced for different client options.
+  if (JSON.stringify(current.additional) !== JSON.stringify(original.additional)) {
+    const rcode = getRcode(result);
+    result.additional = result.additional.filter(rr => rr.rtype !== TYPES.OPT);
+    if (rcode > 15) {
+      const clientOpt = original.additional.find(rr => rr.rtype === TYPES.OPT);
+      if (!clientOpt) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response cannot be represented for this query.');
+      // Preserve the response code, never options or flags from the rewritten query.
+      result.additional.push({ name: '.', rtype: TYPES.OPT, class: clientOpt.class, ttl: (rcode >>> 4) * 0x1000000, rdata: { Opt: { options: [] } } });
+    }
+  }
+  return result;
+}
+/** @param {import('../lib/dns-wasm/index.js').DnsMessage} candidate @param {import('../lib/dns-wasm/index.js').DnsMessage | null} previous */
+function validateProtectedRecords(candidate, previous) {
+  const sections = /** @type {const} */ (['answers', 'authority', 'additional']);
+  const protectedType = (/** @type {number} */ type) => [TYPES.OPT, TYPES.RRSIG, 24, TYPES.TSIG].includes(type);
+  for (const section of sections) {
+    const remaining = new Map();
+    for (const record of previous?.[section] ?? []) {
+      if (!protectedType(record.rtype)) continue;
+      const key = JSON.stringify(record);
+      remaining.set(key, (remaining.get(key) ?? 0) + 1);
+    }
+    for (const record of candidate[section]) {
+      if (!protectedType(record.rtype)) continue;
+      const key = JSON.stringify(record), count = remaining.get(key) ?? 0;
+      if (!count) throw new Error();
+      remaining.set(key, count - 1);
+    }
+  }
+}
 /**
- * Execute environment rules without network access.
+ * Execute environment rules; only trusted extensions may perform explicit I/O.
  * @param {Uint8Array} queryWire
  * @param {Record<string, unknown>} env
  * @param {import('./rules/types.js').ExecutionOptions} [options]
- * @returns {import('./rules/types.js').ExecutionResult}
+ * @returns {Promise<import('./rules/types.js').ExecutionResult>}
  */
-export function executeQuery(queryWire, env, options = {}) {
+export async function executeQuery(queryWire, env, options = {}) {
   const report = createReporter(options);
   /** @type {import('./rules/types.js').Action['type'] | undefined} */
   let actionType;
   /** @type {import('./rules/errors.js').Location} */
   const location = {};
+  /** @type {ReturnType<typeof createBudget> | undefined} */
+  let budget;
   try {
     const limits = loadLimits(env.DNS_LIMITS);
+    budget = createBudget(limits.maxExecutionTimeMs, options.signal);
+    const execution = budget;
+    execution.check();
+    const runExtension = createExtensionRunner(limits, execution.signal);
     const context = loadContext(options.context, limits);
     within(queryWire.byteLength, limits.maxQueryBytes);
     const originalWire = queryWire.slice();
     let parsed;
     try {
-      parsed = parseMessage(originalWire);
-      const edns = getEdns(parsed);
-      if (edns && (edns.version !== 0 || edns.extended_rcode !== 0)) throw new Error();
-      if (parsed.is_response || parsed.opcode !== 0 || parsed.truncated || parsed.rcode !== 0 || parsed.questions.length !== 1 || parsed.answers.length || parsed.authority.length || parsed.additional.some(rr => rr.rtype !== TYPES.OPT)) throw new Error();
-      domain(parsed.questions[0].name);
+      parsed = parseQuery(originalWire);
     } catch {
       throw new RuleError('INVALID_QUERY', 'Invalid or unsupported DNS query.');
     }
     const originalQuery = freeze(parsed);
     /** @type {{ query: import('../lib/dns-wasm/index.js').DnsMessage, response: import('../lib/dns-wasm/index.js').DnsMessage | null }} */
     let state = { query: structuredClone(originalQuery), response: null };
-    const groups = loadGroups(env, limits);
+    const configBudget = createConfigBudget(limits);
+    const upstreams = loadUpstreamGroups(env, limits, options.extensions, configBudget);
+    const transport = createUpstream(limits, execution);
+    const groups = loadGroups(env, limits, options.extensions, configBudget);
+    for (const group of groups) {
+      for (const [ruleIndex, rule] of group.rules.entries()) {
+        for (const [actionIndex, action] of rule.actions.entries()) {
+          if (action.type !== 'queryUpstream' || action.group === undefined) continue;
+          try { upstreams.resolve(action.group); }
+          catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex }); }
+        }
+      }
+    }
     let conditionSteps = 0;
-    const spend = () => within(++conditionSteps, limits.maxConditionSteps, location);
+    const spend = () => { execution.check(); within(++conditionSteps, limits.maxConditionSteps, location); };
+    /** @param {import('./rules/types.js').ConditionHandler} handler @param {Record<string, string | number | boolean>} [item] */
+    const custom = async (handler, item) => invokeCondition(handler, state, item);
+    /** @param {import('./rules/types.js').ConditionHandler} handler @param {typeof state} view @param {Record<string, string | number | boolean>} [item] */
+    const invokeCondition = async (handler, view, item) => {
+      const value = await runExtension(signal => handler({ ...structuredClone(view), originalQuery: structuredClone(originalQuery), context: structuredClone(context.snapshot), signal, item: structuredClone(item) }));
+      if (typeof value !== 'boolean') throw new Error();
+      return value;
+    };
+    /** @param {import('../lib/dns-wasm/index.js').DnsMessage} query @param {string} [groupName] */
+    const queryUpstream = async (query, groupName) => {
+      const group = upstreams.resolve(groupName);
+      return queryGroup(group, query, transport, async (condition, response) => {
+        return await matches(condition, query.questions[0], originalQuery.questions[0], response, context, spend,
+          (handler, item) => invokeCondition(handler, { query, response }, item));
+      }, (error, memberIndex, disposition) => {
+        if (group && group.index !== -1) report(failureAt(error, location), actionType, false, { groupIndex: group.index, memberIndex, disposition });
+      }, () => execution.check());
+    };
     /** @type {'completed' | 'stopped' | 'returned'} */
     let termination = 'completed';
     pipeline: for (const group of groups) {
       location.group = group.name;
       for (const [ruleIndex, rule] of group.rules.entries()) {
+        execution.check();
         location.rule = ruleIndex;
         delete location.action;
         actionType = undefined;
-        if (!matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend)) continue;
+        if (!await matches(rule.when, state.query.questions[0], originalQuery.questions[0], state.response, context, spend, custom)) continue;
         for (const [actionIndex, action] of rule.actions.entries()) {
+          execution.check();
           location.action = actionIndex;
           actionType = action.type;
           try {
@@ -89,22 +153,52 @@ export function executeQuery(queryWire, env, options = {}) {
               break pipeline;
             }
             const candidate = structuredClone(state);
-            if (action.type === 'answer') {
+            if (action.type === 'queryUpstream') {
+              candidate.response = upstreamForClient(await queryUpstream(candidate.query, action.group), candidate.query, originalQuery);
+            } else if (action.type === 'custom' && action.run) {
+              const run = action.run;
+              const view = await runExtension(async signal => {
+                const view = { ...candidate, originalQuery: structuredClone(originalQuery), context: structuredClone(context.snapshot), signal };
+                await run(view);
+                return view;
+              });
+              candidate.query = view.query;
+              candidate.response = view.response;
+              const queryBytes = encodeMessage(candidate.query);
+              within(queryBytes.byteLength, limits.maxQueryBytes, location);
+              candidate.query = parseQuery(queryBytes);
+              if (candidate.response !== null) {
+                within(candidate.response.answers.length + candidate.response.authority.length + candidate.response.additional.length, limits.maxRecords, location);
+                for (const records of [candidate.response.answers, candidate.response.authority, candidate.response.additional]) {
+                  for (const { rtype, data, ...record } of records) {
+                    if (![TYPES.OPT, TYPES.RRSIG, 24, TYPES.TSIG].includes(rtype)) validateRecord({ ...record, type: rtype });
+                  }
+                }
+                validateProtectedRecords(candidate.response, state.response);
+                if (JSON.stringify(candidate.response) !== JSON.stringify(state.response)) candidate.response = invalidateResponse(candidate.response);
+              }
+            } else if (action.type === 'answer') {
               candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
             } else if (action.type === 'setTtl') {
               if (!candidate.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
+              /** @type {import('../lib/dns-wasm/index.js').DnsQuestion[]} */
+              const changed = [];
               for (const records of [candidate.response.answers, candidate.response.authority, candidate.response.additional]) {
-                for (const rr of records) if (rr.rtype !== TYPES.OPT) rr.ttl = action.ttl;
+                for (const rr of records) if (rr.rtype !== TYPES.OPT && rr.rtype !== TYPES.RRSIG && rr.rtype !== 24 && rr.ttl !== action.ttl) {
+                  changed.push({ name: rr.name, rtype: rr.rtype, class: rr.class });
+                  rr.ttl = action.ttl;
+                }
               }
+              if (changed.length) candidate.response = invalidateResponse(candidate.response, changed);
             } else if (action.type === 'rewriteQuery') {
               if (action.name !== undefined) candidate.query.questions[0].name = action.name;
               if (action.queryType !== undefined) candidate.query.questions[0].rtype = recordType(action.queryType);
               within(encodeMessage(candidate.query).byteLength, limits.maxQueryBytes, location);
             }
             if (action.type !== 'rewriteQuery' && candidate.response) {
-              responseWire(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
+              finalizeResponse(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
             }
-            state = candidate;
+            state = structuredClone(candidate);
           } catch (error) {
             const failure = failureAt(error, location);
             if (action.onError !== 'continue') throw failure;
@@ -114,11 +208,19 @@ export function executeQuery(queryWire, env, options = {}) {
         }
       }
     }
-    const wire = state.response ? responseWire(state.response, originalQuery, originalWire, limits.maxResponseBytes, location) : null;
+    execution.check();
+    if (state.response === null && upstreams.hasDefault) {
+      actionType = undefined;
+      delete location.action;
+      delete location.rule;
+      delete location.group;
+      state.response = upstreamForClient(await queryUpstream(state.query), state.query, originalQuery);
+    }
+    const wire = state.response ? finalizeResponse(state.response, originalQuery, originalWire, limits.maxResponseBytes, location) : null;
     return { termination, response: wire, originalQuery, query: state.query };
   } catch (error) {
     const failure = failureAt(error, location);
     report(failure, actionType);
     throw failure;
-  }
+  } finally { budget?.dispose(); }
 }

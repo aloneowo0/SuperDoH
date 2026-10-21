@@ -21,6 +21,7 @@
     "test/typecheck.ts",
     "lib/dns-wasm/test/typecheck.ts",
     "lib/ech-probe/test/typecheck.ts",
-    "test/worker.js"
+    "test/worker.js",
+    "test/doh-extensions-worker.js"
   ]
 }

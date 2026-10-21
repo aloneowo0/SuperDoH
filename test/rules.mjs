@@ -814,3 +814,209 @@ test('IPv6 response addresses bind canonical attribution and all quantification 
     assert.equal(absent.response, null);
   }
 });
+
+test('named trusted conditions select answers and custom actions compose in order', async () => {
+  const result = await execute({ DNS_RULE_CUSTOM: { order: 0, rules: [
+    { actions: [answer(), { type: 'custom', name: 'ttl', params: 23 }] },
+    { when: { all: [
+      { custom: { name: 'ttlIs', params: 23 } },
+      { field: 'query.name', op: 'exact', value: 'example.com' },
+    ] }, actions: [{ type: 'setTtl', ttl: 42 }] },
+  ] } });
+  assert.equal(result.status, 200);
+  assert.equal(decode(result.response).records[0].ttl, 42);
+});
+
+test('extension references validate even in unreachable rules and cannot be supplied by JSON', async () => {
+  const cases = [
+    [{ type: 'custom', name: 'missing', params: 'private-secret', onError: 'continue' }, undefined, 'UNKNOWN_EXTENSION'],
+    [{ type: 'custom', name: 'toString' }, undefined, 'UNKNOWN_EXTENSION'],
+    [{ type: 'custom', name: 'ttl', params: 'private-secret' }, undefined, 'INVALID_EXTENSION_PARAMS'],
+    [answer(), { custom: { name: 'missing' } }, 'UNKNOWN_EXTENSION'],
+    [answer(), { custom: { name: 'ttlIs', params: -1 } }, 'INVALID_EXTENSION_PARAMS'],
+    [{ type: 'custom', name: 'ttl', params: 1, run: 'function() {}' }, undefined, 'INVALID_CONFIG'],
+  ];
+  for (const [action, when, code] of cases) {
+    const result = await execute({ DNS_RULE_BAD: { order: 0, rules: [
+      { actions: [answer(), { type: 'return' }] }, { ...(when && { when }), actions: [action] },
+    ] } });
+    assert.equal(result.status, 400);
+    assert.equal(result.code, code);
+    assert.deepEqual(result.location, { group: 'DNS_RULE_BAD', rule: 1, ...(when ? {} : { action: 0 }) });
+    assert.ok(!JSON.stringify(result).includes('private-secret'));
+    assert.equal(result.events[0].event, 'execution_failed');
+  }
+});
+
+test('custom action validation and partial failures use required and optional rollback contracts', async () => {
+  for (const mode of ['throw', 'query', 'response', 'records', 'oversize']) {
+    for (const optional of [false, true]) {
+      const result = await execute({
+        DNS_LIMITS: { maxRecords: 1, maxResponseBytes: 100 },
+        DNS_RULE_EXT: group([answer(), { type: 'custom', name: 'edit', params: mode, onError: optional ? 'continue' : 'fail' }]),
+      });
+      assert.equal(result.status, optional ? 200 : 400, `${mode}: ${JSON.stringify(result)}`);
+      assert.equal(result.events.length, 1);
+      assert.equal(result.events[0].actionType, 'custom');
+      assert.equal(result.events[0].rolledBack, optional);
+      assert.equal(result.events[0].disposition, optional ? 'rolled_back_continue' : 'terminated');
+      assert.deepEqual(result.events[0].location, { group: 'DNS_RULE_EXT', rule: 0, action: 1 });
+      assert.ok(!JSON.stringify(result).includes('secret'));
+      if (optional) {
+        assert.equal(result.query.questions[0].name, 'example.com');
+        assert.equal(decode(result.response).records[0].ttl, 60);
+      }
+    }
+  }
+});
+
+test('custom condition exceptions and non-booleans terminate, while any/all/not short circuit', async () => {
+  const broken = params => ({ custom: { name: 'broken', params } });
+  for (const when of [broken('throw'), broken('truthy'), { not: broken('throw') }]) {
+    const result = await execute({ DNS_RULE_EXT: group([answer()], 0, when) });
+    assert.equal(result.status, 400);
+    assert.equal(result.code, 'INVALID_STATE');
+    assert.equal(result.events[0].event, 'execution_failed');
+    assert.ok(!JSON.stringify(result).includes('password'));
+  }
+  const result = await execute({ DNS_RULE_EXT: group([answer()], 0, { all: [
+    { any: [{ field: 'query.type', op: 'eq', value: 'A' }, broken('throw')] },
+    { not: { all: [{ field: 'query.type', op: 'eq', value: 'AAAA' }, broken('throw')] } },
+  ] }) });
+  assert.equal(result.status, 200);
+  assert.equal(decode(result.response).records[0].ttl, 60);
+});
+
+test('asynchronous extensions have a cumulative deadline, abort signal and rollback of late work', async () => {
+  for (const optional of [false, true]) {
+    const result = await execute({ DNS_LIMITS: { maxExtensionTimeMs: 20 }, DNS_RULE_EXT: group([
+      answer(), { type: 'custom', name: 'delay', params: 60, onError: optional ? 'continue' : 'fail' },
+      { type: 'setTtl', ttl: 17 },
+    ]) });
+    assert.equal(result.status, optional ? 200 : 400, JSON.stringify(result));
+    assert.equal(result.events[0].code, 'EXTENSION_TIMEOUT');
+    assert.equal(result.events[0].rolledBack, optional);
+    if (optional) assert.equal(decode(result.response).records[0].ttl, 17);
+  }
+  const condition = await execute({ DNS_LIMITS: { maxExtensionTimeMs: 20 },
+    DNS_RULE_EXT: group([answer()], 0, { custom: { name: 'delayed', params: 60 } }),
+  });
+  assert.equal(condition.status, 400);
+  assert.equal(condition.code, 'EXTENSION_TIMEOUT');
+  assert.equal(condition.events[0].event, 'execution_failed');
+  const cumulative = await execute({ DNS_LIMITS: { maxExtensionTimeMs: 400 }, DNS_RULE_EXT: group([
+    answer(), { type: 'custom', name: 'pause', params: 250 }, { type: 'custom', name: 'pause', params: 250 },
+  ]) });
+  assert.equal(cumulative.status, 400);
+  assert.equal(cumulative.code, 'EXTENSION_TIMEOUT');
+  assert.equal(cumulative.location.action, 2);
+});
+
+test('extension call budget counts conditions and actions across rules and optional failures', async () => {
+  const result = await execute({ DNS_LIMITS: { maxExtensionCalls: 2 }, DNS_RULE_EXT: { order: 0, rules: [
+    { actions: [answer(), { type: 'custom', name: 'ttl', params: 21 }] },
+    { when: { custom: { name: 'ttlIs', params: 21 } }, actions: [
+      { type: 'custom', name: 'ttl', params: 22, onError: 'continue' }, { type: 'setTtl', ttl: 23 },
+    ] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(result.events[0].code, 'RESOURCE_LIMIT');
+  assert.equal(decode(result.response).records[0].ttl, 23);
+});
+
+test('extensions receive isolated conditions, original data and per-call parameters', async () => {
+  const result = await execute({ DNS_RULE_EXT: { order: 0, rules: [
+    { actions: [{ type: 'answer', records: [record(), record('192.0.2.2')] }] },
+    { when: { collection: 'response.records', quantifier: 'all', where: { custom: { name: 'isolated', params: { count: 0 } } } }, actions: [
+      { type: 'custom', name: 'hold', params: '' }, { type: 'custom', name: 'poke', params: '' },
+    ] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(result.originalQuery.questions[0].name, 'example.com');
+  assert.equal(result.query.questions[0].name, 'example.com');
+  assert.deepEqual(decode(result.response).records.map(rr => rr.ttl), [60, 60]);
+});
+
+test('extensions see the initial private matching context despite observer mutation', async () => {
+  const result = await execute({ DNS_RULE_EXT: { order: 0, rules: [
+    { actions: [{ type: 'setTtl', ttl: 10, onError: 'continue' }] },
+    { when: { custom: { name: 'initialContext', params: 64512 } }, actions: [answer()] },
+  ] } }, query(), { 'x-test-context': JSON.stringify({ client: { asn: 64512 } }), 'x-test-context-mode': 'mutate' });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.notEqual(result.response, null);
+});
+
+test('retained extension references and parser-owned parameters do not contaminate another request', async () => {
+  const bindings = { DNS_RULE_EXT: group([answer(),
+    { type: 'custom', name: 'poke', params: '' }, { type: 'custom', name: 'shared' },
+    { type: 'custom', name: 'hold', params: '' },
+  ]) };
+  const first = await execute(bindings);
+  const response = await mf.dispatchFetch('https://rules.test/', { method: 'POST', body: query() });
+  const second = await response.json();
+  for (const result of [first, second]) {
+    assert.equal(result.query.questions[0].name, 'example.com');
+    assert.equal(result.originalQuery.questions[0].name, 'example.com');
+    assert.equal(decode(result.response).records[0].ttl, 1);
+  }
+});
+
+test('custom actions cannot bypass built-in record schemas or authentication restrictions', async () => {
+  for (const mode of ['extra', 'opt', 'signature', 'undefined']) {
+    const result = await execute({ DNS_RULE_EXT: group([answer(),
+      { type: 'custom', name: 'protocol', params: mode, onError: 'continue' },
+    ]) });
+    assert.equal(result.status, 200, `${mode}: ${JSON.stringify(result)}`);
+    assert.equal(result.events.length, 1, `${mode}: ${JSON.stringify(result)}`);
+    assert.equal(result.events[0].code, 'INVALID_STATE');
+    assert.equal(result.events[0].rolledBack, true);
+    assert.deepEqual(decode(result.response).records, [{ name: 'example.com', type: 1, ttl: 60, section: 0, data: [192, 0, 2, 1] }]);
+  }
+});
+
+test('late asynchronous writes cannot modify rolled-back or successfully committed DNS state', async () => {
+  for (const name of ['delay', 'detached']) {
+    const result = await execute({ DNS_LIMITS: { maxExtensionTimeMs: 30 }, DNS_RULE_EXT: group([
+      answer(), { type: 'custom', name, params: 60, onError: 'continue' }, { type: 'setTtl', ttl: 17 },
+    ]) }, query(), { 'x-test-settle': 'true' });
+    assert.equal(result.status, 200, JSON.stringify(result));
+    assert.equal(result.query.questions[0].name, 'example.com');
+    assert.equal(result.originalQuery.questions[0].name, 'example.com');
+    assert.equal(decode(result.response).records[0].ttl, 17);
+    assert.equal(result.events.length, name === 'delay' ? 1 : 0);
+    assert.deepEqual(result.logs, []);
+  }
+});
+
+test('successful custom query edits feed later conditions without changing original correlation', async () => {
+  const result = await execute({ DNS_RULE_EXT: { order: 0, rules: [
+    { actions: [answer(), { type: 'custom', name: 'edit', params: 'valid' }] },
+    { when: { all: [
+      { field: 'query.name', op: 'eq', value: 'changed.example' },
+      { field: 'original.name', op: 'eq', value: 'example.com' },
+      { custom: { name: 'ttlIs', params: 999 } },
+    ] }, actions: [{ type: 'setTtl', ttl: 12 }] },
+  ] } });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(result.query.questions[0].name, 'changed.example');
+  assert.equal(result.originalQuery.questions[0].name, 'example.com');
+  assert.equal(decode(result.response).questions[0].name, 'example.com');
+  assert.equal(decode(result.response).records[0].ttl, 12);
+});
+
+test('invalid asynchronous parameter parsers cannot leak unhandled rejections', async () => {
+  const result = await execute({ DNS_RULE_EXT: group([
+    { type: 'custom', name: 'asyncParams', onError: 'continue' },
+  ]) }, query(), { 'x-test-rejections': 'true' });
+  assert.equal(result.status, 400);
+  assert.equal(result.code, 'INVALID_EXTENSION_PARAMS');
+  assert.equal(result.events[0].event, 'execution_failed');
+  assert.ok(!JSON.stringify(result).includes('private-parser-secret'));
+  assert.equal(result.unhandled, 0);
+});
+
+test('cloneable parser results with non-callable then metadata are ordinary parameters', async () => {
+  const result = await execute({ DNS_RULE_EXT: group([answer(), { type: 'custom', name: 'metadata' }]) });
+  assert.equal(result.status, 200, JSON.stringify(result));
+  assert.equal(decode(result.response).records[0].ttl, 27);
+});

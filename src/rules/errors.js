@@ -12,6 +12,19 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  ACCESS_DENIED: 'The requested endpoint is not available.',
+  INVALID_HTTP: 'Invalid DoH HTTP request.',
+  EXECUTION_TIMEOUT: 'DNS execution deadline exceeded.',
+  REQUEST_CANCELLED: 'DNS execution was cancelled.',
+  UPSTREAM_REJECTED: 'DNS upstream response did not meet the adoption condition.',
+  UPSTREAM_EXHAUSTED: 'No member of the DNS upstream group produced an acceptable response.',
+  UPSTREAM_TIMEOUT: 'DNS upstream request timed out.',
+  UPSTREAM_FAILED: 'DNS upstream request failed.',
+  UPSTREAM_INVALID: 'Invalid DNS upstream response.',
+  NO_UPSTREAM: 'No DNS upstream is configured.',
+  EXTENSION_TIMEOUT: 'Trusted extension execution deadline exceeded.',
+  UNKNOWN_EXTENSION: 'Unknown trusted extension.',
+  INVALID_EXTENSION_PARAMS: 'Invalid trusted extension parameters.',
   INVALID_CONTEXT: 'Invalid matching context.',
   INVALID_CONFIG: 'Invalid or unsupported rule configuration.',
   INVALID_OPTIONS: 'Invalid execution diagnostics options.',
@@ -60,7 +73,8 @@ export function createReporter(options) {
   /** @type {import('./types.js').ExecutionOptions['onEvent']} */
   let observer;
   try {
-    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent' && k !== 'context')) throw new Error();
+    if (!options || typeof options !== 'object' || Array.isArray(options) || Object.keys(options).some(k => k !== 'requestId' && k !== 'onEvent' && k !== 'context' && k !== 'extensions' && k !== 'signal')) throw new Error();
+    if (options.signal !== undefined && !(options.signal instanceof AbortSignal)) throw new Error();
     if (options.requestId !== undefined && (typeof options.requestId !== 'string' || !/^[A-Za-z0-9_.:-]{1,128}$/.test(options.requestId))) throw new Error();
     if (options.onEvent !== undefined && typeof options.onEvent !== 'function') throw new Error();
     observer = options.onEvent;
@@ -70,14 +84,15 @@ export function createReporter(options) {
     writeEvent(Object.freeze({ event: 'execution_failed', level: 'error', requestId, location: error.location, code: error.code, message: error.message, disposition: 'terminated', rolledBack: false }));
     throw error;
   }
-  /** @param {RuleError} error @param {import('./types.js').Action['type']} [actionType] @param {boolean} [continued] */
-  return (error, actionType, continued = false) => {
+  /** @param {RuleError} error @param {import('./types.js').Action['type']} [actionType] @param {boolean} [continued] @param {{ groupIndex: number, memberIndex: number, disposition: 'fallback' | 'exhausted' | 'terminated' }} [upstream] */
+  return (error, actionType, continued = false, upstream) => {
     const safe = normalizeFailure(error);
     /** @type {import('./types.js').FailureEvent} */
     const event = Object.freeze({
-      event: actionType ? 'action_failed' : 'execution_failed', level: 'error', requestId,
+      event: upstream ? 'upstream_failed' : actionType ? 'action_failed' : 'execution_failed', level: 'error', requestId,
       location: safe.location, actionType, code: safe.code, message: safe.message,
-      reason: safe.reason, disposition: continued ? 'rolled_back_continue' : 'terminated', rolledBack: continued,
+      reason: safe.reason, disposition: upstream?.disposition ?? (continued ? 'rolled_back_continue' : 'terminated'), rolledBack: continued,
+      ...(upstream ? { upstream: Object.freeze({ groupIndex: upstream.groupIndex, memberIndex: upstream.memberIndex }) } : {}),
     });
     if (!observer) { writeEvent(event); return; }
     const fallback = () => {
