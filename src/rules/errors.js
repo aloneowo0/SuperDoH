@@ -12,6 +12,11 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  INVALID_ECH_CONFIG: 'Invalid ECH configuration.',
+  INVALID_ECH_SOURCE: 'Invalid DNS HTTPS ECH source.',
+  NO_ECH_CONFIG: 'No usable ECH configuration is available.',
+  AMBIGUOUS_ECH_CONFIG: 'DNS HTTPS source contains distinct ECH configurations.',
+  NO_ECH_RECORD: 'No selected HTTPS ServiceMode answer record exists.',
   DOMAIN_LIST_TIMEOUT: 'Domain list source request timed out.',
   DOMAIN_LIST_UNAVAILABLE: 'The domain list is unavailable.',
   DOMAIN_LIST_FAILED: 'Domain list source request failed.',

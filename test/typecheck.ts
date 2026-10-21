@@ -153,3 +153,8 @@ void [enrichment, addressSource, invalidEnrichment, invalidMapping];
 const listCondition: Condition = { field: 'query.name', op: 'inList', value: 'selected' };
 const domainList: import('../src/rules/types.js').DomainListConfig = { urlSecret: 'LIST_URL', format: 'text', refreshIntervalMs: 60000 };
 void [listCondition, domainList];
+
+const directEchAction: Action = { type: 'loadEch', config: 'base64' };
+const dnsEchAction: Action = { type: 'queryEch', name: 'source.example', upstream: 'primary', cache: { maxTtl: 30 } };
+const applyEchAction: Action = { type: 'applyEch', where: { field: 'item.name', op: 'suffix', value: 'example.com' } };
+void [directEchAction, dnsEchAction, applyEchAction];

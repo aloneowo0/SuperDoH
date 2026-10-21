@@ -1,3 +1,4 @@
+import { validateEchAction } from './ech.js';
 import { cachePolicy } from './cache-policy.js';
 import { createConfigBudget } from './config-budget.js';
 import { within } from './limits.js';
@@ -36,6 +37,7 @@ function validateRecord(value) {
 function action(value, countRecord, compileSelector) {
   const { onError, ...body } = object(value);
   if (onError !== undefined && onError !== 'fail' && onError !== 'continue') throw new Error();
+  if (typeof body.type === 'string' && ['loadEch', 'queryEch', 'applyEch'].includes(body.type)) return { ...validateEchAction(body, compileSelector), onError: onError ?? 'fail' };
   const parsed = actionValue(body, countRecord);
   return { ...parsed, onError: onError ?? 'fail', ...('where' in parsed && parsed.where !== undefined ? { selector: compileSelector(parsed.where) } : {}) };
 }

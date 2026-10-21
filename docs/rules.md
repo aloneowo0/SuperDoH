@@ -746,3 +746,19 @@ cacheTtl 默认为 0（不跨请求缓存），可显式设置秒数上限，最
 默认 maxDomainLists=16、maxDomainListEntries=4096、maxDomainListBytes=262144、domainListTimeoutMs=1500、maxDomainListStateBytes=4194304；对应硬上限为 64、65536、2097152、10000、16777216。限制输入条目（包括重复项）、完整下载字节、单次维护耗时及保留状态的估算内存，状态内存不是 JS 引擎实际堆使用量承诺。后缀查找逐标签消费现有条件步骤预算。来源列表超过单变量预算时，环境变量仅保存来源描述，实际数据不需要塞入变量。
 
 workerd 回归以公开 HTTP/DNS 入口观察两种格式、原子替换、失败即失效、按期限恢复及额度；时钟通过仅测试用的宿主包装控制，不新增生产时钟或私有状态测试 API。本地结果不代表全球失效时效、外网可达性或线上免费 CPU 验收。
+
+## ECH 数据取得与 HTTPS 应用分离（#20、#21）
+
+ECH 配置不默认来自任何厂商；必须先用 JSON 动作取得数据，再用 applyEch 写入已有目标响应。结构解析成功不证明 TLS 身份认证、ECH 接受或连接可达性。
+
+- `{ "type": "loadEch", "config": "<标准带填充 Base64 ECHConfigList>" }`：直接从受信任环境 JSON 取得数据，完整预检损坏或不支持的配置；不联网。
+- `{ "type": "queryEch", "name": "source.example", "upstream": "primary", "cache": { "read": true, "write": true, "maxTtl": 60 } }`：通过已有命名 HTTPS/TCP/TLS 上游发出一次独立 IN/HTTPS 查询，不改当前查询或当前答案，不执行 CNAME/别名自动追踪、回退或重试。
+- `{ "type": "applyEch", "where": { "field": "item.name", "op": "eq", "value": "example.com" } }`：将当前已取得的 ECH 数据设置到当前响应 Answer 中命中的 HTTPS ServiceMode（priority 非零）记录。where 可省略以选择全部合格记录；选择器复用现有有界记录条件。仅改参数 key 5，保留优先级、目标、TTL、ALPN、端口和其他适用参数。
+
+要创建 HTTPS 记录，先显式 answer/addRecords；applyEch 不隐式创建、选择厂商或修复 AliasMode。无当前响应报 NO_RESPONSE，无已取得数据报 NO_ECH_CONFIG，无合格目标报 NO_ECH_RECORD。修改后清 AD 并移除被修改 HTTPS RRset 的相关签名，未涉及的记录与签名不无故丢失；写入完全相同 ECH 数据时不无故使原签名失效。
+
+queryEch 仅接受与来源问题对应、RCODE=NOERROR 且完整的响应，从 Answer 中 owner 等于来源名的 IN/HTTPS ServiceMode 记录提取 ECH 参数。没有合格配置报 NO_ECH_CONFIG；每个候选均完整校验，多个候选必须具有相同 ECHConfigList 字节，否则报 AMBIGUOUS_ECH_CONFIG，不任意选第一条。不把其他记录、额外节、错误 RCODE 或 AliasMode 当作配置，也不声称 DNS 数据经过主动 TLS 认证。
+
+queryEch 的 cache 覆盖当前规则缓存策略，否则沿用既有默认安全上游原始响应缓存。DNS TTL、HTTP 新鲜度、来源/查询身份、存储作用域、超时/取消及共享网络额度与其他上游动作完全一致；不建立厂商常量或过期 ECH 回退。来源响应缓存与目标答案隔离，命中仍执行后续 applyEch 和其他规则。
+
+取得和应用均为独立原子动作。取得失败的可选动作不会删除此前成功取得的 ECH 或替换当前 DNS 答案；应用失败不提交任何部分改动。lastAction 暴露本动作成功/失败及安全错误码，既有失败事件不因后来成功消失。原始查询、原始上游缓存及其他请求不受候选修改污染。所有终止方式继续统一协议收尾。

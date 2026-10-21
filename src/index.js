@@ -1,3 +1,4 @@
+import { directEch, queryEch, applyEch } from './rules/ech.js';
 import { loadDomainLists } from './rules/domain-lists.js';
 import { loadAddressSources } from './rules/address-sources.js';
 import { createAttribution } from './doh/attribution.js';
@@ -99,7 +100,7 @@ export async function executeQuery(queryWire, env, options = {}) {
             try { sources.resolve(action.source); }
             catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex, source: action.source }); }
           }
-          if (action.type !== 'queryUpstream') continue;
+          if (action.type !== 'queryUpstream' && action.type !== 'queryEch') continue;
           try { upstreams.resolve(action.upstream); }
           catch (error) { throw failureAt(error, { group: group.name, rule: ruleIndex, action: actionIndex }); }
         }
@@ -109,6 +110,8 @@ export async function executeQuery(queryWire, env, options = {}) {
     properties = { ...properties, lists: await domainLists.prepare(configBudget.listReferences, execution, spendNetwork) };
     /** @type {import('./rules/types.js').ActionResult | undefined} */
     let lastAction;
+    /** @type {import('./rules/ech.js').EchCandidate | undefined} */
+    let ech;
     let conditionSteps = 0;
     const spend = () => { execution.check(); within(++conditionSteps, limits.maxConditionSteps, location); };
     /** @type {'completed' | 'stopped' | 'returned'} */
@@ -128,6 +131,7 @@ export async function executeQuery(queryWire, env, options = {}) {
           actionType = action.type;
           delete location.source;
           if (action.type === 'enrichAddresses') location.source = action.source;
+          if (action.type === 'queryEch') location.source = action.upstream;
           try {
             if (action.type === 'stop' || action.type === 'return') {
               if (action.type === 'return' && !state.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
@@ -138,8 +142,16 @@ export async function executeQuery(queryWire, env, options = {}) {
             const candidate = structuredClone(state);
             let nextCache = cache;
             let nextProperties = properties;
+            let nextEch = ech;
             if (action.type === 'queryUpstream') {
               candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query, { ...cache, ...action.cache }, action.upstream), candidate.query, originalQuery);
+            } else if (action.type === 'loadEch') {
+              nextEch = directEch(action.config);
+            } else if (action.type === 'queryEch') {
+              nextEch = await queryEch(action, (name, query, policy, sourceName) => transport(upstreams.resolve(name), query, policy, sourceName), cache);
+            } else if (action.type === 'applyEch') {
+              if (!ech) throw new RuleError('NO_ECH_CONFIG', 'No ECH configuration has been acquired.');
+              candidate.response = await applyEch(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties, spend, lastAction }, ech, limits, location);
             } else if (action.type === 'enrichAddresses') {
               if (!candidate.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.');
               const enriched = await enrich(sources.resolve(action.source), candidate.response, action.source);
@@ -165,6 +177,7 @@ export async function executeQuery(queryWire, env, options = {}) {
             state = structuredClone(candidate);
             cache = nextCache;
             properties = nextProperties;
+            ech = nextEch;
             lastAction = freeze({ success: true, actionType: action.type, location: { group: group.name, rule: ruleIndex, action: actionIndex } });
           } catch (error) {
             const failure = failureAt(error, location);

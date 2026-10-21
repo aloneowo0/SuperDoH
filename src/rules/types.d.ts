@@ -9,6 +9,9 @@ type ActionValue =
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number; where?: RecordCondition }
   | { type: 'stop' | 'return' }
+  | { type: 'loadEch'; config: string }
+  | { type: 'queryEch'; name: string; upstream: string; cache?: Partial<CachePolicy> }
+  | { type: 'applyEch'; where?: RecordCondition }
   | { type: 'enrichAddresses'; source: string }
   | { type: 'queryUpstream'; upstream: string; cache?: Partial<CachePolicy> }
   | ({ type: 'setCache' } & Partial<CachePolicy>)
