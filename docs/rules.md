@@ -762,3 +762,21 @@ queryEch 仅接受与来源问题对应、RCODE=NOERROR 且完整的响应，从
 queryEch 的 cache 覆盖当前规则缓存策略，否则沿用既有默认安全上游原始响应缓存。DNS TTL、HTTP 新鲜度、来源/查询身份、存储作用域、超时/取消及共享网络额度与其他上游动作完全一致；不建立厂商常量或过期 ECH 回退。来源响应缓存与目标答案隔离，命中仍执行后续 applyEch 和其他规则。
 
 取得和应用均为独立原子动作。取得失败的可选动作不会删除此前成功取得的 ECH 或替换当前 DNS 答案；应用失败不提交任何部分改动。lastAction 暴露本动作成功/失败及安全错误码，既有失败事件不因后来成功消失。原始查询、原始上游缓存及其他请求不受候选修改污染。所有终止方式继续统一协议收尾。
+
+## 主动 TLS retry-config 探测（#22）
+
+`{ "type": "probeEch", "options": { "hostname": "example.com", "port": 443, "serverName": "example.com", "alpn": ["h2"], "timeoutMs": 1500, "maxBytes": 65536, "cacheTtl": 60 } }` 仅调用通用 `lib/ech-probe` 的真实公开 probeEch API，取得的 ECH 数据仍需后续 applyEch 应用；不另造 TLS 客户端或把探测响应当 DNS 答案。
+
+参数均为受校验的环境 JSON：hostname/port 为连接目标，serverName 为 TLS 身份/SNI（DNS 主机默认自身，IP 目标必须另填），alpn 为唯一 ASCII 协议名数组。verifyCertificate 默认 true；可显式 false 沿用库的未认证语义，但应用绝不因证书、网络或资源失败自动关闭验证、切来源或取静态厂商值。caCertificates 接受 PEM 字符串或 DER 字节数组列表，仅适用于开启认证；省略时用库默认信任根，错误证书/身份不会被缓存或伪装成成功。JSON 不接收 signal，运行时绑定当前请求取消信号。
+
+一次未命中的动作只执行一次真实库探测，消耗与列表/归属/DNS 上游相同的网络额度。库负责 TLS 字节预算、完整握手、证书校验和 socket 清理；调用层限制总 deadline、单探测 timeoutMs/maxBytes 及取消。默认 maxEchProbeTimeoutMs=1500、maxEchProbeBytes=65536，硬上限分别 10000 和 1048576，字节上限最小 1024。动作参数只能缩短这些上限及总执行期限，不能通过 onError:continue 重置预算。超时、字节超限及其他失败分别保留 ECH_PROBE_TIMEOUT、RESOURCE_LIMIT、ECH_PROBE_FAILED 等脱敏结果。
+
+cacheTtl 默认 0，显式设置 1..86400 秒才复用探测结果。缓存身份覆盖目标、身份、ALPN、认证政策、完整信任根、有效预算及期限的摘要，不向键写入明文配置。只缓存完整有效成功结果，读回重新校验，期限内仍可能被平台清理；过期不采用旧结果，而在当前显式动作内重新探测一次。更新失败按动作失败处理，不自动退回旧缓存。已成功取得的数据与 DNS 候选按动作隔离，后续可选失败保留前序成功状态，但不会把失败动作标成成功。
+
+探测缓存 miss/hit、检测到的 expired 及新 acquired 状态产生带 requestId/动作定位的 ech_source_state 结构化信息日志；平台直接清理过期对象时只能观察 miss，不能臆造到期原因。失败仍走已有脱敏失败事件与 lastAction，不输出主机、完整 URL、证书或原始异常。缓存仅为数据中心本地加速层，不是全球新鲜性或目标认证的永久数据库。
+
+### 验收边界与当前阻塞
+
+普通回归通过真实 workerd 公共 DoH 入口连接受控本地 TCP 服务，验证单次连接、TLS 收包上限、超时、取消、清理和原答案保留；另保留通用 ECH Node/workerd 离线握手回归。`npm run test:ech-interop` 是独立本地 ECH-capable OpenSSL 的真实成功/证书失败/缓存路径验收，要求设置 ECH_PROBE_OPENSSL。它不放入默认测试后假装通过，不在缺少程序时以 skip 伪装成功。
+
+当前 Windows 环境的 OpenSSL 3.5.5 不提供 ech 命令或 s_server -ech_key，历史 Linux ECH OpenSSL 路径也不存在，因此独立 OpenSSL 成功互操作尚未执行，#22 的该项验收仍阻塞；提供了可运行脚本，但不能宣称这等同成功互操作。主动探测的证书验证与完整握手是重型路径，elapsedMs/网络等待/后台执行均不能证明线上免费 CPU 合格；#25 仍需另行授权部署与实测。

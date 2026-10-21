@@ -16,7 +16,7 @@ const DNS_CLASS_IN = 1;
 /** @typedef {import('../../lib/dns-wasm/index.js').DnsMessage} DnsMessage */
 /** @typedef {import('../../lib/dns-wasm/index.js').DnsRecord} DnsRecord */
 /** @typedef {import('./errors.js').Location} Location */
-/** @typedef {{ bytes: Uint8Array, base64: string, source: 'direct' | 'https' }} EchCandidate */
+/** @typedef {{ bytes: Uint8Array, base64: string, source: 'direct' | 'https' | 'probe' }} EchCandidate */
 /** @typedef {{ type: 'loadEch', config: string, onError?: 'fail' | 'continue' }} LoadEchAction */
 /** @typedef {{ type: 'applyEch', where?: import('./types.js').RecordCondition, selector?: import('./conditions.js').Predicate, onError?: 'fail' | 'continue' }} ApplyEchAction */
 /** @typedef {{ type: 'queryEch', name: string, upstream: string, cache?: Partial<import('./types.js').CachePolicy>, onError?: 'fail' | 'continue' }} QueryEchAction */

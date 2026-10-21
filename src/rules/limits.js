@@ -1,6 +1,7 @@
 import { RuleError } from './errors.js';
 
 const defaults = Object.freeze({
+  maxEchProbeTimeoutMs: 1500, maxEchProbeBytes: 65536,
   maxDomainLists: 16, maxDomainListEntries: 4096, maxDomainListBytes: 262144, domainListTimeoutMs: 1500, maxDomainListStateBytes: 4194304,
   maxUpstreams: 16, maxAddressSources: 16, maxAttributionAddresses: 16, maxAttributionBytes: 16384, attributionTimeoutMs: 1500,
   maxNetworkRequests: 2, maxExecutionTimeMs: 3000, upstreamTimeoutMs: 1500,
@@ -9,6 +10,7 @@ const defaults = Object.freeze({
   maxConditionDepth: 16, maxConditionSteps: 8192, maxConditionValues: 128, maxPatternLength: 256, maxPatternInstructions: 4096, maxContextAddresses: 256,
 });
 const ceilings = Object.freeze({
+  maxEchProbeTimeoutMs: 10000, maxEchProbeBytes: 1048576,
   maxDomainLists: 64, maxDomainListEntries: 65536, maxDomainListBytes: 2097152, domainListTimeoutMs: 10000, maxDomainListStateBytes: 16777216,
   maxUpstreams: 64, maxAddressSources: 64, maxAttributionAddresses: 256, maxAttributionBytes: 262144, attributionTimeoutMs: 10000,
   maxNetworkRequests: 16, maxExecutionTimeMs: 30000, upstreamTimeoutMs: 10000,
@@ -29,7 +31,7 @@ export function loadLimits(raw) {
     for (const [key, item] of Object.entries(value)) {
       if (!Object.hasOwn(defaults, key)) throw new Error();
       const name = /** @type {keyof Limits} */ (key);
-      if (!Number.isSafeInteger(item) || item < 1 || item > ceilings[name]) throw new Error();
+      if (!Number.isSafeInteger(item) || item < (name === 'maxEchProbeBytes' ? 1024 : 1) || item > ceilings[name]) throw new Error();
       limits[name] = item;
     }
     return limits;

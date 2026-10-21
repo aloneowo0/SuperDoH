@@ -1,3 +1,5 @@
+import { probeEch } from './doh/ech-probe.js';
+import { parseEchConfigList } from '../lib/ech-probe/config.js';
 import { directEch, queryEch, applyEch } from './rules/ech.js';
 import { loadDomainLists } from './rules/domain-lists.js';
 import { loadAddressSources } from './rules/address-sources.js';
@@ -132,6 +134,7 @@ export async function executeQuery(queryWire, env, options = {}) {
           delete location.source;
           if (action.type === 'enrichAddresses') location.source = action.source;
           if (action.type === 'queryEch') location.source = action.upstream;
+          if (action.type === 'probeEch') location.source = 'probe';
           try {
             if (action.type === 'stop' || action.type === 'return') {
               if (action.type === 'return' && !state.response) throw new RuleError('NO_RESPONSE', 'This action requires an existing DNS response.', location);
@@ -149,6 +152,12 @@ export async function executeQuery(queryWire, env, options = {}) {
               nextEch = directEch(action.config);
             } else if (action.type === 'queryEch') {
               nextEch = await queryEch(action, (name, query, policy, sourceName) => transport(upstreams.resolve(name), query, policy, sourceName), cache);
+            } else if (action.type === 'probeEch') {
+              const bytes = await probeEch(action.options, limits, execution, spendNetwork, state => {
+                try { console.info(JSON.stringify({ event: 'ech_source_state', level: 'info', requestId: report.requestId, location: { ...location }, state })); }
+                catch { /* Diagnostics must not change DNS execution. */ }
+              });
+              nextEch = { ...directEch(parseEchConfigList(bytes).base64), source: 'probe' };
             } else if (action.type === 'applyEch') {
               if (!ech) throw new RuleError('NO_ECH_CONFIG', 'No ECH configuration has been acquired.');
               candidate.response = await applyEch(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties, spend, lastAction }, ech, limits, location);

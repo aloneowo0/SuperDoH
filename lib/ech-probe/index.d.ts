@@ -1,5 +1,7 @@
 import type { ByteInput, EchConfigList } from './config.js';
 export * from './config.js';
+/** Parse custom PEM/DER trust material without network I/O or chain authentication. Returns isolated DER copies. */
+export function parseTrustAnchors(caCertificates: readonly (string | ByteInput)[]): Uint8Array[];
 
 export interface CommonProbeOptions {
   hostname: string;

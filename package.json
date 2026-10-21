@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit",
     "test:rules": "node --test test/rules.mjs",
     "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs",
-    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:libraries",
+    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:libraries",
     "test:doh": "node --test test/doh.mjs",
     "test:tcp": "node --test test/tcp.mjs",
     "test:tls": "node --test test/tls.mjs",
@@ -16,7 +16,9 @@
     "test:metadata": "node --test test/metadata.mjs",
     "test:attribution": "node --test test/attribution.mjs",
     "test:lists": "node --test test/domain-lists.mjs",
-    "test:ech": "node --test test/ech.mjs"
+    "test:ech": "node --test test/ech.mjs",
+    "test:ech-probe": "node --test test/ech-probe.mjs",
+    "test:ech-interop": "node test/ech-interop.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",

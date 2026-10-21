@@ -9,6 +9,7 @@ type ActionValue =
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number; where?: RecordCondition }
   | { type: 'stop' | 'return' }
+  | { type: 'probeEch'; options: EchProbeConfig }
   | { type: 'loadEch'; config: string }
   | { type: 'queryEch'; name: string; upstream: string; cache?: Partial<CachePolicy> }
   | { type: 'applyEch'; where?: RecordCondition }
@@ -118,3 +119,8 @@ export type AddressSourceConfig = ({ url: string; urlSecret?: never } | { urlSec
 };
 
 export type DomainListConfig = { domains: string[] } | (({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; refreshIntervalMs: number });
+
+export interface EchProbeConfig {
+  hostname: string; port?: number; serverName?: string; alpn?: string[]; timeoutMs?: number; maxBytes?: number;
+  verifyCertificate?: boolean; caCertificates?: (string | number[])[]; cacheTtl?: number;
+}

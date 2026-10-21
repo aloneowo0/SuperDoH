@@ -52,6 +52,10 @@ const result = await probeEch({
 
 `caCertificates` 接受非空的 PEM/DER 证书数组。没有指定时采用库附带的 Mozilla/curl CA 快照；不访问宿主系统证书库，不把服务端附带的根证书当作可信锚，不自动在线下载中间证书或 CA。默认根快照的来源、日期、哈希和许可随构建产物保存；更新根集合需要重新构建和部署。
 
+### 预检自定义信任根
+
+`parseTrustAnchors(caCertificates)` 复用库内同一 PEM/DER 解析器，同步校验证书结构并返回隔离的 DER 副本；不联网，不建立信任链，不验证远端主机。调用者可在完整配置预检中拒绝损坏的信任根，而不是等到发起探测动作才发现。它不替代 probeEch 默认开启的运行时认证。
+
 ## API
 
 ### `probeEch(options)`

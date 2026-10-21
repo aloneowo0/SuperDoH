@@ -1,3 +1,4 @@
+import { validateProbeOptions } from '../doh/ech-probe.js';
 import { validateEchAction } from './ech.js';
 import { cachePolicy } from './cache-policy.js';
 import { createConfigBudget } from './config-budget.js';
@@ -70,6 +71,10 @@ function actionValue(value, countRecord) {
       fields(v, ['type', 'name', 'queryType']);
       if (v.name === undefined && v.queryType === undefined) throw new Error();
       return { type: 'rewriteQuery', name: v.name === undefined ? undefined : domain(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
+    case 'probeEch':
+      fields(v, ['type', 'options']);
+      validateProbeOptions(v.options);
+      return { type: 'probeEch', options: /** @type {import('./types.js').EchProbeConfig} */ (v.options) };
     case 'enrichAddresses':
       fields(v, ['type', 'source']);
       return { type: 'enrichAddresses', source: upstreamName(v.source) };

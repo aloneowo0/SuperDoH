@@ -12,6 +12,9 @@ export class RuleError extends Error {
 }
 
 const messages = Object.freeze({
+  ECH_INVALID: 'Invalid ECH probe configuration or result.',
+  ECH_PROBE_TIMEOUT: 'ECH probe request timed out.',
+  ECH_PROBE_FAILED: 'ECH probe request failed.',
   INVALID_ECH_CONFIG: 'Invalid ECH configuration.',
   INVALID_ECH_SOURCE: 'Invalid DNS HTTPS ECH source.',
   NO_ECH_CONFIG: 'No usable ECH configuration is available.',
@@ -94,7 +97,7 @@ export function createReporter(options) {
     throw error;
   }
   /** @param {RuleError} error @param {import('./types.js').Action['type']} [actionType] @param {boolean} [continued] */
-  return (error, actionType, continued = false) => {
+  const report = (error, actionType, continued = false) => {
     const safe = normalizeFailure(error);
     /** @type {import('./types.js').FailureEvent} */
     const event = Object.freeze({
@@ -116,4 +119,5 @@ export function createReporter(options) {
       }
     } catch { fallback(); }
   };
+  return Object.assign(report, { requestId });
 }

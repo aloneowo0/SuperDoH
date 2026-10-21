@@ -158,3 +158,11 @@ const directEchAction: Action = { type: 'loadEch', config: 'base64' };
 const dnsEchAction: Action = { type: 'queryEch', name: 'source.example', upstream: 'primary', cache: { maxTtl: 30 } };
 const applyEchAction: Action = { type: 'applyEch', where: { field: 'item.name', op: 'suffix', value: 'example.com' } };
 void [directEchAction, dnsEchAction, applyEchAction];
+
+const probeAction: Action = { type: 'probeEch', options: { hostname: 'example.com', serverName: 'example.com', verifyCertificate: true, alpn: ['h2'], cacheTtl: 60 } };
+// @ts-expect-error Native cancellation signals are never accepted in JSON probe options.
+const badProbe: Action = { type: 'probeEch', options: { hostname: 'example.com', signal: new AbortController().signal } };
+void [probeAction, badProbe];
+
+const parsedTrustRoots: (roots: readonly (string | number[])[]) => Uint8Array[] = (await import('../lib/ech-probe/index.js')).parseTrustAnchors;
+void parsedTrustRoots;
