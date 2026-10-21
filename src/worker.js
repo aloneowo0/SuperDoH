@@ -1,3 +1,4 @@
+import { requestContext } from './doh/metadata.js';
 import { executeQuery } from './index.js';
 import { loadLimits } from './rules/limits.js';
 import { RuleError, createReporter, normalizeFailure } from './rules/errors.js';
@@ -111,7 +112,7 @@ export async function handleRequest(request, env, options = {}) {
     catch { throw new HttpError(400); }
     if (configFailure) throw configFailure;
     executionStarted = true;
-    const result = await executeQuery(wire, env, { ...options, signal: budget.signal });
+    const result = await executeQuery(wire, env, { ...options, context: options.context === undefined ? requestContext(request) : options.context, signal: budget.signal });
     executionStarted = false;
     return new Response(result.response, { headers: { 'Content-Type': mediaType, 'Cache-Control': 'no-store' } });
   } catch (error) {

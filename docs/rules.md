@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #15–#16、#26–#29）
+# 环境变量规则执行器（JSON-only / #15–#17、#26–#29）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付，真实请求元数据适配已在 #17 交付；外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -119,7 +119,7 @@ try {
 
 #### 受控匹配上下文与 IP/CIDR
 
-第三参数的 `context` 是调用者已取得的可信属性，不是请求自行声明的配置或归属来源：
+executeQuery 第三参数的 `context` 是调用者已取得的可信属性，不是请求自行声明的配置或归属来源；标准 HTTP 入口未显式覆盖时使用 #17 平台适配，见后文：
 
 ```js
 await executeQuery(queryWire, env, { context: {
@@ -616,3 +616,33 @@ where 使用同一有界 all/any/not、比较、域名、RE2 正则与 IP CIDR �
 编辑在独立候选响应中进行，动作后的记录/大小校验、正常结束、return、stop 均走同一协议收尾。超限的可选添加/替换不会留下部分新增或删除，必需失败终止。上游缓存仍保存改写前数据，不因一次调用的编辑被污染。
 
 公开 DoH/workerd 回归覆盖原生 CNAME、地址选择、TXT/不透明记录和三个节、AAAA NODATA、后续条件可见、RRSIG/AD/扩展 RCODE、可选回滚、不可达配置预检、预算及真实原始缓存隔离；不增加用户函数、循环、隐式请求或部署。
+
+
+## 平台客户端与边缘上下文（#17）
+
+标准 DoH GET/POST 默认从入站 Request.cf 和 Cloudflare 管理的连接头适配规则上下文，使用既有 client.* / edge.* 条件，不需要新环境变量，也不隐式请求 GeoIP/ASN 服务。相同 DNS 查询可以按来源组合域名、类型、ASN 或地区条件选择显式上游；缓存命中不跳过这些规则。
+
+| 条件字段 | HTTP 入口来源 |
+| --- | --- |
+| client.ip | 具有有效平台 colo 元数据时的 CF-Connecting-IP；严格解析单个 IPv4/IPv6，不取客户端转发链 |
+| client.asn | Request.cf.asn，合法 1–2^32−1 整数 |
+| client.country | Request.cf.country，两字母值；XX、T1、null/缺失不当真实国家 |
+| client.region / client.city | Request.cf.region / city 的实际名称，可缺失；不将 regionCode 猜成地区名称 |
+| edge.colo | Request.cf.colo，实际处理数据中心的三字母代码 |
+| client.colo、edge.ip/asn/country/region/city | 平台接口未给出相应可靠数据，默认不填、不根据 colo 推断地理位置 |
+
+地理字段只是平台基于连接来源的粗粒度信息，不保证设备精确位置、VPN 之后的真实住址或行政区精度。不用 DNS 上游地址推断查询者属性，不把客户端城市复制成边缘城市。文本限长并排除控制字符；非法、未知、空或不可用字段保持缺失。既定 exists、比较和 not 语义不变：缺失值不会因为 ne:US 自动等同“美国以外”。需要安全限制的规则必须显式处理缺失情况，地理条件本身不是身份认证。
+
+### 连接头和 Worker 子请求边界
+
+- ASN/地理位置只信 Request.cf，不信任 CF-IPCountry、CF-Region、CF-City、X-Client-ASN、X-Edge-Colo 等客户端可提交头。X-Forwarded-For、X-Real-IP、True-Client-IP 和 CF-Ray 也不作为源 IP 或边缘信息回退。
+- 源 IP 路径假设**直接部署在 Cloudflare Workers 的网络入口**：Cloudflare 在普通访问中提供 CF-Connecting-IP。存在 request.cf/colo 不是通用的远端认证协议；自行构造 Request、在非 Cloudflare 网关转发、Service Binding/RPC 转发或开放本地测试服务的宿主必须另行建立可信入口，不能仅凭同名 HTTP 头声称已验证来源。
+- 同区 Worker 子请求的 CF-Connecting-IP 可受其 X-Real-IP 修改；跨区 Worker 子请求可能是固定 2a06:98c0:3600::103。遇到 CF-Worker 头或该固定地址，本适配器保守保留 edge.colo，但**不填整组 client 属性**，不冒充原始最终用户。CF-Worker 仅作为撤销不可靠属性的提示，不用于认证/放行，也不根据其区名授予权限。需要区级限制可在 Cloudflare WAF/Transform Rules 使用 cf.worker.upstream_zone。
+- Pseudo IPv4 的 Overwrite Headers 模式可能给出 240.0.0.0/4 合成地址，仅此情况下从合法 CF-Connecting-IPv6 恢复真实 IPv6；缺少合法 IPv6 时 IP 缺失，不将合成 IPv4 当真实位置/身份。其他情况下 CF-Connecting-IPv6 不能覆盖有效 CF-Connecting-IP。
+- Managed Transform 移除 IP、预览不提供 cf、字段不可用或地域未知时不补查、不伪造。仅有效平台 colo 才启用连接头到 IP 的适配；其他 cf 字段按实际可用值独立采用。
+
+可信应用调用 handleRequest 的显式 options.context 仍可完全覆盖默认平台适配（与 executeQuery 的宿主上下文能力一致）；这是可信代码集成，不是新增客户端头、环境变量脚本或 DNS 用户扩展入口。默认入口不读取客户端上传的上下文。每请求重新构造并由执行器私有化上下文，不跨请求复用，不默认记录客户端地址/地区。
+
+公开 workerd/DoH 回归通过标准 Miniflare cf 注入提供受控平台元数据，覆盖属性分离、同名伪装头、IPv4/IPv6/Pseudo IPv4、Worker 子请求、未知/缺失字段、GET/POST、逐来源 JSON 上游选择与缓存命中及脱敏错误。Miniflare 会合并合成默认 cf 数据，测试显式将不可用字段置 null，避免把本地默认美国元数据误认为来自被测请求；未为私有模块增加测试 API。这些是本地信任边界/规则验收，不是生产网络地理精度或线上免费 CPU 验收。
+
+参考：[Workers Request.cf](https://developers.cloudflare.com/workers/runtime-apis/request/#incomingrequestcfproperties)、[CF-Connecting-IP 与 Worker 子请求](https://developers.cloudflare.com/fundamentals/reference/http-headers/#cf-connecting-ip)、[Pseudo IPv4](https://developers.cloudflare.com/network/pseudo-ipv4/)、[Worker 子请求 WAF 字段](https://developers.cloudflare.com/waf/custom-rules/use-cases/block-worker-subrequests/)。
