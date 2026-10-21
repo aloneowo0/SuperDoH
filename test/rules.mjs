@@ -8,7 +8,7 @@ import path from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const bundle = await build({
   entryPoints: [path.join(root, 'test/worker.js')], bundle: true, write: false,
-  format: 'esm', platform: 'browser', outfile: path.join(root, 'test/bundle.js'),
+  external: ['cloudflare:sockets'], format: 'esm', platform: 'browser', outfile: path.join(root, 'test/bundle.js'),
   plugins: [{ name: 'wasm-external', setup(build) {
     build.onResolve({ filter: /.wasm$/ }, args => ({
       path: '../' + path.relative(root, path.resolve(args.resolveDir, args.path)).split(path.sep).join('/'), external: true,

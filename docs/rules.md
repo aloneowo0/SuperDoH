@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #26–#27）
+# 环境变量规则执行器（JSON-only / #26–#28）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。TCP/TLS、缓存、外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 上游已在 #28 交付；TLS、缓存、外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -361,7 +361,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 
 ### 显式命名 HTTPS 上游（#27）
 
-`DNS_UPSTREAMS` 是独立 JSON 环境变量（也可为 JSON 文本），只保存连接信息。名称为 1–64 位 ASCII，首位字母，其余字母、数字或下划线；区分大小写。不预置厂商，不自动选择第一项。每项必须有 `transport: "https"`，且 `url` / `urlSecret` 恰好一个：
+`DNS_UPSTREAMS` 是独立 JSON 环境变量（也可为 JSON 文本），只保存连接信息。名称为 1–64 位 ASCII，首位字母，其余字母、数字或下划线；区分大小写。不预置厂商，不自动选择第一项。HTTPS 项必须有 `transport: "https"`，且 `url` / `urlSecret` 恰好一个；普通 TCP 项见下节：
 
 ```json
 {
@@ -370,7 +370,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 }
 ```
 
-`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。TCP/TLS 尚未交付，`transport: "tcp"` / `"tls"` 会明确报 INVALID_CONFIG，不能写上后假装可用。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
+`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。TCP 现在使用独立 address/port 字段；TLS 尚未交付，`transport: "tls"` 仍明确报 INVALID_CONFIG。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
 
 显式请求动作：
 
@@ -385,7 +385,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 }
 ```
 
-一次动作只向指定上游发一次 POST wire 查询，不重试、切换上游或跟随重定向。目标只来自部署配置，客户端不能指定地址或上传配置。先校验 HTTP、媒体、消息大小、DNS/EDNS 版本及实际出站 ID/Question 对应性，再以新响应替换当前响应。所有协议有效且可表示的完整 RCODE 均算请求成功，包括 SERVFAIL、REFUSED、NXDOMAIN、NODATA；业务是否满意由下一条规则判断。HTTP 200 本身不等于 DNS 有效。
+一次 HTTPS 动作只向指定上游发一次 POST wire 查询，不重试、切换上游或跟随重定向。目标只来自部署配置，客户端不能指定地址或上传配置。先校验 HTTP、媒体、消息大小、DNS/EDNS 版本及实际出站 ID/Question 对应性，再以新响应替换当前响应。所有协议有效且可表示的完整 RCODE 均算请求成功，包括 SERVFAIL、REFUSED、NXDOMAIN、NODATA；业务是否满意由下一条规则判断。HTTP 200 本身不等于 DNS 有效。
 
 仅定义上游不联网；正常结束/stop 没有响应时报 NO_RESPONSE 并返回相关 SERVFAIL，绝不补查。return 没响应仍按动作失败处理，可选时可继续。没有显式请求动作时，即使配置了上游也不会访问它。
 
@@ -459,7 +459,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | DNS_UPSTREAM | INVALID_CONFIG；移入 DNS_UPSTREAMS 名称项，并增加显式 queryUpstream 动作 |
 | DNS_UPSTREAM_GROUPS、DNS_DEFAULT_UPSTREAM_GROUP | INVALID_CONFIG（即使空对象/空值）；删除策略组，按名称写顺序规则 |
 | queryUpstream 缺少上游名或包含旧 group 字段 | INVALID_CONFIG；改为必填 upstream 名称 |
-| 上游项缺少 transport，或包含 members、accept 等旧字段 | INVALID_CONFIG；每项仅 transport 和 url/urlSecret；采用判断移到后续规则 |
+| 上游项缺少 transport，或包含 members、accept 等旧字段 | INVALID_CONFIG；按传输使用 transport 和 url/urlSecret 或 address/port；采用判断移到后续规则 |
 | maxUpstreamGroups、maxUpstreamMembers | INVALID_CONFIG；删除，使用 maxUpstreams 和共享资源预算 |
 | UpstreamGroupConfig、upstream_failed、组成员索引、fallback/exhausted 处置、UPSTREAM_REJECTED/UPSTREAM_EXHAUSTED | 已移除；每次显式动作失败用 action_failed 及动作位置，后续成功不抹除既有事件 |
 
@@ -473,4 +473,24 @@ maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读�
 
 响应先对应当前出站查询校验，再恢复原始客户端 ID/Question/RD/CD。未经改写数据保留适用 AD/RRSIG（不代表本服务执行 DNSSEC 密码学校验）；TTL 修改清 AD 并仅移除被改 RRset 的失效签名；rewriteQuery 后的上游响应保守清 AD/全部 RRSIG；TSIG/SIG0 消息认证重新编码后不能沿用。当前基础动作不改 EDNS，保留对未来出站 EDNS 差异的防御：必要时清除不适用 OPT，扩展 RCODE 只能用原客户端 OPT 重建最小无 flags/options OPT，无法安全表示则 UPSTREAM_INVALID，绝不降为 NOERROR。提前返回、可选回滚与 SERVFAIL 都经过统一协议收尾。
 
-本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。TCP/TLS、安全原始响应缓存、外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
+本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。TLS、安全原始响应缓存、外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
+
+### 普通 TCP 命名上游（#28）
+
+```json
+{
+  "primary": { "transport": "tcp", "address": "resolver.example", "port": 53 }
+}
+```
+
+`address` 是独立的 ASCII DNS 主机名、严格 IPv4 或不带括号的 IPv6，不接受 URL、端口后缀、IPv6 zone 或路径；国际域名需先转 ASCII。`port` 省略时为 53，显式值必须为 1–65535 的整数，null 和数字字符串不接受。TCP 项不接受 url/urlSecret，HTTPS 项不接受 address/port；未使用的坏定义也在执行前失败。目标仅来自部署者配置，不从客户端请求拼接。
+
+这是**明文 DNS over TCP**，不是 DoT。每个显式请求动作创建一个连接，发送带两字节长度前缀的 DNS 报文，只取得一份对应响应后关闭连接；不池化、不管线化、不重试、不切其他传输或上游。与 HTTPS 共用完整 RCODE、报文/实际查询对应性、EDNS、记录预算及统一客户端收尾；请求、失败结果及 JSON lastAction 分支语义相同。
+
+前缀和正文可以分段到达；收到完整帧即完成，不等待服务器 EOF。前缀声明不足 DNS 头、超过响应预算、截断、同一读块中超出首帧的数据或不对应响应均拒绝。完整首帧之后不继续等候额外消息，关闭连接后到达的数据不参与当前请求。maxResponseBytes 限制 DNS 正文，不含两个分帧字节。
+
+单次连接建立、写入及读取共同受 upstreamTimeoutMs 和请求总 deadline 约束；maxNetworkRequests 跨 HTTPS/TCP 动作累计，失败也计数。取消、超时、成功和失败均关闭本地 socket，处理 opened/closed 和迟到操作拒绝；不承诺已经发送的网络数据可回滚或远端应用立即停止。平台/操作系统对不可用端口可能先报连接失败，也可能直到预算超时，JSON 应按所需的成功状态或稳定错误码组合处理。
+
+本地验证通过正式 DoH 入口，workerd 直接连接受控 Node TCP DNS 服务，无 nodejs_compat，不用模拟 connect 替代真实连接。覆盖分段帧、保持连接不发 EOF、失败及扩展 RCODE、畸形帧、限额、超时、取消、连接释放及回滚。esbuild 浏览器目标需将平台模块 cloudflare:sockets 保留为 external。
+
+Workers 出站 TCP 对 Cloudflare IP 范围等目标存在平台限制，生产环境本地地址的可达性也不同于 Miniflare；本地受控服务成功不证明任意公共解析器或所有端口可达。本票未进行公网解析、部署或线上 CPU/连接配额验证。平台说明：https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/ 。

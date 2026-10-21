@@ -84,4 +84,6 @@ export interface FailureReason {
   readonly message: string;
 }
 
-export type UpstreamConfig = { transport: 'https' } & ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never });
+export type UpstreamConfig = ({ transport: 'https' } & ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }))
+  | { transport: 'tcp'; address: string; port?: number };
+export type ResolvedUpstream = { transport: 'https'; url: string } | { transport: 'tcp'; address: string; port: number };

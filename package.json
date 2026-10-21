@@ -7,8 +7,9 @@
     "typecheck": "tsc --noEmit",
     "test:rules": "node --test test/rules.mjs",
     "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs",
-    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:libraries",
-    "test:doh": "node --test test/doh.mjs"
+    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:libraries",
+    "test:doh": "node --test test/doh.mjs",
+    "test:tcp": "node --test test/tcp.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",

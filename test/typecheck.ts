@@ -85,7 +85,7 @@ const oldGroup: Action = { type: 'queryUpstream', group: 'standard' };
 const missingSource: Action = { type: 'queryUpstream' };
 // @ts-expect-error An upstream cannot supply both URL sources.
 const ambiguousUpstream: import('../src/rules/types.js').UpstreamConfig = { transport: 'https', url: 'https://test/', urlSecret: 'SECRET' };
-// @ts-expect-error TCP is not implemented by this ticket.
+// @ts-expect-error TCP uses address/port, not HTTPS URL fields.
 const unsupportedTransport: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', url: 'https://test/' };
 void [namedQuery, sources, oldGroup, missingSource, ambiguousUpstream, unsupportedTransport];
 
@@ -107,3 +107,8 @@ const badResultCondition: Condition = { field: 'lastAction.success', op: 'eq', v
 // @ts-expect-error Runtime results are not caller-supplied state.
 executeQuery(new Uint8Array(), {}, { lastAction: { success: true } });
 void [recent, badResultCondition];
+
+const tcpSource: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', address: 'resolver.example', port: 53 };
+// @ts-expect-error Ports must be numbers.
+const badTcpPort: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', address: 'resolver.example', port: '53' };
+void [tcpSource, badTcpPort];

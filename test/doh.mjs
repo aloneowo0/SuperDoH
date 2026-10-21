@@ -9,7 +9,7 @@ import { query, decode, responseWire, nameWire } from './helpers/dns-wire.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const bundleWorker = entry => build({
   entryPoints: [path.join(root, entry)], bundle: true, write: false,
-  format: 'esm', platform: 'browser', outfile: path.join(root, 'test/doh-bundle.js'),
+  external: ['cloudflare:sockets'], format: 'esm', platform: 'browser', outfile: path.join(root, 'test/doh-bundle.js'),
   plugins: [{ name: 'wasm-external', setup(build) {
     build.onResolve({ filter: /.wasm$/ }, args => ({
       path: '../' + path.relative(root, path.resolve(args.resolveDir, args.path)).split(path.sep).join('/'), external: true,
