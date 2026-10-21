@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #26–#28）
+# 环境变量规则执行器（JSON-only / #26–#29）
 
 当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 上游已在 #28 交付；TLS、缓存、外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；缓存、外部来源与 ECH 动作待后续票交付。修订 #7 是目标规格，不是全部已实现声明；未部署、未做线上免费 CPU 验收，README 历史版本说明不是当前功能清单。
 
 ## 公共入口
 
@@ -370,7 +370,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 }
 ```
 
-`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。TCP 现在使用独立 address/port 字段；TLS 尚未交付，`transport: "tls"` 仍明确报 INVALID_CONFIG。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
+`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。TCP/TLS 使用独立 address/port 字段；TLS 还支持显式 serverName，详见后文。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
 
 显式请求动作：
 
@@ -473,7 +473,7 @@ maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读�
 
 响应先对应当前出站查询校验，再恢复原始客户端 ID/Question/RD/CD。未经改写数据保留适用 AD/RRSIG（不代表本服务执行 DNSSEC 密码学校验）；TTL 修改清 AD 并仅移除被改 RRset 的失效签名；rewriteQuery 后的上游响应保守清 AD/全部 RRSIG；TSIG/SIG0 消息认证重新编码后不能沿用。当前基础动作不改 EDNS，保留对未来出站 EDNS 差异的防御：必要时清除不适用 OPT，扩展 RCODE 只能用原客户端 OPT 重建最小无 flags/options OPT，无法安全表示则 UPSTREAM_INVALID，绝不降为 NOERROR。提前返回、可选回滚与 SERVFAIL 都经过统一协议收尾。
 
-本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。TLS、安全原始响应缓存、外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
+本地测试仅使用受控上游，不发真实公共解析请求。未部署、未做线上免费 CPU/连接数或公网互操作验收。安全原始响应缓存、外部列表与 ECH 动作为后续票据，不能因 #27 完成声称新版 #7 全部完成。
 
 ### 普通 TCP 命名上游（#28）
 
@@ -494,3 +494,20 @@ maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读�
 本地验证通过正式 DoH 入口，workerd 直接连接受控 Node TCP DNS 服务，无 nodejs_compat，不用模拟 connect 替代真实连接。覆盖分段帧、保持连接不发 EOF、失败及扩展 RCODE、畸形帧、限额、超时、取消、连接释放及回滚。esbuild 浏览器目标需将平台模块 cloudflare:sockets 保留为 external。
 
 Workers 出站 TCP 对 Cloudflare IP 范围等目标存在平台限制，生产环境本地地址的可达性也不同于 Miniflare；本地受控服务成功不证明任意公共解析器或所有端口可达。本票未进行公网解析、部署或线上 CPU/连接配额验证。平台说明：https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/ 。
+
+### 认证 TLS 命名上游（#29）
+
+```json
+{
+  "secure": { "transport": "tls", "address": "resolver.example", "port": 853 },
+  "secureIp": { "transport": "tls", "address": "192.0.2.53", "port": 853, "serverName": "resolver.example" }
+}
+```
+
+TLS 是标准 DNS over TLS，默认端口 **853**，不等同明文 TCP。address/port 校验与 TCP 相同；serverName 为证书身份和 SNI 使用的 ASCII DNS 主机名，默认取地址中的主机名，连接 IP 时必须显式提供 DNS serverName。此接口不提供仅 IP SAN 身份认证、私有 CA 注入、关闭证书校验或明文降级开关；未知字段在预检阶段失败。TCP/HTTPS 项不接受 serverName。
+
+使用平台原生 socket.startTls 的 expectedServerHostname，在任何 DNS 应用数据发送前立即启用 TLS；没有 STARTTLS DNS 命令，也不会先发明文 DNS。信任链及服务端身份由平台验证。认证失败是明确的动作失败，不重连明文、不换来源、不请求默认上游。普通 DoT 不调用或复刻 ECH 探测库。
+
+握手、写入和读取共同使用单次 upstreamTimeoutMs，并受整体执行 deadline 和跨传输请求次数约束；握手失败、超时和取消均关闭连接。分帧、完整 RCODE、协议对应性、最近动作结果、回滚和最终 DNSSEC/EDNS 收尾与 TCP/HTTPS 共用。
+
+TLS 回归在真实 workerd 正式 DoH 入口连接受控 Node TLS DNS 服务。测试网络单独配置既有证书夹具的根信任，未向生产配置添加测试 CA，未关闭校验。覆盖正确身份、错误身份、不信任根、拆分响应、失败/扩展 RCODE、可选回滚、取消清理，以及原始 TCP 对端不完成 TLS 握手时的有界失败与不降级。通过这些测试不等于公网目标可达或线上 CPU/连接配额合格；平台底层诊断与外部代理日志仍需部署者另行审查。

@@ -20,19 +20,26 @@ export function loadUpstreams(env, limits, configBudget) {
     const upstreams = new Map();
     for (const [name, raw] of Object.entries(definitions)) {
       upstreamName(name);
-      const value = fields(raw, ['transport', 'url', 'urlSecret', 'address', 'port']);
-      if (value.transport === 'tcp') {
+      const value = fields(raw, ['transport', 'url', 'urlSecret', 'address', 'port', 'serverName']);
+      if (value.transport === 'tcp' || value.transport === 'tls') {
         if (value.url !== undefined || value.urlSecret !== undefined) throw new Error();
         const address = value.address;
         if (typeof address !== 'string' || address.length === 0 || address.length > 253) throw new Error();
         if (address.includes(':') || /^[0-9.]+$/.test(address)) ip(address);
         else if (address.replace(/\.$/, '').split('.').some(label => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();
-        const port = value.port === undefined ? 53 : value.port;
+        const port = value.port === undefined ? (value.transport === 'tls' ? 853 : 53) : value.port;
         if (typeof port !== 'number' || !Number.isInteger(port) || port < 1 || port > 65535) throw new Error();
-        upstreams.set(name, { transport: 'tcp', address, port });
+        if (value.transport === 'tls') {
+          const serverName = value.serverName === undefined ? address : value.serverName;
+          if (typeof serverName !== 'string' || serverName.length === 0 || serverName.length > 253 || serverName.includes(':') || /^[0-9.]+$/.test(serverName) || serverName.replace(/\.$/, '').split('.').some(label => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();
+          upstreams.set(name, { transport: 'tls', address, port, serverName: serverName.replace(/\.$/, '') });
+        } else {
+          if (value.serverName !== undefined) throw new Error();
+          upstreams.set(name, { transport: 'tcp', address, port });
+        }
         continue;
       }
-      if (value.address !== undefined || value.port !== undefined) throw new Error();
+      if (value.address !== undefined || value.port !== undefined || value.serverName !== undefined) throw new Error();
       if (value.transport !== 'https' || (value.url === undefined) === (value.urlSecret === undefined)) throw new Error();
       let rawUrl = value.url;
       if (value.urlSecret !== undefined) {

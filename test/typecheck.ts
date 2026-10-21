@@ -112,3 +112,8 @@ const tcpSource: import('../src/rules/types.js').UpstreamConfig = { transport: '
 // @ts-expect-error Ports must be numbers.
 const badTcpPort: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', address: 'resolver.example', port: '53' };
 void [tcpSource, badTcpPort];
+
+const tlsSource: import('../src/rules/types.js').UpstreamConfig = { transport: 'tls', address: '192.0.2.53', serverName: 'resolver.example' };
+// @ts-expect-error TLS does not expose an authentication downgrade.
+const insecureTls: import('../src/rules/types.js').UpstreamConfig = { transport: 'tls', address: 'resolver.example', verifyCertificate: false };
+void [tlsSource, insecureTls];

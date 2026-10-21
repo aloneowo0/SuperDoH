@@ -2,7 +2,7 @@ import { encodeMessage, getEdns, matchResponse, parseMessage } from '../../lib/d
 import { RuleError } from '../rules/errors.js';
 import { createBudget } from './budget.js';
 import { readBody } from './body.js';
-import { queryTcp } from './tcp.js';
+import { queryStream } from './dns-stream.js';
 
 /** @param {unknown} raw @returns {string | undefined} */
 export function loadUpstream(raw) {
@@ -56,8 +56,8 @@ export function createUpstream(limits, budget) {
       if (attempts >= limits.maxNetworkRequests) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.');
       attempts += 1;
       let responseWire;
-      if (target.transport === 'tcp') {
-        responseWire = await queryTcp(target, queryWire, limits.maxResponseBytes, child);
+      if (target.transport !== 'https') {
+        responseWire = await queryStream(target, queryWire, limits.maxResponseBytes, child);
       } else {
         const request = new Request(target.url, {
           method: 'POST',

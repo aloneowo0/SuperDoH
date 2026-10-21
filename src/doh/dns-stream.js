@@ -3,14 +3,14 @@ import { RuleError } from '../rules/errors.js';
 
 /**
  * One connection, one framed query and one response; never wait for peer EOF.
- * @param {{ address: string, port: number }} target
+ * @param {Exclude<import('../rules/types.js').ResolvedUpstream, { transport: 'https' }>} target
  * @param {Uint8Array} query
  * @param {number} maximum
  * @param {ReturnType<typeof import('./budget.js').createBudget>} budget
  */
-export async function queryTcp(target, query, maximum, budget) {
+export async function queryStream(target, query, maximum, budget) {
   budget.check();
-  const socket = connect({ hostname: target.address, port: target.port }, { secureTransport: 'off', allowHalfOpen: false });
+  let socket = connect({ hostname: target.address, port: target.port }, { secureTransport: target.transport === 'tls' ? 'starttls' : 'off', allowHalfOpen: false });
   socket.closed.catch(() => {});
   socket.opened.catch(() => {});
   let closed = false;
@@ -20,21 +20,31 @@ export async function queryTcp(target, query, maximum, budget) {
     try { void socket.close().catch(() => {}); } catch { /* Best-effort cleanup. */ }
   };
   budget.signal.addEventListener('abort', close, { once: true });
-  const writer = socket.writable.getWriter();
-  const reader = socket.readable.getReader();
+  /** @type {WritableStreamDefaultWriter<Uint8Array> | undefined} */
+  let writer;
+  /** @type {ReadableStreamDefaultReader<Uint8Array> | undefined} */
+  let reader;
   try {
+    if (target.transport === 'tls') {
+      // Upgrade immediately: no application data is sent before the TLS handshake.
+      socket = socket.startTls({ expectedServerHostname: target.serverName });
+      socket.opened.catch(() => {});
+      socket.closed.catch(() => {});
+    }
+    const outputWriter = writer = socket.writable.getWriter();
+    const inputReader = reader = socket.readable.getReader();
     await budget.run(() => socket.opened);
     const request = new Uint8Array(query.byteLength + 2);
     request[0] = query.byteLength >>> 8;
     request[1] = query.byteLength & 255;
     request.set(query, 2);
-    await budget.run(() => writer.write(request));
+    await budget.run(() => outputWriter.write(request));
     const prefix = new Uint8Array(2);
     let prefixBytes = 0, received = 0;
     /** @type {Uint8Array | undefined} */
     let output;
     while (true) {
-      const { value, done } = await budget.run(() => reader.read());
+      const { value, done } = await budget.run(() => inputReader.read());
       if (done) throw new RuleError('UPSTREAM_INVALID', 'Incomplete DNS TCP response.');
       let offset = 0;
       while (prefixBytes < 2 && offset < value.byteLength) prefix[prefixBytes++] = value[offset++];
@@ -54,7 +64,7 @@ export async function queryTcp(target, query, maximum, budget) {
   } finally {
     budget.signal.removeEventListener('abort', close);
     close();
-    try { reader.releaseLock(); } catch { /* A cancelled read may still be settling. */ }
-    try { writer.releaseLock(); } catch { /* A cancelled write may still be settling. */ }
+    try { reader?.releaseLock(); } catch { /* A cancelled read may still be settling. */ }
+    try { writer?.releaseLock(); } catch { /* A cancelled write may still be settling. */ }
   }
 }
