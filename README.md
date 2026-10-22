@@ -79,6 +79,6 @@ npm run typecheck
 npm test
 ```
 
-`npm test` runs the standard type, workerd, DNS and ECH library regression suites. The opt-in independent ECH/OpenSSL handshake requires an ECH-capable OpenSSL build; the available system OpenSSL 3.5.5 does not provide the required `ech` command or `s_server -ech_key`. See [docs/acceptance.md](docs/acceptance.md) for this blocker and outstanding online acceptance.
+`npm test` runs the standard type, workerd, DNS and ECH library regression suites. The opt-in independent ECH/OpenSSL handshake requires an ECH-capable OpenSSL build; the Windows system OpenSSL lacks the required ECH commands, but an isolated WSL build passed the public Worker and generic-library interop suites on 2026-10-22. See [docs/acceptance.md](docs/acceptance.md) for the pinned build, reproduction commands and outstanding online acceptance.
 
 Platform references: [runtime/build variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [Wrangler variable preservation](https://developers.cloudflare.com/workers/wrangler/configuration/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).

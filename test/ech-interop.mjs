@@ -51,7 +51,7 @@ function echSvcParam(message) {
     offset += 4;
     assert.ok(offset + size <= data.length, 'ServiceParam value is truncated');
     assert.ok(!params.has(key), `duplicate ServiceParam key ${key}`);
-    params.set(key, data.slice(offset, offset + size));
+    params.set(key, Uint8Array.from(data.slice(offset, offset + size)));
     offset += size;
   }
   const ech = params.get(5);
@@ -141,24 +141,20 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
 
     server = spawn(openssl, ['s_server', '-accept', `127.0.0.1:${port}`, '-tls1_3', '-ciphersuites', 'TLS_AES_128_GCM_SHA256',
       '-cert', path.join(temp, 'leaf.pem'), '-key', path.join(temp, 'key.pem'), '-cert_chain', path.join(temp, 'intermediate.pem'),
-      '-ech_key', path.join(temp, 'ech.pem'), '-verify', '1', '-CAfile', path.join(temp, 'root.pem'), '-quiet', '-www', '-no_ticket', '-msg'],
+      '-ech_key', path.join(temp, 'ech.pem'), '-verify', '1', '-CAfile', path.join(temp, 'root.pem'), '-www', '-no_ticket', '-msg'],
     { env: { ...process.env, OPENSSL_CONF: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
     for (const stream of [server.stdout, server.stderr]) stream.setEncoding('utf8').on('data', text => {
       if (serverLogs.join('').length < 1048576) serverLogs.push(text);
     });
     server.on('error', error => serverLogs.push(String(error)));
 
+    // Wait for OpenSSL to report a bound listener rather than probing the port
+    // just released by the reservation before the actual service is listening.
     const readyDeadline = Date.now() + 10000;
-    while (true) {
-      if (server.exitCode !== null) throw new Error(`OpenSSL ECH server exited early: ${serverLogs.join('')}`);
-      const ready = await new Promise(resolve => {
-        const socket = net.connect(port, '127.0.0.1');
-        socket.once('connect', () => { socket.destroy(); resolve(true); });
-        socket.once('error', () => resolve(false));
-      });
-      if (ready) break;
+    while (!serverLogs.join('').split(/\r?\n/).includes('ACCEPT')) {
+      if (server.exitCode !== null || server.signalCode !== null) throw new Error(`OpenSSL ECH server exited early: ${serverLogs.join('')}`);
       assert.ok(Date.now() < readyDeadline, `OpenSSL ECH server did not start: ${serverLogs.join('')}`);
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     // Independent TLS baseline verifies that the generated server cert/service are usable.
@@ -180,7 +176,7 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
       } }],
     });
     const script = bundle.outputFiles[0].text;
-    mf = new Miniflare({
+    const runtimeOptions = {
       modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/ech-public-bundle.js'), script,
       compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'],
       bindings: { DNS_CACHE: { read: false, write: false } },
@@ -193,7 +189,8 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
         { type: 'ESModule', include: ['**/*.js'], fallthrough: true },
         { type: 'CompiledWasm', include: ['**/*.wasm'], fallthrough: true },
       ],
-    });
+    };
+    mf = new Miniflare(runtimeOptions);
 
     const finishedCount = () => (serverLogs.join('').match(/<<< TLS 1\.3, Handshake[^\r\n]*Finished/g) ?? []).length;
     await waitForFinished(finishedCount, 1, server, serverLogs);
@@ -206,10 +203,11 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     async function configure(probeOptions) {
       logs.length = 0;
       await mf.setOptions({
+        ...runtimeOptions,
         bindings: {
           DNS_CACHE: { read: false, write: false },
           DNS_LIMITS: { maxExecutionTimeMs: 15000, maxEchProbeTimeoutMs: 10000 },
-          DNS_RULE_MAIN: actions(probeOptions),
+          DNS_RULE_MAIN: JSON.stringify(actions(probeOptions)),
         },
       });
     }
@@ -235,7 +233,7 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     assert.equal(finishedCount(), beforeHit, 'a valid cache hit must not start another TLS handshake');
 
     // A wrong DNS identity must fail closed, with no retry using disabled verification.
-    await configure(options({ serverName: 'wrong.example.test' }));
+    await configure(options({ serverName: 'wrong.invalid' }));
     const wrongName = await requestPublic();
     assert.equal(wrongName.flags & 15, 2, logs.join(''));
     assert.equal(finishedCount(), beforeHit, 'wrong serverName must fail before client Finished');
@@ -255,8 +253,9 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     assert.ok(publicNames(unauthenticated).includes(hostname));
     await waitForFinished(finishedCount, beforeHit + 1, server, logs);
   } catch (error) {
-    if (temp) await fs.writeFile(path.join(temp, 'server.log'), [...serverLogs, ...logs].join(''));
-    throw error;
+    const diagnostics = [...serverLogs, ...logs].join('').split(/\r?\n/)
+      .filter(line => !/^    [0-9a-f ]+$/.test(line)).join('\n').slice(-12000);
+    throw new Error(`Independent ECH interop failed: ${error.message}\n${diagnostics}`, { cause: error });
   } finally {
     await mf?.dispose();
     if (server && server.exitCode === null) {

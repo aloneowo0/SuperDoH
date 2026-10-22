@@ -15,7 +15,7 @@ This matrix maps the current implementation surface to its local verification co
 | Maintained domain lists | `npm run test:lists` (`test/domain-lists.mjs`) | Inline/external text/JSON, complete replacement, due refresh, failure invalidation, recovery and bounded isolate state. Test time is controlled by the test harness, not a production clock hook. |
 | ECH direct/HTTPS lookup/application and probe behavior | `npm run test:ech` (`test/ech.mjs`); `npm run test:ech-probe` (`test/ech-probe.mjs`) | ECH actions through the Worker boundary with controlled sources, validation, failure/rollback and resource behavior. |
 | DNS/ECH library regression | `npm run test:libraries` | DNS WASM smoke and generic operations plus ECH Node/workerd offline suites. |
-| Checked-in examples and composed source/cache/ECH flow | `npm run test:acceptance` (`test/acceptance.mjs`) | Executes checked-in JSON configurations and combines maintained lists, attribution, original caching, ECH and JSON; unsupported probe sources fail closed. Independent successful probe interop remains blocked below. |
+| Checked-in examples and composed source/cache/ECH flow | `npm run test:acceptance` (`test/acceptance.mjs`) | Executes checked-in JSON configurations and combines maintained lists, attribution, original caching, ECH and JSON; unsupported probe sources fail closed. Independent successful probe interop passed separately as recorded below. |
 | Types and combined default regression | `npm run typecheck`; `npm test` | TypeScript checks and the standard script sequence in `package.json`. |
 | Opt-in JSON query adapter | `npm run test:json` (`test/json.mjs`) | `DNS_JSON` gating, `name`/`type`/`cd`, authentication, JSON errors and same-pipeline behavior. The script is part of the default npm test sequence. |
 
@@ -39,11 +39,37 @@ LD_LIBRARY_PATH=/path/to/that/build \
 npm run test:ech-interop
 ```
 
-Current environment status: `ECH_PROBE_OPENSSL` is unset. `command -v openssl` resolves to OpenSSL 3.5.5 from the MinGW installation; it has no `ech` subcommand and its `s_server` has no `-ech_key`. The historical `/tmp/opencode/openssl-ech/apps/openssl` referenced by `META_ECH_HANDOFF.md` is not present. Therefore independent ECH handshake success is **not** claimed here; no OpenSSL build/install was attempted.
+### Recorded independent verification (2026-10-22)
+
+After the harness fixes, the full default regression was rerun on Windows on 2026-10-22 and exited with code 0: typechecking, 211 application tests, 130 DNS library tests and 104 ECH offline tests passed. The independent checks below ran separately in WSL, not inside that default total.
+
+The Windows system OpenSSL lacks ECH support and the historical build path is absent. An isolated WSL build of official [OpenSSL source](https://github.com/openssl/openssl) at commit aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c reports OpenSSL 4.2.0-dev and passed:
+
+- Public production DoH entry: one integration test covering default authenticated acquisition/application, reuse without another complete handshake, wrong SNI, untrusted default roots, and separately explicit verification-off behavior.
+- Generic ECH library: four OpenSSL/workerd cases passed; the independent server received three client Finished records, including the Node TLS baseline and both successful workerd clients. No nodejs_compat was enabled.
+
+The wrong-SNI case uses wrong.invalid, outside the fixture certificate's wildcard SAN. The harness waits for OpenSSL's ACCEPT listener signal, retains the complete Miniflare runtime options on reconfiguration, and serializes JSON bindings to omit undefined fields. Failure diagnostics survive temporary-directory cleanup without dumping TLS hex records.
+
+Reproduce inside Linux/WSL with Node.js 22+, GCC, Make, Perl and Git. Use fresh temporary directories; no system installation or account credentials are required:
+
+```sh
+git clone https://github.com/openssl/openssl.git /tmp/superdoh-openssl-ech
+cd /tmp/superdoh-openssl-ech
+git checkout --detach aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c
+./Configure no-shared no-tests enable-ech
+make -j4
+
+# In a separate Linux checkout of this repository, with locked dependencies:
+npm ci
+ECH_PROBE_OPENSSL=/tmp/superdoh-openssl-ech/apps/openssl npm run test:ech-interop
+ECH_PROBE_OPENSSL=/tmp/superdoh-openssl-ech/apps/openssl node lib/ech-probe/test/interop.mjs
+```
+
+The executed build used /tmp/superdoh-openssl-ech-20261022 and an isolated repository copy at /tmp/superdoh-ech-acceptance-20261022; these are disposable local prerequisites, not committed dependencies or a deployment. The development OpenSSL revision is pinned for reproducibility, not recommended as a production dependency. This proves local protocol interoperability only, not public-source reachability or Free-plan CPU compliance.
 
 ## Outstanding acceptance
 
-- **#22 ECH interoperability:** the opt-in test and command exist, but the required ECH-capable OpenSSL executable is unavailable in the current environment. This check is blocked, not passed.
+- **#22 local ECH interoperability:** passed in the isolated WSL environment above; keep this opt-in prerequisite separate from the default offline regression and rerun it for release candidates.
 - **#25 online free-plan acceptance:** no online CPU measurement, deployment, remote DoH interoperability or account-specific free-plan verification was authorized or performed. Local workerd and controlled-source test results cannot substitute for those checks.
 - **Platform/resource caveats:** upstream reachability, Secrets/variable limits and Worker resource availability depend on the deployed account and environment. Application `DNS_LIMITS` values are resource bounds, not free-plan CPU guarantees.
 

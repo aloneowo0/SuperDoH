@@ -1,6 +1,6 @@
 # Online acceptance runbook
 
-Status: **prepared, not authorized or executed**. This is the remaining #25 procedure, not a result or deployment approval. Resolve the independent ECH/OpenSSL prerequisite in [acceptance.md](acceptance.md) before claiming complete acceptance.
+Status: **prepared, not authorized or executed**. This is the remaining #25 procedure, not a result or deployment approval. The independent local ECH/OpenSSL check passed on 2026-10-22; reproduce it using [acceptance.md](acceptance.md) for the actual candidate before claiming complete acceptance.
 
 ## Authorization gate
 
