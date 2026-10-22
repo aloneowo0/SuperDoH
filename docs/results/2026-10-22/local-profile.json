@@ -1,32 +1,34 @@
 {
-  "version": 1,
-  "evidenceKind": "Local V8 sampling diagnostic, not Cloudflare quota CPU",
-  "baseCommit": "a7ea787",
-  "harnessSha256": "a04b3f9beb8577b9607946bb061325261832aea7f4b5a2d5747aa00eff9b7a3f",
+  "version": 2,
+  "baseCommit": "54ba1ac",
+  "harnessSha256": "41e26a97c600c62b0d20cedca74ec31be689b7ef95991cf011e1d91909287d53",
+  "supersedes": "The local elapsed-weight summary in54ba1ac; its function millisecond weights must not be interpreted as CPU.",
   "node": "v24.14.0",
   "workerd": "1.20260730.1",
   "compatibilityDate": "2026-07-30",
   "onlineRequests": 0,
-  "certificateVerification": "enabled for both probe cases; controlled loopback TLS alert, not a successful handshake",
+  "evidenceKind": "Local stack observations only; sample time gaps include waits and are NOT CPU",
   "requestedSamplingIntervalUs": 100,
-  "inclusiveStackWeightsOverlap": true,
+  "inclusiveStackCountsOverlap": true,
+  "sampleIntervalsMustNotBeSummedAsCpu": true,
   "results": [
     {
       "file": "custom-auth-alert-0.cpuprofile",
-      "sampleCount": 96,
-      "profileWindowMs": 129.096,
-      "sampledMs": 128.942,
-      "idleMs": 59.674,
-      "unattributedProgramMs": 8.529,
-      "gcMs": 2.302,
-      "inclusiveSampledMs": {
-        "prepareTrustAnchors": 25.184,
-        "decodePem": 18.843,
-        "parseDer": 23.297,
-        "fromBER": 12.502,
-        "createClientHello": 0.584,
-        "loadGroups": 24.488,
-        "validateProbeOptions": 22.947,
+      "sampleCount": 66,
+      "profileWindowMs": 76.173,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 3,
+      "gcSamples": 2,
+      "maxSampleGapMs": 21.492,
+      "sampleGapsOver10ms": 2,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 27,
+        "decodePem": 18,
+        "parseDer": 26,
+        "fromBER": 12,
+        "createClientHello": 0,
+        "loadGroups": 23,
+        "validateProbeOptions": 23,
         "fetchDomains": 0,
         "parseDomains": 0,
         "prepare": 0
@@ -34,20 +36,21 @@
     },
     {
       "file": "custom-auth-alert-1.cpuprofile",
-      "sampleCount": 31,
-      "profileWindowMs": 29.827,
-      "sampledMs": 29.694,
-      "idleMs": 9.562,
-      "unattributedProgramMs": 0,
-      "gcMs": 0.689,
-      "inclusiveSampledMs": {
-        "prepareTrustAnchors": 9.291,
-        "decodePem": 4.026,
-        "parseDer": 8.663,
-        "fromBER": 4.364,
-        "createClientHello": 0.591,
-        "loadGroups": 5.407,
-        "validateProbeOptions": 7.047,
+      "sampleCount": 24,
+      "profileWindowMs": 17.675,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 3,
+      "maxSampleGapMs": 3.676,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 16,
+        "decodePem": 9,
+        "parseDer": 16,
+        "fromBER": 7,
+        "createClientHello": 0,
+        "loadGroups": 11,
+        "validateProbeOptions": 12,
         "fetchDomains": 0,
         "parseDomains": 0,
         "prepare": 0
@@ -55,20 +58,21 @@
     },
     {
       "file": "custom-auth-alert-2.cpuprofile",
-      "sampleCount": 23,
-      "profileWindowMs": 29.693,
-      "sampledMs": 29.524,
-      "idleMs": 10.287,
-      "unattributedProgramMs": 0,
-      "gcMs": 1.143,
-      "inclusiveSampledMs": {
-        "prepareTrustAnchors": 7.913,
-        "decodePem": 4.562,
-        "parseDer": 7.913,
-        "fromBER": 2.69,
-        "createClientHello": 0.63,
-        "loadGroups": 3.322,
-        "validateProbeOptions": 6.284,
+      "sampleCount": 17,
+      "profileWindowMs": 18.375,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 1,
+      "gcSamples": 2,
+      "maxSampleGapMs": 6.321,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 10,
+        "decodePem": 6,
+        "parseDer": 10,
+        "fromBER": 5,
+        "createClientHello": 0,
+        "loadGroups": 6,
+        "validateProbeOptions": 8,
         "fetchDomains": 0,
         "parseDomains": 0,
         "prepare": 0
@@ -76,20 +80,21 @@
     },
     {
       "file": "default-auth-alert-0.cpuprofile",
-      "sampleCount": 651,
-      "profileWindowMs": 440.325,
-      "sampledMs": 440.146,
-      "idleMs": 64.66,
-      "unattributedProgramMs": 0.538,
-      "gcMs": 22.438,
-      "inclusiveSampledMs": {
-        "prepareTrustAnchors": 314.402,
-        "decodePem": 188.02,
-        "parseDer": 299.816,
-        "fromBER": 139.013,
-        "createClientHello": 0.571,
-        "loadGroups": 7.054,
-        "validateProbeOptions": 0.608,
+      "sampleCount": 421,
+      "profileWindowMs": 248.55,
+      "idleSamples": 3,
+      "unattributedProgramSamples": 2,
+      "gcSamples": 31,
+      "maxSampleGapMs": 23.244,
+      "sampleGapsOver10ms": 2,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 359,
+        "decodePem": 237,
+        "parseDer": 344,
+        "fromBER": 185,
+        "createClientHello": 1,
+        "loadGroups": 5,
+        "validateProbeOptions": 1,
         "fetchDomains": 0,
         "parseDomains": 0,
         "prepare": 0
@@ -97,19 +102,20 @@
     },
     {
       "file": "default-auth-alert-1.cpuprofile",
-      "sampleCount": 8,
-      "profileWindowMs": 33.371,
-      "sampledMs": 33.222,
-      "idleMs": 28.394,
-      "unattributedProgramMs": 0,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
-        "prepareTrustAnchors": 0.655,
+      "sampleCount": 7,
+      "profileWindowMs": 16.33,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 1,
+      "gcSamples": 0,
+      "maxSampleGapMs": 8.641,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 0.581,
+        "loadGroups": 0,
         "validateProbeOptions": 0,
         "fetchDomains": 0,
         "parseDomains": 0,
@@ -118,19 +124,20 @@
     },
     {
       "file": "default-auth-alert-2.cpuprofile",
-      "sampleCount": 9,
-      "profileWindowMs": 28.206,
-      "sampledMs": 28.066,
-      "idleMs": 18.654,
-      "unattributedProgramMs": 0,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
+      "sampleCount": 7,
+      "profileWindowMs": 17.134,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 9.084,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
-        "createClientHello": 0.83,
-        "loadGroups": 0.652,
+        "createClientHello": 1,
+        "loadGroups": 0,
         "validateProbeOptions": 0,
         "fetchDomains": 0,
         "parseDomains": 0,
@@ -139,19 +146,20 @@
     },
     {
       "file": "fixed-0.cpuprofile",
-      "sampleCount": 38,
-      "profileWindowMs": 104.827,
-      "sampledMs": 104.685,
-      "idleMs": 66.833,
-      "unattributedProgramMs": 0.601,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
+      "sampleCount": 24,
+      "profileWindowMs": 58.31,
+      "idleSamples": 3,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 24.285,
+      "sampleGapsOver10ms": 2,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 5.662,
+        "loadGroups": 5,
         "validateProbeOptions": 0,
         "fetchDomains": 0,
         "parseDomains": 0,
@@ -160,13 +168,14 @@
     },
     {
       "file": "fixed-1.cpuprofile",
-      "sampleCount": 5,
-      "profileWindowMs": 12.421,
-      "sampledMs": 12.295,
-      "idleMs": 6.262,
-      "unattributedProgramMs": 0,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
+      "sampleCount": 4,
+      "profileWindowMs": 7.821,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 3.058,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
@@ -181,97 +190,102 @@
     },
     {
       "file": "list-1-0.cpuprofile",
-      "sampleCount": 48,
-      "profileWindowMs": 106.933,
-      "sampledMs": 106.604,
-      "idleMs": 64.156,
-      "unattributedProgramMs": 0.523,
-      "gcMs": 1.306,
-      "inclusiveSampledMs": {
+      "sampleCount": 31,
+      "profileWindowMs": 62.548,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 1,
+      "maxSampleGapMs": 22.252,
+      "sampleGapsOver10ms": 2,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 6.022,
+        "loadGroups": 7,
         "validateProbeOptions": 0,
-        "fetchDomains": 11.695,
-        "parseDomains": 11.041,
-        "prepare": 0.552
+        "fetchDomains": 4,
+        "parseDomains": 2,
+        "prepare": 1
       }
     },
     {
       "file": "list-1-1.cpuprofile",
-      "sampleCount": 11,
-      "profileWindowMs": 20.158,
-      "sampledMs": 19.957,
-      "idleMs": 7.59,
-      "unattributedProgramMs": 0,
-      "gcMs": 0.633,
-      "inclusiveSampledMs": {
+      "sampleCount": 8,
+      "profileWindowMs": 12.653,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 2.842,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 1.049,
+        "loadGroups": 1,
         "validateProbeOptions": 0,
-        "fetchDomains": 4.375,
-        "parseDomains": 0.504,
-        "prepare": 0.816
+        "fetchDomains": 2,
+        "parseDomains": 1,
+        "prepare": 0
       }
     },
     {
       "file": "list-1-2.cpuprofile",
       "sampleCount": 7,
-      "profileWindowMs": 19.485,
-      "sampledMs": 19.181,
-      "idleMs": 9.178,
-      "unattributedProgramMs": 0,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
+      "profileWindowMs": 10.065,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 2.332,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 0.578,
+        "loadGroups": 1,
         "validateProbeOptions": 0,
-        "fetchDomains": 3.021,
-        "parseDomains": 3.021,
+        "fetchDomains": 1,
+        "parseDomains": 1,
         "prepare": 0
       }
     },
     {
       "file": "list-60000-0.cpuprofile",
-      "sampleCount": 45,
-      "profileWindowMs": 113.594,
-      "sampledMs": 113.364,
-      "idleMs": 58.771,
-      "unattributedProgramMs": 18.882,
-      "gcMs": 0.625,
-      "inclusiveSampledMs": {
+      "sampleCount": 32,
+      "profileWindowMs": 78.139,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 1,
+      "maxSampleGapMs": 22.781,
+      "sampleGapsOver10ms": 3,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 6.641,
+        "loadGroups": 7,
         "validateProbeOptions": 0,
-        "fetchDomains": 5.892,
-        "parseDomains": 1.772,
-        "prepare": 0.562
+        "fetchDomains": 4,
+        "parseDomains": 3,
+        "prepare": 1
       }
     },
     {
       "file": "list-60000-1.cpuprofile",
       "sampleCount": 6,
-      "profileWindowMs": 11.365,
-      "sampledMs": 11.201,
-      "idleMs": 5.907,
-      "unattributedProgramMs": 0,
-      "gcMs": 0.659,
-      "inclusiveSampledMs": {
+      "profileWindowMs": 9.647,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 3.071,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
@@ -286,19 +300,152 @@
     },
     {
       "file": "list-60000-2.cpuprofile",
-      "sampleCount": 7,
-      "profileWindowMs": 14.936,
-      "sampledMs": 14.82,
-      "idleMs": 6.394,
-      "unattributedProgramMs": 0.569,
-      "gcMs": 0,
-      "inclusiveSampledMs": {
+      "sampleCount": 4,
+      "profileWindowMs": 7.785,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 1,
+      "gcSamples": 0,
+      "maxSampleGapMs": 2.821,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
         "prepareTrustAnchors": 0,
         "decodePem": 0,
         "parseDer": 0,
         "fromBER": 0,
         "createClientHello": 0,
-        "loadGroups": 0.527,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-0-0.cpuprofile",
+      "sampleCount": 23,
+      "profileWindowMs": 55.239,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 22.977,
+      "sampleGapsOver10ms": 2,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-0-1.cpuprofile",
+      "sampleCount": 5,
+      "profileWindowMs": 8.897,
+      "idleSamples": 3,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 3.126,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-0-2.cpuprofile",
+      "sampleCount": 4,
+      "profileWindowMs": 8.313,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 2.276,
+      "sampleGapsOver10ms": 0,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-1000-0.cpuprofile",
+      "sampleCount": 25,
+      "profileWindowMs": 1070.338,
+      "idleSamples": 3,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 1015.476,
+      "sampleGapsOver10ms": 3,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 1,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-1000-1.cpuprofile",
+      "sampleCount": 5,
+      "profileWindowMs": 1014.069,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 1005.134,
+      "sampleGapsOver10ms": 1,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "wait-1000-2.cpuprofile",
+      "sampleCount": 6,
+      "profileWindowMs": 1019.083,
+      "idleSamples": 2,
+      "unattributedProgramSamples": 0,
+      "gcSamples": 0,
+      "maxSampleGapMs": 1010.074,
+      "sampleGapsOver10ms": 1,
+      "inclusiveStackSamples": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
         "validateProbeOptions": 0,
         "fetchDomains": 0,
         "parseDomains": 0,
@@ -306,6 +453,36 @@
       }
     }
   ],
+  "waitControl": {
+    "sourceDelayMs": 1000,
+    "dnsCacheReadWrite": false,
+    "immediateWarm": {
+      "file": "wait-0-1.cpuprofile",
+      "sampleCount": 5,
+      "profileWindowMs": 8.897,
+      "invalidOldDeltaSumMinusIdleMs": 5.276,
+      "longestGapMs": 3.126,
+      "longestGapAttributedFrame": "superdoh_dns[f70df35564f1c1e5]::message::parse"
+    },
+    "delayedWarm": {
+      "file": "wait-1000-1.cpuprofile",
+      "sampleCount": 5,
+      "profileWindowMs": 1014.069,
+      "invalidOldDeltaSumMinusIdleMs": 1009.989,
+      "longestGapMs": 1005.134,
+      "longestGapAttributedFrame": "<alloc[cb2b8d99256f33df]::collections::btree::map::BTreeMap<_, _, _> as core[608f92abc48d28da]::clone::Clone>::clone::clone_subtree::<alloc[cb2b8d99256f33df]::string::String, serde_json[63601e1ba6a6e49e]::value::Value, alloc[cb2b8d99256f33df]::alloc::Global>"
+    },
+    "conclusion": "Summing sample timeDeltas, even after subtracting idle-labeled samples, incorrectly attributes I/O suspension to function CPU. No function CPU estimate is exported."
+  },
+  "platformRecheck": {
+    "method": "Read-only original Workers Logs query; not a new invocation",
+    "sampleId": "e27686bd-6380-493b-ab07-202856a59d10",
+    "cpuField": "$workers.cpuTimeMs",
+    "cpuMs": 451,
+    "wallField": "$workers.wallTimeMs",
+    "wallMs": 472,
+    "outcome": "ok"
+  },
   "observations": [
     {
       "label": "fixed",
@@ -313,8 +490,8 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 60,
-      "samples": 38,
-      "profileWindowMs": 104.827,
+      "samples": 24,
+      "profileWindowMs": 58.31,
       "sourceCalls": 0,
       "connections": 0
     },
@@ -324,8 +501,8 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 60,
-      "samples": 5,
-      "profileWindowMs": 12.421,
+      "samples": 4,
+      "profileWindowMs": 7.821,
       "sourceCalls": 0,
       "connections": 0
     },
@@ -335,8 +512,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 651,
-      "profileWindowMs": 440.325,
+      "samples": 421,
+      "profileWindowMs": 248.55,
       "sourceCalls": 0,
       "connections": 1
     },
@@ -346,8 +523,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 8,
-      "profileWindowMs": 33.371,
+      "samples": 7,
+      "profileWindowMs": 16.33,
       "sourceCalls": 0,
       "connections": 2
     },
@@ -357,8 +534,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 9,
-      "profileWindowMs": 28.206,
+      "samples": 7,
+      "profileWindowMs": 17.134,
       "sourceCalls": 0,
       "connections": 3
     },
@@ -368,8 +545,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 96,
-      "profileWindowMs": 129.096,
+      "samples": 66,
+      "profileWindowMs": 76.173,
       "sourceCalls": 0,
       "connections": 4
     },
@@ -379,8 +556,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 31,
-      "profileWindowMs": 29.827,
+      "samples": 24,
+      "profileWindowMs": 17.675,
       "sourceCalls": 0,
       "connections": 5
     },
@@ -390,8 +567,8 @@
       "httpStatus": 200,
       "rcode": 2,
       "ttl": null,
-      "samples": 23,
-      "profileWindowMs": 29.693,
+      "samples": 17,
+      "profileWindowMs": 18.375,
       "sourceCalls": 0,
       "connections": 6
     },
@@ -401,8 +578,8 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 30,
-      "samples": 48,
-      "profileWindowMs": 106.933,
+      "samples": 31,
+      "profileWindowMs": 62.548,
       "sourceCalls": 1,
       "connections": 6
     },
@@ -412,8 +589,8 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 30,
-      "samples": 11,
-      "profileWindowMs": 20.158,
+      "samples": 8,
+      "profileWindowMs": 12.653,
       "sourceCalls": 2,
       "connections": 6
     },
@@ -424,7 +601,7 @@
       "rcode": 0,
       "ttl": 30,
       "samples": 7,
-      "profileWindowMs": 19.485,
+      "profileWindowMs": 10.065,
       "sourceCalls": 3,
       "connections": 6
     },
@@ -434,8 +611,8 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 30,
-      "samples": 45,
-      "profileWindowMs": 113.594,
+      "samples": 32,
+      "profileWindowMs": 78.139,
       "sourceCalls": 1,
       "connections": 6
     },
@@ -446,7 +623,7 @@
       "rcode": 0,
       "ttl": 30,
       "samples": 6,
-      "profileWindowMs": 11.365,
+      "profileWindowMs": 9.647,
       "sourceCalls": 1,
       "connections": 6
     },
@@ -456,68 +633,158 @@
       "httpStatus": 200,
       "rcode": 0,
       "ttl": 30,
-      "samples": 7,
-      "profileWindowMs": 14.936,
+      "samples": 4,
+      "profileWindowMs": 7.785,
       "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "wait-0",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 23,
+      "profileWindowMs": 55.239,
+      "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "wait-0",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 5,
+      "profileWindowMs": 8.897,
+      "sourceCalls": 2,
+      "connections": 6
+    },
+    {
+      "label": "wait-0",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 4,
+      "profileWindowMs": 8.313,
+      "sourceCalls": 3,
+      "connections": 6
+    },
+    {
+      "label": "wait-1000",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 25,
+      "profileWindowMs": 1070.338,
+      "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "wait-1000",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 5,
+      "profileWindowMs": 1014.069,
+      "sourceCalls": 2,
+      "connections": 6
+    },
+    {
+      "label": "wait-1000",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 6,
+      "profileWindowMs": 1019.083,
+      "sourceCalls": 3,
       "connections": 6
     }
   ],
   "profiles": [
     {
       "file": "custom-auth-alert-0.cpuprofile",
-      "sha256": "1bd7da10d5f0ecf7b24676d49f7f2283f11e98dbaf0561f4cd2fbff80ae5309e"
+      "sha256": "21b8b5faa81b86b5ec0254f18db7192f933d1a8254dffdabd5ff590d28247ed0"
     },
     {
       "file": "custom-auth-alert-1.cpuprofile",
-      "sha256": "7863c0367d434a25eb11795f02b373d10ad1eaa114c690bbabde422fad6b9de6"
+      "sha256": "9ab715993fee191c58999ab3ed15d4a693332c249b7f359ba03d1de9ef7d6809"
     },
     {
       "file": "custom-auth-alert-2.cpuprofile",
-      "sha256": "0d55652899aca756cdca9ab61efd86846ae80aac6383c74c184de371ec9dc994"
+      "sha256": "4e0d600546f46459917b46462df584c0af3a0fe10c9c48ba6befaeca7a800fc6"
     },
     {
       "file": "default-auth-alert-0.cpuprofile",
-      "sha256": "9bf7730ba81dcc3c149d3e5f2458d6821223be56cf8af50c0aade78eaf0296b1"
+      "sha256": "52cf02c58b88acc0e4284ca2e4858f5f573a25203e4b5146507cb0a4bb345aa3"
     },
     {
       "file": "default-auth-alert-1.cpuprofile",
-      "sha256": "a524e0c62f3d72f3267bf7660a1c73c1fca73ac4f16ba694c6eb217f873109ff"
+      "sha256": "c597b93a705ae2ce8ea0d37790028c4d2407c03d8be0da8af8184a7c4bbff9f6"
     },
     {
       "file": "default-auth-alert-2.cpuprofile",
-      "sha256": "d26249b3a022681a2841839d423319cb98794eb52ce84228d9ceb4f8ba72cefe"
+      "sha256": "359ba8a59f617afebc6db9582714b2d960aabe40409dc6e0dfc1ab3a0529d8b2"
     },
     {
       "file": "fixed-0.cpuprofile",
-      "sha256": "d3800d1196f5f8005b3206091ab7f5453a42704af7e3ca6042f7acbc5d8c5442"
+      "sha256": "6a9df7e46a2710c93f8ee6372fe04ced0942290453bf0787f563ec170074670c"
     },
     {
       "file": "fixed-1.cpuprofile",
-      "sha256": "4a57399099315ed2a05345c4abe3b648e7b34e1fcf3e9f7423cd99d2354fb6d6"
+      "sha256": "7e0a66192c1b1daaef1cde6ddb618498c4bdae2c8c0347139cb8e270dc81afe6"
     },
     {
       "file": "list-1-0.cpuprofile",
-      "sha256": "cf584f09a0650c6d47c75971700f8d491d057afb99bc33e092ac1917612f4a60"
+      "sha256": "ffa3193f5a55b47509acd99ff20127f7390cd9b4cb5b8f1d17e54fa45f3f25bb"
     },
     {
       "file": "list-1-1.cpuprofile",
-      "sha256": "c0b2e7f53a7d7986850f821cb00e19b5b06e6d639d1d7dc077d422053fb1d935"
+      "sha256": "8960a44cd398e087f12c920b95d656d2d1a93fe3e8e48018dd68636e9c016d07"
     },
     {
       "file": "list-1-2.cpuprofile",
-      "sha256": "ea24155640f91895103c06cb669f5580d79a879c9759267cead2c4d38a27f619"
+      "sha256": "03be4c195bfb8a431a237c5d823740e9de2442d388e0a905bfe0eac79bdc3623"
     },
     {
       "file": "list-60000-0.cpuprofile",
-      "sha256": "0fbb42ecae3d02d6ba5798c8b9ff9bfd0d6318b967fff43455badcc95be5f5ad"
+      "sha256": "c3036289dbf11d6d0adc44beecc89eeeed47765b0d7d714748ca73e3feba3ef2"
     },
     {
       "file": "list-60000-1.cpuprofile",
-      "sha256": "5b2962a2ce0198ec022e705f5326a279215e4672eefb9b094d60d35c3832eaee"
+      "sha256": "f9a5112646cf5169f431168604f5e967ef733336ff0f276e5f7d18687487e576"
     },
     {
       "file": "list-60000-2.cpuprofile",
-      "sha256": "9ed224873af17348166bd6ab48c2477b04543c07b1712924195e5983151e1932"
+      "sha256": "5ac016dd5c9f281342bb518b561a933eeff21e0911072649bb6e3b7b8b67513e"
+    },
+    {
+      "file": "wait-0-0.cpuprofile",
+      "sha256": "7bdf5992afaae444bebb8df814cb508bd8819f00b568e8a8f65bda6ff18dd241"
+    },
+    {
+      "file": "wait-0-1.cpuprofile",
+      "sha256": "fdc7a7b1b8d545651a05114614d084513cb83ff47405ba20a7042733e18a7283"
+    },
+    {
+      "file": "wait-0-2.cpuprofile",
+      "sha256": "3be9d42f47b6bc2b4421aaaa1be1aa0b364953932a46c0ed4dbb64cab3f701af"
+    },
+    {
+      "file": "wait-1000-0.cpuprofile",
+      "sha256": "f0671e07f7e55475334079263de8a1c0de295d4b4c4262a19ac1a5eabad52603"
+    },
+    {
+      "file": "wait-1000-1.cpuprofile",
+      "sha256": "13d66cc823ebdfef293ba7a1562fe3a744e1d49654cb51aa4655450227f43833"
+    },
+    {
+      "file": "wait-1000-2.cpuprofile",
+      "sha256": "b2c28147de6a215e892454e817a409ff13cb3cefcdac36d36f4c34996b87f7c8"
     }
   ]
 }

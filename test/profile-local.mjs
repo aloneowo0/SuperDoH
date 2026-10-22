@@ -1,4 +1,4 @@
-import fs from'node:fs';import path from'node:path';import net from'node:net';import{fileURLToPath}from'node:url';import{build}from'esbuild';import{Miniflare,Log,LogLevel}from'miniflare';import{query,decode}from'./helpers/dns-wire.mjs';
+import fs from'node:fs';import path from'node:path';import net from'node:net';import{fileURLToPath}from'node:url';import{build}from'esbuild';import{Miniflare,Log,LogLevel}from'miniflare';import{query,decode,responseWire}from'./helpers/dns-wire.mjs';
 import assert from'node:assert/strict';
 
 // Opt-in local diagnostic only; no deployment, credentials or public upstreams.
@@ -14,7 +14,7 @@ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const fixed={type:'answer',records:[{name:'example.com',type:'A',ttl:60,rdata:{A:{addr:'192.0.2.8'}}}]};
 async function profileCase(label,bindings,count){
  const events=[];let sourceCalls=0;
- const mf=new Miniflare({name:'local-cpu-profile',inspectorPort:0,inspectorHost:'127.0.0.1',modules:true,modulesRoot:root,scriptPath:path.join(root,'test/local-profile-bundle.js'),script:bundled.outputFiles[0].text,compatibilityDate:'2026-07-30',compatibilityFlags:['enable_request_signal','global_fetch_strictly_public'],bindings,log:new Log(LogLevel.NONE),handleRuntimeStdio(stdout,stderr){for(const stream of[stdout,stderr])stream.setEncoding('utf8').on('data',text=>events.push(text));},modulesRules:[{type:'ESModule',include:['**/*.js'],fallthrough:true},{type:'CompiledWasm',include:['**/*.wasm'],fallthrough:true}],outboundService:async request=>{if(new URL(request.url).hostname!=='lists.test')throw Error('Unexpected nonlocal source');sourceCalls++;return new Response(Array.from({length:1000},(_,i)=>i===0?'example.com':'item'+i+'.example').join(String.fromCharCode(10)));}});
+ const mf=new Miniflare({name:'local-cpu-profile',inspectorPort:0,inspectorHost:'127.0.0.1',modules:true,modulesRoot:root,scriptPath:path.join(root,'test/local-profile-bundle.js'),script:bundled.outputFiles[0].text,compatibilityDate:'2026-07-30',compatibilityFlags:['enable_request_signal','global_fetch_strictly_public'],bindings,log:new Log(LogLevel.NONE),handleRuntimeStdio(stdout,stderr){for(const stream of[stdout,stderr])stream.setEncoding('utf8').on('data',text=>events.push(text));},modulesRules:[{type:'ESModule',include:['**/*.js'],fallthrough:true},{type:'CompiledWasm',include:['**/*.wasm'],fallthrough:true}],outboundService:async request=>{const host=new URL(request.url).hostname;if(host!=='lists.test'&&host!=='delay.test')throw Error('Unexpected nonlocal source');sourceCalls++;if(host==='delay.test'){if(label==='wait-1000')await new Promise(resolve=>setTimeout(resolve,1000));return new Response(responseWire(new Uint8Array(await request.arrayBuffer())),{headers:{'Content-Type':'application/dns-message'}});}return new Response(Array.from({length:1000},(_,i)=>i===0?'example.com':'item'+i+'.example').join(String.fromCharCode(10)));}});
  let ws;const pending=new Map();let commandId=0;
  try{
   const inspector=await mf.getInspectorURL();const targets=await(await fetch(new URL('/json',inspector.href.replace('ws:','http:')))).json();
@@ -45,22 +45,23 @@ try{
  const ca=JSON.parse(fs.readFileSync(path.join(root,'lib/ech-probe/test/fixtures/certificates.json'))).rootPem;
  await profileCase('custom-auth-alert',{DNS_RULE_MAIN:group([fixed,{...probe,options:{...probe.options,caCertificates:[ca]}}])},3);
  for(const refresh of[1,60000])await profileCase('list-'+refresh,{DNS_DOMAIN_LISTS:{selected:{url:'https://lists.test/list',format:'text',refreshIntervalMs:refresh}},DNS_RULE_MAIN:{order:0,rules:[{actions:[fixed]},{when:{field:'query.name',op:'inListSuffix',value:'selected'},actions:[{type:'setTtl',ttl:30}]}]}},3);
+ for(const ms of[0,1000])await profileCase('wait-'+ms,{DNS_CACHE:{read:false,write:false},DNS_UPSTREAMS:{selected:{transport:'https',url:'https://delay.test/dns-query'}},DNS_RULE_MAIN:group([{type:'queryUpstream',upstream:'selected'}])},3);
 }finally{for(const socket of sockets)socket.destroy();await new Promise(resolve=>server.close(resolve));}
 
-// Inclusive stack weights overlap; these local samples are not platform quota CPU.
+// Sample intervals can span suspended I/O. Count stack observations; do not turn gaps into CPU.
 const summaries=[];
 for(const file of fs.readdirSync(dir).filter(name=>name.endsWith('.cpuprofile')).sort()){
  const profile=JSON.parse(fs.readFileSync(path.join(dir,file),'utf8'));
  const nodes=new Map(profile.nodes.map(node=>[node.id,node])),parents=new Map(),inclusive=new Map();
  for(const node of profile.nodes)for(const child of node.children??[])parents.set(child,node.id);
- let sampledUs=0,idleUs=0,programUs=0,gcUs=0;
+ let idleSamples=0,programSamples=0,gcSamples=0;
  for(let i=0;i<(profile.samples?.length??0);i++){
   const node=nodes.get(profile.samples[i]),us=profile.timeDeltas[i]??0,name=node.callFrame.functionName;
-  sampledUs+=us;if(name==='(idle)')idleUs+=us;if(name==='(program)')programUs+=us;if(name==='(garbage collector)')gcUs+=us;
+  if(name==='(idle)')idleSamples++;if(name==='(program)')programSamples++;if(name==='(garbage collector)')gcSamples++;
   const seen=new Set();
-  for(let current=node;current;current=nodes.get(parents.get(current.id))){const frame=current.callFrame.functionName;if(!seen.has(frame)){inclusive.set(frame,(inclusive.get(frame)??0)+us);seen.add(frame);}}
+  for(let current=node;current;current=nodes.get(parents.get(current.id))){const frame=current.callFrame.functionName;if(!seen.has(frame)){inclusive.set(frame,(inclusive.get(frame)??0)+1);seen.add(frame);}}
  }
- summaries.push({file,sampleCount:profile.samples?.length??0,profileWindowMs:(profile.endTime-profile.startTime)/1000,sampledMs:sampledUs/1000,idleMs:idleUs/1000,unattributedProgramMs:programUs/1000,gcMs:gcUs/1000,inclusiveSampledMs:Object.fromEntries(['prepareTrustAnchors','decodePem','parseDer','fromBER','createClientHello','loadGroups','validateProbeOptions','fetchDomains','parseDomains','prepare'].map(name=>[name,(inclusive.get(name)??0)/1000]))});
+ summaries.push({file,sampleCount:profile.samples?.length??0,profileWindowMs:(profile.endTime-profile.startTime)/1000,idleSamples,unattributedProgramSamples:programSamples,gcSamples,maxSampleGapMs:Math.max(0,...(profile.timeDeltas??[]))/1000,sampleGapsOver10ms:(profile.timeDeltas??[]).filter(us=>us>10000).length,inclusiveStackSamples:Object.fromEntries(['prepareTrustAnchors','decodePem','parseDer','fromBER','createClientHello','loadGroups','validateProbeOptions','fetchDomains','parseDomains','prepare'].map(name=>[name,inclusive.get(name)??0]))});
 }
-fs.writeFileSync(path.join(dir,'summary.json'),JSON.stringify({evidenceKind:'Local V8 sampling diagnostic, not Cloudflare quota CPU',requestedSamplingIntervalUs:100,inclusiveStackWeightsOverlap:true,results:summaries},null,2));
+fs.writeFileSync(path.join(dir,'summary.json'),JSON.stringify({evidenceKind:'Local stack observations only; sample time gaps include waits and are NOT CPU',requestedSamplingIntervalUs:100,inclusiveStackCountsOverlap:true,sampleIntervalsMustNotBeSummedAsCpu:true,results:summaries},null,2));
 console.log(JSON.stringify({localProfiles:summaries.length,onlineRequests:0,quotaConclusion:'not-measured'}));

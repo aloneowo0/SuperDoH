@@ -1,69 +1,53 @@
-# Local sampled-stack diagnostic — 2026-10-22
+# Local stack-sampling diagnostic — 2026-10-22
 
-## Scope and conclusion
+## Correction: elapsed sample weights are not CPU
 
-This follows the [isolated online acceptance](online-results-2026-10-22.md) recorded in `a7ea787`. **No additional online traffic, deployment, credential use, authentication downgrade or production algorithm change occurred.** The online decision remains **not accepted as a complete Free-plan release**.
+The original local summary in `54ba1ac` summed V8 profile `timeDeltas` and attributed them to the sampled stack. **A controlled one-second source wait disproved treating those weights as CPU, even after subtracting samples labeled `(idle)`.** Sampling can pause across I/O, leaving a large elapsed interval assigned to the next observed frame.
 
-An opt-in harness now captures local V8 sampling profiles through the production `src/worker.js` HTTP entry in real workerd. It confirms that **first-use default trust-anchor preparation is a major local hotspot**. It also demonstrates local due-refresh versus cached-list source access. This is diagnostic evidence for selecting the next optimization, not evidence that CPU or acceptance has improved.
+Accordingly, the earlier **314.402 ms `prepareTrustAnchors` weight must not be read as that function's CPU time**. The corrected tool exports stack-observation counts, elapsed profile windows and gap diagnostics, but no per-function CPU estimate. It does not clamp gaps or subtract an arbitrary threshold and call the remainder CPU.
 
-## Reproduce
+This correction does not change the [online acceptance evidence](online-results-2026-10-22.md). A read-only re-query of the original platform invocation confirmed `$workers.cpuTimeMs:451`, `$workers.wallTimeMs:472` and `ECH_PROBE_FAILED`. Those are separate platform fields, not values derived from the local profiler or client latency. No new online invocation, deployment or credential-bearing request was performed.
 
-With the repository's locked dependencies and Node.js 22+:
+## Explicit wait control
+
+The production HTTP entry made a standard DNS query to an intercepted local source. The source returned identical valid DNS data, either immediately or after a one-second asynchronous wait. DNS cache reads/writes were disabled; all three requests in each case reached the source.
+
+| Warm control | Observed stacks | Elapsed profile window | Longest sample gap | Old sum-minus-idle result: **invalid as CPU** |
+| --- | ---: | ---: | ---: | ---: |
+| Immediate source | 5 | 8.897 ms | 3.126 ms | 5.276 ms |
+| Source waits 1 second | 5 | 1014.069 ms | 1005.134 ms | 1009.989 ms |
+
+The one-second delay enlarged the elapsed window and a sample gap, not the amount of actual Worker computation by one second. This is why neither the profile window nor `sum(timeDeltas) - idle` is used as CPU. Stack counts are also **not** a calibrated CPU meter or a basis for claiming percentage CPU shares; suspension and sampling bias limit them.
+
+Exact counts, counterexample arithmetic, original platform-field recheck and profile digests are in [local-profile.json](results/2026-10-22/local-profile.json), schema version 2. It explicitly supersedes the prior elapsed-weight interpretation.
+
+## Reproduce locally
+
+With Node.js 22+ and the locked development dependencies:
 
 ```sh
 npm ci
 node test/profile-local.mjs
 ```
 
-The command accepts no endpoint, mode or credential arguments. It:
+The opt-in command accepts no endpoint, mode or credential arguments. It creates a fresh ignored `.acceptance/local-profiles-*` directory, bundles the unchanged production Worker, and uses its workerd date/flags. A loopback-only ephemeral inspector captures CDP profiles around public DoH requests, requesting a 100 microsecond sampling interval; that requested interval is not assumed to be the actual interval.
 
-- Creates a fresh ignored `.acceptance/local-profiles-*` directory, so old/concurrent captures cannot be merged accidentally.
-- Bundles the unchanged production entry and uses the configured workerd date/flags.
-- Opens a loopback-only ephemeral inspector and uses CDP `Profiler.start` / `Profiler.stop` around each public DoH request, requesting a 100 µs sampling interval.
-- Sends 14 local requests: fixed answer (2), default-authenticated probe to a controlled TLS-alert peer (3), explicit fixture-root authenticated probe to that same peer (3), and 1,000-entry list cases with 1 ms and 60,000 ms refresh intervals (3 each).
-- Allows the intercepted HTTP fixture only at `lists.test`; its response contains documentation-domain list data. The raw TCP peer and inspector listen on `127.0.0.1`, not public interfaces. The fixture sends a TLS alert, deliberately preventing a successful handshake. Both probe cases retain certificate verification enabled.
-- Independently checks DNS response status, transaction ID, question, expected RCODE and list TTL 30. It counts fixture accesses and local TCP connections, closes sockets/inspectors and disposes each Miniflare instance.
-- Saves 14 `.cpuprofile` files for DevTools/VS Code plus `summary.json`. Raw profiles stay ignored; only allowlisted statistics and profile digests are committed in [local-profile.json](results/2026-10-22/local-profile.json).
+It sends **20 local requests**: fixed answers (2), default-authenticated probe against a loopback TLS-alert peer (3), explicit fixture-root authenticated probe against that peer (3), 1,000-entry list cases with 1 ms / 60,000 ms refresh (3 each), and immediate / one-second-wait DNS sources (3 each). The intercepted HTTP fixture permits only `lists.test` and `delay.test`; raw TCP and the inspector use loopback. Both probe cases retain certificate verification. The peer intentionally sends a TLS alert; this is not a successful ECH handshake test.
 
-The fixed answer and list cases return NOERROR; the alert-peer probes return SERVFAIL as expected. This is not a positive ECH interoperability test. Use the separate independent OpenSSL test for authenticated success.
+The harness independently checks HTTP status, DNS transaction ID/question, expected RCODE and list TTL 30, records source accesses, and closes the local server, sockets, inspectors and Miniflare instances. It saves 20 raw `.cpuprofile` files and `summary.json`. Raw profiles remain ignored; committed output contains allowlisted counts/metadata and digests, not credentials, request URLs or certificate dumps.
 
-## Recorded local observations
+## Findings that remain supported
 
-Windows Node v24.14.0, workerd 1.20260730.1, compatibility date 2026-07-30. The final harness run exited 0 and produced all 14 profiles with matching response assertions. Source/harness hashes and exact profile digests are in the JSON evidence.
+- The corrected first default-root profile contains `prepareTrustAnchors` on **359 of 421 observed stacks**, and `parseDer` on 344. This makes trust preparation a candidate for further investigation, **not a measurement of 359/421 of CPU or a number of CPU milliseconds**.
+- Source inspection independently confirms repeated DER work: `decodePem` calls `parseDer` and returns bytes (`lib/ech-probe/internal/certificate.js:42`), followed by `result.map(parseDer)` in preparation (`:75`). The DER-input branch similarly parses before that map. This duplication is a code fact; no CPU saving has yet been measured from removing it.
+- Default anchor records already have an isolate-local cache with defensive copies. Explicit custom roots are validated at core preflight, adapter execution and the library boundary. An optimization must retain invalid-unreachable-configuration rejection, canonical DER checks, bounds and mutable-input isolation; it cannot simply skip validation.
+- The controlled list source was accessed three times for the 1 ms interval and once for the 60,000 ms interval, with TTL 30 in all six replies. This demonstrates local refresh/reuse behavior, not its CPU cost or new online cache coverage.
+- Root preparation occurs before raw TCP connect. The loopback alert case reproduces that ordering but does not diagnose the precise public probe failure or the online invocation's per-function CPU split. The separate independent OpenSSL test remains the authenticated-positive interoperability check.
 
-| Local capture | Profile window ms | Samples | Idle-labeled ms | Inclusive `prepareTrustAnchors` sampled ms | Inclusive `parseDer` sampled ms |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Default roots, first | 440.325 | 651 | 64.660 | 314.402 | 299.816 |
-| Default roots, next | 33.371 | 8 | 28.394 | 0.655 | 0 observed |
-| Default roots, next | 28.206 | 9 | 18.654 | 0 observed | 0 observed |
-| Explicit fixture root, first | 129.096 | 96 | 59.674 | 25.184 | 23.297 |
-| Explicit fixture root, next | 29.827 | 31 | 9.562 | 9.291 | 8.663 |
-| Explicit fixture root, next | 29.693 | 23 | 10.287 | 7.913 | 7.913 |
+## Verification and limits
 
-These are **sample weights and profile windows**, not Cloudflare quota CPU. Windows scheduling/sampling granularity, profiler overhead, idle and unattributed native/program frames limit precision. Inclusive stack weights overlap: `parseDer` is largely within `prepareTrustAnchors`; do not add them. Zero observed samples do not prove zero execution cost. Short warm profiles have too few samples for reliable fine-grained attribution or tail percentiles.
+The corrected diagnostic completed all 20 public response assertions and profiles. Its built-in wait cases reproduce the counterexample; the exported summary contains no per-function millisecond weights or non-idle CPU estimate. Measurement CLI regression and typechecking are checked separately. No application/library algorithm, certificate policy, online measurement value, source destination or deployed configuration was changed.
 
-The controlled list source was accessed **three times** for the 1 ms interval and **once** for the 60,000 ms interval across three queries each. All six replies carried TTL 30. This establishes local maintenance/reuse behavior, not a new online cache/isolate observation, a recommendation to change freshness, or a Free CPU guarantee. Source-call counters reset per case; the TCP counter is cumulative across the whole diagnostic and ends at six connections.
+After this correction, `npm test` passed all 237 application/tool tests, 130 DNS tests and 104 ECH offline tests. The separate 17-test measurement regression and `npm run typecheck` also passed. Independent Sonnet Standards and Spec reviews reported no concrete findings. The earlier full regression at `54ba1ac` did not validate the elapsed-to-CPU interpretation; the new wait counterexample is precisely the missing check. This opt-in diagnostic remains separate from the default test total.
 
-## What source inspection confirms
-
-- `lib/ech-probe/internal/certificate.js:45` already caches prepared **default** anchor records per isolate and returns defensive DER copies. The warm default-root profiles therefore do **not** justify proposing a new unbounded global cache.
-- The initial valid-root preparation repeats structural DER work: `decodePem` calls `parseDer`, returns its bytes, and `prepareTrustAnchors` later calls `result.map(parseDer)` again. The DER-input branch also parses once before that map. Canonical DER/signature-algorithm checks remain essential; the candidate optimization is to retain the already-validated private record rather than repeat the same parsing, **not skip validation**.
-- Explicit custom roots are preflight-validated by `src/rules/config.js:76`, validated again by the probe adapter, then prepared by the generic library. This explains why structural root preparation remains visible in the custom-root warm profiles. It does not prove that all repeated checks are removable: unreachable invalid configuration must still fail before action execution, direct library callers must still be validated, and mutable caller data must not bypass validation via cache identity.
-- The default probe prepares anchors before opening its raw TCP socket (`lib/ech-probe/internal/probe.js:36`). Thus an unsuccessful peer/destination can still incur expensive first-use setup. The local alert fixture reproduces that ordering; it does **not** establish the exact low-level cause of the earlier public probe failure or its precise per-function CPU split.
-- The list refresh path deliberately invalidates the old snapshot before loading/parsing its replacement. Faster code must preserve unavailable-on-failure behavior, shared quotas, deadlines and memory limits; returning old data is not an acceptable optimization.
-
-## Next optimization boundary
-
-The smallest candidate is removing duplicate parse/serialization work **within one trust-preparation call**, while preserving the complete canonical DER checks, limits, owned copies and certificate-chain behavior. Compare fresh-isolate profiles before/after; keep public malformed-root, mutation/isolation, wrong-SNI, untrusted-chain and independent authenticated-handshake regressions. Do not claim 10 ms compliance from a local reduction or move expensive work to Cron and call the quota solved.
-
-No such production change has been made in this diagnostic commit. Broader options—lazy/default trust indexing, caching compiled configuration, different list refresh policy, another remote source, or a different probe service/plan—have separate invalidation, correctness, freshness or cost trade-offs. They are not silently selected by this harness. Any new online verification still needs the applicable account/resource/source/telemetry authorization.
-
-## References
-
-- [Cloudflare local CPU profiling](https://developers.cloudflare.com/workers/observability/dev-tools/cpu-usage/), retrieved 2026-10-22.
-- [Workers CPU limits](https://developers.cloudflare.com/workers/platform/limits/#cpu-time).
-- [Recorded online limitations](online-results-2026-10-22.md).
-
-## Verification
-
-The opt-in diagnostic exited 0 with all 14 public response assertions and profiles. The full default `npm test` was rerun afterward and exited 0: typechecking, 237 application/tool tests, 130 DNS library tests and 104 ECH offline tests. The diagnostic is deliberately not added to that default total. Independent Sonnet Standards and Spec reviews found no concrete remaining findings; the Spec pass matched the harness hash, observation table and repeated-DER call path. The online evidence and overall acceptance status were not changed.
+References: [Cloudflare CPU and wall definitions](https://developers.cloudflare.com/workers/platform/limits/#cpu-time), [local profiling guidance](https://developers.cloudflare.com/workers/observability/dev-tools/cpu-usage/). Waiting on network I/O is not quota CPU; only actual platform CPU telemetry is used for the online limit comparison.
