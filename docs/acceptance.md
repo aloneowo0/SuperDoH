@@ -89,3 +89,7 @@ After adding the gated runner and offline reporter, the final `npm test` run exi
 ## Authorized online-run regression (2026-10-22)
 
 After adding bounded test-only online fixtures, the exact TTL expectation and public-fetch runtime alignment, `npm test` exited 0: typechecking, **237 application/tool tests**, **130 DNS library tests** and **104 ECH offline tests** passed. All 15 application/tool suites reported zero failures and zero skips. The updated production-entry OpenSSL/workerd interoperability test passed separately in WSL (1 integration test); no certificate-authentication downgrade was used for the authenticated path. Production `wrangler deploy --dry-run` exited 0 (2,000.24 KiB, gzip 477.28 KiB), without deployment of the business Worker. These checks do not override the failed/incomplete online CPU and reachability acceptance.
+
+## Local profiling follow-up (2026-10-22)
+
+The opt-in `node test/profile-local.mjs` diagnostic captures real local workerd sampled stacks through the production HTTP entry, with loopback TLS alerts and controlled list data. It performs no online requests and is separate from `npm test`. The [dated diagnostic](local-profile-2026-10-22.md) records all 14 local profiles, first-use trust-preparation cost and explicit limitations. These sampled-stack observations do not alter the online Free-plan acceptance decision.

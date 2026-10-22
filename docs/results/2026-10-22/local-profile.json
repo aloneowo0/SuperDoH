@@ -1,0 +1,523 @@
+{
+  "version": 1,
+  "evidenceKind": "Local V8 sampling diagnostic, not Cloudflare quota CPU",
+  "baseCommit": "a7ea787",
+  "harnessSha256": "a04b3f9beb8577b9607946bb061325261832aea7f4b5a2d5747aa00eff9b7a3f",
+  "node": "v24.14.0",
+  "workerd": "1.20260730.1",
+  "compatibilityDate": "2026-07-30",
+  "onlineRequests": 0,
+  "certificateVerification": "enabled for both probe cases; controlled loopback TLS alert, not a successful handshake",
+  "requestedSamplingIntervalUs": 100,
+  "inclusiveStackWeightsOverlap": true,
+  "results": [
+    {
+      "file": "custom-auth-alert-0.cpuprofile",
+      "sampleCount": 96,
+      "profileWindowMs": 129.096,
+      "sampledMs": 128.942,
+      "idleMs": 59.674,
+      "unattributedProgramMs": 8.529,
+      "gcMs": 2.302,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 25.184,
+        "decodePem": 18.843,
+        "parseDer": 23.297,
+        "fromBER": 12.502,
+        "createClientHello": 0.584,
+        "loadGroups": 24.488,
+        "validateProbeOptions": 22.947,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "custom-auth-alert-1.cpuprofile",
+      "sampleCount": 31,
+      "profileWindowMs": 29.827,
+      "sampledMs": 29.694,
+      "idleMs": 9.562,
+      "unattributedProgramMs": 0,
+      "gcMs": 0.689,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 9.291,
+        "decodePem": 4.026,
+        "parseDer": 8.663,
+        "fromBER": 4.364,
+        "createClientHello": 0.591,
+        "loadGroups": 5.407,
+        "validateProbeOptions": 7.047,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "custom-auth-alert-2.cpuprofile",
+      "sampleCount": 23,
+      "profileWindowMs": 29.693,
+      "sampledMs": 29.524,
+      "idleMs": 10.287,
+      "unattributedProgramMs": 0,
+      "gcMs": 1.143,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 7.913,
+        "decodePem": 4.562,
+        "parseDer": 7.913,
+        "fromBER": 2.69,
+        "createClientHello": 0.63,
+        "loadGroups": 3.322,
+        "validateProbeOptions": 6.284,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "default-auth-alert-0.cpuprofile",
+      "sampleCount": 651,
+      "profileWindowMs": 440.325,
+      "sampledMs": 440.146,
+      "idleMs": 64.66,
+      "unattributedProgramMs": 0.538,
+      "gcMs": 22.438,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 314.402,
+        "decodePem": 188.02,
+        "parseDer": 299.816,
+        "fromBER": 139.013,
+        "createClientHello": 0.571,
+        "loadGroups": 7.054,
+        "validateProbeOptions": 0.608,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "default-auth-alert-1.cpuprofile",
+      "sampleCount": 8,
+      "profileWindowMs": 33.371,
+      "sampledMs": 33.222,
+      "idleMs": 28.394,
+      "unattributedProgramMs": 0,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0.655,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0.581,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "default-auth-alert-2.cpuprofile",
+      "sampleCount": 9,
+      "profileWindowMs": 28.206,
+      "sampledMs": 28.066,
+      "idleMs": 18.654,
+      "unattributedProgramMs": 0,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0.83,
+        "loadGroups": 0.652,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "fixed-0.cpuprofile",
+      "sampleCount": 38,
+      "profileWindowMs": 104.827,
+      "sampledMs": 104.685,
+      "idleMs": 66.833,
+      "unattributedProgramMs": 0.601,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 5.662,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "fixed-1.cpuprofile",
+      "sampleCount": 5,
+      "profileWindowMs": 12.421,
+      "sampledMs": 12.295,
+      "idleMs": 6.262,
+      "unattributedProgramMs": 0,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "list-1-0.cpuprofile",
+      "sampleCount": 48,
+      "profileWindowMs": 106.933,
+      "sampledMs": 106.604,
+      "idleMs": 64.156,
+      "unattributedProgramMs": 0.523,
+      "gcMs": 1.306,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 6.022,
+        "validateProbeOptions": 0,
+        "fetchDomains": 11.695,
+        "parseDomains": 11.041,
+        "prepare": 0.552
+      }
+    },
+    {
+      "file": "list-1-1.cpuprofile",
+      "sampleCount": 11,
+      "profileWindowMs": 20.158,
+      "sampledMs": 19.957,
+      "idleMs": 7.59,
+      "unattributedProgramMs": 0,
+      "gcMs": 0.633,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 1.049,
+        "validateProbeOptions": 0,
+        "fetchDomains": 4.375,
+        "parseDomains": 0.504,
+        "prepare": 0.816
+      }
+    },
+    {
+      "file": "list-1-2.cpuprofile",
+      "sampleCount": 7,
+      "profileWindowMs": 19.485,
+      "sampledMs": 19.181,
+      "idleMs": 9.178,
+      "unattributedProgramMs": 0,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0.578,
+        "validateProbeOptions": 0,
+        "fetchDomains": 3.021,
+        "parseDomains": 3.021,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "list-60000-0.cpuprofile",
+      "sampleCount": 45,
+      "profileWindowMs": 113.594,
+      "sampledMs": 113.364,
+      "idleMs": 58.771,
+      "unattributedProgramMs": 18.882,
+      "gcMs": 0.625,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 6.641,
+        "validateProbeOptions": 0,
+        "fetchDomains": 5.892,
+        "parseDomains": 1.772,
+        "prepare": 0.562
+      }
+    },
+    {
+      "file": "list-60000-1.cpuprofile",
+      "sampleCount": 6,
+      "profileWindowMs": 11.365,
+      "sampledMs": 11.201,
+      "idleMs": 5.907,
+      "unattributedProgramMs": 0,
+      "gcMs": 0.659,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    },
+    {
+      "file": "list-60000-2.cpuprofile",
+      "sampleCount": 7,
+      "profileWindowMs": 14.936,
+      "sampledMs": 14.82,
+      "idleMs": 6.394,
+      "unattributedProgramMs": 0.569,
+      "gcMs": 0,
+      "inclusiveSampledMs": {
+        "prepareTrustAnchors": 0,
+        "decodePem": 0,
+        "parseDer": 0,
+        "fromBER": 0,
+        "createClientHello": 0,
+        "loadGroups": 0.527,
+        "validateProbeOptions": 0,
+        "fetchDomains": 0,
+        "parseDomains": 0,
+        "prepare": 0
+      }
+    }
+  ],
+  "observations": [
+    {
+      "label": "fixed",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 38,
+      "profileWindowMs": 104.827,
+      "sourceCalls": 0,
+      "connections": 0
+    },
+    {
+      "label": "fixed",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 60,
+      "samples": 5,
+      "profileWindowMs": 12.421,
+      "sourceCalls": 0,
+      "connections": 0
+    },
+    {
+      "label": "default-auth-alert",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 651,
+      "profileWindowMs": 440.325,
+      "sourceCalls": 0,
+      "connections": 1
+    },
+    {
+      "label": "default-auth-alert",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 8,
+      "profileWindowMs": 33.371,
+      "sourceCalls": 0,
+      "connections": 2
+    },
+    {
+      "label": "default-auth-alert",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 9,
+      "profileWindowMs": 28.206,
+      "sourceCalls": 0,
+      "connections": 3
+    },
+    {
+      "label": "custom-auth-alert",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 96,
+      "profileWindowMs": 129.096,
+      "sourceCalls": 0,
+      "connections": 4
+    },
+    {
+      "label": "custom-auth-alert",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 31,
+      "profileWindowMs": 29.827,
+      "sourceCalls": 0,
+      "connections": 5
+    },
+    {
+      "label": "custom-auth-alert",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 2,
+      "ttl": null,
+      "samples": 23,
+      "profileWindowMs": 29.693,
+      "sourceCalls": 0,
+      "connections": 6
+    },
+    {
+      "label": "list-1",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 48,
+      "profileWindowMs": 106.933,
+      "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "list-1",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 11,
+      "profileWindowMs": 20.158,
+      "sourceCalls": 2,
+      "connections": 6
+    },
+    {
+      "label": "list-1",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 7,
+      "profileWindowMs": 19.485,
+      "sourceCalls": 3,
+      "connections": 6
+    },
+    {
+      "label": "list-60000",
+      "index": 0,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 45,
+      "profileWindowMs": 113.594,
+      "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "list-60000",
+      "index": 1,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 6,
+      "profileWindowMs": 11.365,
+      "sourceCalls": 1,
+      "connections": 6
+    },
+    {
+      "label": "list-60000",
+      "index": 2,
+      "httpStatus": 200,
+      "rcode": 0,
+      "ttl": 30,
+      "samples": 7,
+      "profileWindowMs": 14.936,
+      "sourceCalls": 1,
+      "connections": 6
+    }
+  ],
+  "profiles": [
+    {
+      "file": "custom-auth-alert-0.cpuprofile",
+      "sha256": "1bd7da10d5f0ecf7b24676d49f7f2283f11e98dbaf0561f4cd2fbff80ae5309e"
+    },
+    {
+      "file": "custom-auth-alert-1.cpuprofile",
+      "sha256": "7863c0367d434a25eb11795f02b373d10ad1eaa114c690bbabde422fad6b9de6"
+    },
+    {
+      "file": "custom-auth-alert-2.cpuprofile",
+      "sha256": "0d55652899aca756cdca9ab61efd86846ae80aac6383c74c184de371ec9dc994"
+    },
+    {
+      "file": "default-auth-alert-0.cpuprofile",
+      "sha256": "9bf7730ba81dcc3c149d3e5f2458d6821223be56cf8af50c0aade78eaf0296b1"
+    },
+    {
+      "file": "default-auth-alert-1.cpuprofile",
+      "sha256": "a524e0c62f3d72f3267bf7660a1c73c1fca73ac4f16ba694c6eb217f873109ff"
+    },
+    {
+      "file": "default-auth-alert-2.cpuprofile",
+      "sha256": "d26249b3a022681a2841839d423319cb98794eb52ce84228d9ceb4f8ba72cefe"
+    },
+    {
+      "file": "fixed-0.cpuprofile",
+      "sha256": "d3800d1196f5f8005b3206091ab7f5453a42704af7e3ca6042f7acbc5d8c5442"
+    },
+    {
+      "file": "fixed-1.cpuprofile",
+      "sha256": "4a57399099315ed2a05345c4abe3b648e7b34e1fcf3e9f7423cd99d2354fb6d6"
+    },
+    {
+      "file": "list-1-0.cpuprofile",
+      "sha256": "cf584f09a0650c6d47c75971700f8d491d057afb99bc33e092ac1917612f4a60"
+    },
+    {
+      "file": "list-1-1.cpuprofile",
+      "sha256": "c0b2e7f53a7d7986850f821cb00e19b5b06e6d639d1d7dc077d422053fb1d935"
+    },
+    {
+      "file": "list-1-2.cpuprofile",
+      "sha256": "ea24155640f91895103c06cb669f5580d79a879c9759267cead2c4d38a27f619"
+    },
+    {
+      "file": "list-60000-0.cpuprofile",
+      "sha256": "0fbb42ecae3d02d6ba5798c8b9ff9bfd0d6318b967fff43455badcc95be5f5ad"
+    },
+    {
+      "file": "list-60000-1.cpuprofile",
+      "sha256": "5b2962a2ce0198ec022e705f5326a279215e4672eefb9b094d60d35c3832eaee"
+    },
+    {
+      "file": "list-60000-2.cpuprofile",
+      "sha256": "9ed224873af17348166bd6ab48c2477b04543c07b1712924195e5983151e1932"
+    }
+  ]
+}
