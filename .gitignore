@@ -2,3 +2,5 @@
 .wrangler/
 .dev.vars*
 .env*
+
+/.acceptance/

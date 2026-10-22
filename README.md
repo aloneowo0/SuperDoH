@@ -82,3 +82,5 @@ npm test
 `npm test` runs the standard type, workerd, DNS and ECH library regression suites. The opt-in independent ECH/OpenSSL handshake requires an ECH-capable OpenSSL build; the Windows system OpenSSL lacks the required ECH commands, but an isolated WSL build passed the public Worker and generic-library interop suites on 2026-10-22. See [docs/acceptance.md](docs/acceptance.md) for the pinned build, reproduction commands and outstanding online acceptance.
 
 Platform references: [runtime/build variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [Wrangler variable preservation](https://developers.cloudflare.com/workers/wrangler/configuration/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).
+
+The bounded measurement runner and offline telemetry report CLI are documented in [docs/online-acceptance.md](docs/online-acceptance.md). Their manifest example is separate from Worker bindings; running online still requires explicit resource and measurement approval.

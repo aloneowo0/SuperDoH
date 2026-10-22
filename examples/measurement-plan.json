@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "metadata": {
+    "commit": "0000000",
+    "worker": "NEW_ISOLATED_WORKER",
+    "accountPlan": "free",
+    "approvalRef": "APPROVAL_REQUIRED"
+  },
+  "intervalMs": 1000,
+  "timeoutMs": 10000,
+  "scenarios": [
+    {
+      "name": "smoke",
+      "phase": "cold-candidate",
+      "count": 5,
+      "query": { "name": "example.com", "type": 1 },
+      "expected": { "rcode": 0, "answerCount": 1, "ad": false }
+    },
+    {
+      "name": "warm-fixed-answer",
+      "phase": "warm",
+      "count": 30,
+      "query": { "name": "example.com", "type": 1 },
+      "expected": { "rcode": 0, "answerCount": 1, "ad": false }
+    }
+  ]
+}

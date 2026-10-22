@@ -60,3 +60,54 @@ If a default or built-in path exceeds verified limits, report evidence and propo
 - [Workers invocation logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/)
 - [CPU/wall telemetry](https://developers.cloudflare.com/changelog/post/2025-04-09-workers-timing/)
 - [Workers observability API](https://developers.cloudflare.com/api/resources/workers/subresources/observability/)
+
+## Bounded collection and offline reporting tools
+
+The repository now contains preparation tools, **not authorization or executed online measurements**:
+
+- `scripts/acceptance-runner.mjs` sends standard binary DoH POST requests using the public DNS library. It does not deploy, change bindings, select sources or enable telemetry. Its runtime bundling of the existing DNS WASM library uses the locked development `esbuild`; no new production dependency or protocol parser is introduced.
+- `scripts/acceptance-report.mjs` reads sanitized samples plus optional normalized platform telemetry entirely offline. It never contacts Cloudflare or guesses a platform schema.
+- `examples/measurement-plan.json` is a **tool manifest, not a Worker binding object**. Its placeholder commit/Worker/approval and expected answer must be replaced with the approved candidate and actual expected behavior. The fixed-answer template is only a starting point; allocate the approved budget across the full matrix above and run separately when changing Worker configuration.
+
+Create private plans and outputs under ignored `.acceptance/`. Never put the endpoint/path key into a manifest, shell history, command argument or collected report. Supply the complete endpoint through the environment from the approved secure credential flow as `DNS_ACCEPTANCE_URL`; do not print that variable.
+
+Offline preflight (no endpoint or network needed):
+
+```sh
+node scripts/acceptance-runner.mjs examples/measurement-plan.json --plan --authorized-online
+```
+
+`--authorized-online` is an operator acknowledgment that the separate account/resource/source/telemetry approvals already exist; the flag, a manifest label, and this document do **not** establish that approval. A real run must not be performed until the authorization gate above has been satisfied. The template cannot serve as an approval record.
+
+After approval, with the actual private plan and endpoint provided securely:
+
+```sh
+node scripts/acceptance-runner.mjs .acceptance/plan.json --authorized-online > .acceptance/samples.json
+node scripts/acceptance-report.mjs .acceptance/samples.json > .acceptance/report.json
+```
+
+The runner requires HTTPS in online mode, rejects URL userinfo/query/fragment, refuses redirects and performs no retries. A local harness may use `--local` only with an HTTP literal loopback address (`127.0.0.1` or `[::1]`); local manifests must declare `accountPlan: "local"`. There is no hostname/DNS fallback to reach non-loopback services in local mode.
+
+Limits: at most 500 planned requests and 100 uniquely named scenarios, at least five planned smoke requests, 30-second maximum per-request timeout, 65,535-byte response cap, 512-KiB manifest cap, and a 15-minute execution deadline after local setup. Online intervals must be at least 1,000 ms; the runner conservatively waits the interval **after each completed request**, so there is no concurrent traffic. Local tests may use a shorter interval. A failure within the first five samples stops the run; later failures stop their own scenario. The output retains failed samples and stopped scenario names. Exit codes: 0 collected successfully, 1 preflight/setup failure with sanitized error, 2 observed failure or incomplete run with the sample JSON still emitted. If interrupted or killed before emission, treat output as incomplete; do not replace missing samples with success.
+
+The endpoint is never exported. Output includes a random run ID, safe scenario/phase labels, start timestamps, client latency, HTTP status, DNS RCODE, simple correctness and safe error codes. DNS response checks cover identity/question association, QR/opcode/truncation, full RCODE, and configured answer count/AD flag. They do **not** prove every RR's content, source access, cache state, isolate identity or all DNSSEC semantics; retain independent acceptance evidence for those properties. Phase names are declared labels: `cold-candidate` is not verified cold, and repeated queries are not independently proven cache hits. Sample IDs are sent in `X-Acceptance-Sample-Id` for an explicitly approved collector to correlate; the Worker does not expose a new production API or log this header automatically.
+
+### Normalized telemetry input
+
+Read the actual approved platform dataset, discover its fields and units, verify the candidate/Worker and sampling, and correlate samples through the approved collection method. Only then export an allowlisted JSON object:
+
+- Top level: `version: 1`, positive `cpuLimitMs` verified for the approved plan/date, `verifiedOn` as `YYYY-MM-DD`, and `samples` (at most 1,000).
+- Each telemetry sample: `sampleId` copied from a correlated client UUID, finite nonnegative `cpuMs` and `wallMs` in milliseconds, and `outcome` from `ok`, `exception`, `exceededCpu`, `exceededMemory`, `canceled`, `unknown`.
+- No raw event, URL, headers, credentials, certificate or exception body. Duplicate correlations and unknown fields are rejected. Input files are bounded to 2 MiB each and require valid UTF-8.
+
+These are the tool's normalized field names, not an assumption that every Cloudflare API returns that shape. The [Workers Trace Events dataset](https://developers.cloudflare.com/logs/logpush/logpush-job/datasets/account/workers_trace_events/) documents `CPUTimeMs`/`WallTimeMs`; other telemetry surfaces can use different fields. Check the actual source before converting. Do not enable URL-bearing traces/invocation logs on a secret-path endpoint just to obtain these values.
+
+```sh
+node scripts/acceptance-report.mjs .acceptance/samples.json .acceptance/telemetry.json > .acceptance/report.json
+```
+
+Reports keep client latency, observed platform CPU and wall time separate; missing values stay unavailable, and missing/orphan/unknown telemetry is counted. Distributions provide min/median/max, with p95 only at 100 or more samples (still an observed quantile, not a tail-latency guarantee). An incomplete/stopped/local or unmeasured case cannot be reported as within the declared online limit. Failing outcomes and CPU overages remain failures. A fully correlated passing case is only `observed-within-declared-limit`; the limit/account plan and correlation are externally supplied, not independently verified by this CLI. Every report keeps `completeAcceptance: false`. An operator must still complete the full matrix, source/cache/security checks and evidence review before any overall acceptance decision.
+
+### Local verification
+
+`npm run test:measurement` exercises collection through the production workerd HTTP entry and controlled local services, including rate/authorization gates, response/error limits, redaction, correlation schema and offline reporting. Test telemetry is synthetic, explicitly used only to test the report tool; it is not a measurement result. The script is included in `npm test`. No online resource was created or measured during this implementation.

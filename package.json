@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit",
     "test:rules": "node --test test/rules.mjs",
     "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs",
-    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:json && npm run test:acceptance && npm run test:libraries",
+    "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:json && npm run test:acceptance && npm run test:measurement && npm run test:libraries",
     "test:doh": "node --test test/doh.mjs",
     "test:tcp": "node --test test/tcp.mjs",
     "test:tls": "node --test test/tls.mjs",
@@ -20,7 +20,8 @@
     "test:ech-probe": "node --test test/ech-probe.mjs",
     "test:ech-interop": "node test/ech-interop.mjs",
     "test:json": "node --test test/json.mjs",
-    "test:acceptance": "node --test test/acceptance.mjs"
+    "test:acceptance": "node --test test/acceptance.mjs",
+    "test:measurement": "node --test test/acceptance-runner.mjs test/acceptance-report.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",

@@ -16,6 +16,7 @@ This matrix maps the current implementation surface to its local verification co
 | ECH direct/HTTPS lookup/application and probe behavior | `npm run test:ech` (`test/ech.mjs`); `npm run test:ech-probe` (`test/ech-probe.mjs`) | ECH actions through the Worker boundary with controlled sources, validation, failure/rollback and resource behavior. |
 | DNS/ECH library regression | `npm run test:libraries` | DNS WASM smoke and generic operations plus ECH Node/workerd offline suites. |
 | Checked-in examples and composed source/cache/ECH flow | `npm run test:acceptance` (`test/acceptance.mjs`) | Executes checked-in JSON configurations and combines maintained lists, attribution, original caching, ECH and JSON; unsupported probe sources fail closed. Independent successful probe interop passed separately as recorded below. |
+| Measurement collection and offline report tooling | `npm run test:measurement` | Bounded binary DoH collection through the production HTTP entry, safe errors and pacing, schema validation and separate CPU/wall/client summaries. Synthetic test telemetry is not an online result. |
 | Types and combined default regression | `npm run typecheck`; `npm test` | TypeScript checks and the standard script sequence in `package.json`. |
 | Opt-in JSON query adapter | `npm run test:json` (`test/json.mjs`) | `DNS_JSON` gating, `name`/`type`/`cd`, authentication, JSON errors and same-pipeline behavior. The script is part of the default npm test sequence. |
 
@@ -80,3 +81,7 @@ The `.example` and `.test` names in `examples/*.json` are illustrative inputs fo
 `npx wrangler deploy --dry-run` validates the browser-target production bundle locally without upload; this is not a deployment or free-plan CPU test. `wrangler types --include-runtime=false` regenerates the checked-in binding declarations. The production configuration uses `keep_vars: true` so ordinary Dashboard-managed runtime variables survive code deployment; Workers Builds build-only variables remain separate, and ordinary deployments do not delete Secrets. See [configuration preservation](https://developers.cloudflare.com/workers/wrangler/configuration/) and [build/runtime variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
 
 The bounded, authorization-gated procedure for remaining online work is in [online-acceptance.md](online-acceptance.md). It is preparation only, not an executed result or permission to deploy.
+
+## Measurement-tool regression (2026-10-22)
+
+After adding the gated runner and offline reporter, the final `npm test` run exited with code 0: typechecking, 227 application/tool tests (including 16 measurement tests), 130 DNS library tests and 104 ECH offline tests passed. No tests in the application/tool suites were skipped. Standards review found no concrete violations; the Spec review's unknown-telemetry classification finding was fixed and independently rechecked. These are local regression results, not an executed #25 online performance acceptance.
