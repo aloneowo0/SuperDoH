@@ -1,0 +1,572 @@
+{
+  "baseCommit": "1024ddb2865b67a7ed1c3d58c9643c86108fe861",
+  "productionSourceMatchesBaseCommit": true,
+  "pendingChanges": "Deployment public-fetch flag, runtime-aligned tests, fixture, collector TTL expectation, and acceptance evidence; not an already-clean release commit.",
+  "runtimeFiles": [
+    {
+      "file": "lib/dns-wasm/dns_bindgen.js",
+      "sha256": "a9fc2905bc155acc11fa07f26b4c9796386d50204d678cc6750c53e2be7ae480"
+    },
+    {
+      "file": "lib/dns-wasm/dns_bindgen_bg.wasm",
+      "sha256": "4c16ff2bde6e71ec6632bf89e968a8731ada7bb393e0304df489d0a86abb8695"
+    },
+    {
+      "file": "lib/dns-wasm/index.js",
+      "sha256": "e99a73485eb2b7546aced4524cb8b8328822eee93cb044ac24fd318f82398e66"
+    },
+    {
+      "file": "lib/ech-probe/config.js",
+      "sha256": "b19481d4ec2b54b81763301947eda5b44210b638516fa575aee4b197678136c9"
+    },
+    {
+      "file": "lib/ech-probe/index.js",
+      "sha256": "9f645bcc940300e742287ae842b6af07620b809facabd1c31f0681309198b3f1"
+    },
+    {
+      "file": "lib/ech-probe/internal/bytes.js",
+      "sha256": "0e51398c93872e8b41f7f92fc88a757c9926f584ea47de8293fbe0d0f29f9ab7"
+    },
+    {
+      "file": "lib/ech-probe/internal/certificate.js",
+      "sha256": "574ecebbee0e52dec5bd34e41e7c51780adadfaf09761f19549fc05661cce368"
+    },
+    {
+      "file": "lib/ech-probe/internal/crypto.js",
+      "sha256": "768c342127153d110c174dcf3f94c6736041abf7309febd2708299f77e714cfb"
+    },
+    {
+      "file": "lib/ech-probe/internal/probe.js",
+      "sha256": "08136fe53d0eefc81d60cdbb1af677973f6612453cd24e5e1d46434e850ef886"
+    },
+    {
+      "file": "lib/ech-probe/internal/target.js",
+      "sha256": "dd7a1bae34a48fead097c97cda3557f8461b20e69540e462476cbcb08ddc1de5"
+    },
+    {
+      "file": "lib/ech-probe/internal/tls.js",
+      "sha256": "579c0de1b4fc2d2eacd55c54cba48df200703ab99bd91f5484e78e86f298a043"
+    },
+    {
+      "file": "lib/ech-probe/internal/trust-store.js",
+      "sha256": "6f18b82197ed7e844bd35bea6cd79ea093a9ea1eb457965c14b1521b70fb3da5"
+    },
+    {
+      "file": "src/doh/attribution.js",
+      "sha256": "175bd2cf54b05826e1bf4af1aa7345c793337770ba70bd69cf1f3a892d538577"
+    },
+    {
+      "file": "src/doh/body.js",
+      "sha256": "d00b9c1299c0f298c1c7616abe2269f0485ad4ab5354e60135582767ce9ec272"
+    },
+    {
+      "file": "src/doh/budget.js",
+      "sha256": "0cf98d7ede2fbd9ac190b97b364346ae97333f6d0f5df14150e3d222175b6a00"
+    },
+    {
+      "file": "src/doh/cache.js",
+      "sha256": "c74269f1071a9ac04edf2c125cdc4d5ea3615995d787d3d7dd43e7dddae8eea9"
+    },
+    {
+      "file": "src/doh/dns-stream.js",
+      "sha256": "b131215c481bc25803c940746eeb3d2400d1557f14e419fbd68b1f64cb8bb809"
+    },
+    {
+      "file": "src/doh/ech-probe.js",
+      "sha256": "f5c5d76390a5db2d72a095791883c5291ec8fb3a7d3bf73d25647812f3b718ee"
+    },
+    {
+      "file": "src/doh/metadata.js",
+      "sha256": "42b6fc64354e0c242e41e694268d6d27aba4bacb396975dc2f786474052e7468"
+    },
+    {
+      "file": "src/doh/protocol.js",
+      "sha256": "b8d32b05cd2c4faf7c12d27903183430da8cbdc17f5912f0ec4daa6e1be2e99d"
+    },
+    {
+      "file": "src/doh/upstream.js",
+      "sha256": "27bbb21872618d99f3747fd25d2069066ffaa97ab172173a86458d73f0f819f3"
+    },
+    {
+      "file": "src/doh/upstreams.js",
+      "sha256": "8e43caea4990df8e28bf51330bb31c7011e5952abaed0f673f37f57dd13e1306"
+    },
+    {
+      "file": "src/index.js",
+      "sha256": "42478c18324d094ce7a44ffbf948d8e5026b60c813dd0eaada9f799c8bad4725"
+    },
+    {
+      "file": "src/rules/address-sources.js",
+      "sha256": "09409250198fdbd70e5c692b98ee24ce8d458073327fe57deee997b59a15590c"
+    },
+    {
+      "file": "src/rules/cache-policy.js",
+      "sha256": "da573a028c361bb65516641b62b9b21202222dc06ffd064b273b4b41d366fcc7"
+    },
+    {
+      "file": "src/rules/conditions.js",
+      "sha256": "98f7c2fa7ee421f1f352549a223fc6c554c38edbdefc20228de6ec513d8407f2"
+    },
+    {
+      "file": "src/rules/config-budget.js",
+      "sha256": "8f32d7d39452fa4b9daf57f691109427697618ff3680f15373644d3cfc1b0572"
+    },
+    {
+      "file": "src/rules/config.js",
+      "sha256": "47ad20ad78b3c66d3b4a289cf7bbb9342a4026a6dd5547998b627d001f70e5da"
+    },
+    {
+      "file": "src/rules/context.js",
+      "sha256": "f5f7085cb0ed8b85ee5fc8371453d19ac0f29e9c5ffb2a23b4d9cae244312db1"
+    },
+    {
+      "file": "src/rules/domain-lists.js",
+      "sha256": "009440e07d9d44f0703072312a7ec249996229867155bad007a57d295fb9c135"
+    },
+    {
+      "file": "src/rules/ech.js",
+      "sha256": "e921bf680804fe22b2bf3e4af193d0b48f4ce1749c53c70c5d329b2eaf45b914"
+    },
+    {
+      "file": "src/rules/errors.js",
+      "sha256": "2f681a8dc6896bb8671afb5b7ecac233e8f26921b9e1daa329aa91f6974fa384"
+    },
+    {
+      "file": "src/rules/ip.js",
+      "sha256": "cb4a7950d6b6086f7c1cca9d021e1c4ce8c6de48774c77e2f39dbd88c9aae960"
+    },
+    {
+      "file": "src/rules/limits.js",
+      "sha256": "5657f1553b3b030cc5b1d72ed3ccff2a825f3ec6f09fceebf68a0e01b8cf3691"
+    },
+    {
+      "file": "src/rules/records.js",
+      "sha256": "4a590fb809937dfff48ec578b6612d8b89870d430b88480a15b831ae487bd762"
+    },
+    {
+      "file": "src/rules/types.d.ts",
+      "sha256": "dc39c5759e878aef6d38590548b3a78e261e2c68a360389ab7895a2d15772fcf"
+    },
+    {
+      "file": "src/rules/values.js",
+      "sha256": "1b7e80a069cf7f0c090d79a3d2a031ba19d4ca17fa75eef47295ab6eab1174ff"
+    },
+    {
+      "file": "src/worker.js",
+      "sha256": "fd4da1da9c6086dd527a35314c092cc8d2f89199bb7229ae68f9c847a389736e"
+    }
+  ],
+  "runtimeManifestSha256": "14720e42833d1eacb63d2d108579401e6c25514e71254bebc97f8925ba7ee4a8",
+  "lockfileSha256": "e41b85aea97fa69b5341cf0edfc796cb7f43be9df98d5984ffa083ee69ee5772",
+  "fixtureSourceSha256": "77829028a7d50db235a031a7b164d8537a2aa0a8e37d843825be301abc1246ac",
+  "runnerSourceSha256": "1c83636e5e4ba07fceeeb47b68d8752f96d80eecec3affca4fee06883ca65426",
+  "versions": {
+    "node": "v24.14.0",
+    "wrangler": "4.151.3",
+    "workerd": "1.20260730.1",
+    "compatibilityDate": "2026-07-30"
+  },
+  "planVerification": "operator-confirmed-free; subscription API403",
+  "cpuThresholdMs": 10,
+  "telemetryMethod": "Workers Logs; invocation sampling1; traces disabled; key-free measurement URLs. Keyed phase observability disabled before fresh Secret.",
+  "authorizedMaxClientRequests": 500,
+  "reservedClientRequests": 335,
+  "recordedClientRequests": 285,
+  "unaccountedReservationCount": 5,
+  "runs": [
+    {
+      "name": "smoke",
+      "exit": 2,
+      "planned": 5,
+      "received": 1,
+      "correct": 0
+    },
+    {
+      "name": "smoke-proxy",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "fixed-warm",
+      "exit": 0,
+      "planned": 30,
+      "received": 30,
+      "correct": 30
+    },
+    {
+      "name": "rules-10",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "rules-50",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "rules-100",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "https-hit",
+      "exit": 2,
+      "planned": 30,
+      "received": 1,
+      "correct": 0
+    },
+    {
+      "name": "fixture-diagnostic",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "https-hit-public-fetch",
+      "exit": 0,
+      "planned": 30,
+      "received": 30,
+      "correct": 30
+    },
+    {
+      "name": "https-miss",
+      "exit": 0,
+      "planned": 30,
+      "received": 30,
+      "correct": 30
+    },
+    {
+      "name": "https-bypass",
+      "exit": 0,
+      "planned": 30,
+      "received": 30,
+      "correct": 30
+    },
+    {
+      "name": "https-public",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "list-100",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "list-1000",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "list-4096",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "attribution-hit",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "attribution-miss",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "ech-direct",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "ech-dns",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "sequential-fallback",
+      "exit": 0,
+      "planned": 10,
+      "received": 10,
+      "correct": 10
+    },
+    {
+      "name": "tcp-public",
+      "exit": 2,
+      "planned": 5,
+      "received": 1,
+      "correct": 0
+    },
+    {
+      "name": "tls-public",
+      "exit": 2,
+      "planned": 5,
+      "received": 1,
+      "correct": 0
+    },
+    {
+      "name": "ech-probe",
+      "exit": 2,
+      "planned": 5,
+      "received": 1,
+      "correct": 0
+    },
+    {
+      "name": "refresh-good",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "refresh-bad",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "refresh-recovered",
+      "exit": 0,
+      "planned": 5,
+      "received": 5,
+      "correct": 5
+    },
+    {
+      "name": "boundary-composed",
+      "planned": 5,
+      "received": 5,
+      "correct": 5,
+      "exit": 0
+    },
+    {
+      "name": "boundary-public",
+      "planned": 5,
+      "received": 5,
+      "correct": 5,
+      "exit": 0
+    },
+    {
+      "name": "boundary-keyed",
+      "planned": 5,
+      "received": 5,
+      "correct": 5,
+      "exit": 0
+    },
+    {
+      "name": "boundary-finalization",
+      "planned": 5,
+      "received": 5,
+      "correct": 5,
+      "exit": 0
+    }
+  ],
+  "deployments": [
+    {
+      "phase": "rules-10",
+      "version": "a1294078-534b-420b-881d-e6f1a7222fdf",
+      "configSha256": "e4418eafd63db923bc7f49fb99fad87412a2f235b7f806f3750ab62dfcaf0632",
+      "timestamp": "2026-10-22T05:03:50.379Z",
+      "startupMs": 5
+    },
+    {
+      "phase": "rules-50",
+      "version": "7c6a3fde-366d-43fc-bf67-ed354c699f53",
+      "configSha256": "04cae88a9afefc6bf9b2f1c06604ef2c4d81480291edad07a9c56372b627b9a4",
+      "timestamp": "2026-10-22T05:04:23.157Z",
+      "startupMs": 5
+    },
+    {
+      "phase": "rules-100",
+      "version": "9b9d008f-2abf-4f6e-b626-be3e31a57a24",
+      "configSha256": "dd4724b6033f5dad4588326956f97c0cc27ec95ae2ad48222a1b738fa8123c0b",
+      "timestamp": "2026-10-22T05:04:57.598Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "https-hit",
+      "version": "89db336a-6525-4cee-9e36-b254692ee7ec",
+      "configSha256": "5e5bb61d1d21650e993f223870824c112f060a556ea2270f63ee0d2d7fb80cdd",
+      "timestamp": "2026-10-22T05:05:28.949Z",
+      "startupMs": 5
+    },
+    {
+      "phase": "https-hit-public-fetch",
+      "version": "e640699d-9423-4bad-9c67-030e53672b57",
+      "configSha256": "fb28931bdbbd0a848fbc4ada966ccd41849a2df9b419420bc5dc5a9ea97a4c85",
+      "timestamp": "2026-10-22T05:08:02.264Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "https-miss",
+      "version": "446e1d1f-cbf5-45d3-8bf7-8219d1eded58",
+      "configSha256": "fb28931bdbbd0a848fbc4ada966ccd41849a2df9b419420bc5dc5a9ea97a4c85",
+      "timestamp": "2026-10-22T05:13:26.179Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "https-bypass",
+      "version": "b1b539ec-59d1-46f3-9e86-6e544079128b",
+      "configSha256": "6b40ac3e365ab4fe9372b9915731607efd27a9efd325ca7e8055c4ef230814fc",
+      "timestamp": "2026-10-22T05:14:19.078Z",
+      "startupMs": 5
+    },
+    {
+      "phase": "https-public",
+      "version": "651b4cb7-3b5e-4ac5-8a2d-ab4b6a9e1d86",
+      "configSha256": "f0723f19fcc19086c643f394f02e01670387d95e1f56e97cab6677588a1c31dc",
+      "timestamp": "2026-10-22T05:15:28.584Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "list-100",
+      "version": "6f88a314-e8ae-4062-8bc8-e0344649a0ae",
+      "configSha256": "559366273c317461bea8c6cb71d647de79a7c9d11b5dbf00b905855f75fd64a1",
+      "timestamp": "2026-10-22T05:15:54.268Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "list-1000",
+      "version": "35c235d3-357c-4798-9a56-af556df86524",
+      "configSha256": "b452e317a27b3e297d8696c959cb4a8c9b1766e2ee6a03cc0e38b58ea144c3c1",
+      "timestamp": "2026-10-22T05:16:31.314Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "list-4096",
+      "version": "0d9a31c3-ef11-4a52-836e-13a0a5bdc599",
+      "configSha256": "55f835f4e1c108dcc5e54ad765264924c3bdc4786d9cf5c34e83d1c7b408e9af",
+      "timestamp": "2026-10-22T05:16:59.832Z",
+      "startupMs": 6
+    },
+    {
+      "phase": "attribution-hit",
+      "version": "ac12e995-3f60-4a3e-bee0-e2550781dd44",
+      "configSha256": "95a981054cfc1e691889d7f505494825408fc43a0a655bbf6200959a8a989cca",
+      "timestamp": "2026-10-22T05:17:25.499Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "attribution-miss",
+      "version": "5abb1a20-687b-4906-8acb-f10589494913",
+      "configSha256": "f55c1428e1e043f4ac92d7e63d4192316ceb7054f05ac265cb66c63248d75f66",
+      "timestamp": "2026-10-22T05:17:57.769Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "ech-direct",
+      "version": "84002b3d-b2bd-4c48-867a-4d10f0dde55d",
+      "configSha256": "b574dfdfefbd3240026dd3adbbeea7b4df33685298054d8cf060f69cdf314d29",
+      "timestamp": "2026-10-22T05:18:34.180Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "ech-dns",
+      "version": "f4296848-dbf8-41fd-8c52-ccaff792fe3c",
+      "configSha256": "b5c96114f65a8aa038094cbeecd5d3732913211466d88b577550df045a0108a7",
+      "timestamp": "2026-10-22T05:19:05.183Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "sequential-fallback",
+      "version": "95ce8874-db58-4ac6-999f-0a3bb117a757",
+      "configSha256": "8f83cfeb0e416a282eaf530e807ab22831657880b2a8517861f031b990f91b19",
+      "timestamp": "2026-10-22T05:19:33.877Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "tcp-public",
+      "version": "9668a70b-cd80-47f3-a5a7-d34015c4cca9",
+      "configSha256": "4274f621f80d01773b0eee7bc27cb1e7f2814df9301f7a536fa88b1f4f3c7546",
+      "timestamp": "2026-10-22T05:20:12.145Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "tls-public",
+      "version": "acc3622f-0724-444a-a3f2-8198b2071e37",
+      "configSha256": "475e6098320270a0428226801ba6fa13cecfcbb18ee37edc01c09003c24138b7",
+      "timestamp": "2026-10-22T05:20:42.294Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "ech-probe",
+      "version": "46267827-4e12-41a6-b540-614764756c52",
+      "configSha256": "465f20b9656f3fae965f583bdaa00886c53a50ce31e09ad9b56f2ebda6c2b6c8",
+      "timestamp": "2026-10-22T05:21:13.628Z",
+      "startupMs": 3
+    },
+    {
+      "phase": "refresh-good",
+      "version": "4a1ef5f5-7007-40eb-824e-91a025b5987d",
+      "configSha256": "756722bbca82cde63047e26304772ef30208935d08df5bd791a670e1ef48650c",
+      "timestamp": "2026-10-22T05:21:54.231Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "boundary-composed",
+      "version": "796ef243-39dd-4966-a11b-ff25df3d49d6",
+      "configSha256": "8eb6a98ecfbd31e2d227293a3df2476d10cad3b2ea3a20affcc28e72bd14b69d",
+      "timestamp": "2026-10-22T05:23:36.458Z",
+      "startupMs": 4
+    },
+    {
+      "phase": "boundary-public",
+      "version": "e230f882-9c90-44a7-bf0c-fd9c40e94f5a",
+      "configSha256": "a4850a1fd9ab5e6bf6481c5de889ff55937e8f0682234695b3640d6885dde320",
+      "timestamp": "2026-10-22T05:24:03.709Z",
+      "startupMs": 5
+    },
+    {
+      "phase": "boundary-keyed",
+      "version": "dc462728-2fbf-4dbe-b4f1-196549b0a7fe",
+      "configSha256": "c8c001f994f325792aebcb34bc695a7689059692ce167a9d3981bdfa127ddddf",
+      "timestamp": "2026-10-22T05:24:29.456Z",
+      "startupMs": 6
+    },
+    {
+      "phase": "boundary-finalization",
+      "version": "7984e943-4143-4519-b679-bc7d13794921",
+      "configSha256": "f99c35a51258256e874a157c232734105e49a370a9d94951492e7658b0339bfe",
+      "timestamp": "2026-10-22T05:30:30.868Z",
+      "startupMs": 5
+    }
+  ],
+  "initialDeploymentVersion": "0218e91c-4ea1-4cae-b2a3-caa049bfef65",
+  "fixtureInitialVersion": "9e406dbc-af27-462c-a3fb-12e52aa81295",
+  "fixtureFinalVersion": "dd8a3a60-57ed-44e1-91e7-e02d9dcec3fb",
+  "producerRetainedVersion": "e0419922-512a-445e-80a6-c129dcc02772",
+  "producerRetainedPathSecret": true,
+  "retainedObservabilityConfigured": false,
+  "retainedLogpush": false,
+  "retainedTailConsumers": 0,
+  "fixtureDiagnostic": {
+    "sampleCount": 5,
+    "correctCount": 5,
+    "producerCpuMeasurement": false
+  },
+  "completeAcceptance": false
+}

@@ -46,3 +46,11 @@ Use `order` to place groups and keep rule/action array order explicit. The engin
 - Confirm required actions terminate; `onError: "continue"` rolls back only the failed action's DNS candidate and retains its failure result/event.
 - Confirm environment variables and Secrets are present in the correct Workers Builds environment before routing production queries.
 - Deploy only under the operator's own authorization. Local controlled tests do not establish public reachability, account-specific limits, or free-plan CPU compliance.
+
+### Public HTTPS Worker sources
+
+The checked-in runtime flags now include `global_fetch_strictly_public`. Explicit HTTPS sources (DNS, lists and attribution) are fetched through the public Internet front door, including another Worker in the same zone. Without this opt-in flag, same-zone Worker fetches can fail with platform error 1042 or bypass the intended Worker route toward an origin. This was reproduced and corrected on the isolated acceptance deployment; no existing business deployment was changed.
+
+This flag changes routing, not source policy: it does not add a default request, retry, fallback, service binding or TCP exception. Audit explicitly configured own-zone URLs before adopting the updated configuration: they now traverse public routing/security rules and can loop back to the same Worker if misconfigured. Public URLs must not assume private-origin reachability. For private service-to-service traffic, design an explicit authorized service-binding adapter separately rather than assuming that this HTTP configuration supplies one. Outbound raw TCP to Cloudflare IP ranges remains blocked by the platform.
+
+References: [public fetch routing](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public), [error 1042](https://developers.cloudflare.com/workers/observability/errors/), [TCP restrictions](https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/).

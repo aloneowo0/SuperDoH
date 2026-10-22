@@ -1,0 +1,2313 @@
+{
+  "version": 1,
+  "runId": "8afc12df-f9ce-4bb8-9ce7-13a033415539",
+  "mode": "authorized-online",
+  "metadata": {
+    "commit": "1024ddb2865b67a7ed1c3d58c9643c86108fe861",
+    "worker": "superdoh-acceptance-20261022",
+    "accountPlan": "free",
+    "approvalRef": "operator-confirmed-20261022"
+  },
+  "stopped": [
+    "initial-smoke",
+    "https-hit-first",
+    "https-hit-warm",
+    "tcp-public-first",
+    "tcp-public-warm",
+    "tls-public-first",
+    "tls-public-warm",
+    "ech-probe-first",
+    "ech-probe-warm"
+  ],
+  "telemetry": {
+    "declaredCpuLimitMs": 10,
+    "verifiedOn": "2026-10-22",
+    "correlatedSampleCount": 255,
+    "missingSampleCount": 5,
+    "unknownOutcomeCount": 0,
+    "orphanTelemetryCount": 0,
+    "cpuLimitVerifiedFreePlan": false
+  },
+  "cases": [
+    {
+      "scenario": "initial-smoke",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 0,
+      "incorrectCount": 1,
+      "errorCount": 1,
+      "missingTelemetryCount": 1,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 10004.6411,
+        "median": 10004.6411,
+        "p95": null,
+        "max": 10004.6411
+      },
+      "cpuMs": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "wallMs": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "smoke-proxy",
+      "phase": "cold-candidate",
+      "sampleCount": 5,
+      "correctCount": 5,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 1,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 5,
+        "min": 160.56770000000006,
+        "median": 182.90489999999954,
+        "p95": null,
+        "max": 1114.0202
+      },
+      "cpuMs": {
+        "count": 4,
+        "min": 2,
+        "median": 4,
+        "p95": null,
+        "max": 25
+      },
+      "wallMs": {
+        "count": 4,
+        "min": 2,
+        "median": 4.5,
+        "p95": null,
+        "max": 25
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "fixed-warm",
+      "phase": "warm",
+      "sampleCount": 30,
+      "correctCount": 30,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 30,
+        "min": 185.52409999999873,
+        "median": 208.39639999999963,
+        "p95": null,
+        "max": 1204.5551
+      },
+      "cpuMs": {
+        "count": 30,
+        "min": 1,
+        "median": 2,
+        "p95": null,
+        "max": 23
+      },
+      "wallMs": {
+        "count": 30,
+        "min": 2,
+        "median": 2.5,
+        "p95": null,
+        "max": 24
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "rules-10-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1281.3736,
+        "median": 1281.3736,
+        "p95": null,
+        "max": 1281.3736
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 27,
+        "median": 27,
+        "p95": null,
+        "max": 27
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 28,
+        "median": 28,
+        "p95": null,
+        "max": 28
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "rules-10-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 189.29890000000069,
+        "median": 218.3858999999993,
+        "p95": null,
+        "max": 242.5622999999996
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 2,
+        "median": 3,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 2,
+        "median": 3,
+        "p95": null,
+        "max": 5
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "rules-50-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1710.1667000000002,
+        "median": 1710.1667000000002,
+        "p95": null,
+        "max": 1710.1667000000002
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 14,
+        "median": 14,
+        "p95": null,
+        "max": 14
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "rules-50-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 190.22910000000047,
+        "median": 206.702299999999,
+        "p95": null,
+        "max": 260.1352999999999
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 1,
+        "median": 3,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 2,
+        "median": 3,
+        "p95": null,
+        "max": 6
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "rules-100-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1506.9793,
+        "median": 1506.9793,
+        "p95": null,
+        "max": 1506.9793
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 29,
+        "median": 29,
+        "p95": null,
+        "max": 29
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 30,
+        "median": 30,
+        "p95": null,
+        "max": 30
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "rules-100-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 196.48639999999978,
+        "median": 239.6243999999997,
+        "p95": null,
+        "max": 528.8561
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 3,
+        "median": 4,
+        "p95": null,
+        "max": 12
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 4,
+        "median": 5,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-hit-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 0,
+      "incorrectCount": 1,
+      "errorCount": 1,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1162.7228,
+        "median": 1162.7228,
+        "p95": null,
+        "max": 1162.7228
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 12,
+        "median": 12,
+        "p95": null,
+        "max": 12
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 41,
+        "median": 41,
+        "p95": null,
+        "max": 41
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-hit-public-fetch-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1358.0352000000003,
+        "median": 1358.0352000000003,
+        "p95": null,
+        "max": 1358.0352000000003
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 28,
+        "median": 28,
+        "p95": null,
+        "max": 28
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 124,
+        "median": 124,
+        "p95": null,
+        "max": 124
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-hit-public-fetch-warm",
+      "phase": "warm",
+      "sampleCount": 29,
+      "correctCount": 29,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 29,
+        "min": 200.9398000000001,
+        "median": 214.34499999999935,
+        "p95": null,
+        "max": 303.7639999999992
+      },
+      "cpuMs": {
+        "count": 29,
+        "min": 3,
+        "median": 4,
+        "p95": null,
+        "max": 6
+      },
+      "wallMs": {
+        "count": 29,
+        "min": 8,
+        "median": 9,
+        "p95": null,
+        "max": 12
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-0",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1358.5158000000001,
+        "median": 1358.5158000000001,
+        "p95": null,
+        "max": 1358.5158000000001
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 18,
+        "median": 18,
+        "p95": null,
+        "max": 18
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 88,
+        "median": 88,
+        "p95": null,
+        "max": 88
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-miss-1",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 221.5378999999998,
+        "median": 221.5378999999998,
+        "p95": null,
+        "max": 221.5378999999998
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-2",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 211.79020000000037,
+        "median": 211.79020000000037,
+        "p95": null,
+        "max": 211.79020000000037
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 5,
+        "median": 5,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 19,
+        "median": 19,
+        "p95": null,
+        "max": 19
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-3",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 190.20260000000053,
+        "median": 190.20260000000053,
+        "p95": null,
+        "max": 190.20260000000053
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-4",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 206.92769999999928,
+        "median": 206.92769999999928,
+        "p95": null,
+        "max": 206.92769999999928
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 13,
+        "median": 13,
+        "p95": null,
+        "max": 13
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-5",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 228.67889999999989,
+        "median": 228.67889999999989,
+        "p95": null,
+        "max": 228.67889999999989
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 31,
+        "median": 31,
+        "p95": null,
+        "max": 31
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-6",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 194.34289999999964,
+        "median": 194.34289999999964,
+        "p95": null,
+        "max": 194.34289999999964
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-7",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 193.5528000000013,
+        "median": 193.5528000000013,
+        "p95": null,
+        "max": 193.5528000000013
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-8",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 388.9542000000001,
+        "median": 388.9542000000001,
+        "p95": null,
+        "max": 388.9542000000001
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 5,
+        "median": 5,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 20,
+        "median": 20,
+        "p95": null,
+        "max": 20
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-9",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 282.9320000000007,
+        "median": 282.9320000000007,
+        "p95": null,
+        "max": 282.9320000000007
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-10",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 270.3176999999996,
+        "median": 270.3176999999996,
+        "p95": null,
+        "max": 270.3176999999996
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-11",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 280.17219999999907,
+        "median": 280.17219999999907,
+        "p95": null,
+        "max": 280.17219999999907
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-12",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 193.9323000000004,
+        "median": 193.9323000000004,
+        "p95": null,
+        "max": 193.9323000000004
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-13",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 220.40790000000197,
+        "median": 220.40790000000197,
+        "p95": null,
+        "max": 220.40790000000197
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 20,
+        "median": 20,
+        "p95": null,
+        "max": 20
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-14",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 216.512999999999,
+        "median": 216.512999999999,
+        "p95": null,
+        "max": 216.512999999999
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 17,
+        "median": 17,
+        "p95": null,
+        "max": 17
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-15",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 219.31620000000112,
+        "median": 219.31620000000112,
+        "p95": null,
+        "max": 219.31620000000112
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 17,
+        "median": 17,
+        "p95": null,
+        "max": 17
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-16",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 216.51870000000054,
+        "median": 216.51870000000054,
+        "p95": null,
+        "max": 216.51870000000054
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-17",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 193.93149999999878,
+        "median": 193.93149999999878,
+        "p95": null,
+        "max": 193.93149999999878
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-18",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 190.47839999999997,
+        "median": 190.47839999999997,
+        "p95": null,
+        "max": 190.47839999999997
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 2,
+        "median": 2,
+        "p95": null,
+        "max": 2
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 14,
+        "median": 14,
+        "p95": null,
+        "max": 14
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-19",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 195.15410000000338,
+        "median": 195.15410000000338,
+        "p95": null,
+        "max": 195.15410000000338
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 18,
+        "median": 18,
+        "p95": null,
+        "max": 18
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-20",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 192.172300000002,
+        "median": 192.172300000002,
+        "p95": null,
+        "max": 192.172300000002
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 16,
+        "median": 16,
+        "p95": null,
+        "max": 16
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-21",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 226.60139999999956,
+        "median": 226.60139999999956,
+        "p95": null,
+        "max": 226.60139999999956
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 17,
+        "median": 17,
+        "p95": null,
+        "max": 17
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-22",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 192.2428,
+        "median": 192.2428,
+        "p95": null,
+        "max": 192.2428
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-23",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 197.72130000000107,
+        "median": 197.72130000000107,
+        "p95": null,
+        "max": 197.72130000000107
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 18,
+        "median": 18,
+        "p95": null,
+        "max": 18
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-24",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 191.11189999999988,
+        "median": 191.11189999999988,
+        "p95": null,
+        "max": 191.11189999999988
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 14,
+        "median": 14,
+        "p95": null,
+        "max": 14
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-25",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 190.11739999999918,
+        "median": 190.11739999999918,
+        "p95": null,
+        "max": 190.11739999999918
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 14,
+        "median": 14,
+        "p95": null,
+        "max": 14
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-26",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 228.62509999999747,
+        "median": 228.62509999999747,
+        "p95": null,
+        "max": 228.62509999999747
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 5,
+        "median": 5,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 19,
+        "median": 19,
+        "p95": null,
+        "max": 19
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-27",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 190.39340000000084,
+        "median": 190.39340000000084,
+        "p95": null,
+        "max": 190.39340000000084
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 13,
+        "median": 13,
+        "p95": null,
+        "max": 13
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-28",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 208.75279999999475,
+        "median": 208.75279999999475,
+        "p95": null,
+        "max": 208.75279999999475
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-miss-29",
+      "phase": "warm",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 204.09679999999935,
+        "median": 204.09679999999935,
+        "p95": null,
+        "max": 204.09679999999935
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-bypass-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1355.0429,
+        "median": 1355.0429,
+        "p95": null,
+        "max": 1355.0429
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 21,
+        "median": 21,
+        "p95": null,
+        "max": 21
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 90,
+        "median": 90,
+        "p95": null,
+        "max": 90
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-bypass-warm",
+      "phase": "warm",
+      "sampleCount": 29,
+      "correctCount": 29,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 29,
+        "min": 203.1967999999979,
+        "median": 238.1938,
+        "p95": null,
+        "max": 296.2626
+      },
+      "cpuMs": {
+        "count": 29,
+        "min": 2,
+        "median": 4,
+        "p95": null,
+        "max": 6
+      },
+      "wallMs": {
+        "count": 29,
+        "min": 9,
+        "median": 11,
+        "p95": null,
+        "max": 15
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "https-public-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1316.1857,
+        "median": 1316.1857,
+        "p95": null,
+        "max": 1316.1857
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 29,
+        "median": 29,
+        "p95": null,
+        "max": 29
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 57,
+        "median": 57,
+        "p95": null,
+        "max": 57
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "https-public-warm",
+      "phase": "warm",
+      "sampleCount": 4,
+      "correctCount": 4,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 4,
+        "min": 203.01350000000002,
+        "median": 228.83294999999998,
+        "p95": null,
+        "max": 230.08460000000014
+      },
+      "cpuMs": {
+        "count": 4,
+        "min": 4,
+        "median": 5,
+        "p95": null,
+        "max": 6
+      },
+      "wallMs": {
+        "count": 4,
+        "min": 9,
+        "median": 9.5,
+        "p95": null,
+        "max": 11
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "list-100-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1185.9801,
+        "median": 1185.9801,
+        "p95": null,
+        "max": 1185.9801
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 52,
+        "median": 52,
+        "p95": null,
+        "max": 52
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "list-100-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 186.66380000000026,
+        "median": 202.38539999999966,
+        "p95": null,
+        "max": 279.6070999999997
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 1,
+        "median": 2,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 2,
+        "median": 2,
+        "p95": null,
+        "max": 3
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "list-1000-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1281.9736000000003,
+        "median": 1281.9736000000003,
+        "p95": null,
+        "max": 1281.9736000000003
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 45,
+        "median": 45,
+        "p95": null,
+        "max": 45
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 93,
+        "median": 93,
+        "p95": null,
+        "max": 93
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "list-1000-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 212.4404000000004,
+        "median": 225.58349999999973,
+        "p95": null,
+        "max": 270.28859999999986
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 2,
+        "median": 3,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 2,
+        "median": 4,
+        "p95": null,
+        "max": 6
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "list-4096-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1191.1900999999998,
+        "median": 1191.1900999999998,
+        "p95": null,
+        "max": 1191.1900999999998
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 22,
+        "median": 22,
+        "p95": null,
+        "max": 22
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 64,
+        "median": 64,
+        "p95": null,
+        "max": 64
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "list-4096-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 1,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 182.28049999999894,
+        "median": 194.47739999999976,
+        "p95": null,
+        "max": 202.6902
+      },
+      "cpuMs": {
+        "count": 8,
+        "min": 1,
+        "median": 2,
+        "p95": null,
+        "max": 3
+      },
+      "wallMs": {
+        "count": 8,
+        "min": 2,
+        "median": 2,
+        "p95": null,
+        "max": 4
+      },
+      "conclusion": "blocked"
+    },
+    {
+      "scenario": "attribution-hit-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1247.7640999999999,
+        "median": 1247.7640999999999,
+        "p95": null,
+        "max": 1247.7640999999999
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 20,
+        "median": 20,
+        "p95": null,
+        "max": 20
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 74,
+        "median": 74,
+        "p95": null,
+        "max": 74
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "attribution-hit-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 1,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 198.41049999999996,
+        "median": 215.92839999999978,
+        "p95": null,
+        "max": 244.2584999999999
+      },
+      "cpuMs": {
+        "count": 8,
+        "min": 3,
+        "median": 3.5,
+        "p95": null,
+        "max": 8
+      },
+      "wallMs": {
+        "count": 8,
+        "min": 6,
+        "median": 8,
+        "p95": null,
+        "max": 13
+      },
+      "conclusion": "blocked"
+    },
+    {
+      "scenario": "attribution-miss-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1324.9717,
+        "median": 1324.9717,
+        "p95": null,
+        "max": 1324.9717
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 27,
+        "median": 27,
+        "p95": null,
+        "max": 27
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 93,
+        "median": 93,
+        "p95": null,
+        "max": 93
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "attribution-miss-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 1,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 214.80779999999868,
+        "median": 221.71380000000136,
+        "p95": null,
+        "max": 255.73090000000047
+      },
+      "cpuMs": {
+        "count": 8,
+        "min": 4,
+        "median": 5,
+        "p95": null,
+        "max": 6
+      },
+      "wallMs": {
+        "count": 8,
+        "min": 10,
+        "median": 12,
+        "p95": null,
+        "max": 14
+      },
+      "conclusion": "blocked"
+    },
+    {
+      "scenario": "ech-direct-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1167.1767,
+        "median": 1167.1767,
+        "p95": null,
+        "max": 1167.1767
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 26,
+        "median": 26,
+        "p95": null,
+        "max": 26
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 26,
+        "median": 26,
+        "p95": null,
+        "max": 26
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "ech-direct-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 183.72590000000037,
+        "median": 207.79680000000008,
+        "p95": null,
+        "max": 275.09630000000107
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 3,
+        "median": 4,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 3,
+        "median": 4,
+        "p95": null,
+        "max": 7
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "ech-dns-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1252.8199,
+        "median": 1252.8199,
+        "p95": null,
+        "max": 1252.8199
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 25,
+        "median": 25,
+        "p95": null,
+        "max": 25
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 98,
+        "median": 98,
+        "p95": null,
+        "max": 98
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "ech-dns-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 182.29789999999957,
+        "median": 203.82740000000013,
+        "p95": null,
+        "max": 221.86160000000018
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 3,
+        "median": 4,
+        "p95": null,
+        "max": 5
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 6,
+        "median": 7,
+        "p95": null,
+        "max": 10
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "sequential-fallback-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1286.9669,
+        "median": 1286.9669,
+        "p95": null,
+        "max": 1286.9669
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 28,
+        "median": 28,
+        "p95": null,
+        "max": 28
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 93,
+        "median": 93,
+        "p95": null,
+        "max": 93
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "sequential-fallback-warm",
+      "phase": "warm",
+      "sampleCount": 9,
+      "correctCount": 9,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 9,
+        "min": 193.8693000000003,
+        "median": 218.52189999999973,
+        "p95": null,
+        "max": 266.28369999999995
+      },
+      "cpuMs": {
+        "count": 9,
+        "min": 3,
+        "median": 3,
+        "p95": null,
+        "max": 6
+      },
+      "wallMs": {
+        "count": 9,
+        "min": 12,
+        "median": 14,
+        "p95": null,
+        "max": 17
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "tcp-public-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 0,
+      "incorrectCount": 1,
+      "errorCount": 1,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1253.5611,
+        "median": 1253.5611,
+        "p95": null,
+        "max": 1253.5611
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 13,
+        "median": 13,
+        "p95": null,
+        "max": 13
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 27,
+        "median": 27,
+        "p95": null,
+        "max": 27
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "tls-public-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 0,
+      "incorrectCount": 1,
+      "errorCount": 1,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1169.4746,
+        "median": 1169.4746,
+        "p95": null,
+        "max": 1169.4746
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 21,
+        "median": 21,
+        "p95": null,
+        "max": 21
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 46,
+        "median": 46,
+        "p95": null,
+        "max": 46
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "ech-probe-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 0,
+      "incorrectCount": 1,
+      "errorCount": 1,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1708.3700000000001,
+        "median": 1708.3700000000001,
+        "p95": null,
+        "max": 1708.3700000000001
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 451,
+        "median": 451,
+        "p95": null,
+        "max": 451
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 472,
+        "median": 472,
+        "p95": null,
+        "max": 472
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "refresh-good-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1254.2607,
+        "median": 1254.2607,
+        "p95": null,
+        "max": 1254.2607
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 18,
+        "median": 18,
+        "p95": null,
+        "max": 18
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 46,
+        "median": 46,
+        "p95": null,
+        "max": 46
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "refresh-good-warm",
+      "phase": "warm",
+      "sampleCount": 4,
+      "correctCount": 4,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 4,
+        "min": 264.65719999999965,
+        "median": 288.5350000000003,
+        "p95": null,
+        "max": 299.9407000000001
+      },
+      "cpuMs": {
+        "count": 4,
+        "min": 18,
+        "median": 19,
+        "p95": null,
+        "max": 21
+      },
+      "wallMs": {
+        "count": 4,
+        "min": 22,
+        "median": 24.5,
+        "p95": null,
+        "max": 27
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "refresh-bad-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1294.0376,
+        "median": 1294.0376,
+        "p95": null,
+        "max": 1294.0376
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 15,
+        "median": 15,
+        "p95": null,
+        "max": 15
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 49,
+        "median": 49,
+        "p95": null,
+        "max": 49
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "refresh-bad-warm",
+      "phase": "warm",
+      "sampleCount": 4,
+      "correctCount": 4,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 4,
+        "min": 204.22559999999976,
+        "median": 207.25775000000044,
+        "p95": null,
+        "max": 217.65670000000046
+      },
+      "cpuMs": {
+        "count": 4,
+        "min": 2,
+        "median": 3,
+        "p95": null,
+        "max": 4
+      },
+      "wallMs": {
+        "count": 4,
+        "min": 6,
+        "median": 7.5,
+        "p95": null,
+        "max": 8
+      },
+      "conclusion": "observed-within-declared-limit"
+    },
+    {
+      "scenario": "refresh-recovered-first",
+      "phase": "cold-candidate",
+      "sampleCount": 1,
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 1,
+        "min": 1274.5046,
+        "median": 1274.5046,
+        "p95": null,
+        "max": 1274.5046
+      },
+      "cpuMs": {
+        "count": 1,
+        "min": 14,
+        "median": 14,
+        "p95": null,
+        "max": 14
+      },
+      "wallMs": {
+        "count": 1,
+        "min": 48,
+        "median": 48,
+        "p95": null,
+        "max": 48
+      },
+      "conclusion": "failed"
+    },
+    {
+      "scenario": "refresh-recovered-warm",
+      "phase": "warm",
+      "sampleCount": 4,
+      "correctCount": 4,
+      "incorrectCount": 0,
+      "errorCount": 0,
+      "missingTelemetryCount": 0,
+      "unknownOutcomeCount": 0,
+      "clientLatencyMs": {
+        "count": 4,
+        "min": 213.8095999999996,
+        "median": 261.2465000000002,
+        "p95": null,
+        "max": 322.2076000000002
+      },
+      "cpuMs": {
+        "count": 4,
+        "min": 4,
+        "median": 4,
+        "p95": null,
+        "max": 12
+      },
+      "wallMs": {
+        "count": 4,
+        "min": 8,
+        "median": 9.5,
+        "p95": null,
+        "max": 19
+      },
+      "conclusion": "failed"
+    }
+  ],
+  "completeAcceptance": false,
+  "caveats": [
+    "Client latency is end-to-end latency, not Worker CPU or platform wall time.",
+    "Cold-candidate samples are not verified cold starts.",
+    "External telemetry correlation is normalized, sampled, and not independently verified; missing measurements remain unavailable.",
+    "The CPU threshold is user-provided and is not programmatically verified against the Free plan; a self-declared account plan does not establish plan status.",
+    "A per-case observation within a declared CPU limit is not complete version acceptance."
+  ]
+}

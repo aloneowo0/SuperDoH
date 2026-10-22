@@ -1,0 +1,5153 @@
+{
+  "fixtureOriginPlaceholder": "https://fixture.example",
+  "plans": [
+    {
+      "run": "attribution-hit",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "attribution-hit-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "attribution-hit-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "attribution-miss",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "attribution-miss-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "attribution-miss-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "ech-direct",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "ech-direct-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "ech-direct-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "ech-dns",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "ech-dns-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "ech-dns-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "ech-probe",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "ech-probe-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "ech-probe-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 65
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "fixed-warm",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "fixed-warm",
+            "phase": "warm",
+            "count": 30,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "fixture-diagnostic",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022-fixtures",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "fixture-diagnostic",
+            "phase": "cold-candidate",
+            "count": 5,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "https-bypass",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "https-bypass-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-bypass-warm",
+            "phase": "warm",
+            "count": 29,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "https-hit",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "https-hit-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-hit-warm",
+            "phase": "warm",
+            "count": 29,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "https-hit-public-fetch",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "https-hit-public-fetch-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-hit-public-fetch-warm",
+            "phase": "warm",
+            "count": 29,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "https-miss",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "https-miss-0",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "miss-0.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-1",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-1.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-2",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-2.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-3",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-3.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-4",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-4.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-5",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-5.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-6",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-6.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-7",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-7.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-8",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-8.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-9",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-9.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-10",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-10.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-11",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-11.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-12",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-12.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-13",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-13.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-14",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-14.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-15",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-15.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-16",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-16.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-17",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-17.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-18",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-18.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-19",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-19.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-20",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-20.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-21",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-21.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-22",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-22.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-23",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-23.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-24",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-24.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-25",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-25.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-26",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-26.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-27",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-27.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-28",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-28.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "https-miss-29",
+            "phase": "warm",
+            "count": 1,
+            "query": {
+              "name": "miss-29.example",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "https-public",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "https-public-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          },
+          {
+            "name": "https-public-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "list-100",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "list-100-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "list-100-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "list-1000",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "list-1000-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "list-1000-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "list-4096",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "list-4096-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "list-4096-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "refresh-bad",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "refresh-bad-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 2,
+              "answerCount": 0
+            }
+          },
+          {
+            "name": "refresh-bad-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 2,
+              "answerCount": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "refresh-good",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "refresh-good-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          },
+          {
+            "name": "refresh-good-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 30
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "refresh-recovered",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "refresh-recovered-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 60
+            }
+          },
+          {
+            "name": "refresh-recovered-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false,
+              "ttl": 60
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "rules-10",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "rules-10-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "rules-10-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "rules-100",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "rules-100-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "rules-100-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "rules-50",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "rules-50-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "rules-50-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "sequential-fallback",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "sequential-fallback-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          },
+          {
+            "name": "sequential-fallback-warm",
+            "phase": "warm",
+            "count": 9,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "smoke",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "initial-smoke",
+            "phase": "cold-candidate",
+            "count": 5,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "smoke-proxy",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "smoke-proxy",
+            "phase": "cold-candidate",
+            "count": 5,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0,
+              "answerCount": 1,
+              "ad": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "tcp-public",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "tcp-public-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          },
+          {
+            "name": "tcp-public-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "run": "tls-public",
+      "manifest": {
+        "version": 1,
+        "metadata": {
+          "commit": "1024ddb",
+          "worker": "superdoh-acceptance-20261022",
+          "accountPlan": "free",
+          "approvalRef": "operator-confirmed-20261022"
+        },
+        "intervalMs": 1000,
+        "timeoutMs": 10000,
+        "scenarios": [
+          {
+            "name": "tls-public-first",
+            "phase": "cold-candidate",
+            "count": 1,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          },
+          {
+            "name": "tls-public-warm",
+            "phase": "warm",
+            "count": 4,
+            "query": {
+              "name": "example.com",
+              "type": 1
+            },
+            "expected": {
+              "rcode": 0
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "configs": [
+    {
+      "phase": "attribution-hit",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_ADDRESS_SOURCES": {
+          "geo": {
+            "url": "https://fixture.example/geo",
+            "ipParam": "ip",
+            "fields": {
+              "ip": [
+                "ip"
+              ],
+              "asn": [
+                "network",
+                "asn"
+              ],
+              "country": [
+                "location",
+                "country"
+              ]
+            },
+            "cacheTtl": 60
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "enrichAddresses",
+                  "source": "geo"
+                }
+              ]
+            },
+            {
+              "when": {
+                "collection": "response.addresses",
+                "quantifier": "any",
+                "where": {
+                  "all": [
+                    {
+                      "field": "item.asn",
+                      "op": "eq",
+                      "value": 64512
+                    },
+                    {
+                      "field": "item.country",
+                      "op": "eq",
+                      "value": "DE"
+                    }
+                  ]
+                }
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "attribution-miss",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_ADDRESS_SOURCES": {
+          "geo": {
+            "url": "https://fixture.example/geo",
+            "ipParam": "ip",
+            "fields": {
+              "ip": [
+                "ip"
+              ],
+              "asn": [
+                "network",
+                "asn"
+              ],
+              "country": [
+                "location",
+                "country"
+              ]
+            },
+            "cacheTtl": 0
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "enrichAddresses",
+                  "source": "geo"
+                }
+              ]
+            },
+            {
+              "when": {
+                "collection": "response.addresses",
+                "quantifier": "any",
+                "where": {
+                  "all": [
+                    {
+                      "field": "item.asn",
+                      "op": "eq",
+                      "value": 64512
+                    },
+                    {
+                      "field": "item.country",
+                      "op": "eq",
+                      "value": "DE"
+                    }
+                  ]
+                }
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "boundary-composed",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_JSON": true,
+        "DNS_LIMITS": {
+          "maxNetworkRequests": 5
+        },
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          },
+          "broken": {
+            "transport": "https",
+            "url": "https://fixture.example/fail"
+          }
+        },
+        "DNS_DOMAIN_LISTS": {
+          "selected": {
+            "url": "https://fixture.example/list-1000",
+            "format": "text",
+            "refreshIntervalMs": 60000
+          }
+        },
+        "DNS_ADDRESS_SOURCES": {
+          "geo": {
+            "url": "https://fixture.example/geo",
+            "ipParam": "ip",
+            "fields": {
+              "ip": [
+                "ip"
+              ],
+              "asn": [
+                "network",
+                "asn"
+              ],
+              "country": [
+                "location",
+                "country"
+              ]
+            },
+            "cacheTtl": 60
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                },
+                {
+                  "type": "replaceRecords",
+                  "where": {
+                    "field": "item.type",
+                    "op": "eq",
+                    "value": "HTTPS"
+                  },
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": [
+                            {
+                              "key": 3,
+                              "data": [
+                                1,
+                                187
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "addRecords",
+                  "section": "additional",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "enrichAddresses",
+                  "source": "geo"
+                },
+                {
+                  "type": "queryEch",
+                  "name": "ech-source.example",
+                  "upstream": "selected"
+                },
+                {
+                  "type": "applyEch"
+                },
+                {
+                  "type": "queryUpstream",
+                  "upstream": "broken",
+                  "onError": "continue"
+                }
+              ]
+            },
+            {
+              "when": {
+                "all": [
+                  {
+                    "field": "lastAction.code",
+                    "op": "eq",
+                    "value": "UPSTREAM_FAILED"
+                  },
+                  {
+                    "field": "query.name",
+                    "op": "inListSuffix",
+                    "value": "selected"
+                  },
+                  {
+                    "collection": "response.addresses",
+                    "quantifier": "any",
+                    "where": {
+                      "all": [
+                        {
+                          "field": "item.asn",
+                          "op": "eq",
+                          "value": 64512
+                        },
+                        {
+                          "field": "item.country",
+                          "op": "eq",
+                          "value": "DE"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 17
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "boundary-finalization",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": false,
+        "logs": {
+          "enabled": false,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "unused": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "stop-empty.example"
+              },
+              "actions": [
+                {
+                  "type": "stop"
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "return-empty.example"
+              },
+              "actions": [
+                {
+                  "type": "return"
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "stop-answer.example"
+              },
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "stop-answer.example",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "stop"
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "return-answer.example"
+              },
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "return-answer.example",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "return"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "boundary-keyed",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": false,
+        "logs": {
+          "enabled": false,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_JSON": true
+      }
+    },
+    {
+      "phase": "boundary-public",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_JSON": true
+      }
+    },
+    {
+      "phase": "ech-direct",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": []
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "loadEch",
+                  "config": "AD7+DQA6AQAgACABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fIAAEAAEAAQALZXhhbXBsZS5jb20AAA=="
+                },
+                {
+                  "type": "applyEch"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "ech-dns",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": []
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "queryEch",
+                  "name": "ech-source.example",
+                  "upstream": "selected"
+                },
+                {
+                  "type": "applyEch"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "ech-probe",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": []
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "probeEch",
+                  "options": {
+                    "hostname": "cloudflare-ech.com",
+                    "port": 443,
+                    "serverName": "cloudflare-ech.com",
+                    "timeoutMs": 1500,
+                    "maxBytes": 65536
+                  }
+                },
+                {
+                  "type": "applyEch"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "https-bypass",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        }
+      }
+    },
+    {
+      "phase": "https-hit",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "https-hit-public-fetch",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "https-miss",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "https-public",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://cloudflare-dns.com/dns-query"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "list-100",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_DOMAIN_LISTS": {
+          "selected": {
+            "url": "https://fixture.example/list-100",
+            "format": "text",
+            "refreshIntervalMs": 60000
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "inListSuffix",
+                "value": "selected"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "list-1000",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_DOMAIN_LISTS": {
+          "selected": {
+            "url": "https://fixture.example/list-1000",
+            "format": "text",
+            "refreshIntervalMs": 60000
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "inListSuffix",
+                "value": "selected"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "list-4096",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_DOMAIN_LISTS": {
+          "selected": {
+            "url": "https://fixture.example/list-4096",
+            "format": "text",
+            "refreshIntervalMs": 60000
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "inListSuffix",
+                "value": "selected"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "refresh-good",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_DOMAIN_LISTS": {
+          "selected": {
+            "url": "https://fixture.example/list-100",
+            "format": "text",
+            "refreshIntervalMs": 1000
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "inListSuffix",
+                "value": "selected"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 30
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "rules-10",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_SCALE_00": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-0.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-1.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-2.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-3.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-4.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-5.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-6.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-7.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-8.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-9.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_MAIN": {
+          "order": 1000,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "rules-100",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_SCALE_00": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-0.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-1.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-2.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-3.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-4.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-5.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-6.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-7.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-8.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-9.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-10.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-11.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-12.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-13.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-14.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-15.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_01": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-16.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-17.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-18.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-19.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-20.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-21.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-22.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-23.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-24.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-25.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-26.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-27.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-28.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-29.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-30.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-31.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_02": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-32.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-33.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-34.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-35.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-36.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-37.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-38.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-39.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-40.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-41.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-42.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-43.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-44.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-45.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-46.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-47.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_03": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-48.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-49.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-50.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-51.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-52.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-53.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-54.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-55.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-56.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-57.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-58.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-59.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-60.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-61.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-62.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-63.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_04": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-64.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-65.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-66.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-67.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-68.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-69.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-70.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-71.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-72.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-73.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-74.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-75.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-76.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-77.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-78.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-79.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_05": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-80.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-81.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-82.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-83.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-84.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-85.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-86.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-87.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-88.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-89.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-90.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-91.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-92.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-93.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-94.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-95.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_06": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-96.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-97.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-98.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-99.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_MAIN": {
+          "order": 1000,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "rules-50",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_SCALE_00": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-0.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-1.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-2.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-3.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-4.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-5.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-6.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-7.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-8.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-9.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-10.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-11.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-12.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-13.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-14.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-15.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_01": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-16.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-17.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-18.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-19.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-20.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-21.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-22.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-23.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-24.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-25.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-26.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-27.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-28.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-29.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-30.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-31.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_02": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-32.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-33.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-34.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-35.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-36.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-37.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-38.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-39.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-40.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-41.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-42.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-43.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-44.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-45.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-46.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-47.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_SCALE_03": {
+          "order": 0,
+          "rules": [
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-48.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "query.name",
+                "op": "eq",
+                "value": "unused-49.example"
+              },
+              "actions": [
+                {
+                  "type": "setTtl",
+                  "ttl": 60
+                }
+              ]
+            }
+          ]
+        },
+        "DNS_RULE_MAIN": {
+          "order": 1000,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "sequential-fallback",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "primary": {
+            "transport": "https",
+            "url": "https://fixture.example/fail"
+          },
+          "backup": {
+            "transport": "https",
+            "url": "https://fixture.example/dns"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "primary",
+                  "onError": "continue"
+                }
+              ]
+            },
+            {
+              "when": {
+                "field": "lastAction.success",
+                "op": "eq",
+                "value": false
+              },
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "backup"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "tcp-public",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "tcp",
+            "address": "1.1.1.1",
+            "port": 53
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "tls-public",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "tls",
+            "address": "1.1.1.1",
+            "port": 853,
+            "serverName": "cloudflare-dns.com"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "baseline-fixed",
+      "compatibilityDate": "2026-07-30",
+      "compatibilityFlags": [
+        "enable_request_signal"
+      ],
+      "observability": {
+        "enabled": true,
+        "logs": {
+          "enabled": true,
+          "invocation_logs": true,
+          "head_sampling_rate": 1
+        },
+        "traces": {
+          "enabled": false
+        }
+      },
+      "vars": {
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "provenance": "Binding template reconstructed from baseline; original full config hash not recorded."
+    }
+  ],
+  "boundaryChecksSource": "private orchestration; behavior described in the dated report",
+  "fixtureExpiryUtc": "2026-10-22T06:02:48.329Z"
+}

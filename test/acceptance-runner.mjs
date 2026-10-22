@@ -43,7 +43,7 @@ test('measurement runner observes the production DoH HTTP entry and never export
       api.onResolve({ filter: /[.]wasm$/ }, args => ({ path: '../' + path.relative(root, path.resolve(args.resolveDir, args.path)).split(path.sep).join('/'), external: true }));
     } }] });
   const mf = new Miniflare({ modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/measure-worker.js'), script: bundled.outputFiles[0].text,
-    compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], log: new Log(LogLevel.NONE),
+    compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'], log: new Log(LogLevel.NONE),
     bindings: { DNS_PATH_KEY: 'private-test-key', DNS_RULE_MAIN: { order: 0, rules: [{ actions: [{ type: 'answer', records: [
       { name: 'example.com', type: 'A', ttl: 60, rdata: { A: { addr: '192.0.2.8' } } },
     ] }] }] } }, modulesRules: [{ type: 'ESModule', include: ['**/*.js'], fallthrough: true }, { type: 'CompiledWasm', include: ['**/*.wasm'], fallthrough: true }] });
@@ -204,5 +204,19 @@ test('after smoke success a failed scenario stops only itself and preserves late
     assert.equal(output.samples.filter(row => row.scenario === 'bad').length, 1);
     assert.equal(output.samples.filter(row => row.scenario === 'after' && row.correct).length, 2);
     assert.equal(calls, 8);
+  });
+});
+
+test('measurement checks an explicitly expected answer TTL instead of accepting an unmodified answer', async () => {
+  const { responseWire } = await import('./helpers/dns-wire.mjs');
+  await withServer(async (req, res) => {
+    const chunks = []; for await (const chunk of req) chunks.push(chunk);
+    res.writeHead(200, { 'Content-Type': 'application/dns-message' });
+    res.end(responseWire(Buffer.concat(chunks)));
+  }, async endpoint => {
+    const scenario = { ...manifest().scenarios[0], expected: { rcode: 0, answerCount: 1, ttl: 30 } };
+    const result = await invoke(manifest({ scenarios: [scenario] }), ['--local'], { DNS_ACCEPTANCE_URL: endpoint });
+    assert.equal(result.code, 2, result.stderr);
+    assert.equal(JSON.parse(result.stdout).samples[0].errorCode, 'DNS_UNEXPECTED');
   });
 });

@@ -1,6 +1,6 @@
 # Online acceptance runbook
 
-Status: **prepared, not authorized or executed**. This is the remaining #25 procedure, not a result or deployment approval. The independent local ECH/OpenSSL check passed on 2026-10-22; reproduce it using [acceptance.md](acceptance.md) for the actual candidate before claiming complete acceptance.
+Status: **an explicitly authorized isolated run was executed on 2026-10-22; overall acceptance is not passed**. See the [dated results and limitations](online-results-2026-10-22.md). This runbook remains a procedure, not authorization for another run. The independent local ECH/OpenSSL check passed and was rerun with the updated runtime flags; reproduce it using [acceptance.md](acceptance.md) for release candidates.
 
 ## Authorization gate
 
@@ -63,7 +63,7 @@ If a default or built-in path exceeds verified limits, report evidence and propo
 
 ## Bounded collection and offline reporting tools
 
-The repository now contains preparation tools, **not authorization or executed online measurements**:
+The repository contains bounded collection tools. They **do not grant authorization**; separately authorized results are recorded in the dated report, not inferred from these tools:
 
 - `scripts/acceptance-runner.mjs` sends standard binary DoH POST requests using the public DNS library. It does not deploy, change bindings, select sources or enable telemetry. Its runtime bundling of the existing DNS WASM library uses the locked development `esbuild`; no new production dependency or protocol parser is introduced.
 - `scripts/acceptance-report.mjs` reads sanitized samples plus optional normalized platform telemetry entirely offline. It never contacts Cloudflare or guesses a platform schema.
@@ -90,7 +90,7 @@ The runner requires HTTPS in online mode, rejects URL userinfo/query/fragment, r
 
 Limits: at most 500 planned requests and 100 uniquely named scenarios, at least five planned smoke requests, 30-second maximum per-request timeout, 65,535-byte response cap, 512-KiB manifest cap, and a 15-minute execution deadline after local setup. Online intervals must be at least 1,000 ms; the runner conservatively waits the interval **after each completed request**, so there is no concurrent traffic. Local tests may use a shorter interval. A failure within the first five samples stops the run; later failures stop their own scenario. The output retains failed samples and stopped scenario names. Exit codes: 0 collected successfully, 1 preflight/setup failure with sanitized error, 2 observed failure or incomplete run with the sample JSON still emitted. If interrupted or killed before emission, treat output as incomplete; do not replace missing samples with success.
 
-The endpoint is never exported. Output includes a random run ID, safe scenario/phase labels, start timestamps, client latency, HTTP status, DNS RCODE, simple correctness and safe error codes. DNS response checks cover identity/question association, QR/opcode/truncation, full RCODE, and configured answer count/AD flag. They do **not** prove every RR's content, source access, cache state, isolate identity or all DNSSEC semantics; retain independent acceptance evidence for those properties. Phase names are declared labels: `cold-candidate` is not verified cold, and repeated queries are not independently proven cache hits. Sample IDs are sent in `X-Acceptance-Sample-Id` for an explicitly approved collector to correlate; the Worker does not expose a new production API or log this header automatically.
+The endpoint is never exported. Output includes a random run ID, safe scenario/phase labels, start timestamps, client latency, HTTP status, DNS RCODE, simple correctness and safe error codes. DNS response checks cover identity/question association, QR/opcode/truncation, full RCODE, and configured answer count/AD flag and optional exact Answer TTL. An expected `ttl` must be an integer from 0 through 4,294,967,295; it requires at least one Answer and checks every Answer record. Use this for deterministic rewrite assertions, not an aging cache response whose exact TTL is inherently time-dependent. They do **not** prove every RR's content, source access, cache state, isolate identity or all DNSSEC semantics; retain independent acceptance evidence for those properties. Phase names are declared labels: `cold-candidate` is not verified cold, and repeated queries are not independently proven cache hits. Sample IDs are sent in `X-Acceptance-Sample-Id` for an explicitly approved collector to correlate; the application does not expose a new production API or log this header. Approved platform invocation logging can record request metadata, so it must be restricted to key-free measurement requests and disabled before the path-key phase.
 
 ### Normalized telemetry input
 
@@ -110,4 +110,4 @@ Reports keep client latency, observed platform CPU and wall time separate; missi
 
 ### Local verification
 
-`npm run test:measurement` exercises collection through the production workerd HTTP entry and controlled local services, including rate/authorization gates, response/error limits, redaction, correlation schema and offline reporting. Test telemetry is synthetic, explicitly used only to test the report tool; it is not a measurement result. The script is included in `npm test`. No online resource was created or measured during this implementation.
+`npm run test:measurement` exercises collection through the production workerd HTTP entry and controlled local services, including rate/authorization gates, response/error limits, redaction, correlation schema and offline reporting. Test telemetry is synthetic, explicitly used only to test the report tool; it is not a measurement result. The script is included in `npm test`. Running that local suite creates no online resources and performs no online measurements. The separately authorized 2026-10-22 run, resource disposition and incomplete acceptance conclusion are documented in the dated report.

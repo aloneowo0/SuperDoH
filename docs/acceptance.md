@@ -71,7 +71,7 @@ The executed build used /tmp/superdoh-openssl-ech-20261022 and an isolated repos
 ## Outstanding acceptance
 
 - **#22 local ECH interoperability:** passed in the isolated WSL environment above; keep this opt-in prerequisite separate from the default offline regression and rerun it for release candidates.
-- **#25 online free-plan acceptance:** no online CPU measurement, deployment, remote DoH interoperability or account-specific free-plan verification was authorized or performed. Local workerd and controlled-source test results cannot substitute for those checks.
+- **#25 online free-plan acceptance:** an isolated, explicitly authorized run was executed on 2026-10-22. Real platform CPU/wall samples include CPU above the documented Free threshold; public TCP/TLS/probe positive paths did not pass, and some telemetry is missing. The plan was operator-confirmed, not independently billing-API-verified. Overall acceptance remains **not passed**; see [actual results](online-results-2026-10-22.md).
 - **Platform/resource caveats:** upstream reachability, Secrets/variable limits and Worker resource availability depend on the deployed account and environment. Application `DNS_LIMITS` values are resource bounds, not free-plan CPU guarantees.
 
 The `.example` and `.test` names in `examples/*.json` are illustrative inputs for controlled harnesses, not live services. Replace them with sources you operate before deployment; these examples do not establish public reachability or online data accuracy.
@@ -80,8 +80,12 @@ The `.example` and `.test` names in `examples/*.json` are illustrative inputs fo
 
 `npx wrangler deploy --dry-run` validates the browser-target production bundle locally without upload; this is not a deployment or free-plan CPU test. `wrangler types --include-runtime=false` regenerates the checked-in binding declarations. The production configuration uses `keep_vars: true` so ordinary Dashboard-managed runtime variables survive code deployment; Workers Builds build-only variables remain separate, and ordinary deployments do not delete Secrets. See [configuration preservation](https://developers.cloudflare.com/workers/wrangler/configuration/) and [build/runtime variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/).
 
-The bounded, authorization-gated procedure for remaining online work is in [online-acceptance.md](online-acceptance.md). It is preparation only, not an executed result or permission to deploy.
+The bounded, authorization-gated procedure for remaining online work is in [online-acceptance.md](online-acceptance.md). It is not permission to deploy or repeat traffic. The separate [dated result](online-results-2026-10-22.md) records what was actually executed and what remains blocked.
 
 ## Measurement-tool regression (2026-10-22)
 
 After adding the gated runner and offline reporter, the final `npm test` run exited with code 0: typechecking, 227 application/tool tests (including 16 measurement tests), 130 DNS library tests and 104 ECH offline tests passed. No tests in the application/tool suites were skipped. Standards review found no concrete violations; the Spec review's unknown-telemetry classification finding was fixed and independently rechecked. These are local regression results, not an executed #25 online performance acceptance.
+
+## Authorized online-run regression (2026-10-22)
+
+After adding bounded test-only online fixtures, the exact TTL expectation and public-fetch runtime alignment, `npm test` exited 0: typechecking, **237 application/tool tests**, **130 DNS library tests** and **104 ECH offline tests** passed. All 15 application/tool suites reported zero failures and zero skips. The updated production-entry OpenSSL/workerd interoperability test passed separately in WSL (1 integration test); no certificate-authentication downgrade was used for the authenticated path. Production `wrangler deploy --dry-run` exited 0 (2,000.24 KiB, gzip 477.28 KiB), without deployment of the business Worker. These checks do not override the failed/incomplete online CPU and reachability acceptance.

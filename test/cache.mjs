@@ -26,7 +26,7 @@ const calls = [];
 let upstream = async request => new Response(responseWire(new Uint8Array(await request.arrayBuffer())), { headers: { 'Content-Type': 'application/dns-message' } });
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: `${root}/test/doh-bundle.js`, script: bundle.outputFiles[0].text,
-  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], bindings, log: new TestLog(),
+  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'], bindings, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },

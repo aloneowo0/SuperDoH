@@ -37,14 +37,14 @@ async function readManifest(file, local) {
   for (const scenario of value.scenarios) {
     fields(scenario, ['name', 'phase', 'count', 'query', 'expected']);
     fields(scenario.query, ['name', 'type']);
-    fields(scenario.expected, ['rcode'], ['answerCount', 'ad']);
+    fields(scenario.expected, ['rcode'], ['answerCount', 'ad', 'ttl']);
     const name = scenario.query.name;
     if (!slug(scenario.name) || names.has(scenario.name) || !['cold-candidate', 'warm', 'unspecified'].includes(scenario.phase) ||
       !integer(scenario.count, 1, 500) || typeof name !== 'string' || name.length < 1 || name.length > 254 ||
       !(name === '.' || name.replace(/\.$/, '').split('.').every(label => /^[A-Za-z0-9_-]{1,63}$/.test(label))) ||
       !integer(scenario.query.type, 0, 65535) || !integer(scenario.expected.rcode, 0, 4095) ||
       (Object.hasOwn(scenario.expected, 'answerCount') && !integer(scenario.expected.answerCount, 0, 65535)) ||
-      (Object.hasOwn(scenario.expected, 'ad') && typeof scenario.expected.ad !== 'boolean')) fail('INVALID_INPUT');
+      (Object.hasOwn(scenario.expected, 'ad') && typeof scenario.expected.ad !== 'boolean') || (Object.hasOwn(scenario.expected, 'ttl') && !integer(scenario.expected.ttl, 0, 4294967295))) fail('INVALID_INPUT');
     names.add(scenario.name);
     total += scenario.count;
   }
@@ -144,7 +144,7 @@ async function collect(manifest, local) {
           JSON.stringify(message.questions) !== JSON.stringify(original.questions)) fail('DNS_INVALID');
         sample.dnsRcode = dns.getRcode(message);
         const expected = scenario.expected;
-        if (sample.dnsRcode !== expected.rcode || (Object.hasOwn(expected, 'answerCount') && message.answers.length !== expected.answerCount) ||
+        if (sample.dnsRcode !== expected.rcode || (Object.hasOwn(expected, 'ttl') && (!message.answers.length || message.answers.some(rr => rr.ttl !== expected.ttl))) || (Object.hasOwn(expected, 'answerCount') && message.answers.length !== expected.answerCount) ||
           (Object.hasOwn(expected, 'ad') && !!(message.flags & dns.FLAGS.AD) !== expected.ad)) fail('DNS_UNEXPECTED');
         sample.correct = true;
       } catch (error) {

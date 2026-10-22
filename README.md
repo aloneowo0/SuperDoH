@@ -10,7 +10,7 @@ SuperDoH is a single-configuration DNS-over-HTTPS Worker. Its production behavio
 - Supports an opt-in DNS JSON GET adapter through `DNS_JSON=true`; it uses the same rule pipeline as wire-format requests.
 - Provides explicit DNS response-address attribution, maintained domain lists, and ECH acquisition/application actions. These do not run implicitly during condition matching.
 
-The detailed runtime contract, fields, resource limits and failure semantics are in [docs/rules.md](docs/rules.md). Historical behavior and configuration changes are in [docs/migration.md](docs/migration.md); the verification matrix and current blockers are in [docs/acceptance.md](docs/acceptance.md).
+The detailed runtime contract, fields, resource limits and failure semantics are in [docs/rules.md](docs/rules.md). Historical behavior and configuration changes are in [docs/migration.md](docs/migration.md); the verification matrix and current blockers are in [docs/acceptance.md](docs/acceptance.md). The [2026-10-22 isolated online results](docs/online-results-2026-10-22.md) include real CPU/wall evidence; full Free-plan acceptance is **not passed**.
 
 ## Runtime configuration
 

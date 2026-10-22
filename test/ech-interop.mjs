@@ -178,7 +178,7 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     const script = bundle.outputFiles[0].text;
     const runtimeOptions = {
       modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/ech-public-bundle.js'), script,
-      compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'],
+      compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'],
       bindings: { DNS_CACHE: { read: false, write: false } },
       outboundService: { network: { allow: ['private'] } },
       log: new TestLog(logs),

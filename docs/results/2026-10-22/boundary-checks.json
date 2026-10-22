@@ -1,0 +1,280 @@
+[
+  {
+    "version": 1,
+    "mode": "composed",
+    "platformTelemetryAvailable": true,
+    "cases": [
+      {
+        "id": "a13dfca9-699a-411a-980d-897045f0c0dc",
+        "label": "composed-wire-first",
+        "startedAt": "2026-10-22T05:23:36.623Z",
+        "latencyMs": 1370.776,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "a13dfca9-699a-411a-980d-897045f0c0dc",
+          "cpuMs": 38,
+          "wallMs": 129,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "a7203022-646a-47e9-b69a-1ead255326bd",
+        "label": "composed-wire-warm-1",
+        "startedAt": "2026-10-22T05:23:39.002Z",
+        "latencyMs": 510.692,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "a7203022-646a-47e9-b69a-1ead255326bd",
+          "cpuMs": 9,
+          "wallMs": 26,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "a3feb7ba-5517-49ad-8431-f20c95335929",
+        "label": "composed-wire-warm-2",
+        "startedAt": "2026-10-22T05:23:40.514Z",
+        "latencyMs": 267.861,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "a3feb7ba-5517-49ad-8431-f20c95335929",
+          "cpuMs": 9,
+          "wallMs": 24,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "fa1f648a-e52d-4e2d-b44f-b9b1395910cc",
+        "label": "composed-json-1",
+        "startedAt": "2026-10-22T05:23:41.793Z",
+        "latencyMs": 461.927,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "fa1f648a-e52d-4e2d-b44f-b9b1395910cc",
+          "cpuMs": 10,
+          "wallMs": 36,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "7f7f3b83-e01f-4d96-8b74-0e9f9cb9c955",
+        "label": "composed-json-2",
+        "startedAt": "2026-10-22T05:23:43.264Z",
+        "latencyMs": 240.761,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "7f7f3b83-e01f-4d96-8b74-0e9f9cb9c955",
+          "cpuMs": 8,
+          "wallMs": 25,
+          "outcome": "ok"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "mode": "public",
+    "platformTelemetryAvailable": true,
+    "cases": [
+      {
+        "id": "3d489270-3df0-443a-bfd6-1365b5782c87",
+        "label": "wire-get",
+        "startedAt": "2026-10-22T05:24:03.954Z",
+        "latencyMs": 1202.712,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "3d489270-3df0-443a-bfd6-1365b5782c87",
+          "cpuMs": 20,
+          "wallMs": 20,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "540d268c-0aa8-4e33-b1ec-73e72126c7f9",
+        "label": "json-get",
+        "startedAt": "2026-10-22T05:24:06.163Z",
+        "latencyMs": 239.559,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "540d268c-0aa8-4e33-b1ec-73e72126c7f9",
+          "cpuMs": 6,
+          "wallMs": 7,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "e1b08be6-d446-496e-b9d1-2415027995ca",
+        "label": "json-duplicate",
+        "startedAt": "2026-10-22T05:24:07.408Z",
+        "latencyMs": 217.28,
+        "httpStatus": 400,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "e1b08be6-d446-496e-b9d1-2415027995ca",
+          "cpuMs": 1,
+          "wallMs": 2,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "75d489fe-ac74-4b2d-be4c-638a873527eb",
+        "label": "json-post",
+        "startedAt": "2026-10-22T05:24:08.641Z",
+        "latencyMs": 203.242,
+        "httpStatus": 405,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "75d489fe-ac74-4b2d-be4c-638a873527eb",
+          "cpuMs": 1,
+          "wallMs": 1,
+          "outcome": "ok"
+        }
+      },
+      {
+        "id": "be1c312c-69e3-490e-8906-ef946df2e9ad",
+        "label": "wire-malformed",
+        "startedAt": "2026-10-22T05:24:09.851Z",
+        "latencyMs": 213.362,
+        "httpStatus": 400,
+        "correct": true,
+        "errorCode": null,
+        "platform": {
+          "sampleId": "be1c312c-69e3-490e-8906-ef946df2e9ad",
+          "cpuMs": 2,
+          "wallMs": 3,
+          "outcome": "ok"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "mode": "keyed",
+    "platformTelemetryAvailable": false,
+    "cases": [
+      {
+        "id": "14c84902-f111-4eea-ab01-6c7bbfa4f2a2",
+        "label": "unkeyed-before-parse",
+        "startedAt": "2026-10-22T05:24:35.024Z",
+        "latencyMs": 1211.923,
+        "httpStatus": 404,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "5d562bc4-3c4f-42dc-9af5-a85c4de9b059",
+        "label": "wrong-key",
+        "startedAt": "2026-10-22T05:24:37.249Z",
+        "latencyMs": 221.334,
+        "httpStatus": 404,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "de9d225b-5f89-4688-97b0-d9f1b3c088f8",
+        "label": "authorized-wire-post",
+        "startedAt": "2026-10-22T05:24:38.482Z",
+        "latencyMs": 625.041,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "56fae2b3-6825-4910-b60a-a4ee19238c7f",
+        "label": "authorized-wire-get",
+        "startedAt": "2026-10-22T05:24:40.120Z",
+        "latencyMs": 199.676,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "da0d9885-078b-4ca4-bd8e-188a9766e070",
+        "label": "authorized-json",
+        "startedAt": "2026-10-22T05:24:41.331Z",
+        "latencyMs": 218.755,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "mode": "finalization",
+    "platformTelemetryAvailable": false,
+    "cases": [
+      {
+        "id": "7cc44759-3ecc-42af-884a-95c292ef2499",
+        "label": "completed-empty",
+        "startedAt": "2026-10-22T05:30:45.790Z",
+        "latencyMs": 1629.828,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "20482e16-849f-4980-b6ca-36692a2cf0c5",
+        "label": "stopped-empty",
+        "startedAt": "2026-10-22T05:30:48.432Z",
+        "latencyMs": 220.751,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "90b85a2b-7856-419b-90b4-1ce6d30f9589",
+        "label": "returned-empty",
+        "startedAt": "2026-10-22T05:30:49.657Z",
+        "latencyMs": 226.878,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "3c26b51b-9261-4455-921a-f9feee08751f",
+        "label": "stopped-answer",
+        "startedAt": "2026-10-22T05:30:50.891Z",
+        "latencyMs": 210.656,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      },
+      {
+        "id": "5b23324c-f0fa-4cac-9c98-0919492c0bf6",
+        "label": "returned-answer",
+        "startedAt": "2026-10-22T05:30:52.107Z",
+        "latencyMs": 193.042,
+        "httpStatus": 200,
+        "correct": true,
+        "errorCode": null,
+        "platform": null
+      }
+    ]
+  }
+]
