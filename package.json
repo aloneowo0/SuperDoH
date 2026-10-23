@@ -6,7 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test:rules": "node --test test/rules.mjs",
-    "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs",
+    "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs && node --test test/trust-store.mjs",
     "test": "npm run typecheck && npm run test:rules && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:json && npm run test:acceptance && npm run test:online-fixtures && npm run test:measurement && npm run test:libraries",
     "test:doh": "node --test test/doh.mjs",
     "test:tcp": "node --test test/tcp.mjs",

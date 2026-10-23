@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19",
+  "generatedAt": "2026-10-23",
   "source": "https://registry.npmjs.org/",
   "packages": {
     "pkijs": {
@@ -36,5 +36,5 @@
     }
   },
   "output": "pki-core.js",
-  "sha256": "03a13bd25599fbd759e988a3f29e67d23732aed43bd19f0d4d920055affae91d"
+  "sha256": "2fddfe7bcc9ca2d302140b2ece9196f111136a74e495a72a066484c45b7f1ac2"
 }

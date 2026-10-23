@@ -1,0 +1,4 @@
+# Preserve pinned snapshot and generated-file hashes across Windows checkouts.
+vendor/cacert.pem text eol=lf
+vendor/pki-core.js text eol=lf
+internal/trust-store.js text eol=lf

@@ -1,0 +1,504 @@
+{
+  "date": "2026-10-23",
+  "baselineCommit": "09f52fc16538ad08a644c425f6acfa94f2809610",
+  "evidenceKind": "One sequential before/after local Windows workerd whole-process CPU diagnostic; not platform quota CPU or successful-handshake CPU",
+  "limits": [
+    "All threads, GC, background work and counter-query boundaries are included",
+    "Coarse OS counter; zero is not no CPU",
+    "One pair does not establish a percentage saving or production cold/warm identity",
+    "Only loopback TCP and intercepted HTTP; no cloud deployment or public requests",
+    "The independent OpenSSL rerun was not performed; the prior WSL denial was not bypassed"
+  ],
+  "before": {
+    "metadata": {
+      "evidenceKind": "Windows workerd whole-process CPU, not platform quota CPU or function CPU",
+      "processCpuIncludesAllThreads": true,
+      "counterPrecision": "coarse OS counter",
+      "zeroDoesNotMeanNoCpu": true,
+      "onlineRequests": 0
+    },
+    "observations": [
+      {
+        "label": "fixed",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 42.87920000000031,
+        "sourceCalls": 0,
+        "connections": 0,
+        "rcode": 0
+      },
+      {
+        "label": "fixed",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 10.453499999999622,
+        "sourceCalls": 0,
+        "connections": 0,
+        "rcode": 0
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 29.189300000000003,
+        "sourceCalls": 0,
+        "connections": 1,
+        "rcode": 2
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 8.596099999999751,
+        "sourceCalls": 0,
+        "connections": 2,
+        "rcode": 2
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 7.286099999999351,
+        "sourceCalls": 0,
+        "connections": 3,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 0,
+        "processCpuMs": 265.625,
+        "wallMs": 156.02050000000054,
+        "sourceCalls": 0,
+        "connections": 4,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 9.140199999999822,
+        "sourceCalls": 0,
+        "connections": 5,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 9.067799999998897,
+        "sourceCalls": 0,
+        "connections": 6,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 31.54869999999937,
+        "sourceCalls": 0,
+        "connections": 7,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 11.152799999999843,
+        "sourceCalls": 0,
+        "connections": 8,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 10.887300000000323,
+        "sourceCalls": 0,
+        "connections": 9,
+        "rcode": 2
+      },
+      {
+        "label": "list-1",
+        "index": 0,
+        "processCpuMs": 62.5,
+        "wallMs": 43.45550000000003,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-1",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 7.784199999998236,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-1",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 11.612800000002608,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 29.028800000000047,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 7.911700000000565,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 6.820299999999406,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 0,
+        "processCpuMs": 31.25,
+        "wallMs": 21.17319999999745,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 8.688399999999092,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 9.824400000001333,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 0,
+        "processCpuMs": 31.25,
+        "wallMs": 1028.8701,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 1015.8305,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 1021.6438000000016,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      }
+    ]
+  },
+  "after": {
+    "metadata": {
+      "evidenceKind": "Windows workerd whole-process CPU, not platform quota CPU or function CPU",
+      "processCpuIncludesAllThreads": true,
+      "counterPrecision": "coarse OS counter",
+      "zeroDoesNotMeanNoCpu": true,
+      "onlineRequests": 0
+    },
+    "observations": [
+      {
+        "label": "fixed",
+        "index": 0,
+        "processCpuMs": 15.625,
+        "wallMs": 25.972600000000057,
+        "sourceCalls": 0,
+        "connections": 0,
+        "rcode": 0
+      },
+      {
+        "label": "fixed",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 5.739000000000033,
+        "sourceCalls": 0,
+        "connections": 0,
+        "rcode": 0
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 0,
+        "processCpuMs": 31.25,
+        "wallMs": 21.91690000000017,
+        "sourceCalls": 0,
+        "connections": 1,
+        "rcode": 2
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 8.424800000000687,
+        "sourceCalls": 0,
+        "connections": 2,
+        "rcode": 2
+      },
+      {
+        "label": "default-unverified-alert",
+        "index": 2,
+        "processCpuMs": 15.625,
+        "wallMs": 5.880699999999706,
+        "sourceCalls": 0,
+        "connections": 3,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 25.288800000000265,
+        "sourceCalls": 0,
+        "connections": 4,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 9.271099999999933,
+        "sourceCalls": 0,
+        "connections": 5,
+        "rcode": 2
+      },
+      {
+        "label": "default-auth-alert",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 7.286400000000867,
+        "sourceCalls": 0,
+        "connections": 6,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 29.48580000000038,
+        "sourceCalls": 0,
+        "connections": 7,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 1,
+        "processCpuMs": 46.875,
+        "wallMs": 10.438599999999497,
+        "sourceCalls": 0,
+        "connections": 8,
+        "rcode": 2
+      },
+      {
+        "label": "custom-auth-alert",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 11.606499999999869,
+        "sourceCalls": 0,
+        "connections": 9,
+        "rcode": 2
+      },
+      {
+        "label": "list-1",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 27.906699999999546,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-1",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 7.360000000000582,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-1",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 7.653000000000247,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 0,
+        "processCpuMs": 62.5,
+        "wallMs": 22.68249999999898,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 7.349799999999959,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "list-60000",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 5.65849999999773,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 19.720699999998033,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 1,
+        "processCpuMs": 0,
+        "wallMs": 6.187900000000809,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-0",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 5.42160000000149,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 0,
+        "processCpuMs": 46.875,
+        "wallMs": 1025.7459999999992,
+        "sourceCalls": 1,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 1,
+        "processCpuMs": 15.625,
+        "wallMs": 1022.5221999999994,
+        "sourceCalls": 2,
+        "connections": 9,
+        "rcode": 0
+      },
+      {
+        "label": "wait-1000",
+        "index": 2,
+        "processCpuMs": 0,
+        "wallMs": 1010.2760000000017,
+        "sourceCalls": 3,
+        "connections": 9,
+        "rcode": 0
+      }
+    ]
+  },
+  "productionBundle": {
+    "baseline": {
+      "rawBytes": 833491,
+      "gzipBytes": 271548
+    },
+    "optimized": {
+      "rawBytes": 844399,
+      "gzipBytes": 270937
+    }
+  },
+  "optimizedSourceSha256": {
+    "lib/ech-probe/internal/certificate.js": "2c906a1175b0317859b67fcc56fcfaee2ce99eb74beeac504eb9d503148378f0",
+    "lib/ech-probe/internal/probe.js": "8815d571d88760360a40e978283b60c7806255f3ba7fa6ef8d71336ed4c82fca",
+    "lib/ech-probe/internal/tls.js": "a8a54960c9ab36abb1b0328026e25954324ad6e3350bbf64f82e8af8b98bce17",
+    "lib/ech-probe/internal/trust-store.js": "3ee38f791f1d9f9297b8241fb9fa163a6e69952dc06d65864c1263cd0d5d2323",
+    "lib/ech-probe/vendor/pki-core.js": "2fddfe7bcc9ca2d302140b2ece9196f111136a74e495a72a066484c45b7f1ac2"
+  },
+  "diagnosticSha256": "861cf7d9138b329a3edd3c1e62ef8b9c79de401a13e911f1685c0b0921209dee",
+  "pinnedCaSha256": "a41b5d356aea97a529fe27e0f7316d2f9d946d75927476cf9cf1b90637d00505",
+  "baselineGitSourceSha256": {
+    "lib/ech-probe/internal/certificate.js": "92038a1c6f531a49ceafa9055152abc1bf24cb1320dc1f85db820c47a929bd8b",
+    "lib/ech-probe/internal/probe.js": "0b4d9cb89b4faa3d6408b5c7267a7791dfb346b2e0de64e0a90261ec196e41bc",
+    "lib/ech-probe/internal/tls.js": "579c0de1b4fc2d2eacd55c54cba48df200703ab99bd91f5484e78e86f298a043",
+    "lib/ech-probe/internal/trust-store.js": "6f18b82197ed7e844bd35bea6cd79ea093a9ea1eb457965c14b1521b70fb3da5",
+    "lib/ech-probe/vendor/pki-core.js": "03a13bd25599fbd759e988a3f29e67d23732aed43bd19f0d4d920055affae91d"
+  },
+  "validation": {
+    "command": "npm test",
+    "status": "passed",
+    "typecheck": "passed",
+    "applicationAndToolTests": 242,
+    "dnsLibraryTests": 130,
+    "echLibraryTests": {
+      "Node": 57,
+      "workerd": 57
+    },
+    "focusedCommand": "node --test test/trust-store.mjs",
+    "focusedTests": 4,
+    "controlledFixtureFullDerParses": {
+      "connectFailure": 0,
+      "earlyTlsAlert": 0,
+      "customMalformedCaBeforeConnect": 1,
+      "firstVerifiedHandshakeWithTwoMatchingRoots": 5,
+      "subsequentVerifiedHandshake": 3
+    },
+    "notes": [
+      "The successful fixture handshake uses a test-only substituted store: 121 pinned roots plus two controlled same-subject candidates; fixture roots never enter production",
+      "Five first-handshake parses comprise leaf, intermediate, two candidate roots and the leaf again for CertificateVerify; no other full root parse occurs",
+      "Subject-only ASN.1 decoding and name comparisons still occur; zero unrelated full root parses does not mean zero CPU"
+    ]
+  },
+  "baselineReadOnlyControl": {
+    "source": "git HEAD runtime modules, bundled in memory without altering the working tree",
+    "result": "new zero-parse regression rejects the old implementation",
+    "failure": "connect failure does not parse default roots: expected 0 full DER parses, got 121"
+  }
+}
