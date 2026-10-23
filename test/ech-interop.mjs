@@ -197,7 +197,7 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     const baselineFinished = finishedCount();
     const options = (overrides = {}) => ({
       hostname: '127.0.0.1', port, serverName: hostname, timeoutMs: 10000, maxBytes: 65536,
-      caCertificates: [fixture.rootPem], ...overrides,
+      verifyCertificate: true, caCertificates: [fixture.rootPem], ...overrides,
     });
     const actions = probeOptions => group([serviceAnswer, { type: 'probeEch', options: probeOptions }, { type: 'applyEch' }]);
     async function configure(probeOptions) {

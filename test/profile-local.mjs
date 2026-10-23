@@ -40,7 +40,7 @@ async function profileCase(label,bindings,count){
 try{
  const group=actions=>({order:0,rules:[{actions}]});
  await profileCase('fixed',{DNS_RULE_MAIN:group([fixed])},2);
- const probe={type:'probeEch',options:{hostname:'127.0.0.1',port:server.address().port,serverName:'example.test',timeoutMs:1500,maxBytes:65536}};
+ const probe={type:'probeEch',options:{verifyCertificate:true,hostname:'127.0.0.1',port:server.address().port,serverName:'example.test',timeoutMs:1500,maxBytes:65536}};
  await profileCase('default-auth-alert',{DNS_RULE_MAIN:group([fixed,probe])},3);
  const ca=JSON.parse(fs.readFileSync(path.join(root,'lib/ech-probe/test/fixtures/certificates.json'))).rootPem;
  await profileCase('custom-auth-alert',{DNS_RULE_MAIN:group([fixed,{...probe,options:{...probe.options,caCertificates:[ca]}}])},3);

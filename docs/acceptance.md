@@ -93,3 +93,7 @@ After adding bounded test-only online fixtures, the exact TTL expectation and pu
 ## Local profiling follow-up (2026-10-22)
 
 The opt-in `node test/profile-local.mjs` diagnostic captures real local workerd sampled stacks through the production HTTP entry, with loopback TLS alerts and controlled list data. It performs no online requests and is separate from `npm test`. The [dated diagnostic](local-profile-2026-10-22.md) records 20 local profiles including explicit one-second wait controls. The earlier elapsed-stack weights were found to include I/O suspension and must not be interpreted as function CPU; corrected output reports stack counts and gap diagnostics only. The independently recorded platform CPU values and online acceptance decision are unchanged.
+
+## CPU optimization and explicit default-policy revision (2026-10-23)
+
+See [the dated follow-up](cpu-optimization-2026-10-23.md) for single-parse trust preparation, Windows process-CPU controls, and the user-requested default `verifyCertificate: false`. Explicit `true` preserves authentication. These changes do not revise historical online measurements or establish Free-plan acceptance; the new independent OpenSSL rerun has not been performed.

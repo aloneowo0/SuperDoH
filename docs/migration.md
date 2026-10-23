@@ -2,6 +2,10 @@
 
 This guide describes the current JSON-only runtime. It does not preserve old automatic behavior. The parent contract is [issue #7](https://github.com/aloneowo0/SuperDoH/issues/7); the detailed runtime contract, fields, limits and failure semantics are in [rules.md](rules.md).
 
+## ECH probe verification default change (2026-10-23)
+
+`probeEch.options.verifyCertificate` and the public probe library now default to **false**. This intentionally changes the previous authenticated default: omitted/false skips CA trust-chain and hostname checks and returns an unauthenticated library result, while CertificateVerify, Finished and AEAD checks remain mandatory. To preserve previous identity authentication, set `verifyCertificate: true` explicitly on every probe; this is also required when supplying `caCertificates`. Authentication failures never trigger an automatic downgrade. The normalized verification policy remains part of cache identity, so unverified results cannot satisfy a verified lookup. This change does not establish Free-plan CPU compliance.
+
 ## Before changing the Worker
 
 1. Inventory the old configuration, upstream endpoints, policies, ECH values and any path key.

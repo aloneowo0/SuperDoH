@@ -166,3 +166,9 @@ void [probeAction, badProbe];
 
 const parsedTrustRoots: (roots: readonly (string | number[])[]) => Uint8Array[] = (await import('../lib/ech-probe/index.js')).parseTrustAnchors;
 void parsedTrustRoots;
+
+// @ts-expect-error custom CA material requires explicit verification.
+const implicitProbeCa: Action = { type: 'probeEch', options: { hostname: 'example.com', caCertificates: ['pem'] } };
+// @ts-expect-error disabled verification cannot accept custom CA material.
+const disabledProbeCa: Action = { type: 'probeEch', options: { hostname: 'example.com', verifyCertificate: false, caCertificates: ['pem'] } };
+void [implicitProbeCa, disabledProbeCa];

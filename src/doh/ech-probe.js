@@ -91,7 +91,7 @@ export function validateProbeOptions(value) {
     if (typeof timeoutMs !== 'number' || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > MAX_TIMEOUT_MS) throw new Error();
     const maxBytes = input.maxBytes === undefined ? DEFAULT_MAX_BYTES : input.maxBytes;
     if (typeof maxBytes !== 'number' || !Number.isSafeInteger(maxBytes) || maxBytes < 1024 || maxBytes > MAX_PROBE_BYTES) throw new Error();
-    const verifyCertificate = input.verifyCertificate === undefined ? true : input.verifyCertificate;
+    const verifyCertificate = input.verifyCertificate === undefined ? false : input.verifyCertificate;
     if (typeof verifyCertificate !== 'boolean') throw new Error();
     /** @type {(string | Uint8Array)[] | undefined} */
     let caCertificates;
@@ -154,7 +154,7 @@ function identityOptions(options) {
     alpn: options.alpn ?? [],
     timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     maxBytes: options.maxBytes ?? DEFAULT_MAX_BYTES,
-    verifyCertificate: options.verifyCertificate ?? true,
+    verifyCertificate: options.verifyCertificate ?? false,
     caCertificates: options.caCertificates?.map(certificate => typeof certificate === 'string'
       ? { pem: certificate }
       : { bytes: Array.from(certificate) }),
@@ -231,7 +231,7 @@ async function writeCached(key, bytes, ttl, storedAt, budget) {
 }
 
 /**
- * Execute one authenticated library probe, consuming the caller's shared network
+ * Execute one library probe with the explicitly selected verification policy, consuming the caller's shared network
  * allowance only on a cache miss. The caller's budget signal bounds the whole action.
  * @param {unknown} rawOptions
  * @param {import('../rules/limits.js').Limits & { maxEchProbeTimeoutMs?: number, maxEchProbeBytes?: number }} limits
@@ -242,6 +242,7 @@ async function writeCached(key, bytes, ttl, storedAt, budget) {
  */
 export async function probeEch(rawOptions, limits, budget, spendNetwork, notice = () => {}) {
   const options = validateProbeOptions(rawOptions);
+  notice(options.verifyCertificate ? 'verification_enabled' : 'verification_disabled');
   if ((limits.maxEchProbeTimeoutMs !== undefined
       && (typeof limits.maxEchProbeTimeoutMs !== 'number' || !Number.isSafeInteger(limits.maxEchProbeTimeoutMs) || limits.maxEchProbeTimeoutMs < 1))
     || (limits.maxEchProbeBytes !== undefined

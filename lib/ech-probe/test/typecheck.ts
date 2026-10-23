@@ -11,7 +11,7 @@ const options: ProbeOptions & { verifyCertificate: true } = {
   timeoutMs: 1000, maxBytes: 4096, signal: new AbortController().signal,
 };
 const trusted: Promise<AuthenticatedEchProbeResult> = probeEch(options);
-const defaultTrusted: Promise<AuthenticatedEchProbeResult> = probeEch({ hostname: 'example.com' });
+const defaultUntrusted: Promise<UnauthenticatedEchProbeResult> = probeEch({ hostname: 'example.com' });
 const untrusted: Promise<UnauthenticatedEchProbeResult> = probeEch({ hostname: 'example.com', verifyCertificate: false });
 declare const dynamicVerification: boolean;
 const dynamicOptions: ProbeOptions = { hostname: 'example.com', verifyCertificate: dynamicVerification };
@@ -22,8 +22,11 @@ const missingHostname: ProbeOptions = {};
 const ipOptions: ProbeOptions = { hostname: '192.0.2.1', serverName: 'ech.example.com' };
 // @ts-expect-error trust anchors cannot be supplied while authentication is disabled.
 const disabledWithCa: ProbeOptions = { hostname: 'example.com', verifyCertificate: false, caCertificates: [input] };
+// @ts-expect-error custom trust requires explicitly enabling authentication.
+const implicitCa: ProbeOptions = { hostname: 'example.com', caCertificates: [input] };
+void implicitCa;
 const error: EchProbeError = new EchProbeError('ABORTED' satisfies EchProbeErrorCode, 'cancelled');
-void [parsed, missingHostname, ipOptions, disabledWithCa, trusted, defaultTrusted, untrusted, dynamicOptions, dynamicResult, error, parseEchConfigList as (value: ByteInput) => EchConfigList];
+void [parsed, missingHostname, ipOptions, disabledWithCa, trusted, defaultUntrusted, untrusted, dynamicOptions, dynamicResult, error, parseEchConfigList as (value: ByteInput) => EchConfigList];
 
 function checkTrusted(value: AuthenticatedEchProbeResult) {
   const flag: true = value.authenticated;

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import net from 'node:net';
 import assert from 'node:assert/strict';
 import { test, after } from 'node:test';
@@ -82,6 +83,7 @@ test('real TCP probe timeout is observable, cleans its connection, and optional 
     const result=await dns(await post());
     assert.equal(result.flags&15,0,String(logs));
     assert.equal(result.records[0].ttl,12,String(logs));
+    assert.ok(logs.join('').includes('verification_disabled'));
     assert.equal(connections,1);
     await new Promise(resolve=>setTimeout(resolve,30));
     assert.equal(sockets.size,0,'probe must close the actual TCP connection');
@@ -153,4 +155,12 @@ test('probe options are strict JSON and are validated before unreachable actions
     assert.equal(calls.length,0);
     assert.ok(logs.join('').includes('ECH_INVALID'));
   }
+});
+
+test('custom CA requires explicit verification even in an unreachable probe action', async () => {
+  const fixture = JSON.parse(readFileSync(path.join(root, 'lib/ech-probe/test/fixtures/certificates.json'), 'utf8'));
+  await setup({ DNS_RULE_MAIN: group([fixed, { type: 'return' }, probe({ hostname: 'example.com', caCertificates: [fixture.rootPem] })]) });
+  assert.equal((await dns(await post())).flags & 15, 2, String(logs));
+  assert.ok(logs.join('').includes('ECH_INVALID'));
+  assert.equal(calls.length, 0);
 });

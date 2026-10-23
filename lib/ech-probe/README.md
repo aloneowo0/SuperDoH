@@ -4,7 +4,7 @@
 
 运行时使用 `cloudflare:sockets`、Web Crypto 和静态 JS 模块；不需要 WASM、`nodejs_compat`、系统证书库或本地文件。PKI.js 等第三方实现以 vendored ESM 随库附带，调用方不必另装运行时 npm 依赖；来源、版本、许可和可重建脚本保留在库中。
 
-**证书验证默认开启。** 只有当前连接的证书链、SNI 身份、CertificateVerify、server Finished 全部验证成功，且 client Finished 已写出后，才会返回配置。证书验证失败不会自动降级为关闭验证。实现仍是有限范围的 TLS/ECH 探测器，不是经过独立安全审计的通用 TLS 栈。
+**证书信任链和主机名验证默认关闭（`verifyCertificate: false`）。** 默认结果为 `authenticated: false`，不能确认目标身份；需要认证时必须显式设为 `true`，此时证书链和 SNI 身份必须通过验证。所有模式都必须验证 CertificateVerify、server Finished，并成功写出 client Finished 后才返回配置。证书验证失败不会自动降级为关闭验证。实现仍是有限范围的 TLS/ECH 探测器，不是经过独立安全审计的通用 TLS 栈。
 
 ## 使用
 
@@ -17,18 +17,18 @@ const result = await probeEch({
   hostname: 'your-server.example',
   port: 443,
   alpn: ['h2', 'http/1.1'],
-  verifyCertificate: true, // 默认值，可省略
+  verifyCertificate: true, // 显式开启目标身份认证，不可省略
   timeoutMs: 8000,
 });
 
-console.log(result.authenticated);     // 默认模式成功时为 true
+console.log(result.authenticated);     // 上述显式 true 模式成功时为 true
 console.log(result.handshakeComplete); // true，不代表 ECH 被接受
 console.log(result.base64);
 ```
 
 在请求或 scheduled 处理函数内调用，不要在模块顶层发起 socket 或密码操作。
 
-### 关闭证书验证
+### 默认未认证模式
 
 ```ts
 const diagnostic = await probeEch({
@@ -38,7 +38,7 @@ const diagnostic = await probeEch({
 // diagnostic.authenticated 的类型为 false。
 ```
 
-`false` 只跳过 CA 信任链和 SNI 主机名检查，**不会跳过 CertificateVerify、Finished、记录 AEAD 或完整握手检查**。因此它不能确认对方身份，不能作为可信自动刷新来源；但也不会退回“解密出 EE 就成功”的旧行为。关闭验证时同时传入 `caCertificates` 会被拒绝。
+`false` 只跳过 CA 信任链和 SNI 主机名检查，**不会跳过 CertificateVerify、Finished、记录 AEAD 或完整握手检查**。因此它不能确认对方身份，不能作为可信自动刷新来源；但也不会退回“解密出 EE 就成功”的旧行为。关闭验证时同时传入 `caCertificates` 会被拒绝，包括省略 `verifyCertificate` 却配置自定义 CA 的情况；不能把未认证结果标为已认证。
 
 ### 自定义 CA
 
@@ -46,6 +46,7 @@ const diagnostic = await probeEch({
 const result = await probeEch({
   hostname: '192.0.2.10',
   serverName: 'ech.example.com',
+  verifyCertificate: true,
   caCertificates: [myRootPem], // 替换默认信任根，不是追加
 });
 ```
@@ -54,7 +55,7 @@ const result = await probeEch({
 
 ### 预检自定义信任根
 
-`parseTrustAnchors(caCertificates)` 复用库内同一 PEM/DER 解析器，同步校验证书结构并返回隔离的 DER 副本；不联网，不建立信任链，不验证远端主机。调用者可在完整配置预检中拒绝损坏的信任根，而不是等到发起探测动作才发现。它不替代 probeEch 默认开启的运行时认证。
+`parseTrustAnchors(caCertificates)` 复用库内同一 PEM/DER 解析器，同步校验证书结构并返回隔离的 DER 副本；不联网，不建立信任链，不验证远端主机。调用者可在完整配置预检中拒绝损坏的信任根，而不是等到发起探测动作才发现。它不替代 probeEch 在显式开启认证时的运行时认证。
 
 ## API
 
@@ -68,19 +69,19 @@ const result = await probeEch({
 | `port` | 443 | 整数，1–65535 |
 | `serverName` | DNS hostname | DNS SNI；连接 IP 时必填 |
 | `alpn` | `[]` | 唯一 ASCII 0x01..0x7f 名称，每项 1–255 字节，总编码最多 12000 字节 |
-| `verifyCertificate` | `true` | 严格 boolean；失败不自动降级 |
+| `verifyCertificate` | `false` | 严格 boolean；失败不自动降级 |
 | `caCertificates` | 随库 CA 快照 | 非空 PEM/DER 数组，替换默认根集合；false 模式不可传 |
 | `timeoutMs` | 8000 | 整数，1–60000；覆盖验证与客户端握手写入 |
 | `maxBytes` | 65536 | 整数，1024–1048576；累计接收 TLS 字节，包括记录头 |
 | `signal` | 无 | `AbortSignal` |
 
-未知选项拒绝。所有路径启动 socket 关闭并释放读写锁；关闭拒绝会被消费，关闭停滞不会无限阻止返回。认证完成前的 ECH 配置不会以部分成功结果交给调用方。
+未知选项拒绝。所有路径启动 socket 关闭并释放读写锁；关闭拒绝会被消费，关闭停滞不会无限阻止返回。完整握手完成前的 ECH 配置不会以部分成功结果交给调用方；未认证模式不会被标记为已认证。
 
 返回结构：
 
 ```ts
 {
-  authenticated: boolean; // 默认/true 模式成功为 true，显式 false 模式为 false
+  authenticated: boolean; // 显式 true 模式成功为 true，默认/false 模式为 false
   handshakeComplete: true;
   target: string;
   port: number;

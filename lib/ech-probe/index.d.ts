@@ -18,7 +18,8 @@ export interface CommonProbeOptions {
   signal?: AbortSignal;
 }
 export type ProbeOptions = CommonProbeOptions & (
-  | { verifyCertificate?: true; caCertificates?: readonly (string | ByteInput)[] }
+  | { verifyCertificate: true; caCertificates?: readonly (string | ByteInput)[] }
+  | { verifyCertificate?: false; caCertificates?: never }
   | { verifyCertificate: boolean; caCertificates?: never }
 );
 
@@ -36,9 +37,9 @@ export interface AuthenticatedEchProbeResult extends EchProbeResult {
   authenticated: true;
 }
 export interface UnauthenticatedEchProbeResult extends EchProbeResult {
-  /** Trust chain and hostname validation explicitly disabled. CV and Finished still verified. */
+  /** Trust chain and hostname validation disabled (the default). CV and Finished still verified. */
   authenticated: false;
 }
-export function probeEch(options: ProbeOptions & { verifyCertificate: false }): Promise<UnauthenticatedEchProbeResult>;
-export function probeEch(options: ProbeOptions & { verifyCertificate?: true }): Promise<AuthenticatedEchProbeResult>;
+export function probeEch(options: ProbeOptions & { verifyCertificate?: false }): Promise<UnauthenticatedEchProbeResult>;
+export function probeEch(options: ProbeOptions & { verifyCertificate: true }): Promise<AuthenticatedEchProbeResult>;
 export function probeEch(options: ProbeOptions): Promise<AuthenticatedEchProbeResult | UnauthenticatedEchProbeResult>;

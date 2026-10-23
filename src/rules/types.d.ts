@@ -120,7 +120,11 @@ export type AddressSourceConfig = ({ url: string; urlSecret?: never } | { urlSec
 
 export type DomainListConfig = { domains: string[] } | (({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; refreshIntervalMs: number });
 
-export interface EchProbeConfig {
+export type EchProbeConfig = {
   hostname: string; port?: number; serverName?: string; alpn?: string[]; timeoutMs?: number; maxBytes?: number;
-  verifyCertificate?: boolean; caCertificates?: (string | number[])[]; cacheTtl?: number;
-}
+  cacheTtl?: number;
+} & (
+  | { verifyCertificate: true; caCertificates?: (string | number[])[] }
+  | { verifyCertificate?: false; caCertificates?: never }
+  | { verifyCertificate: boolean; caCertificates?: never }
+);
