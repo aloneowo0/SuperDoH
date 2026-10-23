@@ -97,3 +97,7 @@ The opt-in `node test/profile-local.mjs` diagnostic captures real local workerd 
 ## CPU optimization and explicit default-policy revision (2026-10-23)
 
 See [the dated follow-up](cpu-optimization-2026-10-23.md) for single-parse trust preparation, Windows process-CPU controls, and the user-requested default `verifyCertificate: false`. Explicit `true` preserves authentication. These changes do not revise historical online measurements or establish Free-plan acceptance; the new independent OpenSSL rerun has not been performed.
+
+## Bounded cloud retest and cleanup (2026-10-23)
+
+The [current-build cloud retest](cloud-retest-2026-10-23.md) records version-pinned platform measurements for the optional verification policy. Default-unverified failed probes used less CPU in the observed cases, but all active probes still failed; complete Free acceptance remains not passed. Both old test Workers and the new temporary Worker were deleted and confirmed absent. No business Worker or DNS/route change was made.

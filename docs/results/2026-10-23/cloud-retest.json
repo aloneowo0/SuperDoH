@@ -1,0 +1,1348 @@
+{
+  "version": 1,
+  "commit": "e5954e9dbffee0188ada6bf9195f4d7b2aa52047",
+  "accountPlan": "Free operator-confirmed on 2026-10-22, not independently billing-API verified",
+  "authentication": "Existing authorized OAuth connections; chat token not read or reused",
+  "clientRequestCap": 30,
+  "actualClientRequests": 28,
+  "initialExcludedRequests": 6,
+  "readinessRequests": 5,
+  "formalDnsSamples": 17,
+  "formalResponseCorrect": 16,
+  "formalCpuOver10": 6,
+  "cloudOutcome": "Not passed for complete Free acceptance; no successful active ECH probe",
+  "cleanup": {
+    "confirmedAt": "2026-10-23T07:32:14.202Z",
+    "confirmation": "Cloudflare delete succeeded and script-list recheck showed all three absent",
+    "deletedWorkers": [
+      "superdoh-acceptance-20261022",
+      "superdoh-acceptance-20261022-fixtures",
+      "superdoh-acceptance-20261023"
+    ]
+  },
+  "measurement": {
+    "cpuField": "$workers.cpuTimeMs",
+    "wallField": "$workers.wallTimeMs",
+    "join": "Client UUID header + response phase/version metadata + exact platform scriptVersion.id",
+    "wrapperOverhead": "Test-only wrapper adds response headers and readiness route around unchanged production entry",
+    "rawPayloadsExported": false,
+    "platformRowFormat": [
+      "sampleId",
+      "cpuMs",
+      "wallMs",
+      "outcome",
+      "httpStatus",
+      "version",
+      "timestamp",
+      "requestId"
+    ],
+    "queryPages": [
+      {
+        "page": "safe-export-20261023-final-1",
+        "eventCount": 61,
+        "platformCount": 27,
+        "rows": 27
+      }
+    ]
+  },
+  "summary": [
+    {
+      "phase": "pinned-https",
+      "samples": 3,
+      "correct": 3,
+      "cpuMs": [
+        24,
+        3,
+        5
+      ],
+      "wallMs": [
+        27,
+        5,
+        8
+      ],
+      "failureCodes": [
+        null,
+        null,
+        null
+      ],
+      "verification": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "phase": "pinned-direct",
+      "samples": 3,
+      "correct": 3,
+      "cpuMs": [
+        18,
+        4,
+        3
+      ],
+      "wallMs": [
+        19,
+        4,
+        4
+      ],
+      "failureCodes": [
+        null,
+        null,
+        null
+      ],
+      "verification": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "phase": "pinned-required-default",
+      "samples": 1,
+      "correct": 0,
+      "cpuMs": [
+        21
+      ],
+      "wallMs": [
+        34
+      ],
+      "failureCodes": [
+        "ECH_PROBE_FAILED"
+      ],
+      "verification": [
+        "verification_disabled"
+      ]
+    },
+    {
+      "phase": "pinned-optional-default",
+      "samples": 5,
+      "correct": 5,
+      "cpuMs": [
+        30,
+        5,
+        3,
+        2,
+        4
+      ],
+      "wallMs": [
+        38,
+        13,
+        10,
+        4,
+        9
+      ],
+      "failureCodes": [
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED"
+      ],
+      "verification": [
+        "verification_disabled",
+        "verification_disabled",
+        "verification_disabled",
+        "verification_disabled",
+        "verification_disabled"
+      ]
+    },
+    {
+      "phase": "pinned-optional-verified",
+      "samples": 5,
+      "correct": 5,
+      "cpuMs": [
+        843,
+        12,
+        8,
+        8,
+        9
+      ],
+      "wallMs": [
+        900,
+        24,
+        16,
+        14,
+        14
+      ],
+      "failureCodes": [
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED",
+        "ECH_PROBE_FAILED"
+      ],
+      "verification": [
+        "verification_enabled",
+        "verification_enabled",
+        "verification_enabled",
+        "verification_enabled",
+        "verification_enabled"
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "id": "ad9cdd80-f5fc-4bb2-8aca-b903b9a120f7",
+      "phase": "pinned-https",
+      "kind": "ready",
+      "index": 0,
+      "startedAt": "2026-10-23T07:27:14.212Z",
+      "expectedVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "httpStatus": 204,
+      "actualPhase": "pinned-https",
+      "actualVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "versionMatched": true,
+      "correct": true,
+      "latencyMs": 1169.7445000000007,
+      "platform": [
+        "ad9cdd80-f5fc-4bb2-8aca-b903b9a120f7",
+        0,
+        0,
+        "ok",
+        204,
+        "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+        1792740436422,
+        "ec5dc6ebdd2153a2d4ce05dfccc9b0c1"
+      ]
+    },
+    {
+      "id": "dc8269e4-9add-486e-9d94-7ef4a263bc68",
+      "phase": "pinned-https",
+      "kind": "dns",
+      "index": 0,
+      "startedAt": "2026-10-23T07:27:16.391Z",
+      "expectedVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "httpStatus": 200,
+      "actualPhase": "pinned-https",
+      "actualVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 2,
+      "ttls": [
+        58,
+        58
+      ],
+      "correct": true,
+      "latencyMs": 225.816899999998,
+      "platform": [
+        "dc8269e4-9add-486e-9d94-7ef4a263bc68",
+        24,
+        27,
+        "ok",
+        200,
+        "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+        1792740437638,
+        "e5458d2551ede2ce6e5701e9ad2df7fd"
+      ]
+    },
+    {
+      "id": "22f197b7-fbfe-4f6d-a68e-a18c92520a7f",
+      "phase": "pinned-https",
+      "kind": "dns",
+      "index": 1,
+      "startedAt": "2026-10-23T07:27:17.624Z",
+      "expectedVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "httpStatus": 200,
+      "actualPhase": "pinned-https",
+      "actualVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 2,
+      "ttls": [
+        56,
+        56
+      ],
+      "correct": true,
+      "latencyMs": 194.62279999999737,
+      "platform": [
+        "22f197b7-fbfe-4f6d-a68e-a18c92520a7f",
+        3,
+        5,
+        "ok",
+        200,
+        "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+        1792740438860,
+        "eb28e0ff81055bd614e1c30c68981157"
+      ]
+    },
+    {
+      "id": "1b454a90-47fc-4900-bf3d-26842358d5c3",
+      "phase": "pinned-https",
+      "kind": "dns",
+      "index": 2,
+      "startedAt": "2026-10-23T07:27:18.824Z",
+      "expectedVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "httpStatus": 200,
+      "actualPhase": "pinned-https",
+      "actualVersion": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 2,
+      "ttls": [
+        55,
+        55
+      ],
+      "correct": true,
+      "latencyMs": 290.26580000000104,
+      "platform": [
+        "1b454a90-47fc-4900-bf3d-26842358d5c3",
+        5,
+        8,
+        "ok",
+        200,
+        "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+        1792740440134,
+        "8158d4e05e02b10d01d3f13247d4bd22"
+      ]
+    },
+    {
+      "id": "4e1286dd-5a97-4e2b-ad16-3e4172ba88b1",
+      "phase": "pinned-direct",
+      "kind": "ready",
+      "index": 0,
+      "startedAt": "2026-10-23T07:28:05.954Z",
+      "expectedVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "httpStatus": 204,
+      "actualPhase": "pinned-direct",
+      "actualVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "versionMatched": true,
+      "correct": true,
+      "latencyMs": 1201.4948999999906,
+      "platform": [
+        "4e1286dd-5a97-4e2b-ad16-3e4172ba88b1",
+        0,
+        0,
+        "ok",
+        204,
+        "758ba8ad-e86b-4682-ad8b-26799973a00b",
+        1792740488185,
+        "66afad5b17d4ee4e189bb20c51cd935c"
+      ]
+    },
+    {
+      "id": "b28365ce-288d-45d7-91b6-2cca7acf8853",
+      "phase": "pinned-direct",
+      "kind": "dns",
+      "index": 0,
+      "startedAt": "2026-10-23T07:28:08.168Z",
+      "expectedVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "httpStatus": 200,
+      "actualPhase": "pinned-direct",
+      "actualVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 201.71749999999884,
+      "platform": [
+        "b28365ce-288d-45d7-91b6-2cca7acf8853",
+        18,
+        19,
+        "ok",
+        200,
+        "758ba8ad-e86b-4682-ad8b-26799973a00b",
+        1792740489394,
+        "529a65f5827c85384b8f6218494b2e29"
+      ]
+    },
+    {
+      "id": "448e6df6-517c-420b-bcc7-08941ffc5b3a",
+      "phase": "pinned-direct",
+      "kind": "dns",
+      "index": 1,
+      "startedAt": "2026-10-23T07:28:09.379Z",
+      "expectedVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "httpStatus": 200,
+      "actualPhase": "pinned-direct",
+      "actualVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 188.7112999999954,
+      "platform": [
+        "448e6df6-517c-420b-bcc7-08941ffc5b3a",
+        4,
+        4,
+        "ok",
+        200,
+        "758ba8ad-e86b-4682-ad8b-26799973a00b",
+        1792740490610,
+        "f14571c9be30642bd246735a32120d4a"
+      ]
+    },
+    {
+      "id": "c04a70f2-5f98-4a44-b217-6a6f4fd47e54",
+      "phase": "pinned-direct",
+      "kind": "dns",
+      "index": 2,
+      "startedAt": "2026-10-23T07:28:10.574Z",
+      "expectedVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "httpStatus": 200,
+      "actualPhase": "pinned-direct",
+      "actualVersion": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 162.15890000000945,
+      "platform": [
+        "c04a70f2-5f98-4a44-b217-6a6f4fd47e54",
+        3,
+        4,
+        "ok",
+        200,
+        "758ba8ad-e86b-4682-ad8b-26799973a00b",
+        1792740491781,
+        "4cfa5a7133dd28f858abd9f9b406d9c0"
+      ]
+    },
+    {
+      "id": "d0b062ce-d6d1-4f4c-8938-47f3c42b58cd",
+      "phase": "pinned-required-default",
+      "kind": "ready",
+      "index": 0,
+      "startedAt": "2026-10-23T07:28:57.929Z",
+      "expectedVersion": "430ee23b-a297-43fa-8e22-c842fb2defaf",
+      "httpStatus": 204,
+      "actualPhase": "pinned-required-default",
+      "actualVersion": "430ee23b-a297-43fa-8e22-c842fb2defaf",
+      "versionMatched": true,
+      "correct": true,
+      "latencyMs": 1147.5630999999994,
+      "platform": [
+        "d0b062ce-d6d1-4f4c-8938-47f3c42b58cd",
+        0,
+        0,
+        "ok",
+        204,
+        "430ee23b-a297-43fa-8e22-c842fb2defaf",
+        1792740540092,
+        "dd72755e7c5dd252d2f50bfa70aa44e8"
+      ]
+    },
+    {
+      "id": "1b2ee9bb-63df-4ac6-b57d-4fcb4cf00f29",
+      "phase": "pinned-required-default",
+      "kind": "dns",
+      "index": 0,
+      "startedAt": "2026-10-23T07:29:00.092Z",
+      "expectedVersion": "430ee23b-a297-43fa-8e22-c842fb2defaf",
+      "httpStatus": 200,
+      "actualPhase": "pinned-required-default",
+      "actualVersion": "430ee23b-a297-43fa-8e22-c842fb2defaf",
+      "versionMatched": true,
+      "rcode": 2,
+      "answerCount": 0,
+      "ttls": [],
+      "correct": false,
+      "latencyMs": 229.20790000000852,
+      "platform": [
+        "1b2ee9bb-63df-4ac6-b57d-4fcb4cf00f29",
+        21,
+        34,
+        "ok",
+        200,
+        "430ee23b-a297-43fa-8e22-c842fb2defaf",
+        1792740541323,
+        "7636f9ac62e2794474e902336994dfd7"
+      ]
+    },
+    {
+      "id": "423a1500-f103-42ef-91c6-0d8b7f7a7359",
+      "phase": "pinned-optional-default",
+      "kind": "ready",
+      "index": 0,
+      "startedAt": "2026-10-23T07:29:47.188Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 204,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "correct": true,
+      "latencyMs": 1062.9392999999982,
+      "platform": [
+        "423a1500-f103-42ef-91c6-0d8b7f7a7359",
+        0,
+        1,
+        "ok",
+        204,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740589298,
+        "be25912c7c532e5ae717dcc641835c49"
+      ]
+    },
+    {
+      "id": "35880949-34c5-4927-8fd0-7d1b71bf1339",
+      "phase": "pinned-optional-default",
+      "kind": "dns",
+      "index": 0,
+      "startedAt": "2026-10-23T07:29:49.260Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 225.58400000000256,
+      "platform": [
+        "35880949-34c5-4927-8fd0-7d1b71bf1339",
+        30,
+        38,
+        "ok",
+        200,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740590493,
+        "4aaed8ceaf97783cdaf995747c765cf9"
+      ]
+    },
+    {
+      "id": "66025c50-3cd5-4769-af6b-c9fc6fb75315",
+      "phase": "pinned-optional-default",
+      "kind": "dns",
+      "index": 1,
+      "startedAt": "2026-10-23T07:29:50.490Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 226.66380000000936,
+      "platform": [
+        "66025c50-3cd5-4769-af6b-c9fc6fb75315",
+        5,
+        13,
+        "ok",
+        200,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740591732,
+        "827ef63340fdd4a4e4e87515d28909b4"
+      ]
+    },
+    {
+      "id": "212e1c8f-9f5c-4c0e-bd76-4b2ab79b260a",
+      "phase": "pinned-optional-default",
+      "kind": "dns",
+      "index": 2,
+      "startedAt": "2026-10-23T07:29:51.730Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 191.60289999999804,
+      "platform": [
+        "212e1c8f-9f5c-4c0e-bd76-4b2ab79b260a",
+        3,
+        10,
+        "ok",
+        200,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740592961,
+        "a736f6e49acf1a459b737e45f480985b"
+      ]
+    },
+    {
+      "id": "ec07db92-2247-4bc8-b1fd-413434a043f0",
+      "phase": "pinned-optional-default",
+      "kind": "dns",
+      "index": 3,
+      "startedAt": "2026-10-23T07:29:52.933Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 187.95449999999255,
+      "platform": [
+        "ec07db92-2247-4bc8-b1fd-413434a043f0",
+        2,
+        4,
+        "ok",
+        200,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740594166,
+        "0b8ac458db35281406479ac7078b92d8"
+      ]
+    },
+    {
+      "id": "756dfa45-e9db-4b9a-b96d-b36548e4d4d7",
+      "phase": "pinned-optional-default",
+      "kind": "dns",
+      "index": 4,
+      "startedAt": "2026-10-23T07:29:54.135Z",
+      "expectedVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-default",
+      "actualVersion": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 198.99780000001192,
+      "platform": [
+        "756dfa45-e9db-4b9a-b96d-b36548e4d4d7",
+        4,
+        9,
+        "ok",
+        200,
+        "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+        1792740595378,
+        "c4bd2e7a4672b0dcd8e23621b0354a24"
+      ]
+    },
+    {
+      "id": "e53814bf-b4f6-472f-9515-eb58d5426fe4",
+      "phase": "pinned-optional-verified",
+      "kind": "ready",
+      "index": 0,
+      "startedAt": "2026-10-23T07:30:43.322Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 204,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "correct": true,
+      "latencyMs": 1052.186699999991,
+      "platform": [
+        "e53814bf-b4f6-472f-9515-eb58d5426fe4",
+        0,
+        1,
+        "ok",
+        204,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740645398,
+        "4acc08f775a789b81d543b5fb6917887"
+      ]
+    },
+    {
+      "id": "970f49ec-c7df-4067-9fdf-dfb126a31230",
+      "phase": "pinned-optional-verified",
+      "kind": "dns",
+      "index": 0,
+      "startedAt": "2026-10-23T07:30:45.382Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 1109.3974000000162,
+      "platform": [
+        "970f49ec-c7df-4067-9fdf-dfb126a31230",
+        843,
+        900,
+        "ok",
+        200,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740646746,
+        "43554ad056488c8d713325c2dfc37506"
+      ]
+    },
+    {
+      "id": "d56737d5-7f16-4a30-9050-9475fa9d1ca6",
+      "phase": "pinned-optional-verified",
+      "kind": "dns",
+      "index": 1,
+      "startedAt": "2026-10-23T07:30:47.499Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 245.73829999999725,
+      "platform": [
+        "d56737d5-7f16-4a30-9050-9475fa9d1ca6",
+        12,
+        24,
+        "ok",
+        200,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740648770,
+        "44f575e58adc7302970bcfdd4e0435b4"
+      ]
+    },
+    {
+      "id": "0b71b2d3-ee18-417e-9bc8-53854062a566",
+      "phase": "pinned-optional-verified",
+      "kind": "dns",
+      "index": 2,
+      "startedAt": "2026-10-23T07:30:48.749Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 196.4091999999946,
+      "platform": [
+        "0b71b2d3-ee18-417e-9bc8-53854062a566",
+        8,
+        16,
+        "ok",
+        200,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740649971,
+        "529fd5b5592f8dea04ccd43888c51765"
+      ]
+    },
+    {
+      "id": "3564d85d-86af-48b3-868f-6a4bcf5d4666",
+      "phase": "pinned-optional-verified",
+      "kind": "dns",
+      "index": 3,
+      "startedAt": "2026-10-23T07:30:49.948Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 212.79820000001928,
+      "platform": [
+        "3564d85d-86af-48b3-868f-6a4bcf5d4666",
+        8,
+        14,
+        "ok",
+        200,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740651197,
+        "184f64dd104063e888d7ca1044b40be2"
+      ]
+    },
+    {
+      "id": "083ea393-84f8-4b34-877c-68afc59ccc9f",
+      "phase": "pinned-optional-verified",
+      "kind": "dns",
+      "index": 4,
+      "startedAt": "2026-10-23T07:30:51.168Z",
+      "expectedVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "httpStatus": 200,
+      "actualPhase": "pinned-optional-verified",
+      "actualVersion": "2648d41c-1256-4981-b146-dea7861406f2",
+      "versionMatched": true,
+      "rcode": 0,
+      "answerCount": 1,
+      "ttls": [
+        60
+      ],
+      "correct": true,
+      "latencyMs": 256.83360000001267,
+      "platform": [
+        "083ea393-84f8-4b34-877c-68afc59ccc9f",
+        9,
+        14,
+        "ok",
+        200,
+        "2648d41c-1256-4981-b146-dea7861406f2",
+        1792740652416,
+        "5249585198a9b2f08f8c92851ee7397b"
+      ]
+    }
+  ],
+  "initialExcluded": [
+    {
+      "id": "2afb432b-1b2a-49f7-99d7-cf713455fd65",
+      "scenario": "fixed-first",
+      "phase": "cold-candidate",
+      "startedAt": "2026-10-23T07:20:19.861Z",
+      "latencyMs": 1589.736,
+      "correct": false,
+      "errorCode": "HTTP_FAILED",
+      "httpStatus": 404,
+      "dnsRcode": null,
+      "exclusion": "initial 404 without correlated Worker invocation",
+      "platform": null
+    },
+    {
+      "id": "d5e14106-9764-4a2e-9cda-2d00685e49fc",
+      "scenario": "https-public-first",
+      "phase": "cold-candidate",
+      "startedAt": "2026-10-23T07:20:40.271Z",
+      "latencyMs": 1271.5169999999998,
+      "correct": true,
+      "errorCode": null,
+      "httpStatus": 200,
+      "dnsRcode": 0,
+      "exclusion": "platform version does not match intended HTTPS deployment",
+      "platform": [
+        "d5e14106-9764-4a2e-9cda-2d00685e49fc",
+        44,
+        45,
+        "ok",
+        200,
+        "4fc0fd69-f8fa-412b-a155-9b8617d0911c",
+        1792740042541,
+        "6d11320a86ea9716bad90b2baa45f2be"
+      ]
+    },
+    {
+      "id": "78cc3a69-4f09-4970-9a81-e7c1b969114f",
+      "scenario": "https-public-warm",
+      "phase": "warm",
+      "startedAt": "2026-10-23T07:20:42.547Z",
+      "latencyMs": 210.1291000000001,
+      "correct": true,
+      "errorCode": null,
+      "httpStatus": 200,
+      "dnsRcode": 0,
+      "exclusion": "platform version does not match intended HTTPS deployment",
+      "platform": [
+        "78cc3a69-4f09-4970-9a81-e7c1b969114f",
+        5,
+        6,
+        "ok",
+        200,
+        "4fc0fd69-f8fa-412b-a155-9b8617d0911c",
+        1792740043796,
+        "9acd3c19fd894372200931c53a3e4412"
+      ]
+    },
+    {
+      "id": "3eeed519-0824-4a38-9065-3c13dcd2effc",
+      "scenario": "https-public-warm",
+      "phase": "warm",
+      "startedAt": "2026-10-23T07:20:43.766Z",
+      "latencyMs": 242.73729999999978,
+      "correct": true,
+      "errorCode": null,
+      "httpStatus": 200,
+      "dnsRcode": 0,
+      "exclusion": "platform version does not match intended HTTPS deployment",
+      "platform": [
+        "3eeed519-0824-4a38-9065-3c13dcd2effc",
+        6,
+        8,
+        "ok",
+        200,
+        "4fc0fd69-f8fa-412b-a155-9b8617d0911c",
+        1792740045045,
+        "78b6d75399548a006c6aeeeb2df66165"
+      ]
+    },
+    {
+      "id": "c1b38f8b-679a-41d8-b4b9-3e94df0c8e0b",
+      "scenario": "https-public-warm",
+      "phase": "warm",
+      "startedAt": "2026-10-23T07:20:45.014Z",
+      "latencyMs": 180.42839999999978,
+      "correct": true,
+      "errorCode": null,
+      "httpStatus": 200,
+      "dnsRcode": 0,
+      "exclusion": "platform version does not match intended HTTPS deployment",
+      "platform": [
+        "c1b38f8b-679a-41d8-b4b9-3e94df0c8e0b",
+        4,
+        4,
+        "ok",
+        200,
+        "4fc0fd69-f8fa-412b-a155-9b8617d0911c",
+        1792740046234,
+        "68f062c7f379ecb76585a26591bdcebe"
+      ]
+    },
+    {
+      "id": "8ff1dfd8-0229-41de-ab09-915bc8e662bf",
+      "scenario": "https-public-warm",
+      "phase": "warm",
+      "startedAt": "2026-10-23T07:20:46.210Z",
+      "latencyMs": 376.1754000000001,
+      "correct": true,
+      "errorCode": null,
+      "httpStatus": 200,
+      "dnsRcode": 0,
+      "exclusion": "platform version does not match intended HTTPS deployment",
+      "platform": [
+        "8ff1dfd8-0229-41de-ab09-915bc8e662bf",
+        6,
+        7,
+        "ok",
+        200,
+        "4fc0fd69-f8fa-412b-a155-9b8617d0911c",
+        1792740047460,
+        "18b681734feb2249b0d83eecb301ccc8"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "requestId": "5249585198a9b2f08f8c92851ee7397b",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "184f64dd104063e888d7ca1044b40be2",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "529fd5b5592f8dea04ccd43888c51765",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "44f575e58adc7302970bcfdd4e0435b4",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "43554ad056488c8d713325c2dfc37506",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "a46f5c58f01a7fa082af24966cb90605",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "c4bd2e7a4672b0dcd8e23621b0354a24",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "0b8ac458db35281406479ac7078b92d8",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "a736f6e49acf1a459b737e45f480985b",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "827ef63340fdd4a4e4e87515d28909b4",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "4aaed8ceaf97783cdaf995747c765cf9",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "rolled_back_continue"
+    },
+    {
+      "requestId": "ef0601755d64573d9b624285c5b5c316",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "7636f9ac62e2794474e902336994dfd7",
+      "code": "ECH_PROBE_FAILED",
+      "actionType": "probeEch",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "46e25c5abbd4b377a381da85dda7bf72",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "42d71d7a7d47553af2fb186c34bc98e1",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "bb80d4c56c5bf49a28f0fc6ab1d1f955",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    },
+    {
+      "requestId": "45f6dfcae26d639d47e81bb4e69b6274",
+      "code": "ACCESS_DENIED",
+      "disposition": "terminated"
+    }
+  ],
+  "states": [
+    {
+      "requestId": "5249585198a9b2f08f8c92851ee7397b",
+      "state": "verification_enabled"
+    },
+    {
+      "requestId": "184f64dd104063e888d7ca1044b40be2",
+      "state": "verification_enabled"
+    },
+    {
+      "requestId": "529fd5b5592f8dea04ccd43888c51765",
+      "state": "verification_enabled"
+    },
+    {
+      "requestId": "44f575e58adc7302970bcfdd4e0435b4",
+      "state": "verification_enabled"
+    },
+    {
+      "requestId": "43554ad056488c8d713325c2dfc37506",
+      "state": "verification_enabled"
+    },
+    {
+      "requestId": "c4bd2e7a4672b0dcd8e23621b0354a24",
+      "state": "verification_disabled"
+    },
+    {
+      "requestId": "0b8ac458db35281406479ac7078b92d8",
+      "state": "verification_disabled"
+    },
+    {
+      "requestId": "a736f6e49acf1a459b737e45f480985b",
+      "state": "verification_disabled"
+    },
+    {
+      "requestId": "827ef63340fdd4a4e4e87515d28909b4",
+      "state": "verification_disabled"
+    },
+    {
+      "requestId": "4aaed8ceaf97783cdaf995747c765cf9",
+      "state": "verification_disabled"
+    },
+    {
+      "requestId": "7636f9ac62e2794474e902336994dfd7",
+      "state": "verification_disabled"
+    }
+  ],
+  "provenance": {
+    "node": "v24.14.0",
+    "compatibilityDate": "2026-07-30",
+    "compatibilityFlags": [
+      "enable_request_signal",
+      "global_fetch_strictly_public"
+    ],
+    "lockfileSha256": "e41b85aea97fa69b5341cf0edfc796cb7f43be9df98d5984ffa083ee69ee5772",
+    "runtimeHashes": {
+      "lib/dns-wasm/dns_bindgen.js": "a9fc2905bc155acc11fa07f26b4c9796386d50204d678cc6750c53e2be7ae480",
+      "lib/dns-wasm/dns_bindgen_bg.wasm": "4c16ff2bde6e71ec6632bf89e968a8731ada7bb393e0304df489d0a86abb8695",
+      "lib/dns-wasm/index.js": "e99a73485eb2b7546aced4524cb8b8328822eee93cb044ac24fd318f82398e66",
+      "lib/ech-probe/config.js": "b19481d4ec2b54b81763301947eda5b44210b638516fa575aee4b197678136c9",
+      "lib/ech-probe/index.js": "9b051da01749e016d28391be6db4f635b7a53ce30c523e3638ef289513c07353",
+      "lib/ech-probe/internal/bytes.js": "0e51398c93872e8b41f7f92fc88a757c9926f584ea47de8293fbe0d0f29f9ab7",
+      "lib/ech-probe/internal/certificate.js": "92038a1c6f531a49ceafa9055152abc1bf24cb1320dc1f85db820c47a929bd8b",
+      "lib/ech-probe/internal/crypto.js": "768c342127153d110c174dcf3f94c6736041abf7309febd2708299f77e714cfb",
+      "lib/ech-probe/internal/probe.js": "0e0f615fc882d3455393f93fddf0f2424bddd66e0a1022cf1968133698c0a299",
+      "lib/ech-probe/internal/target.js": "dd7a1bae34a48fead097c97cda3557f8461b20e69540e462476cbcb08ddc1de5",
+      "lib/ech-probe/internal/tls.js": "579c0de1b4fc2d2eacd55c54cba48df200703ab99bd91f5484e78e86f298a043",
+      "lib/ech-probe/internal/trust-store.js": "6f18b82197ed7e844bd35bea6cd79ea093a9ea1eb457965c14b1521b70fb3da5",
+      "lib/ech-probe/scripts/pki-entry.js": "c7b3f820e7d7fd97688b28bb6376a0b33632c4d94fd3394877db8cb1cce8a9bf",
+      "lib/ech-probe/vendor/pki-core.js": "03a13bd25599fbd759e988a3f29e67d23732aed43bd19f0d4d920055affae91d",
+      "src/doh/attribution.js": "175bd2cf54b05826e1bf4af1aa7345c793337770ba70bd69cf1f3a892d538577",
+      "src/doh/body.js": "d00b9c1299c0f298c1c7616abe2269f0485ad4ab5354e60135582767ce9ec272",
+      "src/doh/budget.js": "0cf98d7ede2fbd9ac190b97b364346ae97333f6d0f5df14150e3d222175b6a00",
+      "src/doh/cache.js": "c74269f1071a9ac04edf2c125cdc4d5ea3615995d787d3d7dd43e7dddae8eea9",
+      "src/doh/dns-stream.js": "b131215c481bc25803c940746eeb3d2400d1557f14e419fbd68b1f64cb8bb809",
+      "src/doh/ech-probe.js": "5caf66250d9d09d0e0f5677bc317e83aee9ef79669510b8eb788a8bae85082ba",
+      "src/doh/metadata.js": "42b6fc64354e0c242e41e694268d6d27aba4bacb396975dc2f786474052e7468",
+      "src/doh/protocol.js": "b8d32b05cd2c4faf7c12d27903183430da8cbdc17f5912f0ec4daa6e1be2e99d",
+      "src/doh/upstream.js": "27bbb21872618d99f3747fd25d2069066ffaa97ab172173a86458d73f0f819f3",
+      "src/doh/upstreams.js": "8e43caea4990df8e28bf51330bb31c7011e5952abaed0f673f37f57dd13e1306",
+      "src/index.js": "42478c18324d094ce7a44ffbf948d8e5026b60c813dd0eaada9f799c8bad4725",
+      "src/rules/address-sources.js": "09409250198fdbd70e5c692b98ee24ce8d458073327fe57deee997b59a15590c",
+      "src/rules/cache-policy.js": "da573a028c361bb65516641b62b9b21202222dc06ffd064b273b4b41d366fcc7",
+      "src/rules/conditions.js": "98f7c2fa7ee421f1f352549a223fc6c554c38edbdefc20228de6ec513d8407f2",
+      "src/rules/config-budget.js": "8f32d7d39452fa4b9daf57f691109427697618ff3680f15373644d3cfc1b0572",
+      "src/rules/config.js": "47ad20ad78b3c66d3b4a289cf7bbb9342a4026a6dd5547998b627d001f70e5da",
+      "src/rules/context.js": "f5f7085cb0ed8b85ee5fc8371453d19ac0f29e9c5ffb2a23b4d9cae244312db1",
+      "src/rules/domain-lists.js": "009440e07d9d44f0703072312a7ec249996229867155bad007a57d295fb9c135",
+      "src/rules/ech.js": "e921bf680804fe22b2bf3e4af193d0b48f4ce1749c53c70c5d329b2eaf45b914",
+      "src/rules/errors.js": "2f681a8dc6896bb8671afb5b7ecac233e8f26921b9e1daa329aa91f6974fa384",
+      "src/rules/ip.js": "cb4a7950d6b6086f7c1cca9d021e1c4ce8c6de48774c77e2f39dbd88c9aae960",
+      "src/rules/limits.js": "5657f1553b3b030cc5b1d72ed3ccff2a825f3ec6f09fceebf68a0e01b8cf3691",
+      "src/rules/records.js": "4a590fb809937dfff48ec578b6612d8b89870d430b88480a15b831ae487bd762",
+      "src/rules/values.js": "1b7e80a069cf7f0c090d79a3d2a031ba19d4ca17fa75eef47295ab6eab1174ff",
+      "src/worker.js": "fd4da1da9c6086dd527a35314c092cc8d2f89199bb7229ae68f9c847a389736e"
+    },
+    "testWrapper": "// Test-only response metadata wrapper. Production DNS behavior is unchanged.\nimport worker from '../../src/worker.js';\nexport default {\n  async fetch(request, env, ctx) {\n    const phase = env.ACCEPTANCE_PHASE;\n    const version = env.CF_VERSION_METADATA.id;\n    const response = new URL(request.url).pathname === '/__acceptance-ready'\n      ? new Response(null, { status: 204 })\n      : await worker.fetch(request, env, ctx);\n    const headers = new Headers(response.headers);\n    headers.set('x-acceptance-phase', phase);\n    headers.set('x-acceptance-version', version);\n    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });\n  },\n};\n"
+  },
+  "phases": [
+    {
+      "phase": "pinned-https",
+      "version": "fa5ffa73-1122-4b04-b1f2-512d42341c79",
+      "configSha256": "b7df5ec413014903d1cbe88a26df1e714b74d8174eb826eac617f9caa0ffcd49",
+      "plannedDns": 3,
+      "bindingTemplate": {
+        "ACCEPTANCE_PHASE": "pinned-https",
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        },
+        "DNS_UPSTREAMS": {
+          "selected": {
+            "transport": "https",
+            "url": "https://cloudflare-dns.com/dns-query"
+          }
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "queryUpstream",
+                  "upstream": "selected"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "pinned-direct",
+      "version": "758ba8ad-e86b-4682-ad8b-26799973a00b",
+      "configSha256": "7d2f7a2002d4438a71503ca0f867096534bde06c6484732befe0e5bb206e08c0",
+      "plannedDns": 3,
+      "bindingTemplate": {
+        "ACCEPTANCE_PHASE": "pinned-direct",
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": []
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "loadEch",
+                  "config": "AD7+DQA6AQAgACABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fIAAEAAEAAQALZXhhbXBsZS5jb20AAA=="
+                },
+                {
+                  "type": "applyEch"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "pinned-required-default",
+      "version": "430ee23b-a297-43fa-8e22-c842fb2defaf",
+      "configSha256": "544c0036ec816211b9003801d2af71f8957016eb5b741f39aa55aee6e312bd0f",
+      "plannedDns": 1,
+      "bindingTemplate": {
+        "ACCEPTANCE_PHASE": "pinned-required-default",
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "HTTPS",
+                      "ttl": 60,
+                      "rdata": {
+                        "Https": {
+                          "priority": 1,
+                          "target": ".",
+                          "params": []
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "probeEch",
+                  "options": {
+                    "hostname": "cloudflare-ech.com",
+                    "port": 443,
+                    "serverName": "cloudflare-ech.com",
+                    "timeoutMs": 1500,
+                    "maxBytes": 65536
+                  }
+                },
+                {
+                  "type": "applyEch"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "pinned-optional-default",
+      "version": "54480bce-0622-4efe-b2e1-e3aef9640fc7",
+      "configSha256": "d495db4629598bc83306d9c53cda1da218a590d47c18c5261484061b5e0173c5",
+      "plannedDns": 5,
+      "bindingTemplate": {
+        "ACCEPTANCE_PHASE": "pinned-optional-default",
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "probeEch",
+                  "options": {
+                    "hostname": "cloudflare-ech.com",
+                    "port": 443,
+                    "serverName": "cloudflare-ech.com",
+                    "timeoutMs": 1500,
+                    "maxBytes": 65536
+                  },
+                  "onError": "continue"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "phase": "pinned-optional-verified",
+      "version": "2648d41c-1256-4981-b146-dea7861406f2",
+      "configSha256": "42bec10b3d5601aaf333ddbff80b367c854a73d73648bd624ef040e934761d5c",
+      "plannedDns": 5,
+      "bindingTemplate": {
+        "ACCEPTANCE_PHASE": "pinned-optional-verified",
+        "DNS_CACHE": {
+          "read": false,
+          "write": false
+        },
+        "DNS_RULE_MAIN": {
+          "order": 0,
+          "rules": [
+            {
+              "actions": [
+                {
+                  "type": "answer",
+                  "records": [
+                    {
+                      "name": "example.com",
+                      "type": "A",
+                      "ttl": 60,
+                      "rdata": {
+                        "A": {
+                          "addr": "192.0.2.8"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "probeEch",
+                  "options": {
+                    "hostname": "cloudflare-ech.com",
+                    "port": 443,
+                    "serverName": "cloudflare-ech.com",
+                    "timeoutMs": 1500,
+                    "maxBytes": 65536,
+                    "verifyCertificate": true
+                  },
+                  "onError": "continue"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
