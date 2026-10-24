@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "sourceBaseline": "539a750 plus uncommitted runtime/config/test changes; application and ECH internal code unchanged",
+  "wrangler": "4.152.0",
+  "workerd": "1.20261019.1",
+  "compatibilityDate": "2026-10-19",
+  "compatibilityFlags": [
+    "enable_request_signal",
+    "global_fetch_strictly_public",
+    "no_nodejs_compat",
+    "no_nodejs_compat_v2"
+  ],
+  "sourceMaps": true,
+  "testHarness": {
+    "miniflare": "4.20260730.0",
+    "workerdOverride": "1.20261019.1",
+    "wranglerOwnMiniflare": "5.20261019.2-beta",
+    "reason": "Preserve fixture modulesRules and controlled outbound network/custom CA behavior unsupported by the v5 converter",
+    "runtimeAlignmentRegression": true
+  },
+  "verification": {
+    "typecheck": true,
+    "fullRegressionPlatform": "WSL Linux with fresh npm ci from current lockfile",
+    "applicationAndToolTests": 240,
+    "dnsLibraryTests": 130,
+    "echOfflineTests": 114,
+    "trustStoreTests": 4,
+    "total": 488,
+    "failures": 0,
+    "independentLocalProductionEntryTests": 1,
+    "independentLibraryInteropCases": 4,
+    "independentClientFinishedRecords": 3,
+    "standaloneLibraryNodeTests": 57,
+    "standaloneLibraryWorkerdTests": 57,
+    "dryRun": {
+      "passed": true,
+      "bundleKiB": 2010.59,
+      "gzipKiB": 475.15,
+      "uploaded": false
+    },
+    "localStartupProfileGenerated": true,
+    "localRequestProfiles": 20
+  },
+  "startupMeasurement": {
+    "kind": "Local sampled startup profile; not request/quota CPU",
+    "profileWindowMs": 44.9,
+    "sampledMs": 44.6,
+    "activeSampledMs": 18.1,
+    "idleSampledMs": 26.6,
+    "samples": 4
+  },
+  "dependencyAudit": {
+    "clean": false,
+    "info": 0,
+    "low": 0,
+    "moderate": 1,
+    "high": 3,
+    "critical": 0,
+    "total": 4,
+    "scope": "Development tool dependencies; not remediated by this change"
+  },
+  "lockfiles": {
+    "package-lock.json": "d72d069e15482e344b6a6e105fb00a983238f505a0bb0998473124aaaa3e87c4",
+    "lib/ech-probe/package-lock.json": "981327dfd9d55a18d15118d7940cf2791c97a8a0c42549b047e4efa5a9b78815"
+  },
+  "online": {
+    "deployed": false,
+    "acceptanceRequests": 0,
+    "productionProfileCaptured": false,
+    "existingTestWorkerReactivated": false,
+    "fullFreeAcceptance": false
+  },
+  "limits": [
+    "Production profiling documentation does not specify a minimum compatibility date",
+    "Startup profile is not a successful ECH handshake profile",
+    "Local request diagnostic covers fixed answers, early TLS alert, lists and I/O waits, not successful public handshakes",
+    "Sampling gaps and performance.now elapsed time are not exact platform CPU",
+    "No full Free acceptance claim or production business logic optimization",
+    "Temporary v5 adapter failed conversion/fixture checks and was removed; final passing results use the explicit new-engine override"
+  ],
+  "references": [
+    "https://developers.cloudflare.com/workers/observability/profiling-in-production/",
+    "https://developers.cloudflare.com/workers/observability/dev-tools/cpu-usage/",
+    "https://developers.cloudflare.com/workers/configuration/compatibility-flags/"
+  ]
+}

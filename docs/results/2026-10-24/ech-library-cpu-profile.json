@@ -1,0 +1,1863 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "sourceBaseline": "539a750 application/library internals; current uncommitted runtime upgrade configuration",
+  "runtime": {
+    "miniflare": "4.20260730.0",
+    "workerd": "1.20261019.1",
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ]
+  },
+  "scope": "Local ECH library only, independent OpenSSL 4.2.0-dev; no application DNS/rule adapter or public endpoint",
+  "handshake": {
+    "version": 1,
+    "date": "2026-10-24",
+    "runtime": {
+      "miniflare": "4.20260730.0",
+      "workerd": "1.20261019.1",
+      "compatibilityDate": "2026-10-19",
+      "compatibilityFlags": [
+        "no_nodejs_compat",
+        "no_nodejs_compat_v2"
+      ]
+    },
+    "kind": "Library-only local independent OpenSSL successful handshakes",
+    "batches": [
+      {
+        "mode": "empty",
+        "round": 0,
+        "count": 100,
+        "processCpuMs": 60,
+        "meanProcessCpuMs": 0.6,
+        "wallMs": 251.17369700000017,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "wait",
+        "round": 0,
+        "count": 10,
+        "processCpuMs": 10,
+        "meanProcessCpuMs": 1,
+        "wallMs": 1057.989532,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "default-off",
+        "round": 0,
+        "count": 40,
+        "processCpuMs": 120,
+        "meanProcessCpuMs": 3,
+        "wallMs": 222.10030499999993,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "custom-ca",
+        "round": 0,
+        "count": 40,
+        "processCpuMs": 220,
+        "meanProcessCpuMs": 5.5,
+        "wallMs": 298.687676,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 0,
+        "count": 40,
+        "processCpuMs": 200,
+        "meanProcessCpuMs": 5,
+        "wallMs": 280.1539369999996,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 1,
+        "count": 40,
+        "processCpuMs": 170,
+        "meanProcessCpuMs": 4.25,
+        "wallMs": 280.74916600000006,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "custom-ca",
+        "round": 1,
+        "count": 40,
+        "processCpuMs": 170,
+        "meanProcessCpuMs": 4.25,
+        "wallMs": 276.17980199999965,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "default-off",
+        "round": 1,
+        "count": 40,
+        "processCpuMs": 90,
+        "meanProcessCpuMs": 2.25,
+        "wallMs": 191.6832890000005,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "default-off",
+        "round": 2,
+        "count": 40,
+        "processCpuMs": 100,
+        "meanProcessCpuMs": 2.5,
+        "wallMs": 215.71762900000067,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "custom-ca",
+        "round": 2,
+        "count": 40,
+        "processCpuMs": 170,
+        "meanProcessCpuMs": 4.25,
+        "wallMs": 263.60342200000014,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 2,
+        "count": 40,
+        "processCpuMs": 150,
+        "meanProcessCpuMs": 3.75,
+        "wallMs": 240.55154500000026,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 3,
+        "count": 40,
+        "processCpuMs": 150,
+        "meanProcessCpuMs": 3.75,
+        "wallMs": 233.6874630000002,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "custom-ca",
+        "round": 3,
+        "count": 40,
+        "processCpuMs": 170,
+        "meanProcessCpuMs": 4.25,
+        "wallMs": 247.42286000000058,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "default-off",
+        "round": 3,
+        "count": 40,
+        "processCpuMs": 100,
+        "meanProcessCpuMs": 2.5,
+        "wallMs": 178.73767099999986,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "empty",
+        "round": 1,
+        "count": 100,
+        "processCpuMs": 60,
+        "meanProcessCpuMs": 0.6,
+        "wallMs": 236.7511999999997,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      },
+      {
+        "mode": "wait",
+        "round": 1,
+        "count": 10,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 2,
+        "wallMs": 1053.939469,
+        "clockTicks": 100,
+        "profilerEnabled": false
+      }
+    ],
+    "profiles": [
+      {
+        "mode": "default-off",
+        "round": 0,
+        "count": 60,
+        "file": "default-off-0.cpuprofile",
+        "samples": 535,
+        "profileWindowMs": 372.234,
+        "activeStackObservations": 517,
+        "groupCounts": {
+          "idle-or-root": 18,
+          "other-tls-and-probe": 135,
+          "unattributed-program": 26,
+          "tls-key-schedule-and-finished": 67,
+          "certificate-verify": 204,
+          "client-hello": 27,
+          "other-runtime-or-unattributed": 41,
+          "buffer-helpers": 8,
+          "garbage-collector": 9
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "probeWithConnect",
+            "samples": 74
+          },
+          {
+            "name": "hmac",
+            "samples": 37
+          },
+          {
+            "name": "toBER",
+            "samples": 34
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 31
+          },
+          {
+            "name": "(program)",
+            "samples": 26
+          },
+          {
+            "name": "fromBER",
+            "samples": 23
+          },
+          {
+            "name": "createClientHello",
+            "samples": 21
+          },
+          {
+            "name": "Ee",
+            "samples": 20
+          },
+          {
+            "name": "(idle)",
+            "samples": 18
+          },
+          {
+            "name": "verify",
+            "samples": 18
+          },
+          {
+            "name": "push",
+            "samples": 15
+          },
+          {
+            "name": "Hi",
+            "samples": 13
+          },
+          {
+            "name": "E",
+            "samples": 12
+          },
+          {
+            "name": "json",
+            "samples": 10
+          },
+          {
+            "name": "qh",
+            "samples": 9
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 9
+          },
+          {
+            "name": "concat",
+            "samples": 8
+          },
+          {
+            "name": "deriveBits",
+            "samples": 8
+          }
+        ],
+        "inclusiveStackCounts": {
+          "hmac": 38,
+          "expandLabel": 26,
+          "handshakeKeys": 24,
+          "fromBER": 89,
+          "toSchema": 35,
+          "parseDer": 173,
+          "verifyCertificateVerify": 204,
+          "createClientHello": 27,
+          "concat": 8,
+          "toBER": 35,
+          "applicationKeys": 4
+        },
+        "maxSamplingGapMs": 66.164,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "custom-ca",
+        "round": 0,
+        "count": 60,
+        "file": "custom-ca-0.cpuprofile",
+        "samples": 1189,
+        "profileWindowMs": 499.624,
+        "activeStackObservations": 1171,
+        "groupCounts": {
+          "idle-or-root": 18,
+          "other-runtime-or-unattributed": 102,
+          "custom-anchor-preparation": 152,
+          "client-hello": 25,
+          "other-tls-and-probe": 149,
+          "certificate-chain": 360,
+          "certificate-verify": 146,
+          "tls-key-schedule-and-finished": 62,
+          "unattributed-program": 25,
+          "buffer-helpers": 8,
+          "garbage-collector": 142
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(garbage collector)",
+            "samples": 142
+          },
+          {
+            "name": "toBER",
+            "samples": 82
+          },
+          {
+            "name": "fromBER",
+            "samples": 73
+          },
+          {
+            "name": "probeWithConnect",
+            "samples": 73
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 62
+          },
+          {
+            "name": "Ee",
+            "samples": 57
+          },
+          {
+            "name": "verify",
+            "samples": 50
+          },
+          {
+            "name": "Hi",
+            "samples": 50
+          },
+          {
+            "name": "hmac",
+            "samples": 38
+          },
+          {
+            "name": "E",
+            "samples": 37
+          },
+          {
+            "name": "e",
+            "samples": 35
+          },
+          {
+            "name": "wt",
+            "samples": 31
+          },
+          {
+            "name": "(program)",
+            "samples": 25
+          },
+          {
+            "name": "createClientHello",
+            "samples": 23
+          },
+          {
+            "name": "importKey",
+            "samples": 21
+          },
+          {
+            "name": "(idle)",
+            "samples": 18
+          },
+          {
+            "name": "isArrayBuffer",
+            "samples": 17
+          },
+          {
+            "name": "fromSchema",
+            "samples": 17
+          }
+        ],
+        "inclusiveStackCounts": {
+          "parseDer": 475,
+          "decodePem": 149,
+          "prepareTrustAnchors": 152,
+          "createClientHello": 25,
+          "validateCertificateChain": 338,
+          "toBER": 93,
+          "fromBER": 336,
+          "toSchema": 107,
+          "verifyCertificateVerify": 146,
+          "hmac": 38,
+          "expandLabel": 22,
+          "handshakeKeys": 16,
+          "applicationKeys": 5,
+          "isEqual": 3,
+          "concat": 3
+        },
+        "maxSamplingGapMs": 61.51,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 0,
+        "count": 60,
+        "file": "fixture-default-ca-0.cpuprofile",
+        "samples": 909,
+        "profileWindowMs": 351.427,
+        "activeStackObservations": 893,
+        "groupCounts": {
+          "idle-or-root": 16,
+          "other-runtime-or-unattributed": 98,
+          "other-tls-and-probe": 135,
+          "buffer-helpers": 4,
+          "certificate-chain": 383,
+          "certificate-verify": 148,
+          "tls-key-schedule-and-finished": 56,
+          "client-hello": 19,
+          "unattributed-program": 27,
+          "garbage-collector": 23
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "toBER",
+            "samples": 66
+          },
+          {
+            "name": "verify",
+            "samples": 58
+          },
+          {
+            "name": "fromBER",
+            "samples": 48
+          },
+          {
+            "name": "e",
+            "samples": 40
+          },
+          {
+            "name": "wt",
+            "samples": 39
+          },
+          {
+            "name": "connect",
+            "samples": 37
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 32
+          },
+          {
+            "name": "hmac",
+            "samples": 32
+          },
+          {
+            "name": "Hi",
+            "samples": 28
+          },
+          {
+            "name": "(program)",
+            "samples": 27
+          },
+          {
+            "name": "E",
+            "samples": 23
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 23
+          },
+          {
+            "name": "write",
+            "samples": 21
+          },
+          {
+            "name": "Ee",
+            "samples": 21
+          },
+          {
+            "name": "importKey",
+            "samples": 19
+          },
+          {
+            "name": "p",
+            "samples": 19
+          },
+          {
+            "name": "probeWithConnect",
+            "samples": 19
+          },
+          {
+            "name": "(idle)",
+            "samples": 16
+          }
+        ],
+        "inclusiveStackCounts": {
+          "concat": 6,
+          "fromBER": 282,
+          "parseDer": 350,
+          "validateCertificateChain": 363,
+          "toBER": 86,
+          "toSchema": 85,
+          "verifyCertificateVerify": 148,
+          "expandLabel": 25,
+          "createClientHello": 19,
+          "handshakeKeys": 16,
+          "hmac": 32,
+          "applicationKeys": 7,
+          "isEqual": 4,
+          "defaultIssuers": 3
+        },
+        "maxSamplingGapMs": 12.178,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "fixture-default-ca",
+        "round": 1,
+        "count": 60,
+        "file": "fixture-default-ca-1.cpuprofile",
+        "samples": 877,
+        "profileWindowMs": 352.86,
+        "activeStackObservations": 860,
+        "groupCounts": {
+          "idle-or-root": 17,
+          "other-tls-and-probe": 140,
+          "garbage-collector": 28,
+          "certificate-chain": 366,
+          "other-runtime-or-unattributed": 86,
+          "certificate-verify": 135,
+          "tls-key-schedule-and-finished": 47,
+          "unattributed-program": 28,
+          "client-hello": 22,
+          "buffer-helpers": 8
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "toBER",
+            "samples": 57
+          },
+          {
+            "name": "fromBER",
+            "samples": 56
+          },
+          {
+            "name": "verify",
+            "samples": 50
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 33
+          },
+          {
+            "name": "hmac",
+            "samples": 32
+          },
+          {
+            "name": "Ee",
+            "samples": 31
+          },
+          {
+            "name": "wt",
+            "samples": 31
+          },
+          {
+            "name": "e",
+            "samples": 30
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 28
+          },
+          {
+            "name": "(program)",
+            "samples": 28
+          },
+          {
+            "name": "connect",
+            "samples": 24
+          },
+          {
+            "name": "write",
+            "samples": 24
+          },
+          {
+            "name": "E",
+            "samples": 19
+          },
+          {
+            "name": "createClientHello",
+            "samples": 18
+          },
+          {
+            "name": "Hi",
+            "samples": 18
+          },
+          {
+            "name": "importKey",
+            "samples": 18
+          },
+          {
+            "name": "(idle)",
+            "samples": 17
+          },
+          {
+            "name": "Jh",
+            "samples": 15
+          }
+        ],
+        "inclusiveStackCounts": {
+          "fromBER": 253,
+          "parseDer": 326,
+          "validateCertificateChain": 341,
+          "toSchema": 78,
+          "verifyCertificateVerify": 135,
+          "toBER": 77,
+          "hmac": 32,
+          "expandLabel": 25,
+          "createClientHello": 22,
+          "handshakeKeys": 16,
+          "isEqual": 5,
+          "defaultIssuers": 1,
+          "concat": 5,
+          "applicationKeys": 4
+        },
+        "maxSamplingGapMs": 23.916,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "custom-ca",
+        "round": 1,
+        "count": 60,
+        "file": "custom-ca-1.cpuprofile",
+        "samples": 1008,
+        "profileWindowMs": 400.743,
+        "activeStackObservations": 988,
+        "groupCounts": {
+          "idle-or-root": 20,
+          "custom-anchor-preparation": 137,
+          "client-hello": 24,
+          "unattributed-program": 31,
+          "other-tls-and-probe": 140,
+          "certificate-chain": 339,
+          "other-runtime-or-unattributed": 95,
+          "certificate-verify": 126,
+          "tls-key-schedule-and-finished": 57,
+          "garbage-collector": 32,
+          "buffer-helpers": 7
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "toBER",
+            "samples": 87
+          },
+          {
+            "name": "fromBER",
+            "samples": 58
+          },
+          {
+            "name": "verify",
+            "samples": 51
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 47
+          },
+          {
+            "name": "wt",
+            "samples": 45
+          },
+          {
+            "name": "hmac",
+            "samples": 35
+          },
+          {
+            "name": "connect",
+            "samples": 33
+          },
+          {
+            "name": "e",
+            "samples": 32
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 32
+          },
+          {
+            "name": "(program)",
+            "samples": 31
+          },
+          {
+            "name": "Ee",
+            "samples": 27
+          },
+          {
+            "name": "importKey",
+            "samples": 26
+          },
+          {
+            "name": "Hi",
+            "samples": 26
+          },
+          {
+            "name": "write",
+            "samples": 25
+          },
+          {
+            "name": "E",
+            "samples": 21
+          },
+          {
+            "name": "(idle)",
+            "samples": 20
+          },
+          {
+            "name": "createClientHello",
+            "samples": 19
+          },
+          {
+            "name": "fromSchema",
+            "samples": 18
+          }
+        ],
+        "inclusiveStackCounts": {
+          "fromBER": 301,
+          "parseDer": 433,
+          "decodePem": 133,
+          "prepareTrustAnchors": 137,
+          "createClientHello": 24,
+          "validateCertificateChain": 313,
+          "toSchema": 101,
+          "verifyCertificateVerify": 126,
+          "toBER": 103,
+          "hmac": 35,
+          "expandLabel": 23,
+          "handshakeKeys": 19,
+          "applicationKeys": 6,
+          "concat": 8,
+          "isEqual": 5
+        },
+        "maxSamplingGapMs": 37.901,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "default-off",
+        "round": 1,
+        "count": 60,
+        "file": "default-off-1.cpuprofile",
+        "samples": 465,
+        "profileWindowMs": 287.076,
+        "activeStackObservations": 448,
+        "groupCounts": {
+          "idle-or-root": 17,
+          "other-tls-and-probe": 112,
+          "other-runtime-or-unattributed": 44,
+          "certificate-verify": 172,
+          "buffer-helpers": 6,
+          "client-hello": 25,
+          "tls-key-schedule-and-finished": 53,
+          "unattributed-program": 22,
+          "garbage-collector": 14
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "hmac",
+            "samples": 38
+          },
+          {
+            "name": "toBER",
+            "samples": 33
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 29
+          },
+          {
+            "name": "createClientHello",
+            "samples": 23
+          },
+          {
+            "name": "(program)",
+            "samples": 22
+          },
+          {
+            "name": "connect",
+            "samples": 21
+          },
+          {
+            "name": "write",
+            "samples": 18
+          },
+          {
+            "name": "(idle)",
+            "samples": 17
+          },
+          {
+            "name": "fromBER",
+            "samples": 16
+          },
+          {
+            "name": "verify",
+            "samples": 16
+          },
+          {
+            "name": "probeWithConnect",
+            "samples": 14
+          },
+          {
+            "name": "wt",
+            "samples": 14
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 14
+          },
+          {
+            "name": "importKey",
+            "samples": 11
+          },
+          {
+            "name": "e",
+            "samples": 9
+          },
+          {
+            "name": "push",
+            "samples": 8
+          },
+          {
+            "name": "deriveBits",
+            "samples": 8
+          },
+          {
+            "name": "decrypt",
+            "samples": 8
+          }
+        ],
+        "inclusiveStackCounts": {
+          "fromBER": 63,
+          "parseDer": 143,
+          "verifyCertificateVerify": 172,
+          "toBER": 40,
+          "concat": 3,
+          "createClientHello": 25,
+          "hmac": 38,
+          "expandLabel": 25,
+          "applicationKeys": 7,
+          "handshakeKeys": 14,
+          "toSchema": 22
+        },
+        "maxSamplingGapMs": 38.984,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "empty",
+        "count": 10,
+        "file": "empty-control.cpuprofile",
+        "samples": 6,
+        "profileWindowMs": 51.368,
+        "activeStackObservations": 3,
+        "groupCounts": {
+          "idle-or-root": 3,
+          "other-runtime-or-unattributed": 2,
+          "garbage-collector": 1
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(idle)",
+            "samples": 3
+          },
+          {
+            "name": "fetch",
+            "samples": 1
+          },
+          {
+            "name": "json",
+            "samples": 1
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 1
+          }
+        ],
+        "inclusiveStackCounts": {},
+        "maxSamplingGapMs": 31.859,
+        "samplingGapsOver10Ms": 1
+      },
+      {
+        "mode": "wait",
+        "count": 10,
+        "file": "wait-control.cpuprofile",
+        "samples": 9,
+        "profileWindowMs": 1071.867,
+        "activeStackObservations": 6,
+        "groupCounts": {
+          "idle-or-root": 3,
+          "other-runtime-or-unattributed": 5,
+          "unattributed-program": 1
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(idle)",
+            "samples": 3
+          },
+          {
+            "name": "json",
+            "samples": 2
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 2
+          },
+          {
+            "name": "(program)",
+            "samples": 1
+          },
+          {
+            "name": "fetch",
+            "samples": 1
+          }
+        ],
+        "inclusiveStackCounts": {},
+        "maxSamplingGapMs": 414.738,
+        "samplingGapsOver10Ms": 7
+      }
+    ],
+    "completedTls": 870,
+    "expectedClientFinished": 873,
+    "observedClientFinished": 873,
+    "onlineRequests": 0,
+    "fixture": {
+      "leafDerBytes": 548,
+      "caMode": "Custom PEM or test-only fixture root appended to complete pinned default index",
+      "publicProductionRootUnmodified": true
+    },
+    "limits": [
+      "Whole-process CPU includes runtime/GC/all threads, not per-function or platform quota CPU",
+      "CPU batches run before profiler; sampling/profile windows are not CPU milliseconds",
+      "Same loopback ECDSA fixture differs from public Meta chain",
+      "Test-only default index addition is not deployed, not a production trust-policy change"
+    ],
+    "batchSummaries": [
+      {
+        "mode": "empty",
+        "count": 200,
+        "processCpuMs": 120,
+        "meanProcessCpuMs": 0.6,
+        "batchMeanProcessCpuMs": [
+          0.6,
+          0.6
+        ],
+        "wallMs": 487.9248969999999
+      },
+      {
+        "mode": "wait",
+        "count": 20,
+        "processCpuMs": 30,
+        "meanProcessCpuMs": 1.5,
+        "batchMeanProcessCpuMs": [
+          1,
+          2
+        ],
+        "wallMs": 2111.929001
+      },
+      {
+        "mode": "default-off",
+        "count": 160,
+        "processCpuMs": 410,
+        "meanProcessCpuMs": 2.5625,
+        "batchMeanProcessCpuMs": [
+          3,
+          2.25,
+          2.5,
+          2.5
+        ],
+        "wallMs": 808.238894000001
+      },
+      {
+        "mode": "custom-ca",
+        "count": 160,
+        "processCpuMs": 730,
+        "meanProcessCpuMs": 4.5625,
+        "batchMeanProcessCpuMs": [
+          5.5,
+          4.25,
+          4.25,
+          4.25
+        ],
+        "wallMs": 1085.8937600000004
+      },
+      {
+        "mode": "fixture-default-ca",
+        "count": 160,
+        "processCpuMs": 670,
+        "meanProcessCpuMs": 4.1875,
+        "batchMeanProcessCpuMs": [
+          5,
+          4.25,
+          3.75,
+          3.75
+        ],
+        "wallMs": 1035.142111
+      }
+    ],
+    "aggregateProfiles": [
+      {
+        "mode": "default-off",
+        "samples": 1000,
+        "activeStackObservations": 965,
+        "disjointGroupStackCounts": {
+          "idle-or-root": 35,
+          "other-tls-and-probe": 247,
+          "unattributed-program": 48,
+          "tls-key-schedule-and-finished": 120,
+          "certificate-verify": 376,
+          "client-hello": 52,
+          "other-runtime-or-unattributed": 85,
+          "buffer-helpers": 14,
+          "garbage-collector": 23
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "probeWithConnect",
+            "samples": 88
+          },
+          {
+            "name": "hmac",
+            "samples": 75
+          },
+          {
+            "name": "toBER",
+            "samples": 67
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 60
+          },
+          {
+            "name": "(program)",
+            "samples": 48
+          },
+          {
+            "name": "createClientHello",
+            "samples": 44
+          },
+          {
+            "name": "fromBER",
+            "samples": 39
+          },
+          {
+            "name": "(idle)",
+            "samples": 35
+          },
+          {
+            "name": "verify",
+            "samples": 34
+          },
+          {
+            "name": "Ee",
+            "samples": 27
+          },
+          {
+            "name": "push",
+            "samples": 23
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 23
+          },
+          {
+            "name": "connect",
+            "samples": 21
+          },
+          {
+            "name": "wt",
+            "samples": 20
+          },
+          {
+            "name": "Hi",
+            "samples": 19
+          },
+          {
+            "name": "write",
+            "samples": 18
+          },
+          {
+            "name": "E",
+            "samples": 17
+          },
+          {
+            "name": "deriveBits",
+            "samples": 16
+          },
+          {
+            "name": "json",
+            "samples": 16
+          },
+          {
+            "name": "importKey",
+            "samples": 16
+          }
+        ],
+        "inclusiveStackCounts": {
+          "hmac": 76,
+          "expandLabel": 51,
+          "handshakeKeys": 38,
+          "fromBER": 152,
+          "toSchema": 57,
+          "parseDer": 316,
+          "verifyCertificateVerify": 376,
+          "createClientHello": 52,
+          "concat": 11,
+          "toBER": 75,
+          "applicationKeys": 11
+        }
+      },
+      {
+        "mode": "custom-ca",
+        "samples": 2197,
+        "activeStackObservations": 2159,
+        "disjointGroupStackCounts": {
+          "idle-or-root": 38,
+          "other-runtime-or-unattributed": 197,
+          "custom-anchor-preparation": 289,
+          "client-hello": 49,
+          "other-tls-and-probe": 289,
+          "certificate-chain": 699,
+          "certificate-verify": 272,
+          "tls-key-schedule-and-finished": 119,
+          "unattributed-program": 56,
+          "buffer-helpers": 15,
+          "garbage-collector": 174
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(garbage collector)",
+            "samples": 174
+          },
+          {
+            "name": "toBER",
+            "samples": 169
+          },
+          {
+            "name": "fromBER",
+            "samples": 131
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 109
+          },
+          {
+            "name": "verify",
+            "samples": 101
+          },
+          {
+            "name": "probeWithConnect",
+            "samples": 89
+          },
+          {
+            "name": "Ee",
+            "samples": 84
+          },
+          {
+            "name": "wt",
+            "samples": 76
+          },
+          {
+            "name": "Hi",
+            "samples": 76
+          },
+          {
+            "name": "hmac",
+            "samples": 73
+          },
+          {
+            "name": "e",
+            "samples": 67
+          },
+          {
+            "name": "E",
+            "samples": 58
+          },
+          {
+            "name": "(program)",
+            "samples": 56
+          },
+          {
+            "name": "importKey",
+            "samples": 47
+          },
+          {
+            "name": "createClientHello",
+            "samples": 42
+          },
+          {
+            "name": "connect",
+            "samples": 40
+          },
+          {
+            "name": "(idle)",
+            "samples": 38
+          },
+          {
+            "name": "fromSchema",
+            "samples": 35
+          },
+          {
+            "name": "write",
+            "samples": 32
+          },
+          {
+            "name": "json",
+            "samples": 28
+          }
+        ],
+        "inclusiveStackCounts": {
+          "parseDer": 908,
+          "decodePem": 282,
+          "prepareTrustAnchors": 289,
+          "createClientHello": 49,
+          "validateCertificateChain": 651,
+          "toBER": 196,
+          "fromBER": 637,
+          "toSchema": 208,
+          "verifyCertificateVerify": 272,
+          "hmac": 73,
+          "expandLabel": 45,
+          "handshakeKeys": 35,
+          "applicationKeys": 11,
+          "isEqual": 8,
+          "concat": 11
+        }
+      },
+      {
+        "mode": "fixture-default-ca",
+        "samples": 1786,
+        "activeStackObservations": 1753,
+        "disjointGroupStackCounts": {
+          "idle-or-root": 33,
+          "other-runtime-or-unattributed": 184,
+          "other-tls-and-probe": 275,
+          "buffer-helpers": 12,
+          "certificate-chain": 749,
+          "certificate-verify": 283,
+          "tls-key-schedule-and-finished": 103,
+          "client-hello": 41,
+          "unattributed-program": 55,
+          "garbage-collector": 51
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "toBER",
+            "samples": 123
+          },
+          {
+            "name": "verify",
+            "samples": 108
+          },
+          {
+            "name": "fromBER",
+            "samples": 104
+          },
+          {
+            "name": "wt",
+            "samples": 70
+          },
+          {
+            "name": "e",
+            "samples": 70
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 65
+          },
+          {
+            "name": "hmac",
+            "samples": 64
+          },
+          {
+            "name": "connect",
+            "samples": 61
+          },
+          {
+            "name": "(program)",
+            "samples": 55
+          },
+          {
+            "name": "Ee",
+            "samples": 52
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 51
+          },
+          {
+            "name": "Hi",
+            "samples": 46
+          },
+          {
+            "name": "write",
+            "samples": 45
+          },
+          {
+            "name": "E",
+            "samples": 42
+          },
+          {
+            "name": "importKey",
+            "samples": 37
+          },
+          {
+            "name": "createClientHello",
+            "samples": 34
+          },
+          {
+            "name": "(idle)",
+            "samples": 33
+          },
+          {
+            "name": "probeWithConnect",
+            "samples": 33
+          },
+          {
+            "name": "Jh",
+            "samples": 31
+          },
+          {
+            "name": "p",
+            "samples": 28
+          }
+        ],
+        "inclusiveStackCounts": {
+          "concat": 11,
+          "fromBER": 535,
+          "parseDer": 676,
+          "validateCertificateChain": 704,
+          "toBER": 163,
+          "toSchema": 163,
+          "verifyCertificateVerify": 283,
+          "expandLabel": 50,
+          "createClientHello": 41,
+          "handshakeKeys": 32,
+          "hmac": 64,
+          "applicationKeys": 11,
+          "isEqual": 9,
+          "defaultIssuers": 4
+        }
+      },
+      {
+        "mode": "empty",
+        "samples": 6,
+        "activeStackObservations": 3,
+        "disjointGroupStackCounts": {
+          "idle-or-root": 3,
+          "other-runtime-or-unattributed": 2,
+          "garbage-collector": 1
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(idle)",
+            "samples": 3
+          },
+          {
+            "name": "fetch",
+            "samples": 1
+          },
+          {
+            "name": "json",
+            "samples": 1
+          },
+          {
+            "name": "(garbage collector)",
+            "samples": 1
+          }
+        ],
+        "inclusiveStackCounts": {}
+      },
+      {
+        "mode": "wait",
+        "samples": 9,
+        "activeStackObservations": 6,
+        "disjointGroupStackCounts": {
+          "idle-or-root": 3,
+          "other-runtime-or-unattributed": 5,
+          "unattributed-program": 1
+        },
+        "topSelfStackCounts": [
+          {
+            "name": "(idle)",
+            "samples": 3
+          },
+          {
+            "name": "json",
+            "samples": 2
+          },
+          {
+            "name": "(anonymous)",
+            "samples": 2
+          },
+          {
+            "name": "(program)",
+            "samples": 1
+          },
+          {
+            "name": "fetch",
+            "samples": 1
+          }
+        ],
+        "inclusiveStackCounts": {}
+      }
+    ],
+    "profilingMethod": {
+      "requestedSamplingIntervalUs": 100,
+      "grouping": "Disjoint priority match on synchronous stack ancestry; unknown/program samples remain unknown",
+      "inclusiveStackCountsOverlap": true,
+      "samplingGapsAreNotCpu": true,
+      "percentagesAreNotCpuShares": true,
+      "nativeCryptoCpuNotFullyAttributed": true
+    }
+  },
+  "functionMicrobenchmark": {
+    "version": 1,
+    "date": "2026-10-24",
+    "runtime": {
+      "miniflare": "4.20260730.0",
+      "workerd": "1.20261019.1",
+      "compatibilityDate": "2026-10-19",
+      "compatibilityFlags": [
+        "no_nodejs_compat",
+        "no_nodejs_compat_v2"
+      ]
+    },
+    "batches": [
+      {
+        "mode": "loop-control",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 2.578087000000096,
+        "clockTicks": 100
+      },
+      {
+        "mode": "fromBER",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 70,
+        "meanProcessCpuMs": 0.14,
+        "wallMs": 47.513480999999956,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-full",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 210,
+        "meanProcessCpuMs": 0.42,
+        "wallMs": 160.417465,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-no-canonical",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 110,
+        "meanProcessCpuMs": 0.22,
+        "wallMs": 96.48598100000004,
+        "clockTicks": 100
+      },
+      {
+        "mode": "certificate-verify",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 220,
+        "meanProcessCpuMs": 0.44,
+        "wallMs": 195.59229700000014,
+        "clockTicks": 100
+      },
+      {
+        "mode": "key-import",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 10,
+        "meanProcessCpuMs": 0.02,
+        "wallMs": 5.658593999999994,
+        "clockTicks": 100
+      },
+      {
+        "mode": "verify-only",
+        "round": 0,
+        "iterations": 500,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 0.04,
+        "wallMs": 23.97796399999993,
+        "clockTicks": 100
+      },
+      {
+        "mode": "verify-only",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 0.04,
+        "wallMs": 22.179079,
+        "clockTicks": 100
+      },
+      {
+        "mode": "key-import",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 7.360012999999981,
+        "clockTicks": 100
+      },
+      {
+        "mode": "certificate-verify",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 230,
+        "meanProcessCpuMs": 0.46,
+        "wallMs": 196.590465,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-no-canonical",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 100,
+        "meanProcessCpuMs": 0.2,
+        "wallMs": 91.45709099999999,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-full",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 180,
+        "meanProcessCpuMs": 0.36,
+        "wallMs": 153.40097300000002,
+        "clockTicks": 100
+      },
+      {
+        "mode": "fromBER",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 40,
+        "meanProcessCpuMs": 0.08,
+        "wallMs": 45.31619899999987,
+        "clockTicks": 100
+      },
+      {
+        "mode": "loop-control",
+        "round": 1,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 2.7274969999998575,
+        "clockTicks": 100
+      },
+      {
+        "mode": "loop-control",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 2.835765000000265,
+        "clockTicks": 100
+      },
+      {
+        "mode": "fromBER",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 50,
+        "meanProcessCpuMs": 0.1,
+        "wallMs": 43.19247399999995,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-full",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 160,
+        "meanProcessCpuMs": 0.32,
+        "wallMs": 153.45151399999986,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-no-canonical",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 100,
+        "meanProcessCpuMs": 0.2,
+        "wallMs": 92.72955400000001,
+        "clockTicks": 100
+      },
+      {
+        "mode": "certificate-verify",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 220,
+        "meanProcessCpuMs": 0.44,
+        "wallMs": 195.0207620000001,
+        "clockTicks": 100
+      },
+      {
+        "mode": "key-import",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 10,
+        "meanProcessCpuMs": 0.02,
+        "wallMs": 6.5317919999997684,
+        "clockTicks": 100
+      },
+      {
+        "mode": "verify-only",
+        "round": 2,
+        "iterations": 500,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 0.04,
+        "wallMs": 22.4820679999998,
+        "clockTicks": 100
+      },
+      {
+        "mode": "verify-only",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 0.04,
+        "wallMs": 22.239665999999943,
+        "clockTicks": 100
+      },
+      {
+        "mode": "key-import",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 6.252660000000105,
+        "clockTicks": 100
+      },
+      {
+        "mode": "certificate-verify",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 210,
+        "meanProcessCpuMs": 0.42,
+        "wallMs": 198.1281530000001,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-no-canonical",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 100,
+        "meanProcessCpuMs": 0.2,
+        "wallMs": 92.18054299999994,
+        "clockTicks": 100
+      },
+      {
+        "mode": "parse-full",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 190,
+        "meanProcessCpuMs": 0.38,
+        "wallMs": 174.39981399999988,
+        "clockTicks": 100
+      },
+      {
+        "mode": "fromBER",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 40,
+        "meanProcessCpuMs": 0.08,
+        "wallMs": 42.227638999999726,
+        "clockTicks": 100
+      },
+      {
+        "mode": "loop-control",
+        "round": 3,
+        "iterations": 500,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "wallMs": 2.633781999999883,
+        "clockTicks": 100
+      }
+    ],
+    "iterationsPerMode": 2000,
+    "leafDerBytes": 548,
+    "leafPublicKey": "ECDSA P-256",
+    "kind": "Warm local function-only whole-process CPU; not TLS handshake or platform quota CPU",
+    "guardExperiment": "parse-no-canonical skips only the canonical toSchema/toBER/equality guard in a private generated benchmark. It is NOT a safe replacement, not an accepted input-policy change, and never used by a handshake or production.",
+    "signatureChecks": "Actual verifyCertificateVerify on a valid fixture ECDSA signature; verify-only reuses imported key and bypasses X.509/SPKI import only for cost isolation",
+    "onlineRequests": 0,
+    "summaries": [
+      {
+        "mode": "loop-control",
+        "iterations": 2000,
+        "processCpuMs": 0,
+        "meanProcessCpuMs": 0,
+        "batchMeanProcessCpuMs": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "mode": "fromBER",
+        "iterations": 2000,
+        "processCpuMs": 200,
+        "meanProcessCpuMs": 0.1,
+        "batchMeanProcessCpuMs": [
+          0.14,
+          0.08,
+          0.1,
+          0.08
+        ]
+      },
+      {
+        "mode": "parse-full",
+        "iterations": 2000,
+        "processCpuMs": 740,
+        "meanProcessCpuMs": 0.37,
+        "batchMeanProcessCpuMs": [
+          0.42,
+          0.36,
+          0.32,
+          0.38
+        ]
+      },
+      {
+        "mode": "parse-no-canonical",
+        "iterations": 2000,
+        "processCpuMs": 410,
+        "meanProcessCpuMs": 0.205,
+        "batchMeanProcessCpuMs": [
+          0.22,
+          0.2,
+          0.2,
+          0.2
+        ]
+      },
+      {
+        "mode": "certificate-verify",
+        "iterations": 2000,
+        "processCpuMs": 880,
+        "meanProcessCpuMs": 0.44,
+        "batchMeanProcessCpuMs": [
+          0.44,
+          0.46,
+          0.44,
+          0.42
+        ]
+      },
+      {
+        "mode": "key-import",
+        "iterations": 2000,
+        "processCpuMs": 20,
+        "meanProcessCpuMs": 0.01,
+        "batchMeanProcessCpuMs": [
+          0.02,
+          0,
+          0.02,
+          0
+        ]
+      },
+      {
+        "mode": "verify-only",
+        "iterations": 2000,
+        "processCpuMs": 80,
+        "meanProcessCpuMs": 0.04,
+        "batchMeanProcessCpuMs": [
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ]
+      }
+    ]
+  },
+  "rawProfiles": {
+    "location": "Ignored .acceptance/ech-cpu-20261024/results",
+    "published": false,
+    "files": [
+      {
+        "file": "default-off-0.cpuprofile",
+        "sizeBytes": 82823,
+        "sha256": "bb3e2dcbdfb48cd8e798c41266b99d63bcea11b1d26cdba433c9c49913dfb8cf"
+      },
+      {
+        "file": "custom-ca-0.cpuprofile",
+        "sizeBytes": 300367,
+        "sha256": "34fed6c67b141e3bd59317ca272c5d53dfbe4efcd4f953d04da076dec0a4fca2"
+      },
+      {
+        "file": "fixture-default-ca-0.cpuprofile",
+        "sizeBytes": 236869,
+        "sha256": "aa5c75e6335473e619ad7b32e9a724aba048878d045c8165c8c1b80e8695d3cd"
+      },
+      {
+        "file": "fixture-default-ca-1.cpuprofile",
+        "sizeBytes": 214846,
+        "sha256": "9d9c10d60e201c1dad954634706f56e3f2a17d06269361cb390a7e618e829ee0"
+      },
+      {
+        "file": "custom-ca-1.cpuprofile",
+        "sizeBytes": 273264,
+        "sha256": "568333fa98cda36c5400add26868e2060ab12d9097f6957754a4e92742b3b442"
+      },
+      {
+        "file": "default-off-1.cpuprofile",
+        "sizeBytes": 89618,
+        "sha256": "5f30b24665242583931d16b5d7641d3cfa5d0fcd15c9c7bfc11220d485ce1962"
+      },
+      {
+        "file": "empty-control.cpuprofile",
+        "sizeBytes": 983,
+        "sha256": "303a47f7d2bd8658965516362de162ad3a484c4c2afbee29a8642886f69da7da"
+      },
+      {
+        "file": "wait-control.cpuprofile",
+        "sizeBytes": 1178,
+        "sha256": "884adc066b6bd48d8a90efa8f84599dc0eb3aee36503fab02ac3cec84db6b28a"
+      }
+    ]
+  },
+  "conclusions": {
+    "primaryJsHotspot": "Certificate parsing and ASN.1 model construction/canonical reencoding, including repeat leaf parsing in authenticated mode",
+    "secondaryJsHotspot": "TLS key schedule/HMAC and other TLS transport/parser work",
+    "bufferCopy": "Not the leading sampled hotspot in this fixture",
+    "nativeCrypto": "Not completely attributable from JS samples; no exact CPU share claimed",
+    "canonicalGuard": "Cost confirmed only with a private cost-isolation variant; must not remove or weaken production DER checks",
+    "fullFreeAcceptance": false,
+    "productionOptimizationApplied": false
+  },
+  "boundaries": [
+    "870 successful diagnostic handshakes plus 3 successful baseline/interop client Finished records; separate microbenchmark also reran baseline interop",
+    "480 handshakes are in unprofiled CPU batches, 360 in profiling batches, 30 in warmup",
+    "Raw sampling intervals include waits; no summed timeDelta-to-CPU conversion",
+    "Function microbenchmark uses a 548-byte ECDSA P-256 fixture certificate and does not represent public Meta certificate cost",
+    "10 ms whole-process counter resolution; per-call values are batch averages and zeros are below-resolution observations",
+    "Test-only fixture root appended to pinned root index never changes production trust roots",
+    "Original generic interop closing summary counted a capped textual log; authoritative diagnostic Finished count uses uncapped streaming line counts (873)",
+    "No cloud deployment, account profiling capture, public DNS/ECH request, commit or push"
+  ],
+  "diagnosticSources": {
+    "make-profile.mjs": "import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';\nconst root=process.argv[2], tools=path.dirname(new URL(import.meta.url).pathname.replace(/^\\/(.:)/,'$1'));\nconst lib=path.join(root,'lib/ech-probe');let source=fs.readFileSync(path.join(lib,'test/interop.mjs'),'utf8');\nsource=source.replace(\"import { runtimeInfo } from './runtime.mjs';\", \"import { runtimeInfo } from './runtime.mjs';\\nimport { build } from 'esbuild';\\nimport { Certificate, fromBER } from '../vendor/pki-core.js';\\nimport { DEFAULT_CA_INDEX } from '../internal/trust-store.js';\");\nsource=source.replace(\"let logs = '';\", \"let logs = '';\\nlet finishedCount = 0;\\nconst tails = new Map();\");\nconst old=\"for (const stream of [server.stdout, server.stderr]) stream.on('data', data => { if (logs.length < 1048576) logs += data; });\";\nassert.ok(source.includes(old));source=source.replace(old,\"for (const stream of [server.stdout, server.stderr]) stream.on('data', data => { if (logs.length < 1048576) logs += data; const text = (tails.get(stream) ?? '') + data; const lines = text.split(String.fromCharCode(10)); tails.set(stream, lines.pop()); for (const line of lines) if (line.startsWith('<<< TLS 1.3, Handshake') && line.includes('Finished')) finishedCount++; });\");\nconst anchor='  // The independent OpenSSL server must actually receive client Finished.';assert.ok(source.includes(anchor));\nsource=source.replace(anchor,fs.readFileSync(path.join(tools,process.argv[3] ?? 'profile-body.txt'),'utf8')+'\\n'+anchor);\nsource=source.replace(\"const receivedFinished = logs.match(/<<< TLS 1\\.3, Handshake[^\\n]*Finished/g) ?? [];\", \"const receivedFinished = { length: finishedCount };\");\nsource = source.split(String.fromCharCode(10)).map(line => line.startsWith('  const receivedFinished = logs.match') ? '  const receivedFinished = { length: finishedCount };' : line).join(String.fromCharCode(10));\nfs.writeFileSync(path.join(lib,'test/cpu-profile-local.mjs'),source);\n",
+    "profile-body.txt": "  // Successful library-only CPU diagnosis; no public target or application rule pipeline.\n  await mf.dispose();\n  const output = process.env.ECH_CPU_OUTPUT;\n  assert.ok(output, 'ECH_CPU_OUTPUT must name the local output directory');\n  await fs.mkdir(output, { recursive: true });\n  const rootDer = Uint8Array.from(Buffer.from(fixture.rootPem.replace(/-----[^-]+-----/g, '').replace(/\\s/g, ''), 'base64'));\n  const rootCert = new Certificate({ schema: fromBER(rootDer).result });\n  const fixtureAnchor = { subject: Buffer.from(rootCert.subject.toSchema().toBER(false)).toString('base64'), certificate: Buffer.from(rootDer).toString('base64') };\n  const entry = `import { probeEch } from '../index.js';\n    export default { async fetch(request) {\n      const { mode, port, rootPem } = await request.json();\n      if (mode === 'empty') return Response.json({control: true});\n      if (mode === 'wait') { await new Promise(r => setTimeout(r, 100)); return Response.json({control: true}); }\n      const options = { hostname: '127.0.0.1', port, serverName: 'example.test', timeoutMs: 10000 };\n      if (mode !== 'default-off') options.verifyCertificate = true;\n      if (mode === 'custom-ca') options.caCertificates = [rootPem];\n      try {\n        const result = await probeEch(options);\n        return Response.json({ authenticated: result.authenticated, handshakeComplete: result.handshakeComplete, configCount: result.configs.length, bytes: result.bytes.length, publicNames: result.configs.map(c => c.publicName) });\n      } catch (error) { return Response.json({ code: error.code }, {status: 502}); }\n    }};`;\n  const scriptPath = path.join(root, 'test/cpu-profile-worker.js');\n  const bundle = await build({\n    stdin: { contents: entry, resolveDir: path.join(root, 'test'), sourcefile: scriptPath }, bundle: true, write: false, format: 'esm', platform: 'browser',\n    external: ['cloudflare:sockets'],\n    plugins: [{ name: 'test-only-fixture-anchor', setup(api) {\n      api.onLoad({ filter: /trust-store[.]js$/ }, () => ({ contents: `export const DEFAULT_CA_INDEX = Object.freeze(${JSON.stringify([...DEFAULT_CA_INDEX, fixtureAnchor])}.map(Object.freeze));`, loader: 'js' }));\n    }}],\n  });\n  mf = new Miniflare({ name: 'ech-cpu-profile', modules: true, script: bundle.outputFiles[0].text,\n    scriptPath, compatibilityDate: runtime.compatibilityDate, compatibilityFlags: runtime.compatibilityFlags,\n    inspectorPort: 0, inspectorHost: '127.0.0.1', cf: false,\n  });\n  await mf.ready;\n  const ticks = Number(spawnSync('getconf', ['CLK_TCK'], { encoding: 'utf8' }).stdout.trim());\n  assert.ok(ticks > 0);\n  async function workerdPid() {\n    const pids = new Set();\n    for (const tid of await fs.readdir('/proc/' + process.pid + '/task')) {\n      try { for (const pid of (await fs.readFile('/proc/' + process.pid + '/task/' + tid + '/children', 'utf8')).trim().split(/\\s+/).filter(Boolean)) pids.add(pid); } catch {}\n    }\n    const found = [];\n    for (const pid of pids) { try { if ((await fs.readFile('/proc/' + pid + '/comm', 'utf8')).trim().startsWith('workerd')) found.push(pid); } catch {} }\n    assert.equal(found.length, 1, 'one unique workerd process');\n    return found[0];\n  }\n  async function cpu(pid) {\n    const stat = await fs.readFile('/proc/' + pid + '/stat', 'utf8');\n    const parts = stat.slice(stat.lastIndexOf(') ') + 2).trim().split(/\\s+/);\n    return (Number(parts[11]) + Number(parts[12])) * 1000 / ticks;\n  }\n  let completedTls = 0;\n  async function invoke(mode) {\n    const response = await mf.dispatchFetch('http://ech-cpu.test/', { method: 'POST', headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ mode, port, ...(mode === 'custom-ca' ? { rootPem: fixture.rootPem } : {}) }) });\n    const data = await response.json();\n    assert.equal(response.status, 200, JSON.stringify({ mode, ...data }));\n    if (mode === 'empty' || mode === 'wait') assert.equal(data.control, true);\n    else {\n      assert.equal(data.authenticated, mode !== 'default-off'); assert.equal(data.handshakeComplete, true);\n      assert.ok(data.configCount > 0 && data.bytes > 0); assert.ok(data.publicNames.includes('example.test'));\n      completedTls++;\n    }\n  }\n  const pid = await workerdPid(), batches = [];\n  async function measure(mode, count, round) {\n    const before = await cpu(pid), start = performance.now();\n    for (let i = 0; i < count; i++) await invoke(mode);\n    const wallMs = performance.now() - start, processCpuMs = (await cpu(pid)) - before;\n    assert.equal(await workerdPid(), pid);\n    const row = { mode, round, count, processCpuMs, meanProcessCpuMs: processCpuMs / count, wallMs, clockTicks: ticks, profilerEnabled: false };\n    batches.push(row); console.log(JSON.stringify({ evidenceKind: 'local-process-cpu', ...row }));\n  }\n  const modes = ['default-off', 'custom-ca', 'fixture-default-ca'];\n  for (const mode of ['empty', ...modes]) for (let i = 0; i < 10; i++) await invoke(mode);\n  await measure('empty', 100, 0);\n  await measure('wait', 10, 0);\n  for (let round = 0; round < 4; round++) for (const mode of round % 2 ? [...modes].reverse() : modes) await measure(mode, 40, round);\n  await measure('empty', 100, 1);\n  await measure('wait', 10, 1);\n\n  const inspector = await mf.getInspectorURL();\n  const targets = await (await fetch(new URL('/json', inspector.href.replace('ws:', 'http:')))).json();\n  const selected = targets.find(t => t.id.includes('ech-cpu-profile'));\n  assert.ok(selected, 'exact library worker inspector target');\n  const ws = new WebSocket(selected.webSocketDebuggerUrl);\n  const pending = new Map(); let nextId = 0;\n  await new Promise((resolve, reject) => {\n    const timer = setTimeout(() => reject(Error('Inspector open timeout')), 10000);\n    ws.addEventListener('open', () => { clearTimeout(timer); resolve(); }, { once: true });\n    ws.addEventListener('error', () => { clearTimeout(timer); reject(Error('Inspector failed')); }, { once: true });\n  });\n  ws.addEventListener('message', event => {\n    const reply = JSON.parse(String(event.data)), p = pending.get(reply.id);\n    if (p) { pending.delete(reply.id); clearTimeout(p.timer); reply.error ? p.reject(Error(JSON.stringify(reply.error))) : p.resolve(reply.result); }\n  });\n  const send = (method, params = {}) => new Promise((resolve, reject) => {\n    const id = ++nextId, timer = setTimeout(() => { pending.delete(id); reject(Error('Inspector timeout: ' + method)); }, 15000);\n    pending.set(id, { resolve, reject, timer }); ws.send(JSON.stringify({ id, method, params }));\n  });\n  const profiles = [];\n  try {\n    await send('Profiler.enable'); await send('Profiler.setSamplingInterval', { interval: 100 });\n    for (let round = 0; round < 2; round++) {\n      for (const mode of round ? [...modes].reverse() : modes) {\n        await send('Profiler.start');\n        for (let i = 0; i < 60; i++) await invoke(mode);\n        const { profile } = await send('Profiler.stop');\n        assert.ok(profile.samples?.length > 0);\n        const file = mode + '-' + round + '.cpuprofile';\n        await fs.writeFile(path.join(output, file), JSON.stringify(profile));\n        profiles.push({ mode, round, count: 60, file, samples: profile.samples.length, profileWindowMs: (profile.endTime - profile.startTime) / 1000 });\n      }\n    }\n    for (const mode of ['empty', 'wait']) {\n      await send('Profiler.start');\n      for (let i = 0; i < 10; i++) await invoke(mode);\n      const { profile } = await send('Profiler.stop'), file = mode + '-control.cpuprofile';\n      await fs.writeFile(path.join(output, file), JSON.stringify(profile));\n      profiles.push({ mode, count: 10, file, samples: profile.samples?.length ?? 0, profileWindowMs: (profile.endTime - profile.startTime) / 1000 });\n    }\n  } finally { for (const p of pending.values()) { clearTimeout(p.timer); p.reject(Error('Profiler disposed')); } ws.close(); }\n  const expectedFinished = completedTls + 3;\n  const finishDeadline = Date.now() + 3000;\n  while (finishedCount < expectedFinished && Date.now() < finishDeadline) await new Promise(r => setTimeout(r, 10));\n  assert.ok(finishedCount >= expectedFinished, `Independent Finished count ${finishedCount} < ${expectedFinished}`);\n  const evidence = { version: 1, date: '2026-10-24', runtime, kind: 'Library-only local independent OpenSSL successful handshakes',\n    batches, profiles, completedTls, expectedClientFinished: expectedFinished, observedClientFinished: finishedCount, onlineRequests: 0,\n    fixture: { leafDerBytes: Buffer.from(fixture.leafDerBase64, 'base64').length, caMode: 'Custom PEM or test-only fixture root appended to complete pinned default index', publicProductionRootUnmodified: true },\n    limits: ['Whole-process CPU includes runtime/GC/all threads, not per-function or platform quota CPU', 'CPU batches run before profiler; sampling/profile windows are not CPU milliseconds', 'Same loopback ECDSA fixture differs from public Meta chain', 'Test-only default index addition is not deployed, not a production trust-policy change'] };\n  await fs.writeFile(path.join(output, 'measurements.json'), JSON.stringify(evidence, null, 2));\n  console.log(JSON.stringify({ evidenceKind: 'library-profile-complete', completedTls, observedClientFinished: finishedCount, profiles: profiles.length, onlineRequests: 0 }));\n",
+    "micro-body.txt": "  await mf.dispose();\n  const { sign, createPrivateKey, X509Certificate } = await import('node:crypto');\n  const leaf = Buffer.from(fixture.leafDerBase64, 'base64');\n  const spki = new X509Certificate(leaf).publicKey.export({ type: 'spki', format: 'der' });\n  const privateKey = createPrivateKey({ key: Buffer.from(fixture.leafPrivateKeyPkcs8Base64, 'base64'), format: 'der', type: 'pkcs8' });\n  const data = Buffer.from('SuperDoH local CPU diagnostic fixture');\n  const derSignature = sign('sha256', data, privateKey);\n  const rawSignature = sign('sha256', data, { key: privateKey, dsaEncoding: 'ieee-p1363' });\n  const output = process.env.ECH_CPU_OUTPUT;\n  assert.ok(output); await fs.mkdir(output, { recursive: true });\n  const entry = `import { diagnosticParseDer, verifyCertificateVerify } from '../internal/certificate.js';\n    import { fromBER } from '../vendor/pki-core.js';\n    const leaf = new Uint8Array(${JSON.stringify([...leaf])});\n    const spki = new Uint8Array(${JSON.stringify([...spki])});\n    const data = new Uint8Array(${JSON.stringify([...data])});\n    const derSignature = new Uint8Array(${JSON.stringify([...derSignature])});\n    const rawSignature = new Uint8Array(${JSON.stringify([...rawSignature])});\n    let key;\n    export default { async fetch(request) {\n      const { mode, iterations } = await request.json();\n      if (!Number.isInteger(iterations) || iterations < 1 || iterations > 1000) throw Error('Invalid bounded loop');\n      key ??= await crypto.subtle.importKey('spki', spki, {name:'ECDSA',namedCurve:'P-256'},false,['verify']);\n      for(let i=0;i<iterations;i++) {\n        if(mode==='loop-control') await Promise.resolve();\n        else if(mode==='fromBER') { const parsed=fromBER(leaf.slice()); if(parsed.offset!==leaf.length)throw Error('Decode failed'); }\n        else if(mode==='parse-full') diagnosticParseDer(leaf, false);\n        else if(mode==='parse-no-canonical') diagnosticParseDer(leaf, true);\n        else if(mode==='certificate-verify') { if(!await verifyCertificateVerify(leaf,0x0403,derSignature,data))throw Error('CertificateVerify failed'); }\n        else if(mode==='key-import') await crypto.subtle.importKey('spki',spki,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);\n        else if(mode==='verify-only') { if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,rawSignature,data))throw Error('Verify failed'); }\n        else throw Error('Unknown diagnostic mode');\n      }\n      return Response.json({mode,iterations,ok:true});\n    }};`;\n  const bundle = await build({\n    stdin: { contents: entry, resolveDir: path.join(root, 'test'), sourcefile: 'micro-worker.js' },\n    bundle: true, write: false, format: 'esm', platform: 'browser',\n    plugins: [{name:'private-microbenchmark-seam',setup(api){\n      api.onLoad({filter:/internal[/\\\\]certificate[.]js$/},async args=>{\n        let source=await fs.readFile(args.path,'utf8');\n        const needle=\"    const canonical = new Uint8Array(cert.toSchema().toBER(false));\\n    if (canonical.length !== copy.length || !canonical.every((byte, i) => byte === copy[i])) throw new RangeError('Certificate is not canonical DER');\";\n        assert.ok(source.includes(needle),'Canonical guard seam changed');\n        source=source.replace('function parseDer(der) {','function parseDer(der, diagnosticSkipCanonical = false) {');\n        source=source.replace(needle,'    if (!diagnosticSkipCanonical) {\\n'+needle+'\\n    }');\n        source+='\\nexport { parseDer as diagnosticParseDer };\\n';\n        return {contents:source,loader:'js',resolveDir:path.dirname(args.path)};\n      });\n    }}],\n  });\n  mf=new Miniflare({name:'ech-library-micro',modules:true,script:bundle.outputFiles[0].text,compatibilityDate:runtime.compatibilityDate,compatibilityFlags:runtime.compatibilityFlags,cf:false});\n  await mf.ready;\n  const ticks=Number(spawnSync('getconf',['CLK_TCK'],{encoding:'utf8'}).stdout.trim()); assert.ok(ticks>0);\n  const candidates=new Set();\n  for(const tid of await fs.readdir('/proc/'+process.pid+'/task')){try{for(const pid of(await fs.readFile('/proc/'+process.pid+'/task/'+tid+'/children','utf8')).trim().split(/\\s+/).filter(Boolean))candidates.add(pid);}catch{}}\n  const workers=[];for(const pid of candidates){try{if((await fs.readFile('/proc/'+pid+'/comm','utf8')).trim().startsWith('workerd'))workers.push(pid);}catch{}}\n  assert.equal(workers.length,1);const pid=workers[0];\n  async function cpu(){const stat=await fs.readFile('/proc/'+pid+'/stat','utf8');const parts=stat.slice(stat.lastIndexOf(') ')+2).trim().split(/\\s+/);return(Number(parts[11])+Number(parts[12]))*1000/ticks;}\n  async function invoke(mode,iterations){const response=await mf.dispatchFetch('http://micro.test/',{method:'POST',body:JSON.stringify({mode,iterations})});assert.equal(response.status,200);assert.deepEqual(await response.json(),{mode,iterations,ok:true});}\n  const modes=['loop-control','fromBER','parse-full','parse-no-canonical','certificate-verify','key-import','verify-only'];\n  for(const mode of modes)await invoke(mode,30);\n  const batches=[];\n  for(let round=0;round<4;round++)for(const mode of round%2?[...modes].reverse():modes){\n    const before=await cpu(),start=performance.now();await invoke(mode,500);const wallMs=performance.now()-start,processCpuMs=(await cpu())-before;\n    const row={mode,round,iterations:500,processCpuMs,meanProcessCpuMs:processCpuMs/500,wallMs,clockTicks:ticks};batches.push(row);console.log(JSON.stringify({evidenceKind:'local-function-batch-cpu',...row}));\n  }\n  const evidence={version:1,date:'2026-10-24',runtime,batches,iterationsPerMode:2000,leafDerBytes:leaf.length,leafPublicKey:'ECDSA P-256',kind:'Warm local function-only whole-process CPU; not TLS handshake or platform quota CPU',\n    guardExperiment:'parse-no-canonical skips only the canonical toSchema/toBER/equality guard in a private generated benchmark. It is NOT a safe replacement, not an accepted input-policy change, and never used by a handshake or production.',\n    signatureChecks:'Actual verifyCertificateVerify on a valid fixture ECDSA signature; verify-only reuses imported key and bypasses X.509/SPKI import only for cost isolation',onlineRequests:0};\n  await fs.writeFile(path.join(output,'micro-measurements.json'),JSON.stringify(evidence,null,2));\n  console.log(JSON.stringify({evidenceKind:'micro-profile-complete',modes:modes.length,iterationsPerMode:2000,onlineRequests:0}));\n",
+    "summarize.mjs": "import fs from 'node:fs';\nimport path from 'node:path';\nimport assert from 'node:assert/strict';\nconst dir = path.join(import.meta.dirname, 'results');\nconst measurements = JSON.parse(fs.readFileSync(path.join(dir, 'measurements.json'), 'utf8'));\nconst groups = [\n  ['custom-anchor-preparation', ['prepareTrustAnchors', 'decodePem']],\n  ['certificate-verify', ['verifyCertificateVerify', 'ecdsaSignatureToRaw', 'getRsaBits']],\n  ['certificate-chain', ['validateCertificateChain', 'buildPath', 'checkNameConstraints', 'validity', 'extMap', 'constraints', 'usage', 'extendedUsage', 'sanDns', 'matchDns', 'defaultIssuers', 'defaultContains', 'defaultRecord']],\n  ['certificate-parsing', ['parseDer']],\n  ['tls-key-schedule-and-finished', ['handshakeKeys', 'applicationKeys', 'trafficKeys', 'expandLabel', 'hmac', 'verifyFinished', 'finishedVerifyData', 'hash']],\n  ['client-hello', ['createClientHello']],\n  ['buffer-helpers', ['concat', 'bytes', 'take', 'vector', 'extension', 'handshake', 'record']],\n  ['other-tls-and-probe', ['probeWithConnect', 'push', 'serverHello', 'certificate', 'certificateVerify', 'serverFinished', 'finishHandshake', 'readiness', 'dispose', 'parseEchConfigList']],\n];\nconst totals = new Map();\nconst add = (m, k, n = 1) => m.set(k, (m.get(k) ?? 0) + n);\nconst selectedFunctions = new Set(['parseDer', 'fromBER', 'toBER', 'toSchema', 'prepareTrustAnchors', 'decodePem', 'validateCertificateChain', 'verifyCertificateVerify', 'createClientHello', 'hmac', 'expandLabel', 'handshakeKeys', 'applicationKeys', 'concat', 'defaultIssuers', 'isEqual']);\nconst profiles = measurements.profiles.map(row => {\n  const profile = JSON.parse(fs.readFileSync(path.join(dir, row.file), 'utf8'));\n  const nodes = new Map(profile.nodes.map(n => [n.id, n])), parents = new Map();\n  for (const node of nodes.values()) for (const id of node.children ?? []) parents.set(id, node.id);\n  const groupCounts = new Map(), selfCounts = new Map(), inclusive = new Map();\n  let activeObservations = 0;\n  for (const id of profile.samples ?? []) {\n    const node = nodes.get(id); assert.ok(node);\n    const name = node.callFrame.functionName || '(anonymous)';\n    add(selfCounts, name);\n    const chain = new Set();\n    for (let current = node; current; current = nodes.get(parents.get(current.id))) chain.add(current.callFrame.functionName);\n    for (const fn of chain) if (selectedFunctions.has(fn)) add(inclusive, fn);\n    if (name === '(idle)' || name === '(root)') { add(groupCounts, 'idle-or-root'); continue; }\n    activeObservations++;\n    if (name === '(program)') { add(groupCounts, 'unattributed-program'); continue; }\n    if (name === '(garbage collector)') { add(groupCounts, 'garbage-collector'); continue; }\n    const match = groups.find(([, names]) => names.some(name => chain.has(name)));\n    add(groupCounts, match?.[0] ?? 'other-runtime-or-unattributed');\n  }\n  const result = { ...row, activeStackObservations: activeObservations,\n    groupCounts: Object.fromEntries(groupCounts),\n    topSelfStackCounts: [...selfCounts].sort((a, b) => b[1] - a[1]).slice(0, 18).map(([name, samples]) => ({ name, samples })),\n    inclusiveStackCounts: Object.fromEntries(inclusive),\n    maxSamplingGapMs: Math.max(0, ...(profile.timeDeltas ?? [])) / 1000,\n    samplingGapsOver10Ms: (profile.timeDeltas ?? []).filter(n => n > 10000).length,\n  };\n  if (!totals.has(row.mode)) totals.set(row.mode, { mode: row.mode, samples: 0, activeStackObservations: 0, groups: new Map(), self: new Map(), inclusive: new Map() });\n  const aggregate = totals.get(row.mode);\n  aggregate.samples += row.samples; aggregate.activeStackObservations += activeObservations;\n  for (const [key, n] of groupCounts) add(aggregate.groups, key, n);\n  for (const [key, n] of selfCounts) add(aggregate.self, key, n);\n  for (const [key, n] of inclusive) add(aggregate.inclusive, key, n);\n  return result;\n});\nconst aggregateProfiles = [...totals.values()].map(t => ({ mode: t.mode, samples: t.samples, activeStackObservations: t.activeStackObservations,\n  disjointGroupStackCounts: Object.fromEntries(t.groups),\n  topSelfStackCounts: [...t.self].sort((a,b) => b[1]-a[1]).slice(0, 20).map(([name,samples]) => ({name,samples})),\n  inclusiveStackCounts: Object.fromEntries(t.inclusive),\n}));\nconst batchSummaries = [...new Set(measurements.batches.map(row => row.mode))].map(mode => {\n  const rows = measurements.batches.filter(row => row.mode === mode);\n  const count = rows.reduce((n,row)=>n+row.count,0), processCpuMs = rows.reduce((n,row)=>n+row.processCpuMs,0);\n  return { mode, count, processCpuMs, meanProcessCpuMs: processCpuMs/count, batchMeanProcessCpuMs: rows.map(row=>row.meanProcessCpuMs), wallMs: rows.reduce((n,row)=>n+row.wallMs,0) };\n});\nconst evidence = { ...measurements, batchSummaries, profiles, aggregateProfiles,\n  profilingMethod: { requestedSamplingIntervalUs: 100, grouping: 'Disjoint priority match on synchronous stack ancestry; unknown/program samples remain unknown', inclusiveStackCountsOverlap: true, samplingGapsAreNotCpu: true, percentagesAreNotCpuShares: true, nativeCryptoCpuNotFullyAttributed: true },\n};\nfs.writeFileSync(path.join(dir,'summary.json'), JSON.stringify(evidence,null,2)+'\\n');\nconsole.log(JSON.stringify({ batchSummaries, aggregateProfiles },null,2));\n"
+  }
+}

@@ -23,5 +23,10 @@
     "esbuild": "0.25.12",
     "miniflare": "4.20260730.0",
     "pkijs": "3.4.1"
+  },
+  "overrides": {
+    "miniflare@4.20260730.0": {
+      "workerd": "1.20261019.1"
+    }
   }
 }

@@ -1,0 +1,647 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "sourceCommit": "539a750",
+  "worker": "superdoh-meta-ech-probe-20261018132148",
+  "source": {
+    "hostname": "scontent.xx.fbcdn.net",
+    "port": 443,
+    "serverName": "scontent.xx.fbcdn.net",
+    "selection": "Same explicitly selected public source; no fallback or built-in default"
+  },
+  "authorization": "User approved at most 20 additional requests for five uncached probes under each policy plus smoke/readiness/stop checks",
+  "authentication": "Existing supported OAuth; chat credential not used or saved",
+  "accountPlan": "Previously operator-confirmed Free; not independently billing-API verified",
+  "deploymentVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+  "finalStoppedVersion": "65cb2ec6-5bb2-4c40-8e8c-8f16a27ff6fd",
+  "compatibilityDate": "2026-07-30",
+  "compatibilityFlags": [
+    "enable_request_signal",
+    "global_fetch_strictly_public"
+  ],
+  "budget": {
+    "previousClientAttempts": 30,
+    "additionalCap": 20,
+    "thisPhaseAttempts": 17,
+    "totalCap": 50,
+    "totalClientAttempts": 47,
+    "unusedReadinessContingency": 3,
+    "readiness": 1,
+    "payloads": 15,
+    "stopVerification": 1,
+    "pacing": "Sequential; at least one second after completion"
+  },
+  "samples": [
+    {
+      "sampleId": "0d14f983-d968-4318-b7e7-c5c7473c2d45",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "ready",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:50.104Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "result": {
+        "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+        "source": "539a750"
+      },
+      "clientLatencyMs": 1062.2569999999998
+    },
+    {
+      "sampleId": "84214a4f-6c14-4210-9aa3-a90787dea658",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "fixed",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:52.195Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "clientLatencyMs": 188.38549999999987
+    },
+    {
+      "sampleId": "24e86472-60fd-40e6-bb8c-569fa7853104",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "fixed",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:53.399Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "clientLatencyMs": 163.02570000000014
+    },
+    {
+      "sampleId": "54f65ec4-56f6-489f-ba22-d1d8f9ac87b5",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "fixed",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:54.564Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "clientLatencyMs": 174.3122000000003
+    },
+    {
+      "sampleId": "69d9c6ba-3762-4243-be94-55a41d7707f2",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "fixed",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:55.749Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "clientLatencyMs": 175.57970000000023
+    },
+    {
+      "sampleId": "230f5614-e628-49b6-96e7-ca86ff85381a",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "fixed",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:56.932Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "clientLatencyMs": 163.66569999999956
+    },
+    {
+      "sampleId": "07061e5f-dd73-4c62-bc22-5c8989676bea",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-default",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:58.101Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 229.8038000000015
+    },
+    {
+      "sampleId": "9cd8643f-0e5a-450a-88f0-58521dc84024",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-default",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:42:59.334Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 180.52009999999973
+    },
+    {
+      "sampleId": "ba208808-6273-42f6-ab21-576be92cea2e",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-default",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:00.519Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 221.6815999999999
+    },
+    {
+      "sampleId": "1f804a7a-0040-46c3-a4dd-bd965ac08abe",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-default",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:02.495Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 195.8708999999999
+    },
+    {
+      "sampleId": "17077af7-6fa6-4d3f-94a0-314121e93150",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-default",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:03.693Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 191.9302000000007
+    },
+    {
+      "sampleId": "14c867b1-b02f-434b-bef1-106b737f4b86",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-verified",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:04.891Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 204.08810000000085
+    },
+    {
+      "sampleId": "6ab71829-852c-4f4d-9ac6-34bec2a8bd2e",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-verified",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:06.110Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 205.27149999999892
+    },
+    {
+      "sampleId": "dfe11436-f5e0-4a9c-9cbc-680bb181fcef",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-verified",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:07.327Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 189.471800000003
+    },
+    {
+      "sampleId": "eaadc0fa-15c9-409a-bb65-1763a8c62b6f",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-verified",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:08.526Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 186.9382000000005
+    },
+    {
+      "sampleId": "2a088589-959e-4b3f-ba82-674996235e9e",
+      "targetLabel": "meta",
+      "measurementPhase": "uncached-warm-20261024",
+      "mode": "production-verified",
+      "expectedVersion": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "startedAt": "2026-10-24T01:43:09.725Z",
+      "httpStatus": 200,
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "source": "539a750",
+      "targetLabelReceived": "meta",
+      "rcode": 0,
+      "answerCount": 1,
+      "desiredEchSuccess": true,
+      "echConfigBytes": 707,
+      "echConfigCount": 10,
+      "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+      "clientLatencyMs": 188.63490000000093
+    }
+  ],
+  "stopVerification": {
+    "sampleId": "22e7fb7b-4734-40a3-9375-ef051927b245",
+    "mode": "stopped",
+    "expectedVersion": "65cb2ec6-5bb2-4c40-8e8c-8f16a27ff6fd",
+    "startedAt": "2026-10-24T01:43:26.887Z",
+    "httpStatus": 410,
+    "version": null,
+    "source": null,
+    "stopped": true,
+    "clientLatencyMs": 1081.7988999999998
+  },
+  "platformRows": [
+    {
+      "sampleId": "84214a4f-6c14-4210-9aa3-a90787dea658",
+      "requestId": "e50fc647589e9f9106d16405e5b19c93",
+      "mode": "fixed",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 12,
+      "wallMs": 12,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "24e86472-60fd-40e6-bb8c-569fa7853104",
+      "requestId": "132757e82dbc46b3fadb6519b00eee61",
+      "mode": "fixed",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 2,
+      "wallMs": 2,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "54f65ec4-56f6-489f-ba22-d1d8f9ac87b5",
+      "requestId": "fe4757449947eeb9cad082771e5aa411",
+      "mode": "fixed",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 2,
+      "wallMs": 2,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "69d9c6ba-3762-4243-be94-55a41d7707f2",
+      "requestId": "1124a55bf58a9d10bab18483236f0bb8",
+      "mode": "fixed",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 1,
+      "wallMs": 2,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "230f5614-e628-49b6-96e7-ca86ff85381a",
+      "requestId": "847eacdc4329db173bc1566cede4004d",
+      "mode": "fixed",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 3,
+      "wallMs": 4,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "07061e5f-dd73-4c62-bc22-5c8989676bea",
+      "requestId": "d30959ce50bb15779b3269fd153d05a7",
+      "mode": "production-default",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 31,
+      "wallMs": 53,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "9cd8643f-0e5a-450a-88f0-58521dc84024",
+      "requestId": "c153b7c4a046946330342326f24bcfc7",
+      "mode": "production-default",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 13,
+      "wallMs": 19,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "ba208808-6273-42f6-ab21-576be92cea2e",
+      "requestId": "975f95daa19fffa3e28bdca2c7e80d67",
+      "mode": "production-default",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 12,
+      "wallMs": 17,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "1f804a7a-0040-46c3-a4dd-bd965ac08abe",
+      "requestId": "6b3436a597b8755f93c6a6519cda2451",
+      "mode": "production-default",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 13,
+      "wallMs": 18,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "17077af7-6fa6-4d3f-94a0-314121e93150",
+      "requestId": "348b491878d879fa4fdd227e33449b86",
+      "mode": "production-default",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 13,
+      "wallMs": 17,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "14c867b1-b02f-434b-bef1-106b737f4b86",
+      "requestId": "4f00820da31cf26c7c3764a491637c33",
+      "mode": "production-verified",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 39,
+      "wallMs": 45,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "6ab71829-852c-4f4d-9ac6-34bec2a8bd2e",
+      "requestId": "1bf63b0c4ebe2dee614c0315e5da0bce",
+      "mode": "production-verified",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 27,
+      "wallMs": 33,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "dfe11436-f5e0-4a9c-9cbc-680bb181fcef",
+      "requestId": "9ae19943b47feaa207d3aa08e095fc36",
+      "mode": "production-verified",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 21,
+      "wallMs": 27,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "eaadc0fa-15c9-409a-bb65-1763a8c62b6f",
+      "requestId": "f1b21d957fc2af448c3b43af079b0b83",
+      "mode": "production-verified",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 23,
+      "wallMs": 28,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    },
+    {
+      "sampleId": "2a088589-959e-4b3f-ba82-674996235e9e",
+      "requestId": "ed43a1bad6805924b941d7f959e854d0",
+      "mode": "production-verified",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "cpuMs": 24,
+      "wallMs": 29,
+      "outcome": "ok",
+      "matchedDiagnostic": true
+    }
+  ],
+  "sourceStates": [
+    {
+      "sampleId": "07061e5f-dd73-4c62-bc22-5c8989676bea",
+      "requestId": "d30959ce50bb15779b3269fd153d05a7",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_disabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "9cd8643f-0e5a-450a-88f0-58521dc84024",
+      "requestId": "c153b7c4a046946330342326f24bcfc7",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_disabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "ba208808-6273-42f6-ab21-576be92cea2e",
+      "requestId": "975f95daa19fffa3e28bdca2c7e80d67",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_disabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "1f804a7a-0040-46c3-a4dd-bd965ac08abe",
+      "requestId": "6b3436a597b8755f93c6a6519cda2451",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_disabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "17077af7-6fa6-4d3f-94a0-314121e93150",
+      "requestId": "348b491878d879fa4fdd227e33449b86",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_disabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "14c867b1-b02f-434b-bef1-106b737f4b86",
+      "requestId": "4f00820da31cf26c7c3764a491637c33",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_enabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "6ab71829-852c-4f4d-9ac6-34bec2a8bd2e",
+      "requestId": "1bf63b0c4ebe2dee614c0315e5da0bce",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_enabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "dfe11436-f5e0-4a9c-9cbc-680bb181fcef",
+      "requestId": "9ae19943b47feaa207d3aa08e095fc36",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_enabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "eaadc0fa-15c9-409a-bb65-1763a8c62b6f",
+      "requestId": "f1b21d957fc2af448c3b43af079b0b83",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_enabled",
+        "acquired"
+      ]
+    },
+    {
+      "sampleId": "2a088589-959e-4b3f-ba82-674996235e9e",
+      "requestId": "ed43a1bad6805924b941d7f959e854d0",
+      "version": "86479575-bcd6-4988-bd86-5561a175f29b",
+      "states": [
+        "verification_enabled",
+        "acquired"
+      ]
+    }
+  ],
+  "missingPayloadTelemetry": [],
+  "telemetry": {
+    "cpuField": "$workers.cpuTimeMs",
+    "wallField": "$workers.wallTimeMs",
+    "timeframe": {
+      "from": "2026-10-24T01:42:00Z",
+      "to": "2026-10-24T01:44:00Z"
+    },
+    "eventsReturned": 51,
+    "eventLimit": 2000,
+    "matchedPayloads": 15,
+    "totalPayloads": 15,
+    "observedCpuAboveFree10Ms": 11,
+    "probeCpuAboveFree10Ms": 10,
+    "join": "Client UUID + response/native scriptVersion.id + diagnostic/native requestId",
+    "rawRequestsExported": false
+  },
+  "bindingPolicy": {
+    "DNS_CACHE": {
+      "read": false,
+      "write": false
+    },
+    "probe": {
+      "timeoutMs": 1500,
+      "maxBytes": 65536,
+      "cacheTtl": 0
+    }
+  },
+  "results": {
+    "fixedSmokePassed": 5,
+    "defaultFullHandshakeAndApplyPassed": 5,
+    "explicitVerifiedFullHandshakeAndApplyPassed": 5,
+    "defaultCpuMs": [
+      31,
+      13,
+      12,
+      13,
+      13
+    ],
+    "verifiedCpuMs": [
+      39,
+      27,
+      21,
+      23,
+      24
+    ],
+    "defaultMedianCpuMs": 13,
+    "verifiedMedianCpuMs": 24,
+    "echConfigBytes": 707,
+    "echConfigCount": 10,
+    "echSha256": "81fed4b7374fb1de95cbad6c7ec05823360d7ee10dba867603e983752d0a5595",
+    "cacheHitEvents": 0,
+    "failureCodes": [],
+    "fullFreeAcceptance": false
+  },
+  "limits": [
+    "Five observations per policy; no p95/p99 or precise cold/warm-isolate identity",
+    "All ten uncached full-probe CPU observations exceed the documented Free 10 ms threshold",
+    "Later sequential observations remain above 10 ms; first-only overhead is not a sufficient explanation",
+    "Wrapper/logging overhead is included; no exact attribution to parsing, crypto, JIT or GC",
+    "No code change or controlled comparison with the previous day; lower observations are not an optimization result",
+    "Remaining full acceptance matrix is incomplete; #25 and #7 remain open",
+    "Unused requests were readiness contingencies, not authorization for new scenarios"
+  ],
+  "disposition": {
+    "existingWorkerRetained": true,
+    "newWorkersCreated": 0,
+    "stopped": true,
+    "outboundCodeRemoved": true,
+    "businessWorkerDnsRouteChanges": false
+  },
+  "testWorkerSource": "import { connect } from 'cloudflare:sockets';\nimport { probeWithConnect } from '../../lib/ech-probe/internal/probe.js';\nimport { handleRequest } from '../../src/worker.js';\nconst source = '539a750';\nconst fixed = { type: 'answer', records: [{name:'example.com',type:'HTTPS',ttl:60,rdata:{Https:{priority:1,target:'.',params:[]}}}] };\nconst safeCodes=new Set(['ABORTED','CERTIFICATE','CERTIFICATE_VERIFY','CRYPTO','DECRYPT','HOSTNAME','IO','NO_RETRY_CONFIG','TIMEOUT','LIMIT','MALFORMED','UNSUPPORTED','ALERT','FINISHED']);\nfunction errorKind(error){const message=String(error?.message??'');return message.includes('proxy request failed, cannot connect to the specified address')?'PLATFORM_DESTINATION_DISALLOWED':message.includes('TCP Loop detected')?'TCP_LOOP':message.includes('Connection refused')?'CONNECTION_REFUSED':'UNCLASSIFIED';}\nasync function diagnose(mode){\n const state={stage:'start',opened:false,bytesWritten:0,bytesReceived:0};\n function observedConnect(address,options){\n  state.stage='connect';const socket=connect(address,options);void socket.closed.catch(()=>{});\n  return {opened:socket.opened.then(value=>{state.opened=true;state.stage='opened';return value;}),closed:socket.closed,\n   writable:{getWriter(){const writer=socket.writable.getWriter();return {async write(bytes){state.stage='write';await writer.write(bytes);state.bytesWritten+=bytes.length;state.stage='written';},releaseLock(){writer.releaseLock();}};}},\n   readable:{getReader(){const reader=socket.readable.getReader();return {async read(){state.stage='read';const part=await reader.read();if(part.value)state.bytesReceived+=part.value.length;state.stage=part.done?'eof':'received';return part;},releaseLock(){reader.releaseLock();}};}},\n   close:()=>socket.close()};\n }\n try{\n  if(mode==='diag-socket'){\n   const socket=observedConnect({hostname:'scontent.xx.fbcdn.net',port:443},{secureTransport:'off',allowHalfOpen:false});let timer;\n   try{await Promise.race([socket.opened,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error(),{code:'TIMEOUT'})),1500);})]);return {ok:true,...state};}\n   finally{clearTimeout(timer);void socket.close().catch(()=>{});}\n  }\n  const result=await probeWithConnect(observedConnect,{hostname:'scontent.xx.fbcdn.net',port:443,serverName:'scontent.xx.fbcdn.net',timeoutMs:1500,maxBytes:65536,...(mode==='diag-library-verified'?{verifyCertificate:true}:{})});\n  return {ok:true,...state,authenticated:result.authenticated,handshakeComplete:result.handshakeComplete,configBytes:result.bytes.length};\n }catch(error){return {ok:false,...state,code:safeCodes.has(error.code)?error.code:'UNCLASSIFIED',networkErrorKind:errorKind(error.cause??error)};}\n}\nexport default {\n async fetch(request, env) {\n  const mode = new URL(request.url).pathname.slice(1);\n  const version = env.VERSION_METADATA.id;\n  const headers = {'X-Diag-Version':version,'X-Diag-Source':source,'X-Diag-Target':'meta','Cache-Control':'no-store'};\n  if (Date.now() > Number(env.RUN_EXPIRES)) return new Response('Expired',{status:410,headers});\n  if (mode === 'ready') return Response.json({version,source},{headers});\n  const sampleId=request.headers.get('X-Acceptance-Sample-Id');\n  if (!/^[0-9a-f-]{36}$/.test(sampleId??'')) return new Response('Bad sample',{status:400,headers});\n  if (!['fixed','production-default','production-verified','production-verified-cache','production-https','diag-socket','diag-library-default','diag-library-verified'].includes(mode)) return new Response('Not found',{status:404,headers});\n  if(mode.startsWith('diag-')){const result=await diagnose(mode);console.info(JSON.stringify({event:'diag_result',sampleId,mode,version,source,...result}));return Response.json(result,{headers});}\n  const actions = mode==='production-https' ? [{type:'queryUpstream',upstream:'control'}] : mode==='fixed' ? [fixed] : [fixed,{type:'probeEch',options:{hostname:'scontent.xx.fbcdn.net',port:443,serverName:'scontent.xx.fbcdn.net',timeoutMs:1500,maxBytes:65536,...(mode.startsWith('production-verified')?{verifyCertificate:true,...(mode==='production-verified-cache'?{cacheTtl:60}:{})}:{})}},{type:'applyEch'}];\n  const url=new URL(request.url);url.pathname='/dns-query';url.search='';\n  const response=await handleRequest(new Request(url,request),{DNS_UPSTREAMS:{control:{transport:'https',url:'https://cloudflare-dns.com/dns-query'}},DNS_CACHE:{read:false,write:false},DNS_RULE_MAIN:{order:0,rules:[{actions}]}},{requestId:sampleId});\n  console.info(JSON.stringify({event:'diag_result',sampleId,mode,version,source,httpStatus:response.status}));\n  const result=new Response(response.body,response);for(const [k,v]of Object.entries(headers))result.headers.set(k,v);return result;\n }\n};\n",
+  "testClientSource": "import {parseEchConfigList} from '../../lib/ech-probe/config.js';import {createHash} from 'node:crypto';\nimport {setGlobalProxyFromEnv} from 'node:http';import {spawnSync} from 'node:child_process';import fs from 'node:fs';import path from 'node:path';import {randomUUID} from 'node:crypto';import {setTimeout as delay} from 'node:timers/promises';import {fileURLToPath} from 'node:url';import {query,decode} from '../../test/helpers/dns-wire.mjs';\nconst reg='HKCU:'+String.fromCharCode(92)+['Software','Microsoft','Windows','CurrentVersion','Internet Settings'].join(String.fromCharCode(92));\nconst command='(Get-ItemProperty -LiteralPath '+JSON.stringify(reg).replaceAll(String.fromCharCode(92)+String.fromCharCode(92),String.fromCharCode(92))+').ProxyServer';\nlet proxy=spawnSync('powershell.exe',['-NoProfile','-Command',command],{encoding:'utf8',timeout:10000}).stdout.trim();\nif(proxy.includes('='))proxy=proxy.split(';').map(p=>p.split('=')).find(([k])=>k==='https'||k==='http')?.[1];\nif(!/^(127[.]0[.]0[.]1|localhost):[0-9]+$/.test(proxy??''))throw Error('LOOPBACK_PROXY_UNAVAILABLE');\nprocess.env.HTTP_PROXY='http://'+proxy;process.env.HTTPS_PROXY='http://'+proxy;setGlobalProxyFromEnv();\nconst dir=path.dirname(fileURLToPath(import.meta.url));\nconst log=fs.readFileSync(process.argv[2],'utf8');\nconst endpoint=log.match(/https:\\/\\/[^\\s]+\\.workers\\.dev/)?.[0];const expectedVersion=log.match(/Current Version ID: ([0-9a-f-]+)/)?.[1];\nif(!endpoint||!expectedVersion)throw Error('MISSING_DEPLOYMENT');\nconst ledgerFile=path.join(dir,'ledger.json');const ledger=fs.existsSync(ledgerFile)?JSON.parse(fs.readFileSync(ledgerFile,'utf8')):{cap:30,attempts:[],createdAt:new Date().toISOString()};\nconst modes=process.argv[3]==='baseline'?['ready','fixed','fixed','fixed','fixed','fixed','production-default']:process.argv.slice(3);\nlet failed=false;\nfor(const mode of modes){\n if(ledger.attempts.length>=ledger.cap)throw Error('REQUEST_CAP');\n if(ledger.attempts.length)await delay(1000);\n const row={sampleId:randomUUID(),targetLabel:'meta',measurementPhase:'uncached-warm-20261024',mode,expectedVersion,startedAt:new Date().toISOString()};ledger.attempts.push(row);fs.writeFileSync(ledgerFile,JSON.stringify(ledger,null,2));\n try{\n  const start=performance.now();const response=await fetch(endpoint+'/'+mode,mode==='ready'?{redirect:'manual',signal:AbortSignal.timeout(15000)}:{method:'POST',headers:{'Content-Type':'application/dns-message','X-Acceptance-Sample-Id':row.sampleId},body:query('example.com',65),redirect:'manual',signal:AbortSignal.timeout(15000)});\n  row.httpStatus=response.status;row.version=response.headers.get('X-Diag-Version');row.source=response.headers.get('X-Diag-Source');row.targetLabelReceived=response.headers.get('X-Diag-Target');\n  if(mode!=='stopped'&&(row.httpStatus!==200||row.version!==expectedVersion||row.source!=='539a750'||row.targetLabelReceived!=='meta'))throw Error('VERSION_OR_HTTP_MISMATCH');\n  if(mode==='stopped'){row.stopped=response.status===410&&response.headers.get('X-Diag-State')==='stopped';await response.body?.cancel();if(!row.stopped)failed=true;}else if(mode==='ready'||mode.startsWith('diag-')){row.result=await response.json();if(mode!=='ready'&&row.result.ok!==true)failed=true;}\n  else{const dns=decode(new Uint8Array(await response.arrayBuffer()));row.rcode=dns.flags&15;row.answerCount=dns.records.filter(r=>r.section===0).length;row.desiredEchSuccess=(mode==='fixed'||mode==='production-https')?undefined:row.rcode===0;if(dns.id!==0x4242)throw Error('DNS_ID_MISMATCH');if(row.rcode===0&&mode.startsWith('production-')&&mode!=='production-https'){\n const https=dns.records.find(r=>r.section===0&&r.type===65);if(!https)throw Error('ECH_ANSWER_MISSING');const data=https.data;let offset=2;while(offset<data.length){const size=data[offset++];if(size===0)break;if(size>63||offset+size>data.length)throw Error('ECH_ANSWER_INVALID');offset+=size;}\n let ech;while(offset+4<=data.length){const key=(data[offset]<<8)|data[offset+1],length=(data[offset+2]<<8)|data[offset+3];offset+=4;if(offset+length>data.length)throw Error('ECH_ANSWER_INVALID');if(key===5)ech=Uint8Array.from(data.slice(offset,offset+length));offset+=length;}\n if(!ech?.length)throw Error('ECH_CONFIG_MISSING');const parsed=parseEchConfigList(ech);row.echConfigBytes=ech.length;row.echConfigCount=parsed.configs.length;row.echSha256=createHash('sha256').update(ech).digest('hex');\n}if(row.rcode!==0)failed=true;}\n  row.clientLatencyMs=performance.now()-start;\n }catch(e){row.error=['VERSION_OR_HTTP_MISMATCH','DNS_ID_MISMATCH','ECH_ANSWER_MISSING','ECH_ANSWER_INVALID','ECH_CONFIG_MISSING'].includes(e.message)?e.message:'CLIENT_REQUEST_FAILED';failed=true;}\n fs.writeFileSync(ledgerFile,JSON.stringify(ledger,null,2));console.log(JSON.stringify(row));\n if(row.error)break;\n if((mode==='fixed'||mode.startsWith('production-'))&&row.rcode!==0)break;\n}\nconsole.log(JSON.stringify({clientAttemptsUsed:ledger.attempts.length,requestCap:ledger.cap,desiredOutcomePassed:!failed}));if(failed)process.exitCode=2;\n",
+  "stoppedWorkerSource": "export default {\n fetch() {\n  return new Response('Diagnostic run complete. No outbound requests are enabled.', {\n   status:410, headers:{'Cache-Control':'no-store','X-Diag-State':'stopped'}\n  });\n }\n};\n"
+}

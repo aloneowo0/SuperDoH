@@ -6,6 +6,7 @@ const PROBE_CACHE_NAME = 'superdoh-ech-probe-v1';
 const PROBE_CACHE_PREFIX = 'https://superdoh-ech-probe.invalid/v1/';
 const PROBE_CACHE_STORED = 'x-superdoh-ech-stored';
 const PROBE_CACHE_TTL = 'x-superdoh-ech-lifetime';
+const DEFAULT_CACHE_TTL = 60;
 const MAX_CACHE_TTL = 86400;
 const MAX_TIMEOUT_MS = 60000;
 const MAX_PROBE_BYTES = 1048576;
@@ -112,7 +113,7 @@ export function validateProbeOptions(value) {
         return bytes;
       });
     }
-    const cacheTtl = input.cacheTtl === undefined ? 0 : input.cacheTtl;
+    const cacheTtl = input.cacheTtl === undefined ? DEFAULT_CACHE_TTL : input.cacheTtl;
     if (typeof cacheTtl !== 'number' || !Number.isSafeInteger(cacheTtl) || cacheTtl < 0 || cacheTtl > MAX_CACHE_TTL) throw new Error();
     if (caCertificates !== undefined) caCertificates = parseTrustAnchors(caCertificates);
     return {

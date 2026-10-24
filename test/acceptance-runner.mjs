@@ -43,7 +43,7 @@ test('measurement runner observes the production DoH HTTP entry and never export
       api.onResolve({ filter: /[.]wasm$/ }, args => ({ path: '../' + path.relative(root, path.resolve(args.resolveDir, args.path)).split(path.sep).join('/'), external: true }));
     } }] });
   const mf = new Miniflare({ modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/measure-worker.js'), script: bundled.outputFiles[0].text,
-    compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'], log: new Log(LogLevel.NONE),
+    compatibilityDate: '2026-10-19', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public', 'no_nodejs_compat', 'no_nodejs_compat_v2'], log: new Log(LogLevel.NONE),
     bindings: { DNS_PATH_KEY: 'private-test-key', DNS_RULE_MAIN: { order: 0, rules: [{ actions: [{ type: 'answer', records: [
       { name: 'example.com', type: 'A', ttl: 60, rdata: { A: { addr: '192.0.2.8' } } },
     ] }] }] } }, modulesRules: [{ type: 'ESModule', include: ['**/*.js'], fallthrough: true }, { type: 'CompiledWasm', include: ['**/*.wasm'], fallthrough: true }] });

@@ -17,7 +17,7 @@ const bundle = await build({
 });
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: `${root}/test/bundle.js`, script: bundle.outputFiles[0].text,
-  compatibilityDate: '2026-07-30', bindings,
+  compatibilityDate: '2026-10-19', compatibilityFlags: ['no_nodejs_compat', 'no_nodejs_compat_v2'], bindings,
   modulesRules: [
     { type: 'ESModule', include: ['**/*.js'], fallthrough: true },
     { type: 'CompiledWasm', include: ['**/*.wasm'], fallthrough: true },

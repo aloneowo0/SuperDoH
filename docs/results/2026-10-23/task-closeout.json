@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-23",
+  "baselineCommit": "539a750",
+  "scope": "Local task closeout; no deployment or public-source measurement",
+  "defaultRegression": {
+    "command": "npm test",
+    "exitCode": 0,
+    "typecheck": "passed",
+    "applicationAndToolTests": 238,
+    "dnsLibraryTests": 130,
+    "echOfflineTests": 114,
+    "trustStoreTests": 4,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "productionBuild": {
+    "command": "wrangler deploy --dry-run",
+    "wranglerVersion": "4.151.3",
+    "exitCode": 0,
+    "bundleKiB": 2010.59,
+    "gzipKiB": 475.15,
+    "uploaded": false
+  },
+  "independentInterop": {
+    "environment": "WSL Linux; isolated git archive of baselineCommit",
+    "nodeVersion": "24.22.0",
+    "npmVersion": "11.19.1",
+    "opensslVersion": "4.2.0-dev",
+    "opensslCommit": "aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+    "packageLockSha256": "e41b85aea97fa69b5341cf0edfc796cb7f43be9df98d5984ffa083ee69ee5772",
+    "dependencyPreparation": "Reused Linux node_modules only after byte-for-byte lockfile comparison succeeded; did not copy old application source",
+    "commands": [
+      "ECH_PROBE_OPENSSL=/path/to/pinned/openssl npm run test:ech-interop",
+      "ECH_PROBE_OPENSSL=/path/to/pinned/openssl node lib/ech-probe/test/interop.mjs"
+    ],
+    "exitCode": 0,
+    "publicEntryTests": 1,
+    "publicEntryFailed": 0,
+    "publicEntrySkipped": 0,
+    "publicEntryCoverage": [
+      "Explicit verified success and ECH application",
+      "Cache reuse without another full handshake",
+      "Wrong SNI fails closed",
+      "Untrusted bundled-root path fails closed",
+      "Explicit verification-off complete handshake"
+    ],
+    "genericLibraryCases": 4,
+    "genericClientFinishedRecords": 3,
+    "genericCases": [
+      {
+        "case": {
+          "verifyCertificate": true
+        },
+        "authenticated": true,
+        "handshakeComplete": true,
+        "configCount": 1,
+        "bytes": 65,
+        "publicNames": [
+          "example.test"
+        ]
+      },
+      {
+        "case": {
+          "verifyCertificate": false
+        },
+        "authenticated": false,
+        "handshakeComplete": true,
+        "configCount": 1,
+        "bytes": 65,
+        "publicNames": [
+          "example.test"
+        ]
+      },
+      {
+        "case": {
+          "verifyCertificate": true,
+          "serverName": "wrong.example"
+        },
+        "code": "HOSTNAME",
+        "message": "Leaf certificate DNS SAN does not match serverName"
+      },
+      {
+        "case": {
+          "verifyCertificate": true,
+          "defaultRoots": true
+        },
+        "code": "CERTIFICATE",
+        "message": "Unable to build certificate path to a configured local trust anchor"
+      }
+    ],
+    "nodejsCompat": false
+  },
+  "policy": "Default/omitted verifyCertificate is false; explicit true verifies target identity; custom CA requires explicit true; no automatic downgrade",
+  "boundaries": [
+    "No public-source reachability or Free-plan CPU conclusion",
+    "Independent tests exercise explicit true/false; omitted/default false is covered by default offline regression, not claimed as a new independent OpenSSL case",
+    "Earlier cloud measurements target e5954e9, not this baseline",
+    "Initial launch attempts failed due to cross-shell expansion and Windows npm selection; fixed Linux environment before successful runs",
+    "No production code changes; only task/status documentation updated"
+  ],
+  "taskDisposition": {
+    "localDeliveryCompleted": [
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      26
+    ],
+    "remainOpen": [
+      7,
+      25
+    ]
+  }
+}

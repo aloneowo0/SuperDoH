@@ -1,0 +1,4555 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "runtime": {
+    "miniflare": "4.20260730.0",
+    "workerd": "1.20261019.1",
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ]
+  },
+  "onlineRequests": 0,
+  "allPhases": {
+    "kind": "all-phases",
+    "completedTls": 318,
+    "observedClientFinished": 321,
+    "clockDescriptions": [
+      {
+        "instrumented": false,
+        "ready": true,
+        "resolutionNs": 1
+      },
+      {
+        "instrumented": true,
+        "ready": true,
+        "resolutionNs": 1
+      }
+    ],
+    "modes": {
+      "default-off": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 2.7617522125000002,
+          "min": 1.861525,
+          "max": 6.598001
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 5.4279743750000105,
+          "min": 4.241596999999956,
+          "max": 7.857238000000052
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 20,
+          "mean": 19.598351400000002,
+          "min": 16.055102,
+          "max": 31.102789
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 18.4903408,
+              "min": 14.978115,
+              "max": 30.013212
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.62728675,
+              "min": 2.233451,
+              "max": 3.363129
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28941315,
+              "min": 0.190601,
+              "max": 0.683807
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28941315,
+              "min": 0.190601,
+              "max": 0.683807
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31876004999999996,
+              "min": 0.277412,
+              "max": 0.444976
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31876004999999996,
+              "min": 0.277412,
+              "max": 0.444976
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.44352215,
+              "min": 0.314272,
+              "max": 1.006557
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.44352215,
+              "min": 0.314272,
+              "max": 1.006557
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28483425,
+              "min": 0.16768,
+              "max": 0.540557
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28483425,
+              "min": 0.16768,
+              "max": 0.540557
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25296189999999996,
+              "min": 0.162755,
+              "max": 0.366844
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25296189999999996,
+              "min": 0.162755,
+              "max": 0.366844
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2704973,
+              "min": 0.182835,
+              "max": 0.384584
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2704973,
+              "min": 0.182835,
+              "max": 0.384584
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 10.539294600000002,
+              "min": 7.84969,
+              "max": 19.719564
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.1785793000000004,
+              "min": 2.546907,
+              "max": 6.161636
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.9006996,
+              "min": 0.750027,
+              "max": 1.163404
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.5472623,
+              "min": 0.446486,
+              "max": 0.735631
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.35343730000000007,
+              "min": 0.292662,
+              "max": 0.582627
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.35343730000000007,
+              "min": 0.292662,
+              "max": 0.582627
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.7006465999999996,
+              "min": 1.077882,
+              "max": 10.108607
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.7006465999999996,
+              "min": 1.077882,
+              "max": 10.108607
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.33375595,
+              "min": 0.220131,
+              "max": 1.478611
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.33375595,
+              "min": 0.220131,
+              "max": 1.478611
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25237620000000005,
+              "min": 0.17704,
+              "max": 0.561316
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25237620000000005,
+              "min": 0.17704,
+              "max": 0.561316
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.24220384999999997,
+              "min": 0.172964,
+              "max": 0.32712
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.24220384999999997,
+              "min": 0.172964,
+              "max": 0.32712
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.4430055999999998,
+              "min": 1.154829,
+              "max": 7.899093
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8234724999999999,
+              "min": 0.420641,
+              "max": 3.691513
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.6195331,
+              "min": 0.72753,
+              "max": 7.206223
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.6195331,
+              "min": 0.72753,
+              "max": 7.206223
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.4880274999999998,
+              "min": 1.140602,
+              "max": 4.555705
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7832099999999999,
+              "min": 0.62727,
+              "max": 1.291034
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2600715,
+              "min": 0.21037,
+              "max": 0.404069
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2600715,
+              "min": 0.21037,
+              "max": 0.404069
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.44474599999999986,
+              "min": 0.22168,
+              "max": 2.860602
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.44474599999999986,
+              "min": 0.22168,
+              "max": 2.860602
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.72644225,
+              "min": 2.346878,
+              "max": 3.789022
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.1831485499999999,
+              "min": 0.989059,
+              "max": 1.469628
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7423708,
+              "min": 0.613243,
+              "max": 1.006752
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.47078450000000005,
+              "min": 0.377028,
+              "max": 0.711065
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8125241000000001,
+              "min": 0.619975,
+              "max": 1.642335
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8125241000000001,
+              "min": 0.619975,
+              "max": 1.642335
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25998509999999997,
+              "min": 0.225408,
+              "max": 0.368415
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25998509999999997,
+              "min": 0.225408,
+              "max": 0.368415
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3135334,
+              "min": 0.245086,
+              "max": 0.498127
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3135334,
+              "min": 0.245086,
+              "max": 0.498127
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.423795,
+              "min": 0.329639,
+              "max": 0.673828
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.423795,
+              "min": 0.329639,
+              "max": 0.673828
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 19.598351400000002,
+              "min": 16.055102,
+              "max": 31.102789
+            }
+          }
+        }
+      },
+      "custom-ca": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 5.5181371625,
+          "min": 3.58178,
+          "max": 11.970228
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 7.705102162500012,
+          "min": 6.397623999999951,
+          "max": 10.044007999999849
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 20,
+          "mean": 24.8453675,
+          "min": 21.533728,
+          "max": 35.705266
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 23.65554965,
+              "min": 19.691433,
+              "max": 34.497901
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.8051839000000007,
+              "min": 2.905145,
+              "max": 11.799989
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3082904999999999,
+              "min": 0.218438,
+              "max": 0.458738
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3082904999999999,
+              "min": 0.218438,
+              "max": 0.458738
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "trust-preparation": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.3119169,
+              "min": 0.695727,
+              "max": 2.501777
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.3119169,
+              "min": 0.695727,
+              "max": 2.501777
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.36452599999999996,
+              "min": 0.249767,
+              "max": 0.625576
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.36452599999999996,
+              "min": 0.249767,
+              "max": 0.625576
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.6014068,
+              "min": 0.375152,
+              "max": 3.294259
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.6014068,
+              "min": 0.375152,
+              "max": 3.294259
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3066816,
+              "min": 0.193226,
+              "max": 0.742341
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3066816,
+              "min": 0.193226,
+              "max": 0.742341
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2528795,
+              "min": 0.178441,
+              "max": 0.436689
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2528795,
+              "min": 0.178441,
+              "max": 0.436689
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25615875,
+              "min": 0.212453,
+              "max": 0.322801
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.25615875,
+              "min": 0.212453,
+              "max": 0.322801
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 12.734917850000002,
+              "min": 10.09329,
+              "max": 16.201168
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.1829919,
+              "min": 2.530355,
+              "max": 4.090422
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.1576520999999997,
+              "min": 0.766582,
+              "max": 4.12826
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.63250125,
+              "min": 0.460748,
+              "max": 1.173247
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.5251508500000002,
+              "min": 0.294392,
+              "max": 3.300042
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.5251508500000002,
+              "min": 0.294392,
+              "max": 3.300042
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.5030598,
+              "min": 1.117104,
+              "max": 4.359718
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.5030598,
+              "min": 1.117104,
+              "max": 4.359718
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.29087539999999995,
+              "min": 0.214511,
+              "max": 0.521068
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.29087539999999995,
+              "min": 0.214511,
+              "max": 0.521068
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28933844999999997,
+              "min": 0.171646,
+              "max": 0.68915
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28933844999999997,
+              "min": 0.171646,
+              "max": 0.68915
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.4683882999999995,
+              "min": 2.095616,
+              "max": 4.96024
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.6980037,
+              "min": 0.411079,
+              "max": 2.879536
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "certificate-chain": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.7703846,
+              "min": 1.536544,
+              "max": 4.075363
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.7703846,
+              "min": 1.536544,
+              "max": 4.075363
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.47327335,
+              "min": 1.126823,
+              "max": 2.79662
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.5255600500000001,
+              "min": 0.413797,
+              "max": 0.837001
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.9477133000000002,
+              "min": 0.69229,
+              "max": 2.314047
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.9477133000000002,
+              "min": 0.69229,
+              "max": 2.314047
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.3693385500000002,
+              "min": 1.037211,
+              "max": 1.993849
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7727040000000001,
+              "min": 0.574741,
+              "max": 1.313955
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28070129999999993,
+              "min": 0.212057,
+              "max": 0.376134
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.28070129999999993,
+              "min": 0.212057,
+              "max": 0.376134
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31593325,
+              "min": 0.231151,
+              "max": 0.381951
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31593325,
+              "min": 0.231151,
+              "max": 0.381951
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 2.9306829500000005,
+              "min": 2.371759,
+              "max": 3.336733
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.3042554499999999,
+              "min": 1.040742,
+              "max": 1.607317
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7830507499999999,
+              "min": 0.641266,
+              "max": 0.939063
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.5086662000000001,
+              "min": 0.419814,
+              "max": 0.652888
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.83803675,
+              "min": 0.640091,
+              "max": 1.081638
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.83803675,
+              "min": 0.640091,
+              "max": 1.081638
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.27972454999999996,
+              "min": 0.22316,
+              "max": 0.34863
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.27972454999999996,
+              "min": 0.22316,
+              "max": 0.34863
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.32710325,
+              "min": 0.252401,
+              "max": 0.440096
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.32710325,
+              "min": 0.252401,
+              "max": 0.440096
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.45580165000000006,
+              "min": 0.346099,
+              "max": 0.721593
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.45580165000000006,
+              "min": 0.346099,
+              "max": 0.721593
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 24.8453675,
+              "min": 21.533728,
+              "max": 35.705266
+            }
+          }
+        }
+      },
+      "fixture-default-ca": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 4.9108913124999996,
+          "min": 3.014997,
+          "max": 12.988008
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 7.282538525000009,
+          "min": 5.833332999999584,
+          "max": 10.604155999999875
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 20,
+          "mean": 25.142553450000005,
+          "min": 20.36051,
+          "max": 29.505416
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 24.059284249999997,
+              "min": 19.400519,
+              "max": 28.587972
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.2666073999999994,
+              "min": 2.761297,
+              "max": 4.025252
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31534225,
+              "min": 0.205385,
+              "max": 0.643857
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.31534225,
+              "min": 0.205385,
+              "max": 0.643857
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "trust-preparation": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2564087,
+              "min": 0.173889,
+              "max": 0.367819
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2564087,
+              "min": 0.173889,
+              "max": 0.367819
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3668730000000001,
+              "min": 0.253369,
+              "max": 0.722705
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3668730000000001,
+              "min": 0.253369,
+              "max": 0.722705
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.47311630000000005,
+              "min": 0.366455,
+              "max": 0.677184
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.47311630000000005,
+              "min": 0.366455,
+              "max": 0.677184
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.30161285000000004,
+              "min": 0.214745,
+              "max": 0.593507
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.30161285000000004,
+              "min": 0.214745,
+              "max": 0.593507
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2635053,
+              "min": 0.161164,
+              "max": 0.453148
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.2635053,
+              "min": 0.161164,
+              "max": 0.453148
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3321236,
+              "min": 0.230855,
+              "max": 0.581487
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3321236,
+              "min": 0.230855,
+              "max": 0.581487
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 14.625212099999999,
+              "min": 10.367037,
+              "max": 19.137306
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.4816103000000007,
+              "min": 2.861909,
+              "max": 5.31277
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.2503014000000001,
+              "min": 0.806537,
+              "max": 4.998087
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8237150999999999,
+              "min": 0.466723,
+              "max": 4.467006
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.42658630000000003,
+              "min": 0.306465,
+              "max": 0.643601
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.42658630000000003,
+              "min": 0.306465,
+              "max": 0.643601
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.5234591499999997,
+              "min": 1.248077,
+              "max": 2.219165
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.5234591499999997,
+              "min": 1.248077,
+              "max": 2.219165
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3392398999999999,
+              "min": 0.221348,
+              "max": 0.646429
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3392398999999999,
+              "min": 0.221348,
+              "max": 0.646429
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.34027470000000004,
+              "min": 0.207221,
+              "max": 0.960581
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.34027470000000004,
+              "min": 0.207221,
+              "max": 0.960581
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.8439328,
+              "min": 2.137349,
+              "max": 6.963531
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7025369999999999,
+              "min": 0.449527,
+              "max": 1.851979
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "certificate-chain": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.1413958,
+              "min": 1.586066,
+              "max": 5.964917
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.1413958,
+              "min": 1.586066,
+              "max": 5.964917
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.8911207,
+              "min": 1.244364,
+              "max": 6.217353
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8302378499999999,
+              "min": 0.450335,
+              "max": 4.855439
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.06088285,
+              "min": 0.710549,
+              "max": 1.788607
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.06088285,
+              "min": 0.710549,
+              "max": 1.788607
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.95527315,
+              "min": 1.196981,
+              "max": 8.713351
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8928631999999999,
+              "min": 0.710178,
+              "max": 1.619446
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3089941499999999,
+              "min": 0.215051,
+              "max": 0.494832
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.3089941499999999,
+              "min": 0.215051,
+              "max": 0.494832
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7534158000000001,
+              "min": 0.254382,
+              "max": 7.431727
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.7534158000000001,
+              "min": 0.254382,
+              "max": 7.431727
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 3.0606494500000005,
+              "min": 2.498293,
+              "max": 3.529621
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 1.3156823000000002,
+              "min": 0.98163,
+              "max": 1.610241
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8518172500000001,
+              "min": 0.621326,
+              "max": 1.076897
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.56022395,
+              "min": 0.384278,
+              "max": 0.727134
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8791116499999999,
+              "min": 0.674639,
+              "max": 1.126412
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.8791116499999999,
+              "min": 0.674639,
+              "max": 1.126412
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.30563155000000003,
+              "min": 0.213047,
+              "max": 0.404039
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.30563155000000003,
+              "min": 0.213047,
+              "max": 0.404039
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.346694,
+              "min": 0.26262,
+              "max": 0.486555
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.346694,
+              "min": 0.26262,
+              "max": 0.486555
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.4511393,
+              "min": 0.363928,
+              "max": 0.512364
+            },
+            "exclusiveCpuMs": {
+              "n": 20,
+              "mean": 0.4511393,
+              "min": 0.363928,
+              "max": 0.512364
+            },
+            "callsPerHandshake": {
+              "n": 20,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 20,
+              "mean": 25.142553450000005,
+              "min": 20.36051,
+              "max": 29.505416
+            }
+          }
+        }
+      }
+    },
+    "controls": {
+      "empty": {
+        "wholeCpuMs": {
+          "n": 20,
+          "mean": 0.78723785,
+          "min": 0.50218,
+          "max": 1.497807
+        },
+        "wallMs": {
+          "n": 20,
+          "mean": 2.744416399999932,
+          "min": 2.2067190000002483,
+          "max": 4.029414999999972
+        }
+      },
+      "wait": {
+        "wholeCpuMs": {
+          "n": 4,
+          "mean": 1.481797,
+          "min": 1.193405,
+          "max": 1.703258
+        },
+        "wallMs": {
+          "n": 4,
+          "mean": 105.46201000000008,
+          "min": 104.81181699999979,
+          "max": 106.51083800000015
+        }
+      },
+      "marker-empty": {
+        "wholeCpuMs": {
+          "n": 40,
+          "mean": 1.1754926500000002,
+          "min": 0.784151,
+          "max": 3.087382
+        },
+        "wallMs": {
+          "n": 40,
+          "mean": 4.225488374999839,
+          "min": 3.0844400000005407,
+          "max": 11.922921000000315
+        },
+        "spanCpuMs": {
+          "n": 40,
+          "mean": 0.27117979999999997,
+          "min": 0.183476,
+          "max": 0.549402
+        }
+      },
+      "marker-wait": {
+        "wholeCpuMs": {
+          "n": 4,
+          "mean": 1.9888340000000002,
+          "min": 1.687176,
+          "max": 2.491534
+        },
+        "wallMs": {
+          "n": 4,
+          "mean": 107.96906324999986,
+          "min": 105.960376,
+          "max": 109.04651999999987
+        },
+        "spanCpuMs": {
+          "n": 4,
+          "mean": 0.75788575,
+          "min": 0.646836,
+          "max": 0.877387
+        }
+      }
+    }
+  },
+  "singlePhase": {
+    "kind": "single-phase",
+    "completedTls": 1048,
+    "observedClientFinished": 1051,
+    "clockDescriptions": [
+      {
+        "instrumented": false,
+        "ready": true,
+        "resolutionNs": 1
+      },
+      {
+        "instrumented": true,
+        "ready": true,
+        "resolutionNs": 1
+      }
+    ],
+    "modes": {
+      "default-off": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 2.887245062500001,
+          "min": 2.039603,
+          "max": 7.359594
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 5.6576293374999835,
+          "min": 4.6703590000001896,
+          "max": 8.053618999999799
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 250,
+          "mean": 3.8237407119999998,
+          "min": 2.031449,
+          "max": 14.038544
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.560657999999999,
+              "min": 1.445112,
+              "max": 6.409348
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.560657999999999,
+              "min": 1.445112,
+              "max": 6.409348
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.072236800000001,
+              "min": 2.104533,
+              "max": 9.998648
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3402474000000001,
+              "min": 0.215287,
+              "max": 0.551004
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3402474000000001,
+              "min": 0.215287,
+              "max": 0.551004
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.2100032999999994,
+              "min": 2.145846,
+              "max": 5.107139
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.43308899999999995,
+              "min": 0.279823,
+              "max": 0.799731
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.43308899999999995,
+              "min": 0.279823,
+              "max": 0.799731
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.420657,
+              "min": 2.154266,
+              "max": 5.928075
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5544691,
+              "min": 0.340736,
+              "max": 1.012206
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5544691,
+              "min": 0.340736,
+              "max": 1.012206
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.0858650999999995,
+              "min": 2.351878,
+              "max": 5.970717
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3339737,
+              "min": 0.196421,
+              "max": 0.453565
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3339737,
+              "min": 0.196421,
+              "max": 0.453565
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.2062152999999993,
+              "min": 2.105973,
+              "max": 4.831633
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.30190989999999995,
+              "min": 0.195556,
+              "max": 0.428125
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.30190989999999995,
+              "min": 0.195556,
+              "max": 0.428125
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.2061960999999997,
+              "min": 2.054323,
+              "max": 5.085449
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3535394,
+              "min": 0.249946,
+              "max": 0.483401
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3535394,
+              "min": 0.249946,
+              "max": 0.483401
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.6315440000000003,
+              "min": 2.385751,
+              "max": 5.450345
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6058442,
+              "min": 0.890136,
+              "max": 3.290865
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6058442,
+              "min": 0.890136,
+              "max": 3.290865
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.706754900000001,
+              "min": 2.031449,
+              "max": 8.151659
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6826052,
+              "min": 1.014999,
+              "max": 2.544484
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6826052,
+              "min": 1.014999,
+              "max": 2.544484
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.117397200000001,
+              "min": 4.238204,
+              "max": 7.970827
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6579318000000001,
+              "min": 0.321047,
+              "max": 1.24239
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6579318000000001,
+              "min": 0.321047,
+              "max": 1.24239
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.7500994,
+              "min": 2.07676,
+              "max": 10.372717
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.43485399999999996,
+              "min": 0.293789,
+              "max": 0.74045
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.43485399999999996,
+              "min": 0.293789,
+              "max": 0.74045
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.5116967000000003,
+              "min": 2.216155,
+              "max": 5.699162
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.49061959999999993,
+              "min": 0.258086,
+              "max": 1.772658
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.49061959999999993,
+              "min": 0.258086,
+              "max": 1.772658
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.5078031000000003,
+              "min": 2.414836,
+              "max": 4.726139
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4163569,
+              "min": 0.216606,
+              "max": 1.187346
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4163569,
+              "min": 0.216606,
+              "max": 1.187346
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.0739882000000005,
+              "min": 2.425041,
+              "max": 5.746089
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2899006,
+              "min": 0.242289,
+              "max": 0.397789
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2899006,
+              "min": 0.242289,
+              "max": 0.397789
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.4061579,
+              "min": 2.589018,
+              "max": 4.733486
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.2379749,
+              "min": 0.770327,
+              "max": 2.48039
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.2379749,
+              "min": 0.770327,
+              "max": 2.48039
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.4331087999999994,
+              "min": 2.521388,
+              "max": 4.995597
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.0609194,
+              "min": 0.773594,
+              "max": 1.490981
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.0609194,
+              "min": 0.773594,
+              "max": 1.490981
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.5923502,
+              "min": 2.837519,
+              "max": 4.43144
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5920184,
+              "min": 0.3218,
+              "max": 1.846159
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5920184,
+              "min": 0.3218,
+              "max": 1.846159
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.4928200000000005,
+              "min": 2.473399,
+              "max": 6.106094
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.35088320000000006,
+              "min": 0.24243,
+              "max": 0.531652
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.35088320000000006,
+              "min": 0.24243,
+              "max": 0.531652
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.0959027000000003,
+              "min": 2.475555,
+              "max": 5.444241
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.427828,
+              "min": 0.29823,
+              "max": 0.625613
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.427828,
+              "min": 0.29823,
+              "max": 0.625613
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.4773451,
+              "min": 2.385912,
+              "max": 5.230342
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4000271000000001,
+              "min": 0.320487,
+              "max": 0.501625
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4000271000000001,
+              "min": 0.320487,
+              "max": 0.501625
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.2043508999999992,
+              "min": 2.456604,
+              "max": 4.664017
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5704786000000001,
+              "min": 0.263713,
+              "max": 2.347383
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5704786000000001,
+              "min": 0.263713,
+              "max": 2.347383
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.502402200000001,
+              "min": 2.572317,
+              "max": 11.098269
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5984683,
+              "min": 0.25341,
+              "max": 2.546828
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5984683,
+              "min": 0.25341,
+              "max": 2.546828
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.6136181,
+              "min": 2.626105,
+              "max": 5.408188
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.3016732999999998,
+              "min": 0.796635,
+              "max": 4.401863
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.3016732999999998,
+              "min": 0.796635,
+              "max": 4.401863
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.8087572000000005,
+              "min": 3.70043,
+              "max": 14.038544
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.641709,
+              "min": 0.342008,
+              "max": 2.154842
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.641709,
+              "min": 0.342008,
+              "max": 2.154842
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.8731224999999996,
+              "min": 2.771121,
+              "max": 6.463218
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4702836,
+              "min": 0.309101,
+              "max": 0.712883
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4702836,
+              "min": 0.309101,
+              "max": 0.712883
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 3.5931250999999995,
+              "min": 2.139508,
+              "max": 6.133027
+            }
+          }
+        }
+      },
+      "custom-ca": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 5.240091787499999,
+          "min": 3.514202,
+          "max": 11.664612
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 7.5190912375000325,
+          "min": 6.042742000000089,
+          "max": 10.291034000000309
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 270,
+          "mean": 5.646820970370367,
+          "min": 3.356221,
+          "max": 17.662309
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 4.656279700000001,
+              "min": 2.881614,
+              "max": 8.822452
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 4.656279700000001,
+              "min": 2.881614,
+              "max": 8.822452
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.813528,
+              "min": 3.654167,
+              "max": 10.874837
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3345629,
+              "min": 0.196148,
+              "max": 0.444169
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3345629,
+              "min": 0.196148,
+              "max": 0.444169
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.9251571,
+              "min": 3.356221,
+              "max": 8.925766
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4249689,
+              "min": 0.303017,
+              "max": 0.58232
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4249689,
+              "min": 0.303017,
+              "max": 0.58232
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.124869500000001,
+              "min": 3.845357,
+              "max": 7.831276
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4762756,
+              "min": 0.392346,
+              "max": 0.659622
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4762756,
+              "min": 0.392346,
+              "max": 0.659622
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.6246638,
+              "min": 4.338738,
+              "max": 7.337692
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.40321380000000007,
+              "min": 0.233013,
+              "max": 1.110758
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.40321380000000007,
+              "min": 0.233013,
+              "max": 1.110758
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.8280477,
+              "min": 3.55953,
+              "max": 6.376128
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.25982900000000003,
+              "min": 0.217913,
+              "max": 0.309851
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.25982900000000003,
+              "min": 0.217913,
+              "max": 0.309851
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.1141175,
+              "min": 3.74241,
+              "max": 8.481758
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.29350069999999995,
+              "min": 0.246228,
+              "max": 0.402132
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.29350069999999995,
+              "min": 0.246228,
+              "max": 0.402132
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.1857546999999995,
+              "min": 3.413686,
+              "max": 8.695566
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 3.2169251,
+              "min": 1.918703,
+              "max": 6.237783
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 3.2169251,
+              "min": 1.918703,
+              "max": 6.237783
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.7301278,
+              "min": 3.525585,
+              "max": 8.612632
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.7783814,
+              "min": 1.143225,
+              "max": 3.011111
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.7783814,
+              "min": 1.143225,
+              "max": 3.011111
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 8.444532800000001,
+              "min": 5.425889,
+              "max": 16.190868
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.8420374,
+              "min": 0.332126,
+              "max": 2.974279
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.8420374,
+              "min": 0.332126,
+              "max": 2.974279
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.217895399999999,
+              "min": 3.802777,
+              "max": 7.708106
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4403669,
+              "min": 0.284187,
+              "max": 1.051579
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4403669,
+              "min": 0.284187,
+              "max": 1.051579
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.1643851000000005,
+              "min": 3.457146,
+              "max": 6.956774
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2841745,
+              "min": 0.231711,
+              "max": 0.439444
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2841745,
+              "min": 0.231711,
+              "max": 0.439444
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.5228931,
+              "min": 3.484897,
+              "max": 11.591548
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.24311839999999996,
+              "min": 0.190815,
+              "max": 0.333432
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.24311839999999996,
+              "min": 0.190815,
+              "max": 0.333432
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.0568063,
+              "min": 3.54347,
+              "max": 8.98787
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.858876,
+              "min": 1.238754,
+              "max": 3.404037
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.858876,
+              "min": 1.238754,
+              "max": 3.404037
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.753965200000001,
+              "min": 3.46602,
+              "max": 8.785541
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.0524302,
+              "min": 0.617343,
+              "max": 2.118827
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.0524302,
+              "min": 0.617343,
+              "max": 2.118827
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.912077200000001,
+              "min": 3.577037,
+              "max": 7.166682
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.2779279999999997,
+              "min": 0.703441,
+              "max": 4.701784
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.2779279999999997,
+              "min": 0.703441,
+              "max": 4.701784
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.4194067,
+              "min": 4.012427,
+              "max": 9.869887
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.8576137999999999,
+              "min": 0.421943,
+              "max": 2.514703
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.8576137999999999,
+              "min": 0.421943,
+              "max": 2.514703
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.6318743,
+              "min": 3.927655,
+              "max": 8.293169
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.36821570000000003,
+              "min": 0.258693,
+              "max": 0.558377
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.36821570000000003,
+              "min": 0.258693,
+              "max": 0.558377
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.0265944000000005,
+              "min": 3.548546,
+              "max": 7.696416
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.934281,
+              "min": 0.351741,
+              "max": 2.446798
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.934281,
+              "min": 0.351741,
+              "max": 2.446798
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.666780700000001,
+              "min": 3.498845,
+              "max": 12.388171
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3859195000000001,
+              "min": 0.27822,
+              "max": 0.494539
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3859195000000001,
+              "min": 0.27822,
+              "max": 0.494539
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.805756199999999,
+              "min": 3.604237,
+              "max": 6.386926
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.47257059999999995,
+              "min": 0.27796,
+              "max": 1.792867
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.47257059999999995,
+              "min": 0.27796,
+              "max": 1.792867
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.4263136,
+              "min": 3.858421,
+              "max": 17.662309
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3676278,
+              "min": 0.258371,
+              "max": 0.453907
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3676278,
+              "min": 0.258371,
+              "max": 0.453907
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.3101997,
+              "min": 3.84095,
+              "max": 8.169211
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.1192360000000001,
+              "min": 0.706859,
+              "max": 2.680595
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.1192360000000001,
+              "min": 0.706859,
+              "max": 2.680595
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.7724152,
+              "min": 4.842434,
+              "max": 11.032948
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4195231,
+              "min": 0.283924,
+              "max": 1.17866
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4195231,
+              "min": 0.283924,
+              "max": 1.17866
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.8183718,
+              "min": 3.64189,
+              "max": 8.690514
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5512648000000001,
+              "min": 0.391707,
+              "max": 1.059341
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5512648000000001,
+              "min": 0.391707,
+              "max": 1.059341
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.606931400000001,
+              "min": 4.436481,
+              "max": 7.62191
+            }
+          },
+          "trust-preparation": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.7131513,
+              "min": 0.601226,
+              "max": 0.918444
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.7131513,
+              "min": 0.601226,
+              "max": 0.918444
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.1732661,
+              "min": 3.945098,
+              "max": 8.920447
+            }
+          },
+          "certificate-chain": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.0324731,
+              "min": 1.396558,
+              "max": 3.10849
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.0324731,
+              "min": 1.396558,
+              "max": 3.10849
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.387434900000001,
+              "min": 4.149886,
+              "max": 10.80214
+            }
+          }
+        }
+      },
+      "fixture-default-ca": {
+        "baselineCpuMs": {
+          "n": 80,
+          "mean": 4.85635025,
+          "min": 3.050377,
+          "max": 13.804225
+        },
+        "baselineWallMs": {
+          "n": 80,
+          "mean": 7.063136900000009,
+          "min": 5.710726999999906,
+          "max": 10.091663000000153
+        },
+        "instrumentedWholeCpuMs": {
+          "n": 270,
+          "mean": 5.245426796296295,
+          "min": 3.17584,
+          "max": 38.525343
+        },
+        "phases": {
+          "total-probe": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 5.0682339,
+              "min": 2.95638,
+              "max": 10.489924
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 5.0682339,
+              "min": 2.95638,
+              "max": 10.489924
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 9.0403615,
+              "min": 3.98458,
+              "max": 38.525343
+            }
+          },
+          "configuration": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.31324640000000004,
+              "min": 0.27172,
+              "max": 0.435471
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.31324640000000004,
+              "min": 0.27172,
+              "max": 0.435471
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.8369117,
+              "min": 3.280349,
+              "max": 10.19786
+            }
+          },
+          "client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3941871999999999,
+              "min": 0.264515,
+              "max": 0.516792
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3941871999999999,
+              "min": 0.264515,
+              "max": 0.516792
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.6437257,
+              "min": 3.289728,
+              "max": 8.361213
+            }
+          },
+          "tcp-connect": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4895061,
+              "min": 0.323319,
+              "max": 0.685903
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4895061,
+              "min": 0.323319,
+              "max": 0.685903
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.6429496,
+              "min": 3.558535,
+              "max": 7.457089
+            }
+          },
+          "write-client-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3132078,
+              "min": 0.217159,
+              "max": 0.448416
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3132078,
+              "min": 0.217159,
+              "max": 0.448416
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.1886726,
+              "min": 3.17584,
+              "max": 7.287881
+            }
+          },
+          "parser-setup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3649272,
+              "min": 0.238711,
+              "max": 0.661155
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3649272,
+              "min": 0.238711,
+              "max": 0.661155
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.3081838,
+              "min": 3.887707,
+              "max": 9.246825
+            }
+          },
+          "network-read": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3109919,
+              "min": 0.243725,
+              "max": 0.40557
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.3109919,
+              "min": 0.243725,
+              "max": 0.40557
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.1045149,
+              "min": 3.652496,
+              "max": 9.003718
+            }
+          },
+          "record-processing": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.653451,
+              "min": 2.005355,
+              "max": 4.761471
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 2.653451,
+              "min": 2.005355,
+              "max": 4.761471
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.5708188,
+              "min": 3.662658,
+              "max": 6.575709
+            }
+          },
+          "record-decryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.4286272,
+              "min": 0.982322,
+              "max": 2.462121
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.4286272,
+              "min": 0.982322,
+              "max": 2.462121
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 5,
+              "min": 5,
+              "max": 5
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.6109737,
+              "min": 5.578925,
+              "max": 9.170088
+            }
+          },
+          "server-hello": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.44372799999999996,
+              "min": 0.316791,
+              "max": 0.618951
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.44372799999999996,
+              "min": 0.316791,
+              "max": 0.618951
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.837088799999999,
+              "min": 3.329734,
+              "max": 8.257816
+            }
+          },
+          "handshake-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6794882000000001,
+              "min": 0.30581,
+              "max": 3.679207
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6794882000000001,
+              "min": 0.30581,
+              "max": 3.679207
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.4243409,
+              "min": 3.255218,
+              "max": 8.224423
+            }
+          },
+          "encrypted-extensions": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2840171,
+              "min": 0.234027,
+              "max": 0.350369
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.2840171,
+              "min": 0.234027,
+              "max": 0.350369
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.5296562,
+              "min": 3.493804,
+              "max": 7.1594
+            }
+          },
+          "certificate-request": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5096093,
+              "min": 0.223448,
+              "max": 2.128123
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5096093,
+              "min": 0.223448,
+              "max": 2.128123
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.0291769,
+              "min": 3.928227,
+              "max": 10.862835
+            }
+          },
+          "certificate-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6036518999999998,
+              "min": 1.373165,
+              "max": 2.138801
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.6036518999999998,
+              "min": 1.373165,
+              "max": 2.138801
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.493583299999999,
+              "min": 3.604307,
+              "max": 7.043504
+            }
+          },
+          "certificate-verify-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.045978,
+              "min": 0.631876,
+              "max": 3.31822
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.045978,
+              "min": 0.631876,
+              "max": 3.31822
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.5411164,
+              "min": 3.287711,
+              "max": 9.141857
+            }
+          },
+          "certificate-verify-function": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.1643921,
+              "min": 0.75416,
+              "max": 2.728619
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.1643921,
+              "min": 0.75416,
+              "max": 2.728619
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.421760699999999,
+              "min": 4.117885,
+              "max": 7.64524
+            }
+          },
+          "server-finished-message": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.9656098999999999,
+              "min": 0.36151,
+              "max": 3.634362
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.9656098999999999,
+              "min": 0.36151,
+              "max": 3.634362
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.305001799999999,
+              "min": 4.126325,
+              "max": 8.050894
+            }
+          },
+          "server-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.48854699999999995,
+              "min": 0.305307,
+              "max": 1.47432
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.48854699999999995,
+              "min": 0.305307,
+              "max": 1.47432
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.685075500000001,
+              "min": 3.822344,
+              "max": 8.901716
+            }
+          },
+          "application-key-schedule": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5656148,
+              "min": 0.372972,
+              "max": 1.495863
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5656148,
+              "min": 0.372972,
+              "max": 1.495863
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.5987419,
+              "min": 4.018281,
+              "max": 7.032319
+            }
+          },
+          "client-finish-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5860673000000001,
+              "min": 0.369525,
+              "max": 1.59646
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5860673000000001,
+              "min": 0.369525,
+              "max": 1.59646
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.0195896,
+              "min": 3.90123,
+              "max": 8.508364
+            }
+          },
+          "client-empty-certificate": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4266553,
+              "min": 0.299027,
+              "max": 0.890413
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.4266553,
+              "min": 0.299027,
+              "max": 0.890413
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.2047111,
+              "min": 3.710648,
+              "max": 9.543859
+            }
+          },
+          "client-finished-proof": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5221365,
+              "min": 0.299037,
+              "max": 1.751157
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.5221365,
+              "min": 0.299037,
+              "max": 1.751157
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.8228614,
+              "min": 3.841177,
+              "max": 7.707722
+            }
+          },
+          "record-encryption": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.3726795999999999,
+              "min": 0.897397,
+              "max": 3.232809
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.3726795999999999,
+              "min": 0.897397,
+              "max": 3.232809
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 3,
+              "min": 3,
+              "max": 3
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.992737099999999,
+              "min": 5.191073,
+              "max": 9.854957
+            }
+          },
+          "write-client-records": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6866314000000001,
+              "min": 0.371529,
+              "max": 1.722118
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.6866314000000001,
+              "min": 0.371529,
+              "max": 1.722118
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.6022478,
+              "min": 4.030065,
+              "max": 9.534318
+            }
+          },
+          "cleanup": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.61564,
+              "min": 0.36496,
+              "max": 1.844336
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.61564,
+              "min": 0.36496,
+              "max": 1.844336
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 4.718814500000001,
+              "min": 3.731425,
+              "max": 7.703891
+            }
+          },
+          "trust-preparation": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.33364099999999997,
+              "min": 0.250291,
+              "max": 0.425666
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 0.33364099999999997,
+              "min": 0.250291,
+              "max": 0.425666
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 5.1060133,
+              "min": 3.928382,
+              "max": 8.950132
+            }
+          },
+          "certificate-chain": {
+            "inclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.8582775999999996,
+              "min": 1.542611,
+              "max": 2.449549
+            },
+            "exclusiveCpuMs": {
+              "n": 10,
+              "mean": 1.8582775999999996,
+              "min": 1.542611,
+              "max": 2.449549
+            },
+            "callsPerHandshake": {
+              "n": 10,
+              "mean": 1,
+              "min": 1,
+              "max": 1
+            },
+            "wholeCpuMs": {
+              "n": 10,
+              "mean": 6.346894,
+              "min": 4.314342,
+              "max": 11.487058
+            }
+          }
+        }
+      }
+    },
+    "controls": {
+      "empty": {
+        "wholeCpuMs": {
+          "n": 20,
+          "mean": 0.8355808999999998,
+          "min": 0.557905,
+          "max": 1.461103
+        },
+        "wallMs": {
+          "n": 20,
+          "mean": 3.048654549999992,
+          "min": 2.3857610000000022,
+          "max": 4.634429999999611
+        }
+      },
+      "wait": {
+        "wholeCpuMs": {
+          "n": 4,
+          "mean": 1.37534675,
+          "min": 1.219675,
+          "max": 1.762069
+        },
+        "wallMs": {
+          "n": 4,
+          "mean": 105.21635074999995,
+          "min": 105.0370469999998,
+          "max": 105.42730900000015
+        }
+      },
+      "marker-empty": {
+        "wholeCpuMs": {
+          "n": 40,
+          "mean": 1.2287939749999999,
+          "min": 0.754055,
+          "max": 3.821369
+        },
+        "wallMs": {
+          "n": 40,
+          "mean": 4.4625389000001405,
+          "min": 2.4015920000001643,
+          "max": 17.737503999999717
+        },
+        "spanCpuMs": {
+          "n": 40,
+          "mean": 0.28396689999999997,
+          "min": 0.189594,
+          "max": 0.674604
+        }
+      },
+      "marker-wait": {
+        "wholeCpuMs": {
+          "n": 4,
+          "mean": 2.5135422499999995,
+          "min": 1.922251,
+          "max": 3.28958
+        },
+        "wallMs": {
+          "n": 4,
+          "mean": 109.57403124999996,
+          "min": 108.28530599999976,
+          "max": 111.6359910000001
+        },
+        "spanCpuMs": {
+          "n": 4,
+          "mean": 0.951216,
+          "min": 0.661572,
+          "max": 1.322242
+        }
+      }
+    }
+  },
+  "micro": {
+    "leafDerBytes": 548,
+    "leafPublicKey": "ECDSA P-256",
+    "modes": {
+      "loop-control": {
+        "iterations": 2000,
+        "meanCpuMs": 0.002497429499999811,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.002497429499999811,
+          "min": 0.00206612800000039,
+          "max": 0.003403850000000034
+        }
+      },
+      "fromBER": {
+        "iterations": 2000,
+        "meanCpuMs": 0.09893419100000031,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.09893419100000031,
+          "min": 0.08458894800000052,
+          "max": 0.122593524
+        }
+      },
+      "x509-construction": {
+        "iterations": 2000,
+        "meanCpuMs": 0.14730719649999985,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.14730719649999985,
+          "min": 0.11841904199999953,
+          "max": 0.20949890200000004
+        }
+      },
+      "canonical-roundtrip": {
+        "iterations": 2000,
+        "meanCpuMs": 0.19636986849999977,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.19636986849999977,
+          "min": 0.16331748999999945,
+          "max": 0.23129270799999996
+        }
+      },
+      "algorithm-consistency": {
+        "iterations": 2000,
+        "meanCpuMs": 0.014096460500000092,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.014096460500000092,
+          "min": 0.011292438000000403,
+          "max": 0.01654564000000005
+        }
+      },
+      "spki-and-signature-format": {
+        "iterations": 2000,
+        "meanCpuMs": 0.025602238999999825,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.025602238999999825,
+          "min": 0.017267555999998876,
+          "max": 0.03912354400000004
+        }
+      },
+      "parse-full": {
+        "iterations": 2000,
+        "meanCpuMs": 0.3537677049999998,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.3537677049999998,
+          "min": 0.3359283400000004,
+          "max": 0.3792867539999997
+        }
+      },
+      "parse-no-canonical": {
+        "iterations": 2000,
+        "meanCpuMs": 0.19713660200000027,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.19713660200000027,
+          "min": 0.19069127800000024,
+          "max": 0.20583115799999996
+        }
+      },
+      "certificate-verify": {
+        "iterations": 2000,
+        "meanCpuMs": 0.4501466210000001,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.4501466210000001,
+          "min": 0.40371450200000025,
+          "max": 0.5760124920000003
+        }
+      },
+      "key-import": {
+        "iterations": 2000,
+        "meanCpuMs": 0.014784226499999704,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.014784226499999706,
+          "min": 0.0068025819999993475,
+          "max": 0.03664473999999973
+        }
+      },
+      "verify-only": {
+        "iterations": 2000,
+        "meanCpuMs": 0.038984526000000186,
+        "batchMeanCpuMs": {
+          "n": 4,
+          "mean": 0.038984526000000186,
+          "min": 0.03738097400000015,
+          "max": 0.040069272000000634
+        }
+      }
+    }
+  },
+  "interpretation": [
+    "All timings are local whole-workerd-process CPU, not platform quota CPU.",
+    "Single-phase rows include their children and marker overhead; independent rows cannot be summed.",
+    "All-phase exclusive rows partition the instrumented root, not the uninstrumented baseline.",
+    "Microbenchmarks use independent repeated operations; prepared inputs and GC/JIT differ, so sub-benchmarks cannot be added as exact parent decompositions.",
+    "Resolution 1 ns is clock granularity, not accuracy."
+  ]
+}

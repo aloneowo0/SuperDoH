@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "baselineCommit": "539a750",
+  "onlineRequests": 0,
+  "deployments": 0,
+  "cache": {
+    "api": "Workers Cache API caches.open / match / put",
+    "namespace": "superdoh-ech-probe-v1",
+    "defaultTtlSeconds": 60,
+    "explicitZero": "disabled",
+    "maxTtlSeconds": 86400,
+    "contents": "Only completed successful ECHConfigList bytes; never TLS keys or ClientHello",
+    "scope": "Data-center-local, evictable; no cross-isolate Promise, no global freshness guarantee",
+    "identity": "Existing target/SNI/ALPN/verification/trust-roots/effective-limits/TTL digest is unchanged"
+  },
+  "verification": {
+    "defaultCacheRed": {
+      "expectedFailure": "omitted cacheTtl must enable the Cache API hit path",
+      "observed": true
+    },
+    "publicDoHCacheInterop": {
+      "passed": 1,
+      "failed": 0,
+      "scenarios": [
+        "default lifetime enables real hit without another server-observed Finished",
+        "wrong SNI cannot reuse authenticated cache",
+        "untrusted default roots fail closed",
+        "disabled identity verification remains isolated",
+        "cacheTtl:0 executes two fresh handshakes",
+        "another destination port cannot reuse cache",
+        "TTL 1 second hits while fresh and performs another TLS handshake after expiry",
+        "failed renewal returns SERVFAIL, never stale ECH, repeated failure remains miss/expired"
+      ]
+    },
+    "fullRegression": {
+      "environment": "isolated WSL snapshot of current worktree, lockfile-matched Linux dependencies",
+      "typecheck": "passed",
+      "appAndToolTests": 240,
+      "trustStoreTests": 4,
+      "dnsTests": 130,
+      "echLibraryTests": 114,
+      "total": 488,
+      "failed": 0,
+      "skipped": 0
+    },
+    "additionalWindowsProbeRegression": {
+      "passed": 5,
+      "failed": 0,
+      "note": "Includes final standard-suite default cache-miss assertion added after the full-regression snapshot."
+    },
+    "libraryOpenSslInterop": {
+      "passed": 4,
+      "clientFinished": 3
+    },
+    "placeholderAb": {
+      "completedTls": 2080,
+      "clientFinished": 2083,
+      "exitCode": 0
+    }
+  },
+  "productionTlsChange": false,
+  "sourceNotes": "Only application default TTL changed; randomized invalid ECH and all TLS verification remain unchanged.",
+  "diagnosticNotes": [
+    "An initial A/B run completed measurement but exited with a duplicate-Miniflare-disposal error. Cleanup was fixed and the complete final run exited 0; only final batches are used.",
+    "An initial extended-cache test stalled in fixture cleanup after terminating OpenSSL. The stopped-child reference was cleared; corrected test passed. These were test harness issues, not production changes."
+  ],
+  "logs": [
+    "ech-placeholder-ab-final.log",
+    "ech-cache-default-red.log",
+    "ech-cache-default-green-final.log",
+    "ech-cache-full-tests.log",
+    "ech-cache-probe-regression-windows.log"
+  ]
+}

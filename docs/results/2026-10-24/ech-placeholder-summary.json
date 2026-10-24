@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "runtime": {
+    "miniflare": "4.20260730.0",
+    "workerd": "1.20261019.1",
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ]
+  },
+  "onlineRequests": 0,
+  "results": {
+    "loop-control": {
+      "random": {
+        "iterations": 120000,
+        "meanCpuMs": 0.00016505107500000001,
+        "batchRangeMs": [
+          0.0000555331,
+          0.0004796819
+        ],
+        "sessions": [
+          {
+            "session": 0,
+            "meanCpuMs": 0.0001727071
+          },
+          {
+            "session": 3,
+            "meanCpuMs": 0.00015739505
+          }
+        ]
+      },
+      "fixed": {
+        "iterations": 120000,
+        "meanCpuMs": 0.0001467228833333333,
+        "batchRangeMs": [
+          0.0000635075,
+          0.0004793607
+        ],
+        "sessions": [
+          {
+            "session": 1,
+            "meanCpuMs": 0.0001709176333333333
+          },
+          {
+            "session": 2,
+            "meanCpuMs": 0.0001225281333333333
+          }
+        ]
+      }
+    },
+    "extension": {
+      "random": {
+        "iterations": 120000,
+        "meanCpuMs": 0.0029921563166666674,
+        "batchRangeMs": [
+          0.0023093834999999997,
+          0.0036395060000000003
+        ],
+        "sessions": [
+          {
+            "session": 0,
+            "meanCpuMs": 0.00301345195
+          },
+          {
+            "session": 3,
+            "meanCpuMs": 0.0029708606833333336
+          }
+        ]
+      },
+      "fixed": {
+        "iterations": 120000,
+        "meanCpuMs": 0.0004812907333333333,
+        "batchRangeMs": [
+          0.0002974319,
+          0.0009410202999999999
+        ],
+        "sessions": [
+          {
+            "session": 1,
+            "meanCpuMs": 0.0004332224
+          },
+          {
+            "session": 2,
+            "meanCpuMs": 0.0005293590666666666
+          }
+        ]
+      }
+    },
+    "client-hello": {
+      "random": {
+        "iterations": 6000,
+        "meanCpuMs": 0.04131622066666667,
+        "batchRangeMs": [
+          0.03639726,
+          0.04558041
+        ],
+        "sessions": [
+          {
+            "session": 0,
+            "meanCpuMs": 0.041598363
+          },
+          {
+            "session": 3,
+            "meanCpuMs": 0.041034078333333335
+          }
+        ]
+      },
+      "fixed": {
+        "iterations": 6000,
+        "meanCpuMs": 0.037737354833333334,
+        "batchRangeMs": [
+          0.03157474,
+          0.0434594
+        ],
+        "sessions": [
+          {
+            "session": 1,
+            "meanCpuMs": 0.03796037766666667
+          },
+          {
+            "session": 2,
+            "meanCpuMs": 0.037514332
+          }
+        ]
+      }
+    },
+    "default-off": {
+      "random": {
+        "iterations": 480,
+        "meanCpuMs": 1.6270940479166667,
+        "batchRangeMs": [
+          1.3928442,
+          1.861688725
+        ],
+        "sessions": [
+          {
+            "session": 0,
+            "meanCpuMs": 1.6379507166666665
+          },
+          {
+            "session": 3,
+            "meanCpuMs": 1.6162373791666667
+          }
+        ]
+      },
+      "fixed": {
+        "iterations": 480,
+        "meanCpuMs": 1.531267577083333,
+        "batchRangeMs": [
+          1.325126775,
+          1.720729975
+        ],
+        "sessions": [
+          {
+            "session": 1,
+            "meanCpuMs": 1.6072304041666665
+          },
+          {
+            "session": 2,
+            "meanCpuMs": 1.4553047499999998
+          }
+        ]
+      }
+    },
+    "custom-ca": {
+      "random": {
+        "iterations": 480,
+        "meanCpuMs": 3.8112098291666667,
+        "batchRangeMs": [
+          3.2230767499999997,
+          4.79300855
+        ],
+        "sessions": [
+          {
+            "session": 0,
+            "meanCpuMs": 3.8032924416666662
+          },
+          {
+            "session": 3,
+            "meanCpuMs": 3.8191272166666668
+          }
+        ]
+      },
+      "fixed": {
+        "iterations": 480,
+        "meanCpuMs": 3.76697759375,
+        "batchRangeMs": [
+          3.3075472249999995,
+          4.591460725
+        ],
+        "sessions": [
+          {
+            "session": 1,
+            "meanCpuMs": 3.8571445166666667
+          },
+          {
+            "session": 2,
+            "meanCpuMs": 3.676810670833333
+          }
+        ]
+      }
+    }
+  },
+  "completedTls": 2080,
+  "observedClientFinished": 2083,
+  "productionDecision": "Keep the randomized placeholder. Extension-only savings are measurable (~2.5 us), but complete-probe batch ranges overlap and no stable end-to-end benefit is established; the fixed template would also add a recognizable repeated ECH value.",
+  "method": "Linux whole-workerd-process CPU; no stage RPC; includes runtime/GC and batch request overhead",
+  "limits": [
+    "One Worker HTTP request contains each operation batch; request overhead is amortized, unlike the earlier per-request whole-call baseline.",
+    "No stage RPC or V8 sampling profiler runs during these batches.",
+    "Both default-off and custom-ca perform fresh TLS handshakes, with no application Cache API in this library-only comparison.",
+    "Fixed template interoperability is proven only for the local pinned OpenSSL fixture, not arbitrary public servers.",
+    "Statistical independence/confidence is not claimed; batch ranges are descriptive, not confidence intervals."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-23",
+  "sourceCommit": "539a750",
+  "environment": "Isolated WSL/Linux git archive, Node 24.22.0, workerd from locked dependencies, pinned independent OpenSSL 4.2.0-dev",
+  "opensslCommit": "aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c",
+  "method": "Read /proc workerd child process utime+stime before/after 20 successful local handshakes per batch; enumerate children across Node threads and require a single stable workerd PID",
+  "clockTickHz": 100,
+  "observations": [
+    {
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 130,
+      "perHandshakeProcessCpuMs": 6.5,
+      "wallMs": 168.32725099999993,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 190,
+      "perHandshakeProcessCpuMs": 9.5,
+      "wallMs": 205.1895239999999,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 120,
+      "perHandshakeProcessCpuMs": 6,
+      "wallMs": 163.09637999999995,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 210,
+      "perHandshakeProcessCpuMs": 10.5,
+      "wallMs": 217.32183399999985,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    }
+  ],
+  "successfulTimedHandshakes": 80,
+  "independentHarnessExitCode": 0,
+  "applicationCodeChanges": false,
+  "onlineRequests": 0,
+  "limits": [
+    "Whole-process and all-thread CPU including runtime/GC, not Cloudflare quota or function CPU",
+    "Batch averages at 10 ms counter resolution, not exact per-request CPU",
+    "Already-warmed local fixture and transcript; no cold/isolate-start comparison",
+    "Explicit true uses fixture CA; it is not public Meta bundled-root validation",
+    "Different hardware, certificates and runtime conditions prohibit directly comparing these values with 73/138 ms platform observations",
+    "Two preliminary temporary counter-discovery runs failed and produced no CPU measurements; corrected thread enumeration/template regex, then reran successfully",
+    "No production optimization or Free compliance inferred"
+  ],
+  "generatorSource": "import fs from 'node:fs';import path from 'node:path';\nconst root=process.argv[2];let source=fs.readFileSync(path.join(root,'test/ech-interop.mjs'),'utf8');\nconst anchor='  } catch (error) {\\n    const diagnostics';\nif(!source.includes(anchor))throw Error('Harness insertion anchor missing');\nconst benchmark=String.raw`\n    const ticks=Number(spawnSync('getconf',['CLK_TCK'],{encoding:'utf8'}).stdout.trim());\n    assert.ok(Number.isFinite(ticks)&&ticks>0);\n    const findWorkerd=async()=>{\n      const tasks=await fs.readdir('/proc/'+process.pid+'/task');const pids=new Set();for(const tid of tasks){try{for(const pid of (await fs.readFile('/proc/'+process.pid+'/task/'+tid+'/children','utf8')).trim().split(/\\s+/).filter(Boolean))pids.add(pid);}catch{}}const children=[...pids];\n      const matches=[];for(const pid of children){try{if((await fs.readFile('/proc/'+pid+'/comm','utf8')).trim().startsWith('workerd'))matches.push(pid);}catch{}}\n      assert.equal(matches.length,1,'one workerd child for process CPU');return matches[0];\n    };\n    const processCpu=async pid=>{const stat=await fs.readFile('/proc/'+pid+'/stat','utf8');const fields=stat.slice(stat.lastIndexOf(') ')+2).trim().split(/\\s+/);return (Number(fields[11])+Number(fields[12]))*1000/ticks;};\n    for(const verified of [false,true,false,true]){\n      await configure(verified?options():options({verifyCertificate:false,caCertificates:undefined}));\n      assertEchAnswer(await requestPublic());\n      const pid=await findWorkerd();const before=await processCpu(pid);const start=performance.now();\n      for(let i=0;i<20;i++)assertEchAnswer(await requestPublic());\n      const wallMs=performance.now()-start;const cpuMs=(await processCpu(pid))-before;assert.equal(await findWorkerd(),pid);assert.ok(cpuMs>=0);\n      console.log(JSON.stringify({evidenceKind:'Linux workerd whole-process CPU; not platform quota CPU',verified,successfulHandshakes:20,processCpuMs:cpuMs,perHandshakeProcessCpuMs:cpuMs/20,wallMs,clockTicks:ticks,onlineRequests:0,scope:'Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation'}));\n    }\n`;\nsource=source.replace(anchor,benchmark+anchor);fs.writeFileSync(path.join(root,'test/ech-cpu-local.mjs'),source);\n"
+}

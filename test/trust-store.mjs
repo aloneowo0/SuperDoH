@@ -81,7 +81,7 @@ for (const runtime of ['Node', 'workerd']) {
         const rows = await module.runLazyTrustTests(fixture, trusted);
         assert.ok(rows.length >= (trusted ? 9 : 1));
       } else {
-        const mf = new Miniflare({ modules: true, script, compatibilityDate: '2026-07-30', log: new Log(LogLevel.NONE) });
+        const mf = new Miniflare({ modules: true, script, compatibilityDate: '2026-10-19', compatibilityFlags: ['no_nodejs_compat', 'no_nodejs_compat_v2'], log: new Log(LogLevel.NONE) });
         try {
           const response = await mf.dispatchFetch('https://lazy-trust.test/', { method: 'POST', body: JSON.stringify({ fixture, trusted }) });
           const rows = await response.json();

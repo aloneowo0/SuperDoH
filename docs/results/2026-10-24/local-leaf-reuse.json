@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "sourceCommit": "539a750",
+  "kind": "Isolated local prototype only; no production source changes or online requests",
+  "measurement": "Linux unique stable workerd process utime+stime, CLK_TCK 100; 20 successful independent OpenSSL handshakes per batch",
+  "batches": [
+    {
+      "phase": "baseline",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 130,
+      "perHandshakeProcessCpuMs": 6.5,
+      "wallMs": 169.14919200000008,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "baseline",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 230,
+      "perHandshakeProcessCpuMs": 11.5,
+      "wallMs": 227.0094999999999,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "baseline",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 130,
+      "perHandshakeProcessCpuMs": 6.5,
+      "wallMs": 165.63916299999983,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "baseline",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 220,
+      "perHandshakeProcessCpuMs": 11,
+      "wallMs": 220.70574799999986,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "same-handshake-leaf-reuse",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 120,
+      "perHandshakeProcessCpuMs": 6,
+      "wallMs": 137.36052499999983,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "same-handshake-leaf-reuse",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 190,
+      "perHandshakeProcessCpuMs": 9.5,
+      "wallMs": 402.2800829999999,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "same-handshake-leaf-reuse",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": false,
+      "successfulHandshakes": 20,
+      "processCpuMs": 110,
+      "perHandshakeProcessCpuMs": 5.5,
+      "wallMs": 133.22362999999996,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    },
+    {
+      "phase": "same-handshake-leaf-reuse",
+      "evidenceKind": "Linux workerd whole-process CPU; not platform quota CPU",
+      "verified": true,
+      "successfulHandshakes": 20,
+      "processCpuMs": 190,
+      "perHandshakeProcessCpuMs": 9.5,
+      "wallMs": 203.21078699999998,
+      "clockTicks": 100,
+      "onlineRequests": 0,
+      "scope": "Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation"
+    }
+  ],
+  "parseCounts": {
+    "fixture": "Controlled chain with one intermediate and already parsed matching roots",
+    "baselineAuthenticated": 3,
+    "prototypeAuthenticated": 2,
+    "firstAuthenticatedWithBacktracking": {
+      "baseline": 5,
+      "prototype": 4
+    },
+    "scope": "Same-handshake leaf DER reuse only; chain validation, hostname, CertificateVerify and Finished retained"
+  },
+  "checks": {
+    "baselineWindowsTrustStoreTestsPassed": 4,
+    "prototypeNodeWorkerdTrustStoreTestsPassed": 4,
+    "baselineIndependentLocalPublicEntryTestsPassed": 1,
+    "prototypeIndependentLocalPublicEntryTestsPassed": 1,
+    "prototypeNodeOfflineTestsPassed": 57,
+    "prototypeWorkerdOfflineTestsPassed": 57
+  },
+  "limitations": [
+    "Whole-process local CPU is not platform CPU or exact per-function CPU",
+    "True uses fixture CA; public bundled-root/Meta workload differs",
+    "Baseline and prototype run in separate sequential processes; unrelated control batches also changed",
+    "One prototype true batch had 402 ms wall while using 190 ms process CPU; wall is not CPU",
+    "Earlier exploratory prototype true batches averaged 11 and 10.5 ms; no stable saving or Free compliance claim",
+    "Initial final regression launch named a nonexistent run.mjs; corrected node.mjs and workerd.mjs both passed separately",
+    "Only the intact logged comparison is included in batches; initial mixed-output log lost part of baseline and is not a full comparison"
+  ],
+  "conclusion": "Duplicate leaf parsing is real; no demonstrated stable CPU saving sufficient to address public gap. Candidate not promoted to production.",
+  "publicRequests": 0,
+  "experimentScript": "set -eu\nexport PATH=/home/aloneowo/.local/bin:/usr/local/bin:/usr/bin:/bin\nsource=/mnt/d/code/cloudflare/doh/SuperDoH\nold=/tmp/superdoh-ech-acceptance-20261022\ncmp \"$source/package-lock.json\" \"$old/package-lock.json\"\nwork=$(mktemp -d /tmp/superdoh-leaf-reuse-20261024-XXXXXX)\ngit -C \"$source\" archive HEAD | tar -xf - -C \"$work\"\nln -s \"$old/node_modules\" \"$work/node_modules\"\nnode \"$source/.acceptance/diag-20261023/make-local-cpu.mjs\" \"$work\"\nexport ECH_PROBE_OPENSSL=/tmp/superdoh-openssl-ech-20261022/apps/openssl\ncd \"$work\"\nprintf 'EXPERIMENT baseline\\n'\nnode test/ech-cpu-local.mjs\nnode --input-type=module - <<'JS'\nimport fs from 'node:fs';\nimport assert from 'node:assert/strict';\nfunction replace(p,a,b){let s=fs.readFileSync(p,'utf8');assert.equal(s.split(a).length,2,'unique experiment seam: '+a);fs.writeFileSync(p,s.replace(a,b));}\nconst p='lib/ech-probe/internal/certificate.js';\nreplace(p,'  checkNameConstraints(path, host);\\n}', '  checkNameConstraints(path, host);\\n  return supplied[0];\\n}');\nreplace(p,'verifyCertificateVerify(leafDer, scheme, signature, signedData) {','verifyCertificateVerify(leafDer, scheme, signature, signedData, preparedLeaf) {');\nreplace(p,'const cert = parseDer(leafDer).cert, spki =', 'const cert = (preparedLeaf && sameDer(preparedLeaf.der, leafDer) ? preparedLeaf : parseDer(leafDer)).cert, spki =');\nconst t='lib/ech-probe/internal/tls.js';\nreplace(t,'await validateCertificateChain(certificates, this.serverName, this.trustAnchors);','this.preparedLeaf = await validateCertificateChain(certificates, this.serverName, this.trustAnchors);');\nreplace(t,'await verifyCertificateVerify(this.leafDer, scheme, signature, signedData);','await verifyCertificateVerify(this.leafDer, scheme, signature, signedData, this.preparedLeaf);');\n// Test-only prototype: successful authenticated paths now parse the leaf once.\nconst f='lib/ech-probe/test/lazy-trust-entry.js';let tests=fs.readFileSync(f,'utf8');\nfor(const [name,oldCount,newCount] of [['matching roots backtrack and accept equivalent encoded names',5,4],['subsequent handshake reuses only private matching root records',3,2],['CertificateVerify tampering still fails closed',3,2],['Finished tampering still fails closed',3,2]]){\n const a=`'${name}', ${oldCount},`, b=`'${name}', ${newCount},`;assert.ok(tests.includes(a));tests=tests.replace(a,b);\n}\nfs.writeFileSync(f,tests);\nJS\nprintf 'EXPERIMENT same-handshake-leaf-reuse prototype\\n'\nnode --test test/trust-store.mjs\nnode test/ech-cpu-local.mjs\nprintf 'EXPERIMENT negative-and-protocol-regression\\n'\nnode lib/ech-probe/test/node.mjs\nnode lib/ech-probe/test/workerd.mjs\nprintf 'EXPERIMENT complete\\n'\n",
+  "harnessGenerator": "import fs from 'node:fs';import path from 'node:path';\nconst root=process.argv[2];let source=fs.readFileSync(path.join(root,'test/ech-interop.mjs'),'utf8');\nconst anchor='  } catch (error) {\\n    const diagnostics';\nif(!source.includes(anchor))throw Error('Harness insertion anchor missing');\nconst benchmark=String.raw`\n    const ticks=Number(spawnSync('getconf',['CLK_TCK'],{encoding:'utf8'}).stdout.trim());\n    assert.ok(Number.isFinite(ticks)&&ticks>0);\n    const findWorkerd=async()=>{\n      const tasks=await fs.readdir('/proc/'+process.pid+'/task');const pids=new Set();for(const tid of tasks){try{for(const pid of (await fs.readFile('/proc/'+process.pid+'/task/'+tid+'/children','utf8')).trim().split(/\\s+/).filter(Boolean))pids.add(pid);}catch{}}const children=[...pids];\n      const matches=[];for(const pid of children){try{if((await fs.readFile('/proc/'+pid+'/comm','utf8')).trim().startsWith('workerd'))matches.push(pid);}catch{}}\n      assert.equal(matches.length,1,'one workerd child for process CPU');return matches[0];\n    };\n    const processCpu=async pid=>{const stat=await fs.readFile('/proc/'+pid+'/stat','utf8');const fields=stat.slice(stat.lastIndexOf(') ')+2).trim().split(/\\s+/);return (Number(fields[11])+Number(fields[12]))*1000/ticks;};\n    for(const verified of [false,true,false,true]){\n      await configure(verified?options():options({verifyCertificate:false,caCertificates:undefined}));\n      assertEchAnswer(await requestPublic());\n      const pid=await findWorkerd();const before=await processCpu(pid);const start=performance.now();\n      for(let i=0;i<20;i++)assertEchAnswer(await requestPublic());\n      const wallMs=performance.now()-start;const cpuMs=(await processCpu(pid))-before;assert.equal(await findWorkerd(),pid);assert.ok(cpuMs>=0);\n      console.log(JSON.stringify({evidenceKind:'Linux workerd whole-process CPU; not platform quota CPU',verified,successfulHandshakes:20,processCpuMs:cpuMs,perHandshakeProcessCpuMs:cpuMs/20,wallMs,clockTicks:ticks,onlineRequests:0,scope:'Warm local independent TLS fixture; true uses explicit fixture CA, not public bundled-root validation'}));\n    }\n`;\nsource=source.replace(anchor,benchmark+anchor);fs.writeFileSync(path.join(root,'test/ech-cpu-local.mjs'),source);\n"
+}

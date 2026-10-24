@@ -20,7 +20,7 @@ const buildFixture = async () => build({
 const bundled = await buildFixture();
 const runtimeOptions = {
   modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/online-fixture-worker.js'),
-  script: bundled.outputFiles[0].text, compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal'], log: new Log(LogLevel.NONE),
+  script: bundled.outputFiles[0].text, compatibilityDate: '2026-10-19', compatibilityFlags: ['enable_request_signal', 'no_nodejs_compat', 'no_nodejs_compat_v2'], log: new Log(LogLevel.NONE),
   bindings: { EXPIRES_AT: Date.now() + 60 * 60 * 1000 },
   modulesRules: [
     { type: 'ESModule', include: ['**/*.js'], fallthrough: true },

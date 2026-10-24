@@ -41,6 +41,8 @@ Small complete binding-object examples:
 - [ECH lookup from a DNS HTTPS answer](examples/ech-query.json)
 - [Authenticated TLS ECH probe and application](examples/ech-probe.json)
 
+The `probeEch` rule action caches successfully acquired ECHConfigList bytes in the Workers Cache API for 60 seconds by default. Set `options.cacheTtl` to `0` to disable caching, or to `1..86400` to choose a lifetime. Cache hits bypass the TLS probe; failures and expired results are not reused. This application cache does not cache TLS keys or change the standalone library API.
+
 There is no hidden default upstream. If a rule pipeline produces no response, the request fails with DNS SERVFAIL; it does not silently query a configured source. An explicit upstream action makes one request to the named source, and only JSON conditions decide whether later actions run.
 
 ## HTTP API
@@ -84,3 +86,7 @@ npm test
 Platform references: [runtime/build variables](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/), [Wrangler variable preservation](https://developers.cloudflare.com/workers/wrangler/configuration/), [Workers limits](https://developers.cloudflare.com/workers/platform/limits/).
 
 The bounded measurement runner and offline telemetry report CLI are documented in [docs/online-acceptance.md](docs/online-acceptance.md). Their manifest example is separate from Worker bindings; running online still requires explicit resource and measurement approval.
+
+## Runtime and CPU profiling
+
+Current configuration uses Wrangler 4.152.0 and compatibility date `2026-10-19`, explicitly disabling Node.js compatibility. Tests pin the same workerd engine while preserving their existing fixture API. See [runtime versions, CPU profiling tools and measurement boundaries](docs/runtime-profiling-2026-10-24.md) before changing these pins or collecting a profile. Production profiling does not require treating elapsed time as CPU, and a local startup profile is not an ECH-handshake performance result.

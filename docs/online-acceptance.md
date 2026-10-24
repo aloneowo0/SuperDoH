@@ -19,7 +19,7 @@ Keep normal production configuration unchanged. Prepare measurement-specific con
 
 1. Record the commit, lockfile, Wrangler/workerd versions, compatibility date, deployment version, account plan, configuration hashes (not secrets), application limits and platform quotas verified on the test date.
 2. Run `npm test`, `npm run typecheck`, local `wrangler deploy --dry-run`, and `npm run test:ech-interop` with an available ECH-capable OpenSSL build. Missing support remains a blocker, not an automatic skip or a reason to disable authentication.
-3. Verify source reachability and TLS identity for HTTPS/TCP/TLS separately. Distinguish platform destination restrictions, certificate errors and invalid DNS responses. Never silently replace a failing transport or turn off verification.
+3. Preflight raw TCP destinations against platform restrictions before deploying: Cloudflare IP ranges are blocked, so a Cloudflare-hosted ECH target is not a valid raw-TCP success fixture. Explicitly select an allowed, authorized source; do not silently substitute one. Verify source reachability and TLS identity for HTTPS/TCP/TLS separately. Distinguish platform destination restrictions, certificate errors and invalid DNS responses. Never silently replace a failing transport or turn off verification.
 4. Reuse checked-in JSON examples with explicitly configured, authorized sources. Keep the default original-response cache enabled for default scenarios; change its JSON policies explicitly for bypass cases.
 
 ## Measurement matrix
@@ -34,7 +34,7 @@ Keep normal production configuration unchanged. Prepare measurement-specific con
 | Maintained lists | First load, warm snapshot, due replacement, failed refresh with old data unusable, and recovery. Record entry/byte counts; start with 100/1,000 entries, then the configured maximum if small cases are safe. Refresh interval is not DNS TTL. |
 | Address attribution | Single/multiple normalized addresses, same-address matching, hit/miss, missing fields, source fault, rollback and shared quotas. Metadata is not precise physical location. |
 | Direct/DNS ECH | Preserve other HTTPS parameters, clear AD/affected signatures only on modification, isolate source and target, and validate safe DNS reuse. |
-| Full authenticated probe | Separate complete handshake from cached configuration reuse. Check default authentication failure, timeout/byte limits and cleanup. Any explicitly configured verification-off diagnostic is separately labeled, never an automatic downgrade. |
+| Full authenticated probe | Separate complete handshake from cached configuration reuse. Select `verifyCertificate: true` explicitly for authenticated acceptance; separately cover the current default-unverified behavior, identity failure, timeout/byte limits and cleanup. Any explicitly configured verification-off diagnostic is separately labeled, never an automatic downgrade. |
 | Access/failure boundaries | Authorization before source work; invalid input versus execution failure; stop/return/completed finalization; no-answer SERVFAIL; cancellation and redaction. |
 
 Allocate the approved sample budget before sending traffic. For lightweight cases aim for at least 30 warm observations if the total budget permits; report the actual count. Label small heavy-probe samples and do not infer reliable tail percentiles from a handful of requests.

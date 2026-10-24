@@ -178,7 +178,7 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     const script = bundle.outputFiles[0].text;
     const runtimeOptions = {
       modules: true, modulesRoot: root, scriptPath: path.join(root, 'test/ech-public-bundle.js'), script,
-      compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'],
+      compatibilityDate: '2026-10-19', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public', 'no_nodejs_compat', 'no_nodejs_compat_v2'],
       bindings: { DNS_CACHE: { read: false, write: false } },
       outboundService: { network: { allow: ['private'] } },
       log: new TestLog(logs),
@@ -224,12 +224,13 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     }
 
     // Authenticated success also proves a cache hit does not perform another TLS handshake.
-    await configure(options({ cacheTtl: 60 }));
+    await configure(options());
     const first = assertEchAnswer(await requestPublic());
     await waitForFinished(finishedCount, baselineFinished + 1, server, logs);
     const beforeHit = finishedCount();
     const second = assertEchAnswer(await requestPublic());
     assert.deepEqual(second, first);
+    assert.ok(logs.join('').includes('"state":"hit"'), 'omitted cacheTtl must enable the Cache API hit path');
     assert.equal(finishedCount(), beforeHit, 'a valid cache hit must not start another TLS handshake');
 
     // A wrong DNS identity must fail closed, with no retry using disabled verification.
@@ -252,6 +253,49 @@ test('public DoH obtains authenticated ECH retry configs from a local TLS server
     const unauthenticated = assertEchAnswer(await requestPublic());
     assert.ok(publicNames(unauthenticated).includes(hostname));
     await waitForFinished(finishedCount, beforeHit + 1, server, logs);
+
+    // Explicit opt-out must execute two complete handshakes despite earlier cached results.
+    await configure(options({ cacheTtl: 0 }));
+    const beforeUncached = finishedCount();
+    for (let i = 1; i <= 2; i++) {
+      assertEchAnswer(await requestPublic());
+      await waitForFinished(finishedCount, beforeUncached + i, server, logs);
+    }
+    assert.ok(!logs.join('').includes('"state":"hit"'), 'cacheTtl:0 must bypass the Cache API');
+
+    // The connection target participates in cache identity, not just the SNI.
+    const unused = net.createServer();
+    await new Promise(resolve => unused.listen(0, '127.0.0.1', resolve));
+    const closedPort = unused.address().port;
+    await new Promise(resolve => unused.close(resolve));
+    await configure(options({ port: closedPort }));
+    assert.equal((await requestPublic()).flags & 15, 2, 'another target must not receive cached ECH');
+
+    // A short explicit lifetime is honored and renewal actually performs TLS.
+    await configure(options({ cacheTtl: 1 }));
+    const beforeExpiry = finishedCount();
+    assertEchAnswer(await requestPublic());
+    await waitForFinished(finishedCount, beforeExpiry + 1, server, logs);
+    assertEchAnswer(await requestPublic());
+    assert.equal(finishedCount(), beforeExpiry + 1, 'fresh short-TTL entry should hit');
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    assertEchAnswer(await requestPublic());
+    await waitForFinished(finishedCount, beforeExpiry + 2, server, logs);
+
+    // Expired data must never mask a failed renewal, and failures must not become hits.
+    const ended = once(server, 'exit');
+    server.kill();
+    await ended;
+    server = undefined;
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    for (let i = 0; i < 2; i++) {
+      logs.length = 0;
+      assert.equal((await requestPublic()).flags & 15, 2, 'expired ECH must not be returned after renewal fails');
+      assert.ok(logs.join('').includes('ECH_PROBE_FAILED'));
+      assert.ok(!logs.join('').includes('"state":"hit"'), 'a failed probe must not be cached');
+      assert.ok(/"state":"(?:miss|expired)"/.test(logs.join('')), 'failed renewal must revisit the acquisition path');
+    }
+
   } catch (error) {
     const diagnostics = [...serverLogs, ...logs].join('').split(/\r?\n/)
       .filter(line => !/^    [0-9a-f ]+$/.test(line)).join('\n').slice(-12000);

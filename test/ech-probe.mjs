@@ -29,7 +29,7 @@ const calls = [];
 let upstream = async request => new Response(responseWire(new Uint8Array(await request.arrayBuffer())), { headers: { 'Content-Type': 'application/dns-message' } });
 const options = (bindings, trusted = false) => ({
   modules: true, modulesRoot: root, scriptPath: `${root}/test/doh-bundle.js`, script: (trusted ? trustedBundle : bundle).outputFiles[0].text,
-  compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
+  compatibilityDate: '2026-10-19', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public', 'no_nodejs_compat', 'no_nodejs_compat_v2'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },
@@ -84,6 +84,7 @@ test('real TCP probe timeout is observable, cleans its connection, and optional 
     assert.equal(result.flags&15,0,String(logs));
     assert.equal(result.records[0].ttl,12,String(logs));
     assert.ok(logs.join('').includes('verification_disabled'));
+    assert.ok(logs.join('').includes('"state":"miss"'), 'omitting cacheTtl must check the Cache API before probing');
     assert.equal(connections,1);
     await new Promise(resolve=>setTimeout(resolve,30));
     assert.equal(sockets.size,0,'probe must close the actual TCP connection');

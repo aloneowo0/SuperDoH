@@ -1,0 +1,419 @@
+{
+  "version": 1,
+  "date": "2026-10-24",
+  "runtime": {
+    "miniflare": "4.20260730.0",
+    "workerd": "1.20261019.1",
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ]
+  },
+  "batches": [
+    {
+      "mode": "loop-control",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 1.701925000000017,
+      "meanProcessCpuMs": 0.003403850000000034,
+      "wallMs": 2.629677000000129,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "fromBER",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 61.296762,
+      "meanProcessCpuMs": 0.122593524,
+      "wallMs": 49.61693600000012,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "x509-construction",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 104.74945100000002,
+      "meanProcessCpuMs": 0.20949890200000004,
+      "wallMs": 84.34079799999995,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "canonical-roundtrip",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 112.38226700000007,
+      "meanProcessCpuMs": 0.22476453400000013,
+      "wallMs": 81.71381200000019,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "algorithm-consistency",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 8.272820000000024,
+      "meanProcessCpuMs": 0.01654564000000005,
+      "wallMs": 10.782523000000083,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "spki-and-signature-format",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 19.56177200000002,
+      "meanProcessCpuMs": 0.03912354400000004,
+      "wallMs": 14.44974400000001,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-full",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 178.0252959999999,
+      "meanProcessCpuMs": 0.35605059199999983,
+      "wallMs": 153.3610729999998,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-no-canonical",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 102.91557899999998,
+      "meanProcessCpuMs": 0.20583115799999996,
+      "wallMs": 86.89418599999999,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "certificate-verify",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 201.85725100000013,
+      "meanProcessCpuMs": 0.40371450200000025,
+      "wallMs": 188.0432639999999,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "key-import",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 3.790211999999883,
+      "meanProcessCpuMs": 0.007580423999999766,
+      "wallMs": 6.232324000000062,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "verify-only",
+      "round": 0,
+      "iterations": 500,
+      "processCpuMs": 18.690487000000076,
+      "meanProcessCpuMs": 0.03738097400000015,
+      "wallMs": 21.29671300000018,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "verify-only",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 19.29370700000004,
+      "meanProcessCpuMs": 0.038587414000000084,
+      "wallMs": 22.200018999999884,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "key-import",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 18.322369999999864,
+      "meanProcessCpuMs": 0.03664473999999973,
+      "wallMs": 10.40773900000022,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "certificate-verify",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 288.00624600000015,
+      "meanProcessCpuMs": 0.5760124920000003,
+      "wallMs": 207.54212599999983,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-no-canonical",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 98.94452000000001,
+      "meanProcessCpuMs": 0.19788904000000002,
+      "wallMs": 93.57587899999999,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-full",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 189.64337699999987,
+      "meanProcessCpuMs": 0.3792867539999997,
+      "wallMs": 172.94011,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "spki-and-signature-format",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 13.747999000000164,
+      "meanProcessCpuMs": 0.027495998000000327,
+      "wallMs": 15.887787000000117,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "algorithm-consistency",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 6.364525999999842,
+      "meanProcessCpuMs": 0.012729051999999684,
+      "wallMs": 9.52170500000011,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "canonical-roundtrip",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 115.64635399999997,
+      "meanProcessCpuMs": 0.23129270799999996,
+      "wallMs": 99.47871600000008,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "x509-construction",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 67.355008,
+      "meanProcessCpuMs": 0.134710016,
+      "wallMs": 50.48660700000028,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "fromBER",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 48.31319199999962,
+      "meanProcessCpuMs": 0.09662638399999923,
+      "wallMs": 48.7128230000003,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "loop-control",
+      "round": 1,
+      "iterations": 500,
+      "processCpuMs": 1.033064000000195,
+      "meanProcessCpuMs": 0.00206612800000039,
+      "wallMs": 3.8212079999998423,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "loop-control",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 1.1206649999999172,
+      "meanProcessCpuMs": 0.0022413299999998345,
+      "wallMs": 3.7199289999998655,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "fromBER",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 42.294474000000264,
+      "meanProcessCpuMs": 0.08458894800000052,
+      "wallMs": 44.34319400000004,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "x509-construction",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 59.20952099999977,
+      "meanProcessCpuMs": 0.11841904199999953,
+      "wallMs": 49.30751199999986,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "canonical-roundtrip",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 83.05237099999977,
+      "meanProcessCpuMs": 0.16610474199999953,
+      "wallMs": 74.76045500000009,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "algorithm-consistency",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 7.909356000000116,
+      "meanProcessCpuMs": 0.01581871200000023,
+      "wallMs": 9.938861000000088,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "spki-and-signature-format",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 9.260929000000033,
+      "meanProcessCpuMs": 0.018521858000000065,
+      "wallMs": 10.430476999999883,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-full",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 171.90256699999964,
+      "meanProcessCpuMs": 0.3438051339999993,
+      "wallMs": 152.00830599999972,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-no-canonical",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 95.34563900000012,
+      "meanProcessCpuMs": 0.19069127800000024,
+      "wallMs": 92.19021799999973,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "certificate-verify",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 203.59880999999996,
+      "meanProcessCpuMs": 0.4071976199999999,
+      "wallMs": 192.24616800000058,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "key-import",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 4.054579999999987,
+      "meanProcessCpuMs": 0.008109159999999975,
+      "wallMs": 6.9928970000000845,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "verify-only",
+      "round": 2,
+      "iterations": 500,
+      "processCpuMs": 20.03463600000032,
+      "meanProcessCpuMs": 0.040069272000000634,
+      "wallMs": 22.980311000000256,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "verify-only",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 19.95022199999994,
+      "meanProcessCpuMs": 0.03990044399999988,
+      "wallMs": 22.605835999999726,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "key-import",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 3.4012909999996737,
+      "meanProcessCpuMs": 0.0068025819999993475,
+      "wallMs": 5.883176000000276,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "certificate-verify",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 206.83093499999995,
+      "meanProcessCpuMs": 0.41366186999999993,
+      "wallMs": 190.3197050000008,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-no-canonical",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 97.06746600000042,
+      "meanProcessCpuMs": 0.19413493200000084,
+      "wallMs": 89.82830300000023,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "parse-full",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 167.9641700000002,
+      "meanProcessCpuMs": 0.3359283400000004,
+      "wallMs": 154.55263299999933,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "spki-and-signature-format",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 8.633777999999438,
+      "meanProcessCpuMs": 0.017267555999998876,
+      "wallMs": 11.219592000000375,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "algorithm-consistency",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 5.646219000000201,
+      "meanProcessCpuMs": 0.011292438000000403,
+      "wallMs": 8.169871999999486,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "canonical-roundtrip",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 81.65874499999973,
+      "meanProcessCpuMs": 0.16331748999999945,
+      "wallMs": 74.02057500000046,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "x509-construction",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 63.300412999999935,
+      "meanProcessCpuMs": 0.12660082599999986,
+      "wallMs": 47.852981,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "fromBER",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 45.96395400000074,
+      "meanProcessCpuMs": 0.09192790800000147,
+      "wallMs": 46.40947899999992,
+      "clockResolutionNs": 1
+    },
+    {
+      "mode": "loop-control",
+      "round": 3,
+      "iterations": 500,
+      "processCpuMs": 1.1392049999994924,
+      "meanProcessCpuMs": 0.002278409999998985,
+      "wallMs": 3.9592469999997775,
+      "clockResolutionNs": 1
+    }
+  ],
+  "iterationsPerMode": 2000,
+  "leafDerBytes": 548,
+  "leafPublicKey": "ECDSA P-256",
+  "kind": "High-resolution process-clock function loops; not TLS handshake or platform quota CPU",
+  "preparation": "Fresh ASN.1 graphs/certificate models prepared outside each measured operation block; GC spillover can still occur",
+  "guardExperiment": "parse-no-canonical skips only the canonical toSchema/toBER/equality guard in a private generated benchmark. It is NOT a safe replacement, not an accepted input-policy change, and never used by a handshake or production.",
+  "signatureChecks": "Actual verifyCertificateVerify on a valid fixture ECDSA signature; verify-only reuses imported key and bypasses X.509/SPKI import only for cost isolation",
+  "onlineRequests": 0
+}

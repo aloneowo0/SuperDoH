@@ -16,7 +16,7 @@ const bundleWorker = entry => build({
     }));
   } }],
 });
-const bundle = await bundleWorker('src/worker.js');
+const bundle = await bundleWorker('test/metadata-request-worker.js');
 const logs = [];
 class TestLog extends Log {
   constructor() { super(LogLevel.ERROR); }
@@ -26,7 +26,7 @@ const calls = [];
 let upstream = async request => new Response(responseWire(new Uint8Array(await request.arrayBuffer())), { headers: { 'Content-Type': 'application/dns-message' } });
 const options = bindings => ({
   modules: true, modulesRoot: root, scriptPath: `${root}/test/doh-bundle.js`, script: bundle.outputFiles[0].text,
-  cf: false, compatibilityDate: '2026-07-30', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
+  cf: false, compatibilityDate: '2026-10-19', compatibilityFlags: ['enable_request_signal', 'global_fetch_strictly_public', 'no_nodejs_compat', 'no_nodejs_compat_v2'], bindings: { DNS_CACHE: { read: false, write: false }, ...bindings }, log: new TestLog(),
   handleRuntimeStdio(stdout, stderr) {
     for (const stream of [stdout, stderr]) stream.setEncoding('utf8').on('data', text => logs.push(text));
   },
@@ -117,7 +117,8 @@ test('Worker subrequests do not claim the original end-user identity or location
 
 test('invalid, missing or synthetic addresses are absent; unrelated IPv6 and forwarding headers do not override a real IPv4', async () => {
   await setup({ DNS_RULE_MAIN: policy(exists('client.ip', false)) });
-  for (const headers of [{}, { 'CF-Connecting-IP': 'bad' }, { 'CF-Connecting-IP': '192.0.2.1, 198.51.100.1' }, { 'CF-Connecting-IP': '240.0.0.1' }, { 'CF-Connecting-IP': '240.0.0.1', 'CF-Connecting-IPv6': 'bad' }]) {
+  // The new local ingress supplies a real loopback identity when the header is omitted.
+  for (const headers of [{ 'x-test-missing-client-ip': 'true' }, { 'CF-Connecting-IP': 'bad' }, { 'CF-Connecting-IP': '192.0.2.1, 198.51.100.1' }, { 'CF-Connecting-IP': '240.0.0.1' }, { 'CF-Connecting-IP': '240.0.0.1', 'CF-Connecting-IPv6': 'bad' }]) {
     assert.equal((await dns(await incoming({ colo: 'SJC' }, headers))).records[0].ttl, 7);
   }
   await setup({ DNS_RULE_MAIN: policy(eq('client.ip', '192.0.2.1')) });
