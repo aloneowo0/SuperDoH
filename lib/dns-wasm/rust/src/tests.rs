@@ -319,3 +319,28 @@ fn native_json_cannot_bypass_gateway_invariant() {
     let data = serde_json::json!({"Ipseckey":{"precedence":10,"gateway_type":1,"gateway":"None","algorithm":2,"key":[1,2,3,4]}});
     assert!(rdata::encode(45, &data).is_err());
 }
+
+#[test]
+fn encoded_packet_reuses_the_fully_validated_wire_model() {
+    let mut p = packet();
+    p.flags = 0x8180;
+    p.answers.push(record("example.com", 1, json!({"A":{"addr":"192.0.2.8"}})));
+    let (wire, parsed) = message::encode_parsed(p, message::EncodeOptions::default()).unwrap();
+    assert_eq!(serde_json::to_value(&parsed).unwrap(), serde_json::to_value(message::parse(&wire).unwrap()).unwrap());
+    assert_eq!(parsed.answers[0].data, "192.0.2.8");
+}
+
+#[test]
+fn checked_response_keeps_identity_and_size_error_precedence() {
+    let query = message::query("example.com", 1, 0x4242).unwrap();
+    let mut p = packet();
+    p.flags = 0x8180;
+    let wire = validation::encode_response(p.clone(), &query, 65535).unwrap().unwrap();
+    assert_eq!(validation::validate(&wire, Some(&query)).unwrap()["valid"], true);
+    assert!(validation::encode_response(p.clone(), &query, wire.len() - 1).unwrap().is_none());
+    p.id = 7;
+    assert!(validation::encode_response(p.clone(), &query, 65535).is_err());
+    assert!(validation::encode_response(p.clone(), &query, 0).unwrap().is_none());
+    p.answers.push(record("example.com", 1, json!({"A":{"addr":"invalid"}})));
+    assert!(validation::encode_response(p, &query, 0).is_err());
+}

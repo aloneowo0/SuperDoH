@@ -19,11 +19,15 @@ export function encodeMessageJson(json: string, options: string): Uint8Array;
 
 export function encodeRdataJson(rtype: number, json: string): Uint8Array;
 
+export function encodeResponseJson(json: string, query: Uint8Array, maximum: number): Uint8Array;
+
 export function encodeSvcParamJson(key: number, json: string): Uint8Array;
 
 export function extractIpsJson(bytes: Uint8Array): string;
 
 export function matchResponseJson(bytes: Uint8Array, query: Uint8Array): string;
+
+export function normalizeMessageJson(json: string, options: string): string;
 
 export function parseMessageJson(packet: Uint8Array): string;
 
@@ -48,9 +52,11 @@ export interface InitOutput {
     readonly encodeEdeJson: (a: number, b: number) => [number, number, number, number];
     readonly encodeMessageJson: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly encodeRdataJson: (a: number, b: number, c: number) => [number, number, number, number];
+    readonly encodeResponseJson: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
     readonly encodeSvcParamJson: (a: number, b: number, c: number) => [number, number, number, number];
     readonly extractIpsJson: (a: number, b: number) => [number, number, number, number];
     readonly matchResponseJson: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+    readonly normalizeMessageJson: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly parseMessageJson: (a: number, b: number) => [number, number, number, number];
     readonly toDnsJson: (a: number, b: number) => [number, number, number, number];
     readonly typeCode: (a: number, b: number) => [number, number, number];

@@ -1,6 +1,6 @@
-import { parseMessage, encodeMessage, matchResponse, TYPES, FLAGS, getEdns } from '../../lib/dns-wasm/index.js';
+import { parseMessage, encodeResponse, normalizeMessage, TYPES, FLAGS, getEdns } from '../../lib/dns-wasm/index.js';
 import { domain } from '../rules/values.js';
-import { within } from '../rules/limits.js';
+import { RuleError } from '../rules/errors.js';
 
 /** @param {Uint8Array} wire */
 export function parseQuery(wire) {
@@ -23,9 +23,8 @@ export function finalizeResponse(response, original, originalWire, maximum, loca
   output.id = original.id;
   output.questions = original.questions.map(q => ({ ...q }));
   output.flags = (output.flags & ~(FLAGS.RD | FLAGS.CD)) | (original.flags & (FLAGS.RD | FLAGS.CD));
-  const wire = encodeMessage(output, { strip_message_authentication: true });
-  within(wire.byteLength, maximum, location);
-  matchResponse(wire, originalWire);
+  const wire = encodeResponse(output, originalWire, maximum);
+  if (wire === null) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.', location);
   return wire;
 }
 /**
@@ -40,5 +39,5 @@ export function invalidateResponse(response, rrsets) {
       if ((!rrsets && records[i].rtype === TYPES.RRSIG) || records[i].rtype === 24 || records[i].rtype === TYPES.TSIG) records.splice(i, 1);
     }
   }
-  return parseMessage(encodeMessage(output, { strip_message_authentication: true, ...(rrsets ? { invalidate_rrsets: rrsets } : {}) }));
+  return normalizeMessage(output, { strip_message_authentication: true, ...(rrsets ? { invalidate_rrsets: rrsets } : {}) });
 }

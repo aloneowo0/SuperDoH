@@ -5,23 +5,7 @@ pub fn validate(bytes: &[u8], expected: Option<&[u8]>) -> Result<Value, String> 
     let p = message::parse(bytes)?;
     if let Some(query) = expected {
         let q = message::parse(query)?;
-        if p.flags & 0x8000 == 0 || q.flags & 0x8000 != 0 {
-            return Err("response/query QR mismatch".into());
-        }
-        if p.id != q.id
-            || p.flags & 0x7800 != q.flags & 0x7800
-            || p.questions.len() != q.questions.len()
-        {
-            return Err("query identity mismatch".into());
-        }
-        for (a, b) in p.questions.iter().zip(&q.questions) {
-            if a.rtype != b.rtype
-                || a.class != b.class
-                || message::name(&a.name)? != message::name(&b.name)?
-            {
-                return Err("question mismatch".into());
-            }
-        }
+        match_packets(&p, &q)?;
     }
     let ext = p
         .additional
@@ -63,4 +47,42 @@ pub fn dns_json(bytes: &[u8]) -> Result<Value, String> {
     Ok(
         json!({"Status":(p.flags&15)|(ext<<4),"TC":p.flags&0x0200!=0,"RD":p.flags&0x0100!=0,"RA":p.flags&0x0080!=0,"AD":p.flags&0x0020!=0,"CD":p.flags&0x0010!=0,"Question":p.questions.iter().map(|q|json!({"name":q.name,"type":q.rtype,"class":q.class})).collect::<Vec<_>>(),"Answer":records(&p.answers),"Authority":records(&p.authority),"Additional":records(&p.additional)}),
     )
+}
+
+fn match_packets(p: &message::Packet, q: &message::Packet) -> Result<(), String> {
+    if p.flags & 0x8000 == 0 || q.flags & 0x8000 != 0 {
+        return Err("response/query QR mismatch".into());
+    }
+    if p.id != q.id
+        || p.flags & 0x7800 != q.flags & 0x7800
+        || p.questions.len() != q.questions.len()
+    {
+        return Err("query identity mismatch".into());
+    }
+    for (a, b) in p.questions.iter().zip(&q.questions) {
+        if a.rtype != b.rtype
+            || a.class != b.class
+            || message::name(&a.name)? != message::name(&b.name)?
+        {
+            return Err("question mismatch".into());
+        }
+    }
+    Ok(())
+}
+
+pub fn encode_response(
+    packet: message::Packet,
+    query: &[u8],
+    maximum: usize,
+) -> Result<Option<Vec<u8>>, String> {
+    let options = message::EncodeOptions {
+        strip_message_authentication: true,
+        ..Default::default()
+    };
+    let (wire, parsed) = message::encode_parsed(packet, options)?;
+    if wire.len() > maximum {
+        return Ok(None);
+    }
+    match_packets(&parsed, &message::parse(query)?)?;
+    Ok(Some(wire))
 }

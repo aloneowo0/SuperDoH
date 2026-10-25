@@ -186,6 +186,10 @@ fn prepare(mut p: Packet, options: &EncodeOptions) -> Result<Packet, String> {
 }
 
 pub fn encode(packet: Packet, options: EncodeOptions) -> Result<Vec<u8>, String> {
+    encode_parsed(packet, options).map(|(wire, _)| wire)
+}
+
+pub fn encode_parsed(packet: Packet, options: EncodeOptions) -> Result<(Vec<u8>, Packet), String> {
     let p = prepare(packet, &options)?;
     let mut b = MessageBuilder::new_vec();
     b.header_mut().set_id(p.id);
@@ -225,8 +229,8 @@ pub fn encode(packet: Packet, options: EncodeOptions) -> Result<Vec<u8>, String>
     if out.len() > 65535 {
         return Err("DNS message exceeds 65535 bytes".into());
     }
-    parse(&out)?;
-    Ok(out)
+    let parsed = parse(&out)?;
+    Ok((out, parsed))
 }
 
 pub fn query(name_value: &str, rtype: u16, id: u16) -> Result<Vec<u8>, String> {

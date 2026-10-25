@@ -57,6 +57,10 @@ export const FLAGS: Readonly<{ QR: number; AA: number; TC: number; RD: number; R
 export const TYPES: Readonly<{ A: 1; NS: 2; CNAME: 5; SOA: 6; PTR: 12; MX: 15; TXT: 16; AAAA: 28; SRV: 33; DNAME: 39; OPT: 41; DS: 43; RRSIG: 46; NSEC: 47; DNSKEY: 48; NSEC3: 50; TLSA: 52; SVCB: 64; HTTPS: 65; TSIG: 250; ANY: 255; CAA: 257 }>;
 export function createMessage(options?: Partial<DnsMessage>): DnsMessage;
 export function parseMessage(packet: Bytes): ParsedMessage;
+/** @internal Encode and fully parse once, preserving normal encoding validation. */
+export function normalizeMessage(message: DnsMessage, options?: EncodeOptions): ParsedMessage;
+/** @internal Encode, strip message authentication and match the query. Null means the size limit failed before correspondence checking. */
+export function encodeResponse(message: DnsMessage, query: Bytes, maximum: number): Uint8Array | null;
 export function encodeMessage(message: DnsMessage, options?: EncodeOptions): Uint8Array;
 export function buildQuery(name: string, rtype?: number, id?: number, options?: { flags?: number; class?: number }): Uint8Array;
 export function buildResponse(query: Bytes | DnsMessage, options?: Partial<DnsMessage> & { rcode?: number; udp_payload_size?: number }): Uint8Array;

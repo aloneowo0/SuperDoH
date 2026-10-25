@@ -30,6 +30,17 @@ pub fn parse_message(packet: &[u8]) -> Result<String, JsValue> {
 pub fn encode_message(json: &str, options: &str) -> Result<Vec<u8>, JsValue> {
     binary(message::encode(input(json)?, input(options)?))
 }
+#[wasm_bindgen(js_name=normalizeMessageJson)]
+pub fn normalize_message(json: &str, options: &str) -> Result<String, JsValue> {
+    output(message::encode_parsed(input(json)?, input(options)?).map(|(_, packet)| packet))
+}
+#[wasm_bindgen(js_name=encodeResponseJson)]
+pub fn encode_response(json: &str, query: &[u8], maximum: u32) -> Result<Vec<u8>, JsValue> {
+    let wire = validation::encode_response(input(json)?, query, maximum as usize)
+        .map_err(|error| JsValue::from_str(&error))?;
+    // No wire crosses the bridge when the configured size limit is exceeded.
+    wire.ok_or(JsValue::NULL)
+}
 #[wasm_bindgen(js_name=buildQuery)]
 pub fn build_query(name: &str, rtype: u16, id: u16) -> Result<Vec<u8>, JsValue> {
     binary(message::query(name, rtype, id))
