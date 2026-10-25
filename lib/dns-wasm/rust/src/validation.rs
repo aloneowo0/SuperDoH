@@ -74,11 +74,8 @@ pub fn encode_response(
     packet: message::Packet,
     query: &[u8],
     maximum: usize,
+    options: message::EncodeOptions,
 ) -> Result<Option<Vec<u8>>, String> {
-    let options = message::EncodeOptions {
-        strip_message_authentication: true,
-        ..Default::default()
-    };
     let (wire, parsed) = message::encode_parsed(packet, options)?;
     if wire.len() > maximum {
         return Ok(None);

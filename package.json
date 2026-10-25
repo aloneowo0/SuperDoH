@@ -12,7 +12,7 @@
     "test:tcp": "node --test test/tcp.mjs",
     "test:tls": "node --test test/tls.mjs",
     "test:cache": "node --test test/cache.mjs",
-    "test:records": "node --test test/records.mjs",
+    "test:records": "node --test test/records.mjs test/protocol-ownership.mjs",
     "test:metadata": "node --test test/metadata.mjs",
     "test:attribution": "node --test test/attribution.mjs",
     "test:lists": "node --test test/domain-lists.mjs",

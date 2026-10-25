@@ -1,4 +1,4 @@
-import { encodeMessage, parseMessage, matchResponse, getRcode, TYPES } from '../../lib/dns-wasm/index.js';
+import { encodeMessage, encodeResponse, parseMessage, getRcode, TYPES } from '../../lib/dns-wasm/index.js';
 import { RuleError } from '../rules/errors.js';
 import { readBody } from './body.js';
 
@@ -119,7 +119,8 @@ export async function readCache(key, query, maxTtl, limits, budget) {
     budget.check();
     const message = parseMessage(wire);
     message.id = query.id;
-    matchResponse(encodeMessage(message), encodeMessage(query));
+    const checkedWire = encodeResponse(message, encodeMessage(query), 65535, {});
+    if (checkedWire === null) throw new Error('cached response exceeds maximum DNS message size');
     message.questions = structuredClone(query.questions);
     if (message.answers.length + message.authority.length + message.additional.length > limits.maxRecords) throw new RuleError('RESOURCE_LIMIT', 'Configured resource limit exceeded.');
     ageMessage(message, elapsed);

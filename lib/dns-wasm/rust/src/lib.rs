@@ -35,8 +35,13 @@ pub fn normalize_message(json: &str, options: &str) -> Result<String, JsValue> {
     output(message::encode_parsed(input(json)?, input(options)?).map(|(_, packet)| packet))
 }
 #[wasm_bindgen(js_name=encodeResponseJson)]
-pub fn encode_response(json: &str, query: &[u8], maximum: u32) -> Result<Vec<u8>, JsValue> {
-    let wire = validation::encode_response(input(json)?, query, maximum as usize)
+pub fn encode_response(
+    json: &str,
+    query: &[u8],
+    maximum: u32,
+    options: &str,
+) -> Result<Vec<u8>, JsValue> {
+    let wire = validation::encode_response(input(json)?, query, maximum as usize, input(options)?)
         .map_err(|error| JsValue::from_str(&error))?;
     // No wire crosses the bridge when the configured size limit is exceeded.
     wire.ok_or(JsValue::NULL)

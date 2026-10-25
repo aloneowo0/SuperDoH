@@ -19,7 +19,7 @@ export function encodeMessageJson(json: string, options: string): Uint8Array;
 
 export function encodeRdataJson(rtype: number, json: string): Uint8Array;
 
-export function encodeResponseJson(json: string, query: Uint8Array, maximum: number): Uint8Array;
+export function encodeResponseJson(json: string, query: Uint8Array, maximum: number, options: string): Uint8Array;
 
 export function encodeSvcParamJson(key: number, json: string): Uint8Array;
 
@@ -52,7 +52,7 @@ export interface InitOutput {
     readonly encodeEdeJson: (a: number, b: number) => [number, number, number, number];
     readonly encodeMessageJson: (a: number, b: number, c: number, d: number) => [number, number, number, number];
     readonly encodeRdataJson: (a: number, b: number, c: number) => [number, number, number, number];
-    readonly encodeResponseJson: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly encodeResponseJson: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number, number, number];
     readonly encodeSvcParamJson: (a: number, b: number, c: number) => [number, number, number, number];
     readonly extractIpsJson: (a: number, b: number) => [number, number, number, number];
     readonly matchResponseJson: (a: number, b: number, c: number, d: number) => [number, number, number, number];

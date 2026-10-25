@@ -335,12 +335,52 @@ fn checked_response_keeps_identity_and_size_error_precedence() {
     let query = message::query("example.com", 1, 0x4242).unwrap();
     let mut p = packet();
     p.flags = 0x8180;
-    let wire = validation::encode_response(p.clone(), &query, 65535).unwrap().unwrap();
+    let strip_authentication = || message::EncodeOptions {
+        strip_message_authentication: true,
+        ..Default::default()
+    };
+    let wire = validation::encode_response(p.clone(), &query, 65535, strip_authentication())
+        .unwrap()
+        .unwrap();
     assert_eq!(validation::validate(&wire, Some(&query)).unwrap()["valid"], true);
-    assert!(validation::encode_response(p.clone(), &query, wire.len() - 1).unwrap().is_none());
+    assert!(validation::encode_response(
+        p.clone(),
+        &query,
+        wire.len() - 1,
+        strip_authentication()
+    )
+    .unwrap()
+    .is_none());
     p.id = 7;
-    assert!(validation::encode_response(p.clone(), &query, 65535).is_err());
-    assert!(validation::encode_response(p.clone(), &query, 0).unwrap().is_none());
-    p.answers.push(record("example.com", 1, json!({"A":{"addr":"invalid"}})));
-    assert!(validation::encode_response(p, &query, 0).is_err());
+    assert!(validation::encode_response(p.clone(), &query, 65535, strip_authentication()).is_err());
+    assert!(validation::encode_response(p.clone(), &query, 0, strip_authentication())
+        .unwrap()
+        .is_none());
+    p.answers
+        .push(record("example.com", 1, json!({"A":{"addr":"invalid"}})));
+    assert!(validation::encode_response(p, &query, 0, strip_authentication()).is_err());
+}
+
+#[test]
+fn checked_response_requires_explicit_authentication_removal() {
+    let query = message::query("example.com", 1, 0x4242).unwrap();
+    for rtype in [24, 250] {
+        let mut p = packet();
+        p.flags = 0x8180;
+        p.additional
+            .push(record("example.com", rtype, json!({"Raw":[0, 0, 1, 2]})));
+        assert!(validation::encode_response(p.clone(), &query, 65535, Default::default()).is_err());
+        let output = validation::encode_response(
+            p,
+            &query,
+            65535,
+            message::EncodeOptions {
+                strip_message_authentication: true,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+        .unwrap();
+        assert!(message::parse(&output).unwrap().additional.is_empty());
+    }
 }

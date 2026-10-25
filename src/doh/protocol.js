@@ -19,7 +19,8 @@ export function parseQuery(wire) {
  * @param {import('../rules/errors.js').Location} [location]
  */
 export function finalizeResponse(response, original, originalWire, maximum, location = {}) {
-  const output = structuredClone(response);
+  // Encoding only reads records; isolate the envelope fields that are rewritten.
+  const output = { ...response };
   output.id = original.id;
   output.questions = original.questions.map(q => ({ ...q }));
   output.flags = (output.flags & ~(FLAGS.RD | FLAGS.CD)) | (original.flags & (FLAGS.RD | FLAGS.CD));
@@ -32,7 +33,7 @@ export function finalizeResponse(response, original, originalWire, maximum, loca
  * @param {import('../../lib/dns-wasm/index.js').DnsQuestion[]} [rrsets]
  */
 export function invalidateResponse(response, rrsets) {
-  const output = structuredClone(response);
+  const output = { ...response, answers: [...response.answers], authority: [...response.authority], additional: [...response.additional] };
   output.flags &= ~FLAGS.AD;
   for (const records of [output.answers, output.authority, output.additional]) {
     for (let i = records.length - 1; i >= 0; i--) {

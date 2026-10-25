@@ -59,8 +59,8 @@ export function createMessage(options?: Partial<DnsMessage>): DnsMessage;
 export function parseMessage(packet: Bytes): ParsedMessage;
 /** @internal Encode and fully parse once, preserving normal encoding validation. */
 export function normalizeMessage(message: DnsMessage, options?: EncodeOptions): ParsedMessage;
-/** @internal Encode, strip message authentication and match the query. Null means the size limit failed before correspondence checking. */
-export function encodeResponse(message: DnsMessage, query: Bytes, maximum: number): Uint8Array | null;
+/** @internal Encode and match the query. Defaults to stripping message authentication. Null means the size limit failed before correspondence checking. */
+export function encodeResponse(message: DnsMessage, query: Bytes, maximum: number, options?: EncodeOptions): Uint8Array | null;
 export function encodeMessage(message: DnsMessage, options?: EncodeOptions): Uint8Array;
 export function buildQuery(name: string, rtype?: number, id?: number, options?: { flags?: number; class?: number }): Uint8Array;
 export function buildResponse(query: Bytes | DnsMessage, options?: Partial<DnsMessage> & { rcode?: number; udp_payload_size?: number }): Uint8Array;
