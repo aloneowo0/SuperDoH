@@ -85,6 +85,8 @@ export async function executeQuery(queryWire, env, options = {}) {
     const originalQuery = freeze(parsed);
     /** @type {{ query: import('../lib/dns-wasm/index.js').DnsMessage, response: import('../lib/dns-wasm/index.js').DnsMessage | null }} */
     let state = { query: structuredClone(originalQuery), response: null };
+    /** @type {Uint8Array | undefined} */
+    let responseWire;
     const configBudget = createConfigBudget(limits);
     const upstreams = loadUpstreams(env, limits, configBudget);
     let cache = loadCachePolicy(env.DNS_CACHE, configBudget);
@@ -142,7 +144,13 @@ export async function executeQuery(queryWire, env, options = {}) {
               termination = action.type === 'stop' ? 'stopped' : 'returned';
               break pipeline;
             }
-            const candidate = structuredClone(state);
+            // Only in-place writers need private data; all other actions read committed state.
+            const editsRecords = ['removeRecords', 'replaceRecords', 'addRecords', 'setTtl'].includes(action.type);
+            const candidate = {
+              query: action.type === 'rewriteQuery' ? structuredClone(state.query) : state.query,
+              response: editsRecords && state.response ? structuredClone(state.response) : state.response,
+            };
+            let nextWire = responseWire;
             let nextCache = cache;
             let nextProperties = properties;
             let nextEch = ech;
@@ -180,10 +188,11 @@ export async function executeQuery(queryWire, env, options = {}) {
               if (action.queryType !== undefined) candidate.query.questions[0].rtype = recordType(action.queryType);
               within(encodeMessage(candidate.query).byteLength, limits.maxQueryBytes, location);
             }
-            if (action.type !== 'rewriteQuery' && candidate.response) {
-              finalizeResponse(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
+            if (candidate.response && candidate.response !== state.response) {
+              nextWire = finalizeResponse(candidate.response, originalQuery, originalWire, limits.maxResponseBytes, location);
             }
-            state = structuredClone(candidate);
+            state = candidate;
+            responseWire = nextWire;
             cache = nextCache;
             properties = nextProperties;
             ech = nextEch;
@@ -200,7 +209,7 @@ export async function executeQuery(queryWire, env, options = {}) {
     }
     execution.check();
     if (state.response === null) throw new RuleError('NO_RESPONSE', 'No DNS response was produced.');
-    const wire = finalizeResponse(state.response, originalQuery, originalWire, limits.maxResponseBytes, location);
+    const wire = responseWire ?? finalizeResponse(state.response, originalQuery, originalWire, limits.maxResponseBytes, location);
     return { termination, response: wire, originalQuery, query: state.query, lastAction };
   } catch (error) {
     const failure = failureAt(error, location);
