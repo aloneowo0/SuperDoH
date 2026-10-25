@@ -21,7 +21,7 @@
     "test:ech-interop": "node test/ech-interop.mjs",
     "test:json": "node --test test/json.mjs",
     "test:acceptance": "node --test test/acceptance.mjs",
-    "test:measurement": "node --test test/acceptance-runner.mjs test/acceptance-report.mjs",
+    "test:measurement": "node --test test/acceptance-runner.mjs test/acceptance-report.mjs test/acceptance-safety.mjs",
     "test:online-fixtures": "node --test test/online-fixtures.mjs",
     "test:runtime": "node --test test/runtime-config.mjs"
   },

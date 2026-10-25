@@ -1,0 +1,111 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import { randomUUID,randomBytes,createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { setGlobalProxyFromEnv } from 'node:http';
+import { setTimeout as delay } from 'node:timers/promises';
+import { query,decode } from '../../test/helpers/dns-wire.mjs';
+import { parseEchConfigList } from '../../lib/ech-probe/config.js';
+const dir=import.meta.dirname,root=path.resolve(dir,'../..');
+const account='de840a0c07482d94be19fdc1aad928da',worker='superdoh',fixture='superdoh-dns-cpu-fixtures-20261024';
+const origin='https://superdoh.aloneowo0.workers.dev',fixtureOrigin='https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev';
+const base=`/accounts/${account}/workers/scripts/${worker}`,fb=`/accounts/${account}/workers/scripts/${fixture}`;
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const write=(f,v)=>fs.writeFileSync(path.join(dir,f+'.json'),JSON.stringify(v,null,2));
+assert.equal(process.argv[2],'--execute-approved');assert.ok(!fs.existsSync(path.join(dir,'ledger.json')));
+let proxy=process.env.ACCEPTANCE_LOOPBACK_PROXY??'';
+if(proxy.includes('='))proxy=proxy.split(';').map(s=>s.split('=')).find(([k])=>k==='https'||k==='http')?.[1];
+assert.match(proxy,/^(127\.0\.0\.1|localhost):\d+$/);process.env.HTTP_PROXY=process.env.HTTPS_PROXY='http://'+proxy;setGlobalProxyFromEnv();
+const config=fs.readFileSync(path.join(process.env.APPDATA,'xdg.config','.wrangler','config','default.toml'),'utf8');
+const line=config.split('\n').find(l=>/^\s*oauth_token\s*=/.test(l));assert.ok(line,'OAuth unavailable');const token=JSON.parse(line.slice(line.indexOf('=')+1).trim());
+async function api(p,{method='GET',body,form,binary=false}={}){
+ assert.ok([base,fb].some(b=>p===b||p.startsWith(b+'/')));
+ const r=await fetch('https://api.cloudflare.com/client/v4'+p,{method,headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},body:form??(body?JSON.stringify(body):undefined),signal:AbortSignal.timeout(30000)});
+ if(!r.ok)throw Error('CONTROL_HTTP_'+r.status);if(binary)return Buffer.from(await r.arrayBuffer());const v=await r.json();if(!v.success)throw Error('CONTROL_REJECTED');return v.result;
+}
+async function current(b=base){const d=(await api(b+'/deployments')).deployments[0];assert.equal(d.versions.length,1);assert.equal(d.versions[0].percentage,100);return d.versions[0].version_id;}
+async function bindings(b){return (await api(b+'/versions/'+await current(b))).resources.bindings;}
+let expectedVersion=await current(),expectedFixtureVersion=await current(fb);
+assert.equal(expectedVersion,'a6648644-3bbe-42b2-9e62-2eff11421921');
+const before={version:expectedVersion,bindings:await bindings(base),fixtureVersion:expectedFixtureVersion,fixtureBindings:await bindings(fb),scriptSettings:await api(base+'/script-settings')};
+assert.deepEqual(before.bindings,[]);assert.equal(before.fixtureBindings.find(b=>b.name==='EXPIRES_AT').json,0);
+const raw=await api(base,{binary:true}),boundary=raw.subarray(0,raw.indexOf(10)).toString().trim();
+const modules=raw.toString('latin1').split(boundary).filter(p=>p.includes('Content-Disposition:')).map(p=>{const a=p.indexOf('\r\n\r\n'),sep=a>=0?4:2,i=a>=0?a:p.indexOf('\n\n');const name=p.slice(0,i).match(/name="([^"]+)"/)[1];let body=p.slice(i+sep);if(body.endsWith('\r\n'))body=body.slice(0,-2);else if(body.endsWith('\n'))body=body.slice(0,-1);const b=Buffer.from(body,'latin1');return {name,bytes:b.length,sha256:sha(b)};}).filter(m=>!m.name.endsWith('.map'));
+assert.equal(modules.filter(m=>m.name.endsWith('.wasm')).length,1);assert.equal(modules.find(m=>m.name.endsWith('.wasm')).sha256,sha(fs.readFileSync(path.join(root,'lib/dns-wasm/dns_bindgen_bg.wasm'))));
+assert.ok(modules.some(m=>m.sha256==='3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007'));
+write('before',{...before,modules});
+const runId=randomUUID(),ledger={runId,commit:'0582d8600480e96bd4a4df30641af14dd8bf85e9',cap:300,echAttemptCap:10,attempts:[],scenarios:[],failures:[],startedAt:new Date().toISOString()};
+write('ledger',ledger);let lastEnd=0,echAttempts=0,key,obsExpected=before.scriptSettings.observability;
+const observed={...obsExpected,enabled:true,head_sampling_rate:1,logs:{...obsExpected.logs,enabled:true,head_sampling_rate:1,invocation_logs:true},traces:{...obsExpected.traces,enabled:false}};
+async function setObs(value){assert.deepEqual((await api(base+'/script-settings')).observability,obsExpected);await api(base+'/script-settings',{method:'PATCH',body:{observability:value}});obsExpected=(await api(base+'/script-settings')).observability;}
+async function patch(b,value,label){assert.equal(await current(b),b===base?expectedVersion:expectedFixtureVersion);const f=new FormData();f.set('settings',new Blob([JSON.stringify({bindings:value,annotations:{'workers/message':'Acceptance #25 current: '+label}})],{type:'application/json'}));await api(b+'/settings',{method:'PATCH',form:f});const v=await current(b);if(b===base)expectedVersion=v;else expectedFixtureVersion=v;const actual=await bindings(b);assert.deepEqual(actual.map(b=>b.name).sort(),value.map(b=>b.name).sort());for(const b of value)if(b.type!=='secret_text')assert.deepEqual(actual.find(a=>a.name===b.name),b);return v;}
+const fixtureBindings=state=>before.fixtureBindings.map(b=>b.name==='EXPIRES_AT'?{...b,json:Date.now()+3600000}:b.name==='LIST_STATE'?{...b,text:state}:b);
+const group=actions=>({order:0,rules:[{actions}]}),fixed={type:'answer',records:[{name:'example.com',type:'A',ttl:60,rdata:{A:{addr:'192.0.2.8'}}}]};
+const ECH='AD7+DQA6AQAgACABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fIAAEAAEAAQALZXhhbXBsZS5jb20AAA==';
+const httpsAnswer={type:'answer',records:[{name:'example.com',type:'HTTPS',ttl:60,rdata:{Https:{priority:1,target:'.',params:[]}}}]};
+const url=(p,label)=>fixtureOrigin+p+'?run='+runId+'&case='+label;
+async function configure(label,vars,{secret}={}){const bs=Object.entries(vars).map(([name,json])=>({name,type:'json',json}));if(secret)bs.push({name:'DNS_PATH_KEY',type:'secret_text',text:secret});const version=await patch(base,bs,label);await delay(12000);const row={label,version,vars,telemetryExpected:!secret,configuredAt:new Date().toISOString()};ledger.scenarios.push(row);write('ledger',ledger);console.log(JSON.stringify({configured:label,version}));return row;}
+async function boundedBody(r){const reader=r.body?.getReader();if(!reader)return Buffer.alloc(0);let n=0;const a=[];try{for(;;){const p=await reader.read();if(p.done)break;n+=p.value.length;if(n>65535)throw Error('BODY_LIMIT');a.push(p.value);}return Buffer.concat(a,n);}finally{await reader.cancel().catch(()=>{});reader.releaseLock();}}
+function checkEch(d,expected){const rr=d.records.find(r=>r.section===0&&r.type===65);assert.ok(rr);let i=2;while(rr.data[i]){i+=1+rr.data[i];assert.ok(i<rr.data.length);}i++;const p=new Map();while(i<rr.data.length){assert.ok(i+4<=rr.data.length);const k=rr.data[i]*256+rr.data[i+1],n=rr.data[i+2]*256+rr.data[i+3];i+=4;assert.ok(i+n<=rr.data.length);p.set(k,rr.data.slice(i,i+n));i+=n;}assert.ok(p.get(5)?.length);const b=Uint8Array.from(p.get(5)),v=parseEchConfigList(b);assert.ok(v.configs.length>0);if(expected.synthetic)assert.deepEqual(b,Uint8Array.from(Buffer.from(ECH,'base64')));if(expected.composed){assert.deepEqual(p.get(3),[1,187]);const a=d.records.filter(r=>r.section===2);assert.equal(a.length,1);assert.equal(a[0].ttl,17);assert.deepEqual(a[0].data,[192,0,2,8]);}return {echBytes:b.length,echConfigCount:v.configs.length,echSha256:sha(b)};}
+async function request(scenario,index,expected={},opts={}){
+ assert.ok(ledger.attempts.length<ledger.cap-2);if(opts.probe){assert.ok(echAttempts<10);echAttempts++;}
+ if(lastEnd)await delay(Math.max(0,1000-(performance.now()-lastEnd)));
+ const row={sampleId:randomUUID(),scenario:scenario.label,version:scenario.version,index,phase:opts.phase??(index===0?'first-observed':'subsequent'),startedAt:new Date().toISOString(),expected,telemetryExpected:scenario.telemetryExpected,probeAttempt:!!opts.probe};ledger.attempts.push(row);write('ledger',ledger);const start=performance.now();
+ try{const init=opts.init??{method:'POST',body:query(opts.name??'example.com',expected.type??1),headers:{'Content-Type':'application/dns-message'}};const r=await fetch(origin+(opts.path??'/dns-query'),{...init,headers:{...init.headers,'X-Acceptance-Sample-Id':row.sampleId},redirect:'manual',signal:AbortSignal.timeout(15000)});row.httpStatus=r.status;row.colo=r.headers.get('cf-ray')?.split('-').at(-1);const b=await boundedBody(r);row.responseBytes=b.length;row.edgeError1102=r.status===503&&b.includes(Buffer.from('1102'));assert.equal(r.status,expected.status??200);
+ if(expected.status&&expected.status!==200){}else if(expected.json){const d=JSON.parse(b);assert.equal(d.Status,expected.rcode??0);assert.equal(d.Answer.length,expected.count??1);if(expected.fixed)assert.equal(d.Answer[0].data,'192.0.2.8');if(expected.ttl!==undefined)for(const a of d.Answer)assert.equal(a.TTL,expected.ttl);row.dnsRcode=d.Status;}
+ else{assert.equal(r.headers.get('Content-Type')?.split(';')[0],'application/dns-message');const d=decode(b);assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:opts.name??'example.com',type:expected.type??1,class:1}]);row.dnsRcode=d.flags&15;row.ad=!!(d.flags&32);assert.equal(row.dnsRcode,expected.rcode??0);if(expected.ad!==undefined)assert.equal(row.ad,expected.ad);const a=d.records.filter(r=>r.section===0);row.answerCount=a.length;row.ttls=a.map(a=>a.ttl);if(expected.count!==undefined)assert.equal(a.length,expected.count);if(expected.ttl!==undefined)for(const rr of a)assert.equal(rr.ttl,expected.ttl);if(expected.fixed)assert.deepEqual(a[0].data,[192,0,2,8]);if(expected.ech)Object.assign(row,checkEch(d,expected));row.responseSha256=sha(b);}
+ row.correct=true;
+ }catch(e){row.correct=false;row.errorCode=e.code==='ERR_ASSERTION'?'ASSERTION_FAILED':e.message==='BODY_LIMIT'?'BODY_LIMIT':'CLIENT_REQUEST_FAILED';}
+ finally{row.latencyMs=performance.now()-start;row.finishedAt=new Date().toISOString();lastEnd=performance.now();write('ledger',ledger);}
+ if(!row.correct){ledger.failures.push({scenario:scenario.label,sampleId:row.sampleId,errorCode:row.errorCode});write('ledger',ledger);console.log(JSON.stringify({scenario:scenario.label,failed:true,httpStatus:row.httpStatus,dnsRcode:row.dnsRcode}));}return row;
+}
+async function samples(label,vars,n,expected,opts={}){const s=await configure(label,vars);for(let i=0;i<n;i++){const row=await request(s,i,expected,{...opts,phase:n===48?(i<16?'warmup':'measured'):undefined});if(!row.correct)break;}assert.equal(await current(),s.version);console.log(JSON.stringify({completed:label,total:ledger.attempts.length}));return s;}
+const fixedExpected={fixed:true,count:1,ttl:60,ad:false};
+const upstream=(label,transport='https',p='/dns')=>({DNS_UPSTREAMS:{primary:transport==='https'?{transport,url:url(p,label)}:{transport,address:'9.9.9.9',port:transport==='tls'?853:53,...(transport==='tls'?{serverName:'dns.quad9.net'}:{})}},DNS_CACHE:{read:false,write:false},DNS_RULE_MAIN:group([{type:'queryUpstream',upstream:'primary'}])});
+let fatal;
+try{
+ await patch(fb,fixtureBindings('good'),'fixture enable bounded 60min');await setObs(observed);
+ await samples('fixed-smoke',{DNS_RULE_MAIN:group([fixed])},5,fixedExpected);if(ledger.failures.length)throw Error('SMOKE_FAILED');
+ for(const n of [16,128]){const vars={DNS_RULE_ZZ:{order:99,rules:[{actions:[fixed]}]}};for(let g=0;g<n/16;g++)vars['DNS_RULE_'+g]={order:g,rules:Array.from({length:16},()=>({when:{field:'query.name',op:'eq',value:'never.example'},actions:[{type:'setCache',read:false,write:false}]}))};await samples('rules-'+n,vars,5,fixedExpected);}
+ await samples('https-fixture-bypass',upstream('bypass'),5,fixedExpected);
+ const cached=upstream('shared-cache');delete cached.DNS_CACHE;await samples('https-cache-first-and-reuse',cached,5,{fixed:true,count:1,ad:false});
+ await samples('https-cache-disabled-policy',{...cached,DNS_CACHE:{read:false,write:false}},5,fixedExpected);
+ await samples('https-no-store',{...upstream('nostore','https','/dns-no-store'),DNS_CACHE:{read:true,write:true}},5,fixedExpected);
+ for(const n of [100,1000,4096])await samples('list-'+n,{DNS_DOMAIN_LISTS:{selected:{url:url('/list-'+n,'list-'+n),format:'text',refreshIntervalMs:60000}},DNS_RULE_MAIN:{order:0,rules:[{actions:[fixed]},{when:{field:'query.name',op:'inListSuffix',value:'selected'},actions:[{type:'setTtl',ttl:17}]}]}},5,{...fixedExpected,ttl:17});
+ const listVars={DNS_DOMAIN_LISTS:{selected:{url:url('/list-100','refresh'),format:'text',refreshIntervalMs:1000}},DNS_RULE_MAIN:{order:0,rules:[{actions:[fixed]},{when:{field:'query.name',op:'inListSuffix',value:'selected'},actions:[{type:'setTtl',ttl:17}]}]}};
+ const refresh=await configure('list-refresh',listVars);await request(refresh,0,{...fixedExpected,ttl:17});await patch(fb,fixtureBindings('recovered'),'list content changed');await request(refresh,1,fixedExpected);await patch(fb,fixtureBindings('bad'),'list source failure');await request(refresh,2,{rcode:2,count:0});await patch(fb,fixtureBindings('good'),'list source recovery');await request(refresh,3,{...fixedExpected,ttl:17});
+ for(const ttl of [0,60])await samples('attribution-'+ttl,{DNS_ADDRESS_SOURCES:{geo:{url:url('/geo','geo-'+ttl),ipParam:'ip',fields:{ip:['ip'],asn:['network','asn'],country:['location','country']},cacheTtl:ttl}},DNS_RULE_MAIN:{order:0,rules:[{actions:[fixed,{type:'enrichAddresses',source:'geo'}]},{when:{collection:'response.addresses',quantifier:'any',where:{all:[{field:'item.asn',op:'eq',value:64512},{field:'item.country',op:'eq',value:'DE'}]}},actions:[{type:'setTtl',ttl:17}]}]}},5,{...fixedExpected,ttl:17});
+ const composed=JSON.parse(fs.readFileSync(path.join(root,'.acceptance/r2-20261024/composed-config.json'),'utf8')).vars;delete composed.RUN_EXPIRES;for(const k of ['DNS_UPSTREAMS','DNS_DOMAIN_LISTS','DNS_ADDRESS_SOURCES'])for(const v of Object.values(composed[k]))v.url=url(new URL(v.url).pathname,'composed');
+ for(const label of ['composed-round1','composed-round2'])await samples(label,composed,48,{type:65,count:1,ttl:17,ad:false,ech:true,synthetic:true,composed:true});
+ const direct={DNS_RULE_MAIN:group([httpsAnswer,{type:'loadEch',config:ECH},{type:'applyEch'},{type:'setTtl',ttl:17}])};await samples('ech-direct',direct,5,{type:65,count:1,ttl:17,ech:true,synthetic:true,ad:false});
+ await samples('https-public',{...upstream('https-public'),DNS_UPSTREAMS:{primary:{transport:'https',url:'https://cloudflare-dns.com/dns-query'}}},5,{rcode:0});
+ await samples('tcp-public',upstream('tcp','tcp'),5,{rcode:0});
+ await samples('tls-public',upstream('tls','tls'),5,{rcode:0});
+ for(const [label,verify,ttl,n] of [['ech-default-uncached',false,0,2],['ech-auth-uncached',true,0,2],['ech-default-cache',false,60,3],['ech-auth-cache',true,60,3]]){
+ const options={hostname:'scontent.xx.fbcdn.net',serverName:'scontent.xx.fbcdn.net',port:443,alpn:['h2'],timeoutMs:8000,maxBytes:65536,cacheTtl:ttl,...(verify?{verifyCertificate:true}:{})};
+ await samples(label,{DNS_LIMITS:{maxEchProbeTimeoutMs:8000,maxExecutionTimeMs:10000},DNS_RULE_MAIN:group([httpsAnswer,{type:'probeEch',options},{type:'applyEch'}])},n,{type:65,rcode:0,count:1,ech:true,ad:false},{probe:true});}
+ const protocol=await configure('protocol-json',{DNS_JSON:true,DNS_RULE_MAIN:group([fixed])});const wire=query();
+ await request(protocol,0,fixedExpected,{path:'/dns-query?dns='+Buffer.from(wire).toString('base64url'),init:{method:'GET'}});
+ await request(protocol,1,{...fixedExpected,json:true},{path:'/dns-query?name=example.com&type=A',init:{method:'GET'}});
+ await request(protocol,2,{status:400},{path:'/dns-query?name=example.com&name=duplicate.example',init:{method:'GET'}});
+ await request(protocol,3,{status:405},{path:'/dns-query?name=example.com',init:{method:'POST',body:wire,headers:{'Content-Type':'application/dns-message'}}});
+ await request(protocol,4,{status:400},{init:{method:'POST',body:Uint8Array.of(0),headers:{'Content-Type':'application/dns-message'}}});
+ await request(protocol,5,{status:415},{init:{method:'POST',body:wire,headers:{'Content-Type':'text/plain'}}});
+ const rollback={DNS_RULE_MAIN:{order:0,rules:[{actions:[fixed,{type:'setTtl',ttl:17},{type:'queryUpstream',upstream:'broken',onError:'continue'}]},{when:{field:'lastAction.code',op:'eq',value:'UPSTREAM_FAILED'},actions:[{type:'setTtl',ttl:19}]}]},DNS_UPSTREAMS:{broken:{transport:'https',url:url('/fail','rollback')}}};await samples('optional-failure-current-state',rollback,5,{...fixedExpected,ttl:19});
+ await setObs({...observed,enabled:false,logs:{...observed.logs,enabled:false,invocation_logs:false},traces:{...observed.traces,enabled:false}});
+ key=randomBytes(32).toString('base64url');const keyed=await configure('keyed-isolation',{DNS_JSON:true,DNS_RULE_MAIN:group([fixed])},{secret:key});
+ await request(keyed,0,{status:404},{path:'/dns-query?name=example.com&name=duplicate.example',init:{method:'GET'}});
+ await request(keyed,1,{status:404},{path:'/invalid-key/dns-query'});
+ await request(keyed,2,fixedExpected,{path:'/'+key+'/dns-query'});
+ await request(keyed,3,fixedExpected,{path:'/'+key+'/dns-query?dns='+Buffer.from(wire).toString('base64url'),init:{method:'GET'}});
+ await request(keyed,4,{...fixedExpected,json:true},{path:'/'+key+'/dns-query?name=example.com&type=A',init:{method:'GET'}});
+}catch(e){fatal=e.message?.match(/^(CONTROL_HTTP_\d+|CONTROL_REJECTED|SMOKE_FAILED)$/)?.[0]??'RUN_STOPPED';console.log(JSON.stringify({fatal}));}
+finally{
+ const cleanup={startedAt:new Date().toISOString(),restored:false,errors:[]};
+ try{const v=await patch(base,before.bindings,'restore original active and latest bindings');assert.deepEqual((await api(base+'/settings')).bindings,before.bindings);cleanup.version=v;cleanup.activeBindingsRestored=true;cleanup.latestBindingsRestored=true;}catch{cleanup.errors.push('BINDING_RESTORATION_FAILED');}
+ try{await patch(fb,before.fixtureBindings,'restore expired fixture');cleanup.fixtureRestored=true;}catch{cleanup.errors.push('FIXTURE_RESTORATION_FAILED');}
+ if(cleanup.activeBindingsRestored)try{await setObs(before.scriptSettings.observability);assert.deepEqual(obsExpected,before.scriptSettings.observability);cleanup.observabilityRestored=true;}catch{cleanup.errors.push('OBSERVABILITY_RESTORATION_FAILED');}
+ cleanup.restored=cleanup.errors.length===0;ledger.finishedAt=new Date().toISOString();ledger.echAttempts=echAttempts;ledger.fatal=fatal??null;write('ledger',ledger);write('cleanup',cleanup);console.log(JSON.stringify({requests:ledger.attempts.length,echAttempts,failures:ledger.failures.length,cleanup}));
+}
+if(fatal)process.exitCode=1;
