@@ -107,7 +107,7 @@ test('reports partial missing and unknown telemetry as unavailable instead of dr
   assert.equal(report.cases[0].conclusion, 'blocked');
 });
 
-test('unknown telemetry alone blocks, while its measured CPU overage remains a failure', async t => {
+test('unknown telemetry remains blocked even when its measured CPU exceeds the threshold', async t => {
   const result = await invoke(t, base, telemetry('unknown'));
   assert.equal(result.status, 0, result.stderr);
   const report = JSON.parse(result.stdout);
@@ -118,7 +118,43 @@ test('unknown telemetry alone blocks, while its measured CPU overage remains a f
   const overLimit = { ...telemetry('unknown'), samples: [{ sampleId, cpuMs: 11, wallMs: 12, outcome: 'unknown' }] };
   const exceeded = await invoke(t, base, overLimit);
   assert.equal(exceeded.status, 0, exceeded.stderr);
-  assert.equal(JSON.parse(exceeded.stdout).cases[0].conclusion, 'failed');
+  assert.equal(JSON.parse(exceeded.stdout).cases[0].conclusion, 'blocked');
+  assert.equal(JSON.parse(exceeded.stdout).cases[0].cpuOverLimitCount, 1);
+});
+
+test('reports successful CPU overages separately from actual execution failures', async t => {
+  const secondId = '00000000-0000-4000-8000-000000000005';
+  const thirdId = '00000000-0000-4000-8000-000000000006';
+  const input = { ...base, samples: [base.samples[0], { ...base.samples[0], id: secondId }, { ...base.samples[0], id: thirdId }] };
+  const timing = { ...telemetry('ok'), samples: [
+    { sampleId, cpuMs: 6, wallMs: 12, outcome: 'ok' },
+    { sampleId: secondId, cpuMs: 10, wallMs: 15, outcome: 'ok' },
+    { sampleId: thirdId, cpuMs: 13, wallMs: 20, outcome: 'ok' },
+  ] };
+  const result = await invoke(t, input, timing);
+  assert.equal(result.status, 0, result.stderr);
+  const report = JSON.parse(result.stdout), row = report.cases[0];
+  assert.equal(row.conclusion, 'observed-with-cpu-overages');
+  assert.equal(row.cpuWithinLimitCount, 2);
+  assert.equal(row.cpuOverLimitCount, 1);
+  assert.equal(row.cpuWithinLimitRatio, 2 / 3);
+  assert.equal(row.executionFailureCount, 0);
+  assert.equal(report.completeAcceptance, false);
+  const failed = await invoke(t, input, { ...timing, samples: timing.samples.map(s => s.sampleId === thirdId ? { ...s, outcome: 'exceededCpu' } : s) });
+  assert.equal(JSON.parse(failed.stdout).cases[0].conclusion, 'failed');
+  assert.equal(JSON.parse(failed.stdout).cases[0].executionFailureCount, 1);
+});
+
+test('successful overages do not hide missing telemetry or a stopped scenario', async t => {
+  const high = { ...telemetry('ok'), samples: [{ sampleId, cpuMs: 13, wallMs: 20, outcome: 'ok' }] };
+  for (const input of [{ ...base, stopped: ['simple-case'] }, { ...base, mode: 'local' },
+    { ...base, samples: [...base.samples, { ...base.samples[0], id: '00000000-0000-4000-8000-000000000007' }] }]) {
+    const result = await invoke(t, input, high);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).cases[0].conclusion, 'blocked');
+  }
+  const missing = await invoke(t, base);
+  assert.equal(JSON.parse(missing.stdout).cases[0].cpuWithinLimitRatio, null);
 });
 
 test('rejects inconsistent correctness and outcome fields through the public CLI', async t => {
@@ -179,5 +215,8 @@ test('reports p95 only at one hundred samples and flags a declared CPU overage',
   assert.equal(row.sampleCount, 100);
   assert.equal(row.clientLatencyMs.p95, 95);
   assert.equal(row.cpuMs.p95, 95);
-  assert.equal(row.conclusion, 'failed');
+  assert.equal(row.cpuWithinLimitCount, 94);
+  assert.equal(row.cpuOverLimitCount, 6);
+  assert.equal(row.cpuWithinLimitRatio, 0.94);
+  assert.equal(row.conclusion, 'observed-with-cpu-overages');
 });

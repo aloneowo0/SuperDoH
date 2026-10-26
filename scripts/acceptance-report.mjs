@@ -116,13 +116,14 @@ function buildReport(collection, telemetry) {
     const wall = records.filter(row => row.measured).map(row => row.measured.wallMs);
     const missingTelemetryCount = records.filter(row => !row.measured).length;
     const unknownOutcomeCount = records.filter(row => row.measured?.outcome === 'unknown').length;
-    const failed = records.some(({ sample, measured }) => !sample.correct ||
-      (measured && ['exception', 'exceededCpu', 'exceededMemory', 'canceled'].includes(measured.outcome)) ||
-      (measured && telemetry && measured.cpuMs > telemetry.limit));
+    const executionFailureCount = records.filter(({ sample, measured }) => !sample.correct ||
+      (measured && ['exception', 'exceededCpu', 'exceededMemory', 'canceled'].includes(measured.outcome))).length;
+    const cpuWithinLimitCount = telemetry ? cpu.filter(value => value <= telemetry.limit).length : 0;
+    const cpuOverLimitCount = cpu.length - cpuWithinLimitCount;
     let conclusion;
-    if (failed) conclusion = 'failed';
+    if (executionFailureCount) conclusion = 'failed';
     else if (collection.mode === 'local' || collection.stopped.includes(group.scenario) || !telemetry || missingTelemetryCount || unknownOutcomeCount) conclusion = 'blocked';
-    else conclusion = 'observed-within-declared-limit';
+    else conclusion = cpuOverLimitCount ? 'observed-with-cpu-overages' : 'observed-within-declared-limit';
     return {
       scenario: group.scenario,
       phase: group.phase,
@@ -132,6 +133,10 @@ function buildReport(collection, telemetry) {
       errorCount: records.filter(row => !row.sample.correct || row.sample.errorCode !== null).length,
       missingTelemetryCount,
       unknownOutcomeCount,
+      executionFailureCount,
+      cpuWithinLimitCount,
+      cpuOverLimitCount,
+      cpuWithinLimitRatio: cpu.length ? cpuWithinLimitCount / cpu.length : null,
       clientLatencyMs: distribution(records.map(row => row.sample.latencyMs)),
       cpuMs: distribution(cpu),
       wallMs: distribution(wall),
@@ -160,6 +165,8 @@ function buildReport(collection, telemetry) {
       'Cold-candidate samples are not verified cold starts.',
       'External telemetry correlation is normalized, sampled, and not independently verified; missing measurements remain unavailable.',
       'The CPU threshold is user-provided and is not programmatically verified against the Free plan; a self-declared account plan does not establish plan status.',
+      'Successful invocations above the declared CPU threshold are reported separately from execution failures; platform flexibility is not a guaranteed extra CPU allowance.',
+      'The within-limit ratio uses correlated CPU samples only; missing measurements are counted separately and keep the case blocked.',
       'A per-case observation within a declared CPU limit is not complete version acceptance.',
     ],
   };

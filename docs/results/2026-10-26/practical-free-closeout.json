@@ -1,0 +1,379 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "kind": "Practical Free acceptance and bounded key closeout",
+  "policy": {
+    "basis": "User accepts most requests within Free CPU budget and occasional overages; no all-invocation <=10 ms requirement, no invented percentage or full-acceptance claim.",
+    "platformReference": "https://developers.cloudflare.com/workers/platform/limits/#cpu-time",
+    "profileRequired": false,
+    "actualExecutionErrorsStillFail": true
+  },
+  "budget": {
+    "clientCap": 24,
+    "clientAttempts": 14,
+    "successfulChecks": 13,
+    "runnerEncodingFailure": 1,
+    "profileAttempts": 0
+  },
+  "scope": {
+    "producer": "superdoh",
+    "sourceCommit": "0582d86",
+    "productionCodeModified": false,
+    "currentDirtyWorkspaceDeployed": false,
+    "fixtureModified": false,
+    "publicEchRequests": 0,
+    "telemetryCollectedForKeyedRequests": false
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "version": "1a0ed5cc-2345-4bd5-ac5a-10724855c97a",
+      "keyType": "secret_text",
+      "plaintextKeyExported": false,
+      "loggingVerifiedOff": true,
+      "configuredAt": "2026-10-26T05:00:20.901Z"
+    },
+    {
+      "phase": 2,
+      "version": "4223f5de-d417-48b0-a527-4bfb3aeed675",
+      "keyType": "secret_text",
+      "plaintextKeyExported": false,
+      "loggingVerifiedOff": true,
+      "configuredAt": "2026-10-26T05:02:12.342Z"
+    }
+  ],
+  "samples": [
+    {
+      "id": "f4fcfff1-cf12-47bd-8db4-36f3e992dd30",
+      "phase": 1,
+      "label": "missing-key",
+      "startedAt": "2026-10-26T05:01:28.177Z",
+      "correct": true,
+      "expectedStatus": 404,
+      "status": 404,
+      "finishedAt": "2026-10-26T05:01:29.317Z"
+    },
+    {
+      "id": "8d38617d-8a03-433f-91cb-825197012b0b",
+      "phase": 1,
+      "label": "wrong-key",
+      "startedAt": "2026-10-26T05:01:30.377Z",
+      "correct": true,
+      "expectedStatus": 404,
+      "status": 404,
+      "finishedAt": "2026-10-26T05:01:30.611Z"
+    },
+    {
+      "id": "36b5cd1d-1b20-441a-b9fa-7eb5fdffee2d",
+      "phase": 1,
+      "label": "unauthorized-malformed-json",
+      "startedAt": "2026-10-26T05:01:31.673Z",
+      "correct": true,
+      "expectedStatus": 404,
+      "status": 404,
+      "finishedAt": "2026-10-26T05:01:31.921Z"
+    },
+    {
+      "id": "e83dbad2-ed9e-4f1b-b369-1e02ffece788",
+      "phase": 1,
+      "label": "authorized-wire-post",
+      "startedAt": "2026-10-26T05:01:32.983Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:01:33.248Z"
+    },
+    {
+      "id": "a5087305-fbbd-4764-81ef-caf4f016e7ca",
+      "phase": 1,
+      "label": "authorized-wire-get",
+      "startedAt": "2026-10-26T05:01:34.305Z",
+      "correct": false,
+      "expectedStatus": 200,
+      "status": 400,
+      "errorCode": "CLOUD_ASSERTION_OR_TRANSPORT_FAILED",
+      "finishedAt": "2026-10-26T05:01:34.515Z"
+    },
+    {
+      "id": "71e4c55f-7661-430a-b08c-cfe3e669805d",
+      "phase": 1,
+      "label": "authorized-wire-get",
+      "startedAt": "2026-10-26T05:01:46.047Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:01:47.370Z"
+    },
+    {
+      "id": "102b640d-8bb5-446d-9323-47b6b9e43b68",
+      "phase": 1,
+      "label": "authorized-json-get",
+      "startedAt": "2026-10-26T05:01:48.426Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:01:48.641Z"
+    },
+    {
+      "id": "36f72645-90fd-4cb2-895a-ecb9d5ee03e9",
+      "phase": 1,
+      "label": "authorized-invalid-json",
+      "startedAt": "2026-10-26T05:01:49.691Z",
+      "correct": true,
+      "expectedStatus": 400,
+      "status": 400,
+      "finishedAt": "2026-10-26T05:01:49.855Z"
+    },
+    {
+      "id": "e06f5325-27c6-4a99-9242-7a41ccbb9683",
+      "phase": 2,
+      "label": "retired-key",
+      "startedAt": "2026-10-26T05:02:17.836Z",
+      "correct": true,
+      "expectedStatus": 404,
+      "status": 404,
+      "finishedAt": "2026-10-26T05:02:18.984Z"
+    },
+    {
+      "id": "f6b29672-d77e-47eb-8486-251d80fe7587",
+      "phase": 2,
+      "label": "authorized-wire-post",
+      "startedAt": "2026-10-26T05:02:20.049Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:02:20.251Z"
+    },
+    {
+      "id": "a9dea37c-5388-45eb-87fa-b853c98a2964",
+      "phase": 2,
+      "label": "authorized-wire-get",
+      "startedAt": "2026-10-26T05:02:21.312Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:02:21.519Z"
+    },
+    {
+      "id": "e1fb21a8-f90b-4a9e-96b4-45532835192a",
+      "phase": 2,
+      "label": "authorized-json-get",
+      "startedAt": "2026-10-26T05:02:22.575Z",
+      "correct": true,
+      "expectedStatus": 200,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:02:22.776Z"
+    },
+    {
+      "phase": "cleanup",
+      "label": "cleanup-wire-servfail",
+      "startedAt": "2026-10-26T05:05:50.260Z",
+      "correct": true,
+      "status": 200,
+      "finishedAt": "2026-10-26T05:05:51.318Z"
+    },
+    {
+      "phase": "cleanup",
+      "label": "cleanup-json-disabled",
+      "startedAt": "2026-10-26T05:05:52.369Z",
+      "correct": true,
+      "status": 404,
+      "finishedAt": "2026-10-26T05:05:52.576Z"
+    }
+  ],
+  "operationalCorrections": [
+    {
+      "issue": "Cloudflare returns observability:null / omitted after explicitly disabling collection",
+      "handling": "Verified both settings APIs after a fresh disable, plus no Logpush/Tail consumers; no key traffic before verification."
+    },
+    {
+      "issue": "PATCH settings created latest version without deploying it",
+      "handling": "Explicitly deployed it, verified active Secret binding before first keyed request."
+    },
+    {
+      "issue": "Uint8Array.toString did not produce base64url",
+      "handling": "Preserved 400 in ledger; changed to Buffer.from(wire).toString(base64url) and only resumed remaining phase-1 cases; no app fix."
+    },
+    {
+      "issue": "Empty bindings retained Secret",
+      "handling": "Guard kept logging disabled; explicitly deleted the temporary DNS_PATH_KEY through Secrets API, verified active/latest empty before restoring collection."
+    }
+  ],
+  "before": {
+    "kind": "closeout-before",
+    "settings": {
+      "placement": {},
+      "compatibility_date": "2026-10-19",
+      "compatibility_flags": [
+        "enable_request_signal",
+        "global_fetch_strictly_public",
+        "no_nodejs_compat",
+        "no_nodejs_compat_v2"
+      ],
+      "usage_model": "standard",
+      "tags": [],
+      "tail_consumers": [],
+      "logpush": false,
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": false,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": true,
+          "persist": true,
+          "head_sampling_rate": 1
+        },
+        "issues": {
+          "enabled": false
+        }
+      },
+      "annotations": {
+        "workers/message": "Canonical-ID CPU diagnosis cleanup: original modules, empty bindings",
+        "workers/triggered_by": "upload"
+      },
+      "bindings": []
+    },
+    "scriptSettings": {
+      "logpush": false,
+      "tags": null,
+      "tail_consumers": null,
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": false,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": true,
+          "persist": true,
+          "head_sampling_rate": 1
+        },
+        "issues": {
+          "enabled": false
+        }
+      }
+    },
+    "versions": [
+      {
+        "version_id": "f5ccd128-c42f-45f5-bd6f-7acdfc263a3c",
+        "percentage": 100
+      }
+    ]
+  },
+  "restored": {
+    "kind": "closeout-restored",
+    "restoredAt": "2026-10-26T05:03:18.238Z",
+    "version": "457cbcd9-27c8-4611-a2fc-c3a171781e90",
+    "activeBindings": [],
+    "latestBindings": [],
+    "sourceEtag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3",
+    "originalEtag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3",
+    "temporarySecretDeleted": true,
+    "scriptSettings": {
+      "logpush": false,
+      "tags": null,
+      "tail_consumers": null,
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": false,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": true,
+          "persist": true,
+          "head_sampling_rate": 1
+        },
+        "issues": {
+          "enabled": false
+        }
+      }
+    }
+  },
+  "independent": {
+    "kind": "closeout-independent-check",
+    "verifiedAt": "2026-10-26T05:08:44.836Z",
+    "activeVersion": "457cbcd9-27c8-4611-a2fc-c3a171781e90",
+    "activeBindings": [],
+    "latestBindings": [],
+    "scriptSettings": {
+      "logpush": false,
+      "tags": null,
+      "tail_consumers": null,
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": false,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": true
+        },
+        "traces": {
+          "enabled": true,
+          "persist": true,
+          "head_sampling_rate": 1
+        },
+        "issues": {
+          "enabled": false
+        }
+      }
+    },
+    "keyWindowEventCount": 0,
+    "queryLimit": 2000,
+    "logAbsenceLimitation": "No events returned in this bounded query; not a claim about all platform or intermediary logging"
+  },
+  "verification": {
+    "staticTypecheckPassed": true,
+    "syntaxChecksPassed": true,
+    "cloudReportCalculations": {
+      "kind": "closeout-report-cloud-checks",
+      "passed": 11,
+      "executedAt": "2026-10-26T05:07:40.542Z",
+      "buildReportSha256": "d4429dfd19ce588e2bd8a18d1936cc1cbdc4285a48d15b9065a5a4631ed2a450",
+      "distributionSha256": "9a55508e9e923f77da9c14855a2ef8d90755bfe30a36d237460a38348765ed90",
+      "scope": "Exact report calculation functions in Cloudflare MCP runtime; filesystem/CLI input validation not executed",
+      "workerClientRequests": 0
+    },
+    "localNodeMiniflareBehaviorTestsRun": false,
+    "fullNpmSuiteRun": false,
+    "publicCliRegressionTestsAddedButNotExecuted": true,
+    "limitation": "Cloud report calculation snapshots match source hashes, but Node filesystem/CLI validation and full regression were not run under the cloud-only instruction."
+  },
+  "reproduction": {
+    "runnerSource": "import fs from 'node:fs';\nimport assert from 'node:assert/strict';\nimport { privateDecrypt, constants, randomUUID } from 'node:crypto';\nimport { setTimeout as delay } from 'node:timers/promises';\nimport { setGlobalProxyFromEnv } from 'node:http';\nimport { query, decode } from '../../test/helpers/dns-wire.mjs';\nprocess.env.HTTP_PROXY=process.env.HTTPS_PROXY='http://127.0.0.1:7889';setGlobalProxyFromEnv();\nconst dir=import.meta.dirname, phase=Number(process.argv[2]);\nconst transcript=fs.readFileSync(process.env.DNS_DIAGNOSTIC_TRANSCRIPT,'utf8');\nconst phases=new Map();\nfunction scan(v){if(typeof v==='string'){try{const j=JSON.parse(v);if(j.kind==='closeout-key-phase')phases.set(j.phase,j);}catch{}}else if(Array.isArray(v))v.forEach(scan);else if(v&&typeof v==='object')Object.values(v).forEach(scan);}\nfor(const l of transcript.trim().split('\\n'))try{scan(JSON.parse(l));}catch{}\nconst key=n=>privateDecrypt({key:fs.readFileSync(dir+'/private.pem'),padding:constants.RSA_PKCS1_OAEP_PADDING,oaepHash:'sha256'},Buffer.from(phases.get(n).encryptedKey,'base64')).toString();\nconst resume=process.argv.includes('--resume'),current=key(phase), old=phase===2?key(1):undefined, wire=query('example.com',1);\nconst file=dir+'/key-ledger.json',ledger=fs.existsSync(file)?JSON.parse(fs.readFileSync(file)):{cap:24,samples:[]};\nconst save=()=>fs.writeFileSync(file,JSON.stringify(ledger,null,2));\nasync function request(label,path,status,{method='POST',json=false}={}){\n assert.ok(ledger.samples.length<24);if(ledger.lastCompletedAt)await delay(Math.max(0,1050-(Date.now()-ledger.lastCompletedAt)));\n const row={id:randomUUID(),phase,label,startedAt:new Date().toISOString(),correct:false,expectedStatus:status};ledger.samples.push(row);save();\n try{const r=await fetch('https://superdoh.aloneowo0.workers.dev'+path,{method,headers:{'Content-Type':'application/dns-message','Accept':json?'application/dns-json':'application/dns-message'},...(method==='POST'?{body:wire}:{}),redirect:'manual',signal:AbortSignal.timeout(15000)});row.status=r.status;const bytes=Buffer.from(await r.arrayBuffer());assert.ok(bytes.length<65536);assert.equal(r.status,status);\n if(status===200){assert.equal(r.headers.get('cache-control'),'no-store');if(json){const d=JSON.parse(bytes);assert.equal(d.Status,0);assert.equal(d.Answer.length,1);assert.equal(d.Answer[0].data,phase===1?'192.0.2.8':'192.0.2.9');assert.equal(d.Answer[0].TTL,60);}else{const d=decode(bytes);assert.equal(d.id,0x4242);assert.equal(d.flags&15,0);assert.equal(d.flags&32,0);assert.deepEqual(d.questions,[{name:'example.com',type:1,class:1}]);const a=d.records.filter(x=>x.section===0);assert.equal(a.length,1);assert.equal(a[0].ttl,60);assert.deepEqual(a[0].data,[192,0,2,phase===1?8:9]);}}\n row.correct=true;\n }catch{row.errorCode='CLOUD_ASSERTION_OR_TRANSPORT_FAILED';process.exitCode=1;}\n finally{row.finishedAt=new Date().toISOString();ledger.lastCompletedAt=Date.now();save();}\n assert.ok(row.correct,'Cloud check failed: '+label);\n}\ntry{\n if(phase===1&&!resume){await request('missing-key','/dns-query',404);await request('wrong-key','/invalid-key/dns-query',404);await request('unauthorized-malformed-json','/dns-query?name=x&name=y',404,{method:'GET',json:true});}\n else if(phase===2)await request('retired-key','/'+old+'/dns-query',404);\n if(!resume)await request('authorized-wire-post','/'+current+'/dns-query',200);\n await request('authorized-wire-get','/'+current+'/dns-query?dns='+Buffer.from(wire).toString('base64url'),200,{method:'GET'});\n await request('authorized-json-get','/'+current+'/dns-query?name=example.com&type=A',200,{method:'GET',json:true});\n if(phase===1)await request('authorized-invalid-json','/'+current+'/dns-query?name=x&name=y',400,{method:'GET',json:true});\n console.log(JSON.stringify({phase,correct:ledger.samples.filter(x=>x.correct).length,total:ledger.samples.length}));\n}catch{console.error(JSON.stringify({error:'BOUNDED_KEY_CHECK_FAILED',phase,total:ledger.samples.length}));process.exitCode=1;}\n",
+    "keysRemoved": true,
+    "requiresFreshEphemeralKeysAndExplicitLoggingDisable": true,
+    "credentialsIncluded": false,
+    "runnerSourceRedacted": true,
+    "requiredEnvironment": [
+      "DNS_DIAGNOSTIC_TRANSCRIPT: operator-local transcript containing encrypted ephemeral key transport results; not included in published evidence"
+    ]
+  },
+  "conclusion": {
+    "keyWireJsonAndRotationChecksPassed": true,
+    "cacheIsolationNotProvenByStaticAnswerRotation": true,
+    "fullFreeAcceptance": false,
+    "remaining": [
+      "Full current-source cloud matrix is not established by the old deployed source.",
+      "Uncached active ECH has historical frequently over-budget samples; ordinary cached traffic is separate.",
+      "Static-answer rotation proves key/answer change, not full upstream cache identity isolation.",
+      "Historical resource failures and missing telemetry remain recorded, not reclassified as successful."
+    ]
+  }
+}
