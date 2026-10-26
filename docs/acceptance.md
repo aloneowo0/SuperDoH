@@ -1,6 +1,6 @@
 # Acceptance matrix and verification status
 
-Current decision (2026-10-26): **bounded current-source functionality delivered; full Free acceptance not declared**. Use the [unified #25 reconciliation and usage boundaries](acceptance-closeout-2026-10-26.md) as the current status. Dated sections below preserve historical observations, failures and policies; they are not all current blockers or new release test results.
+Current decision (2026-10-26): **current-source representative acceptance completed; #25 technically ready to close under the agreed practical Free policy**. Use the [final acceptance evidence and boundaries](final-acceptance-2026-10-26.md). Historical dated sections preserve earlier failures, incomplete runs and decisions; neither universal Free safety nor a fresh full-suite run is claimed.
 
 This matrix maps the current implementation surface to its local verification commands. A listed command is a reproducible check, not a claim that it was run for a particular release. Run in the repository root with Node.js 22+ and the locked dependencies. Workerd tests use the configured compatibility date and do not enable `nodejs_compat`.
 
@@ -73,7 +73,7 @@ The executed build used /tmp/superdoh-openssl-ech-20261022 and an isolated repos
 ## Outstanding acceptance
 
 - **#22 local ECH interoperability:** passed in the isolated WSL environment above; keep this opt-in prerequisite separate from the default offline regression and rerun it for release candidates.
-- **#25 online free-plan acceptance:** current-source HTTPS/TCP/JSON smoke and bounded cache/Secret-target isolation are recorded; path-key and representative CPU evidence have explicit historical provenance. Occasional successful CPU overages are not automatic failure. Uncached active ECH has repeated high historical costs, current native CPU and full-regression claims remain unestablished, and the initial TCP failure is retained. See the [unified decision and finite remaining gaps](acceptance-closeout-2026-10-26.md), not the oldest run alone. #25/#7 remain open.
+- **#25 online free-plan acceptance:** current-source representative CPU/Wall and DNSSEC finalization now join the source-verified transport/cache checks and unchanged-library historical regression evidence. Under the approved majority-within-Free policy, the finite acceptance is ready for #25 closure; uncached ECH costs and all other documented limits remain. See [all ten criteria and publication status](final-acceptance-2026-10-26.md). No parent #7 closure or automatic push is implied.
 - **Platform/resource caveats:** upstream reachability, Secrets/variable limits and Worker resource availability depend on the deployed account and environment. Application `DNS_LIMITS` values are resource bounds, not free-plan CPU guarantees.
 
 The `.example` and `.test` names in `examples/*.json` are illustrative inputs for controlled harnesses, not live services. Replace them with sources you operate before deployment; these examples do not establish public reachability or online data accuracy.

@@ -1,8 +1,8 @@
 # Online acceptance runbook
 
-Status: **bounded current-source checks completed; full acceptance is not declared**. The [unified #25 reconciliation](acceptance-closeout-2026-10-26.md) is the current decision: source-verified correctness and cache isolation, historical key/CPU provenance, practical Free policy, ECH costs and finite remaining claims. Earlier reports remain unchanged. This runbook is not authorization for another run; the reconciliation itself sent no cloud requests or behavior tests.
+Status: **current-source representative acceptance completed; #25 is ready to close with recorded boundaries**. See [final evidence and all ten criteria](final-acceptance-2026-10-26.md). Historical reports remain unchanged; uncached ECH and arbitrary configurations have no unconditional Free guarantee. This runbook does not authorize another run or imply a fresh full npm/Rust test.
 
-Current upstream scope, approved 2026-10-25, is HTTPS and ordinary DNS over TCP only. `transport: "tls"` in any `DNS_UPSTREAMS` definition is rejected before network work, including unused definitions; this runbook does not authorize DoT traffic. Earlier online DoT measurements remain historical evidence, not a passing current-scope test. The independent ECH TLS probe remains separate and unchanged. The complete #25 matrix remains unaccepted; previous key checks and practical CPU observations are recorded separately, not blanket failures. See [ADR 0001](adr/0001-exclude-dot-from-current-scope.md).
+Current upstream scope, approved 2026-10-25, is HTTPS and ordinary DNS over TCP only. `transport: "tls"` in any `DNS_UPSTREAMS` definition is rejected before network work, including unused definitions; this runbook does not authorize DoT traffic. Earlier online DoT measurements remain historical evidence, not a passing current-scope test. The independent ECH TLS probe remains separate and unchanged. The final #25 decision combines current bounded checks and explicitly identified unchanged-code historical evidence; it does not certify all configurations. See [ADR 0001](adr/0001-exclude-dot-from-current-scope.md).
 
 ## Authorization gate
 

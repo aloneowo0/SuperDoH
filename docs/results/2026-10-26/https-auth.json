@@ -1,0 +1,622 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "kind": "Actual HTTPS certificate rejection through current-source isolated Worker",
+  "source": {
+    "productionSha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+    "modules": [
+      {
+        "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+        "bytes": 854948,
+        "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+      },
+      {
+        "name": "worker.js",
+        "bytes": 1208784,
+        "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+      }
+    ],
+    "wrapperSeparate": true,
+    "wrapperSha256": "1b8c5795b28bf42a306d851b41f0a4a0787226b8fff4a6670adf2628fc113206",
+    "cloudVersion": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e"
+  },
+  "budget": {
+    "clientCap": 12,
+    "clientAttempts": 8,
+    "validationRequests": 7,
+    "cleanupRequests": 1,
+    "minimumCompletionGapMs": 1001,
+    "profiles": 0,
+    "cpuMatrixRequests": 0,
+    "echProbes": 0
+  },
+  "summary": {
+    "allAssertionsPassed": true,
+    "validControlStatus": 200,
+    "expiredCertificateStatus": 526,
+    "hostnameMismatchStatus": 526,
+    "selfSignedCertificateStatus": 526,
+    "productionFailures": [
+      "UPSTREAM_FAILED",
+      "UPSTREAM_FAILED",
+      "UPSTREAM_FAILED"
+    ],
+    "productionDnsRcodes": [
+      2,
+      2,
+      2
+    ],
+    "criterion10AuthenticationGapResolved": true,
+    "notGenericNetworkFailureInference": true
+  },
+  "samples": [
+    {
+      "id": "1eb6bb4d-cac5-4649-b219-a6ebc7b1ad3e",
+      "phase": "run",
+      "scenario": "valid",
+      "mode": "native",
+      "startedAt": "2026-10-26T09:04:53.700Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "observation": {
+        "resolved": true,
+        "status": 200,
+        "certificateRejected": false,
+        "redirected": false
+      },
+      "finishedAt": "2026-10-26T09:04:56.800Z"
+    },
+    {
+      "id": "b4ed393f-9f8a-428d-b302-9be9ff9a09c8",
+      "phase": "run",
+      "scenario": "expired",
+      "mode": "native",
+      "startedAt": "2026-10-26T09:04:57.812Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "observation": {
+        "resolved": true,
+        "status": 526,
+        "certificateRejected": true,
+        "redirected": false
+      },
+      "finishedAt": "2026-10-26T09:04:58.519Z"
+    },
+    {
+      "id": "b779b815-90c3-4340-ba8f-d460e613d3f1",
+      "phase": "run",
+      "scenario": "expired",
+      "mode": "dns",
+      "startedAt": "2026-10-26T09:04:59.521Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failureCode": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "finishedAt": "2026-10-26T09:05:03.165Z"
+    },
+    {
+      "id": "f67cf030-20d4-4443-8cd6-a193911dde0e",
+      "phase": "run",
+      "scenario": "wrong-host",
+      "mode": "native",
+      "startedAt": "2026-10-26T09:05:04.173Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "observation": {
+        "resolved": true,
+        "status": 526,
+        "certificateRejected": true,
+        "redirected": false
+      },
+      "finishedAt": "2026-10-26T09:05:05.911Z"
+    },
+    {
+      "id": "13dc8df0-c6ed-4168-b9fa-db7672284bfc",
+      "phase": "run",
+      "scenario": "wrong-host",
+      "mode": "dns",
+      "startedAt": "2026-10-26T09:05:06.914Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failureCode": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "finishedAt": "2026-10-26T09:05:07.940Z"
+    },
+    {
+      "id": "41ed516c-217b-47c4-8f17-8f763e1828e6",
+      "phase": "run",
+      "scenario": "self-signed",
+      "mode": "native",
+      "startedAt": "2026-10-26T09:05:08.948Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "observation": {
+        "resolved": true,
+        "status": 526,
+        "certificateRejected": true,
+        "redirected": false
+      },
+      "finishedAt": "2026-10-26T09:05:10.726Z"
+    },
+    {
+      "id": "bb0eee4e-7592-4485-8eba-6a1f5c7ab2c9",
+      "phase": "run",
+      "scenario": "self-signed",
+      "mode": "dns",
+      "startedAt": "2026-10-26T09:05:11.727Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failureCode": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "finishedAt": "2026-10-26T09:05:13.559Z"
+    },
+    {
+      "id": "d05e4426-5b82-460e-b3a2-25dedcea5489",
+      "phase": "cleanup",
+      "scenario": "cleanup",
+      "mode": "cleanup",
+      "startedAt": "2026-10-26T09:06:00.956Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": null,
+      "sourceSha": null,
+      "failureCode": null,
+      "rcode": 2,
+      "finishedAt": "2026-10-26T09:06:03.089Z"
+    }
+  ],
+  "operations": [
+    {
+      "kind": "https-auth-setup",
+      "at": "2026-10-26T09:04:39.642Z",
+      "clientCap": 12,
+      "expiresAt": 1793006078513,
+      "targets": {
+        "valid": "https://sha256.badssl.com/",
+        "expired": "https://expired.badssl.com/",
+        "wrong-host": "https://wrong.host.badssl.com/",
+        "self-signed": "https://self-signed.badssl.com/"
+      },
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "versions": [
+        {
+          "version_id": "003d9ea4-bb2e-41ca-81f1-3f3ad82c9d8e",
+          "percentage": 100
+        }
+      ],
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1208784,
+          "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+        }
+      ],
+      "wrapper": "const rollback = {\"settings\":{\"placement\":{},\"compatibility_date\":\"2026-10-19\",\"compatibility_flags\":[\"enable_request_signal\",\"global_fetch_strictly_public\",\"no_nodejs_compat\",\"no_nodejs_compat_v2\"],\"usage_model\":\"standard\",\"tags\":[],\"tail_consumers\":[],\"logpush\":false,\"observability\":{\"enabled\":true,\"head_sampling_rate\":1,\"redact_query_string\":false,\"logs\":{\"enabled\":true,\"head_sampling_rate\":1,\"persist\":true,\"invocation_logs\":true},\"traces\":{\"enabled\":true,\"persist\":true,\"head_sampling_rate\":1},\"issues\":{\"enabled\":false}},\"annotations\":{\"workers/triggered_by\":\"upload\"},\"bindings\":[]},\"reverse\":[{\"at\":1167606,\"match\":\"  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \\\"off\\\", allowHalfOpen: false });\\n\",\"insert\":\"  let socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: target2.transport === \\\"tls\\\" ? \\\"starttls\\\" : \\\"off\\\", allowHalfOpen: false });\\n\"},{\"at\":1168115,\"match\":\"\",\"insert\":\"    if (target2.transport === \\\"tls\\\") {\\n      socket = socket.startTls({ expectedServerHostname: target2.serverName });\\n      socket.opened.catch(() => {\\n      });\\n      socket.closed.catch(() => {\\n      });\\n    }\\n\"},{\"at\":1176407,\"match\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\"]);\\n      if (value.transport === \\\"tcp\\\") {\\n\",\"insert\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\", \\\"serverName\\\"]);\\n      if (value.transport === \\\"tcp\\\" || value.transport === \\\"tls\\\") {\\n\"},{\"at\":1177003,\"match\":\"        const port = value.port === void 0 ? 53 : value.port;\\n\",\"insert\":\"        const port = value.port === void 0 ? value.transport === \\\"tls\\\" ? 853 : 53 : value.port;\\n\"},{\"at\":1177177,\"match\":\"        upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n\",\"insert\":\"        if (value.transport === \\\"tls\\\") {\\n          const serverName = value.serverName === void 0 ? address2 : value.serverName;\\n          if (typeof serverName !== \\\"string\\\" || serverName.length === 0 || serverName.length > 253 || serverName.includes(\\\":\\\") || /^[0-9.]+$/.test(serverName) || serverName.replace(/\\\\.$/, \\\"\\\").split(\\\".\\\").some((label) => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();\\n          upstreams.set(name, { transport: \\\"tls\\\", address: address2, port, serverName: serverName.replace(/\\\\.$/, \\\"\\\") });\\n        } else {\\n          if (value.serverName !== void 0) throw new Error();\\n          upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n        }\\n\"},{\"at\":1177279,\"match\":\"      if (value.address !== void 0 || value.port !== void 0) throw new Error();\\n\",\"insert\":\"      if (value.address !== void 0 || value.port !== void 0 || value.serverName !== void 0) throw new Error();\\n\"}]};\nimport {handleRequest} from './worker.js';\nconst targets={\"valid\":\"https://sha256.badssl.com/\",\"expired\":\"https://expired.badssl.com/\",\"wrong-host\":\"https://wrong.host.badssl.com/\",\"self-signed\":\"https://self-signed.badssl.com/\"};\nexport default {async fetch(request,env){const c=request.headers.get('x-tls-case'),sample=request.headers.get('x-tls-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!Object.hasOwn(targets,c)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const headers={'X-Tls-Version':env.VERSION.id,'X-Tls-Source':\"209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56\"};if(new URL(request.url).pathname==='/tls-probe'){let observation;try{const r=await fetch(targets[c],{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(5000)});observation={resolved:true,status:r.status,certificateRejected:r.status===526,redirected:r.redirected};await r.body?.cancel();}catch(error){const certificateMessageMatched=/certificate|cert_|ssl|tls|hostname/i.test(String(error?.message??''));observation={resolved:false,certificateRejected:certificateMessageMatched,certificateMessageMatched,errorClass:error instanceof TypeError?'TypeError':'Error'};}return Response.json(observation,{headers});}if(new URL(request.url).pathname!=='/dns-query')return new Response('Not found.',{status:404});const failures=[];const response=await handleRequest(request,{DNS_CACHE:{read:false,write:false},DNS_LIMITS:{upstreamTimeoutMs:5000,maxExecutionTimeMs:10000},DNS_UPSTREAMS:{selected:{transport:'https',url:targets[c]}},DNS_RULE_MAIN:{order:0,rules:[{actions:[{type:'queryUpstream',upstream:'selected'}]}]}},{requestId:sample,onEvent:event=>{failures.push(event.code);}});return new Response(response.body,{status:response.status,headers:{...Object.fromEntries(response.headers),...headers,'X-Tls-Failures':failures.join(',')}});}};\n",
+      "wrapperSha256": "1b8c5795b28bf42a306d851b41f0a4a0787226b8fff4a6670adf2628fc113206",
+      "settingsBefore": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "annotations": {
+          "workers/triggered_by": "upload"
+        },
+        "bindings": []
+      },
+      "beforeVersions": [
+        {
+          "version_id": "d55a465a-1ddf-4e63-8692-bad6f437e82d",
+          "percentage": 100
+        }
+      ],
+      "fixtureBefore": {
+        "settings": {
+          "placement": {},
+          "compatibility_date": "2026-10-19",
+          "compatibility_flags": [
+            "enable_request_signal",
+            "global_fetch_strictly_public",
+            "no_nodejs_compat",
+            "no_nodejs_compat_v2"
+          ],
+          "usage_model": "standard",
+          "tags": [],
+          "tail_consumers": [],
+          "logpush": false,
+          "annotations": {
+            "workers/triggered_by": "upload"
+          },
+          "bindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ]
+        },
+        "versions": [
+          {
+            "version_id": "42eb4c18-ab7c-46c6-9d64-33d64198bd6c",
+            "percentage": 100
+          }
+        ]
+      },
+      "metadata": {
+        "main_module": "https-auth.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          },
+          {
+            "name": "EXPIRES_AT",
+            "type": "plain_text",
+            "text": "1793006078513"
+          }
+        ],
+        "observability": {
+          "enabled": false,
+          "logs": {
+            "enabled": false,
+            "invocation_logs": false
+          },
+          "traces": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": []
+      }
+    },
+    {
+      "kind": "https-auth-cleanup",
+      "at": "2026-10-26T09:05:41.606Z",
+      "versions": [
+        {
+          "version_id": "8604a169-ea09-4be6-887a-ef039d77d08b",
+          "percentage": 100
+        }
+      ],
+      "originalModules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ],
+      "wrapperRemoved": true,
+      "secretsCreated": 0
+    },
+    {
+      "kind": "https-auth-independent-restoration",
+      "at": "2026-10-26T09:06:46.716Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "8604a169-ea09-4be6-887a-ef039d77d08b",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "42eb4c18-ab7c-46c6-9d64-33d64198bd6c",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    }
+  ],
+  "restoration": {
+    "independent": {
+      "kind": "https-auth-independent-restoration",
+      "at": "2026-10-26T09:06:46.716Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "8604a169-ea09-4be6-887a-ef039d77d08b",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "42eb4c18-ab7c-46c6-9d64-33d64198bd6c",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    },
+    "publicCleanupPassed": true,
+    "originalSourceAndWasmRestored": true,
+    "activeAndLatestBindingsEmpty": true,
+    "observabilityRestored": true,
+    "fixtureUntouched": true,
+    "secretsCreated": 0
+  },
+  "reproduction": {
+    "requiresFreshAuthorization": true,
+    "clientSource": "import fs from'node:fs';import assert from'node:assert/strict';import{randomUUID}from'node:crypto';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';process.env.HTTP_PROXY=process.env.HTTPS_PROXY='http://127.0.0.1:7889';setGlobalProxyFromEnv();\nconst dir=import.meta.dirname,phase=process.argv[2],control=JSON.parse(fs.readFileSync(dir+'/control.json')),setup=control.find(v=>v.kind==='https-auth-setup');assert.ok(setup);const file=dir+'/ledger.json',ledger=fs.existsSync(file)?JSON.parse(fs.readFileSync(file)):[];\nconst cases=phase==='run'?[{scenario:'valid',mode:'native'},...['expired','wrong-host','self-signed'].flatMap(scenario=>[{scenario,mode:'native'},{scenario,mode:'dns'}])]:[{scenario:'cleanup',mode:'cleanup'}];\nfor(const c of cases){assert.ok(ledger.length<12);if(ledger.length)await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(ledger.at(-1).finishedAt)+1000-Date.now())));const s={id:randomUUID(),phase,...c,startedAt:new Date().toISOString(),correct:false};ledger.push(s);fs.writeFileSync(file,JSON.stringify(ledger,null,2));try{const r=await fetch('https://superdoh.aloneowo0.workers.dev'+(c.mode==='native'?'/tls-probe':'/dns-query'),{method:c.mode==='native'?'GET':'POST',headers:{'Content-Type':'application/dns-message','X-Tls-Case':c.scenario,'X-Tls-Sample':s.id},body:c.mode==='native'?undefined:query(),redirect:'manual',signal:AbortSignal.timeout(15000)});s.httpStatus=r.status;assert.equal(r.status,200);s.version=r.headers.get('X-Tls-Version');s.sourceSha=r.headers.get('X-Tls-Source');if(phase==='run'){assert.equal(s.version,setup.versions[0].version_id);assert.equal(s.sourceSha,'209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56');}else assert.equal(s.sourceSha,null);\nif(c.mode==='native'){s.observation=await r.json();if(c.scenario==='valid'){assert.equal(s.observation.resolved,true);assert.equal(s.observation.status,200);assert.equal(s.observation.certificateRejected,false);}else assert.equal(s.observation.certificateRejected,true,'Generic network/HTTP failure alone is not certificate rejection proof');}else{s.failureCode=r.headers.get('X-Tls-Failures');if(phase==='run')assert.equal(s.failureCode,'UPSTREAM_FAILED');const d=decode(new Uint8Array(await r.arrayBuffer()));s.rcode=d.flags&15;assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:'example.com',type:1,class:1}]);assert.equal(s.rcode,2);assert.equal(d.records.length,0);}s.correct=true;}catch(e){s.error={name:e.name,message:e.message};}finally{s.finishedAt=new Date().toISOString();fs.writeFileSync(file,JSON.stringify(ledger,null,2));console.log(JSON.stringify(s));}if(!s.correct)break;}assert.ok(ledger.filter(s=>s.phase===phase).every(s=>s.correct),'Certificate proof failed; retain evidence, restore and do not call generic failures TLS verification.');\n",
+    "wrapper": "const rollback = {\"settings\":{\"placement\":{},\"compatibility_date\":\"2026-10-19\",\"compatibility_flags\":[\"enable_request_signal\",\"global_fetch_strictly_public\",\"no_nodejs_compat\",\"no_nodejs_compat_v2\"],\"usage_model\":\"standard\",\"tags\":[],\"tail_consumers\":[],\"logpush\":false,\"observability\":{\"enabled\":true,\"head_sampling_rate\":1,\"redact_query_string\":false,\"logs\":{\"enabled\":true,\"head_sampling_rate\":1,\"persist\":true,\"invocation_logs\":true},\"traces\":{\"enabled\":true,\"persist\":true,\"head_sampling_rate\":1},\"issues\":{\"enabled\":false}},\"annotations\":{\"workers/triggered_by\":\"upload\"},\"bindings\":[]},\"reverse\":[{\"at\":1167606,\"match\":\"  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \\\"off\\\", allowHalfOpen: false });\\n\",\"insert\":\"  let socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: target2.transport === \\\"tls\\\" ? \\\"starttls\\\" : \\\"off\\\", allowHalfOpen: false });\\n\"},{\"at\":1168115,\"match\":\"\",\"insert\":\"    if (target2.transport === \\\"tls\\\") {\\n      socket = socket.startTls({ expectedServerHostname: target2.serverName });\\n      socket.opened.catch(() => {\\n      });\\n      socket.closed.catch(() => {\\n      });\\n    }\\n\"},{\"at\":1176407,\"match\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\"]);\\n      if (value.transport === \\\"tcp\\\") {\\n\",\"insert\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\", \\\"serverName\\\"]);\\n      if (value.transport === \\\"tcp\\\" || value.transport === \\\"tls\\\") {\\n\"},{\"at\":1177003,\"match\":\"        const port = value.port === void 0 ? 53 : value.port;\\n\",\"insert\":\"        const port = value.port === void 0 ? value.transport === \\\"tls\\\" ? 853 : 53 : value.port;\\n\"},{\"at\":1177177,\"match\":\"        upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n\",\"insert\":\"        if (value.transport === \\\"tls\\\") {\\n          const serverName = value.serverName === void 0 ? address2 : value.serverName;\\n          if (typeof serverName !== \\\"string\\\" || serverName.length === 0 || serverName.length > 253 || serverName.includes(\\\":\\\") || /^[0-9.]+$/.test(serverName) || serverName.replace(/\\\\.$/, \\\"\\\").split(\\\".\\\").some((label) => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();\\n          upstreams.set(name, { transport: \\\"tls\\\", address: address2, port, serverName: serverName.replace(/\\\\.$/, \\\"\\\") });\\n        } else {\\n          if (value.serverName !== void 0) throw new Error();\\n          upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n        }\\n\"},{\"at\":1177279,\"match\":\"      if (value.address !== void 0 || value.port !== void 0) throw new Error();\\n\",\"insert\":\"      if (value.address !== void 0 || value.port !== void 0 || value.serverName !== void 0) throw new Error();\\n\"}]};\nimport {handleRequest} from './worker.js';\nconst targets={\"valid\":\"https://sha256.badssl.com/\",\"expired\":\"https://expired.badssl.com/\",\"wrong-host\":\"https://wrong.host.badssl.com/\",\"self-signed\":\"https://self-signed.badssl.com/\"};\nexport default {async fetch(request,env){const c=request.headers.get('x-tls-case'),sample=request.headers.get('x-tls-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!Object.hasOwn(targets,c)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const headers={'X-Tls-Version':env.VERSION.id,'X-Tls-Source':\"209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56\"};if(new URL(request.url).pathname==='/tls-probe'){let observation;try{const r=await fetch(targets[c],{redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(5000)});observation={resolved:true,status:r.status,certificateRejected:r.status===526,redirected:r.redirected};await r.body?.cancel();}catch(error){const certificateMessageMatched=/certificate|cert_|ssl|tls|hostname/i.test(String(error?.message??''));observation={resolved:false,certificateRejected:certificateMessageMatched,certificateMessageMatched,errorClass:error instanceof TypeError?'TypeError':'Error'};}return Response.json(observation,{headers});}if(new URL(request.url).pathname!=='/dns-query')return new Response('Not found.',{status:404});const failures=[];const response=await handleRequest(request,{DNS_CACHE:{read:false,write:false},DNS_LIMITS:{upstreamTimeoutMs:5000,maxExecutionTimeMs:10000},DNS_UPSTREAMS:{selected:{transport:'https',url:targets[c]}},DNS_RULE_MAIN:{order:0,rules:[{actions:[{type:'queryUpstream',upstream:'selected'}]}]}},{requestId:sample,onEvent:event=>{failures.push(event.code);}});return new Response(response.body,{status:response.status,headers:{...Object.fromEntries(response.headers),...headers,'X-Tls-Failures':failures.join(',')}});}};\n",
+    "targets": {
+      "valid": "https://sha256.badssl.com/",
+      "expired": "https://expired.badssl.com/",
+      "wrong-host": "https://wrong.host.badssl.com/",
+      "self-signed": "https://self-signed.badssl.com/"
+    },
+    "notes": "Public purpose-built badssl endpoints; ordinary certificate-checked fetch only, no custom roots, TLS downgrade, fallback or retry. The standalone native probe distinguishes explicit526 from unrelated DNS/HTTP/network errors; production handleRequest independently returns DNS SERVFAIL."
+  },
+  "references": {
+    "testService": "https://github.com/chromium/badssl.com/blob/master/README.md",
+    "cloudflare526": "https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-526/#error-526-in-the-workers-context"
+  },
+  "verification": {
+    "typecheck": {
+      "command": "npm --prefix SuperDoH run typecheck",
+      "exitCode": 0
+    },
+    "freshFullSuiteRun": false,
+    "localWorkerBehaviorTestsRun": false
+  },
+  "limitations": [
+    "Small certificate-failure validation, not a performance distribution or all TLS/PKI failure modes.",
+    "Public valid/untrusted endpoints are explicit test sources, not built-in application defaults.",
+    "The initial documentation WebFetch to badssl.com failed ECONNREFUSED; it is not a Worker test sample. Cloud Worker controls succeeded and the service description is linked to its public repository.",
+    "No native CPU metrics were deliberately collected in this certificate follow-up."
+  ]
+}
