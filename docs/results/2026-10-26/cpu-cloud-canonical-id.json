@@ -1,0 +1,2066 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "kind": "Cloud canonical-ID profile selection diagnosis, not an application CPU fix",
+  "source": {
+    "commit": "0582d86",
+    "currentLocalWorkspaceDeployed": false,
+    "modules": [
+      {
+        "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+        "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+      },
+      {
+        "name": "worker.js",
+        "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+      }
+    ],
+    "wrapperSeparate": true,
+    "measuredVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "enable_request_signal",
+      "global_fetch_strictly_public",
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ]
+  },
+  "authorization": {
+    "clientCap": 60,
+    "captureCap": 2,
+    "captureDurationCapMs": 10000,
+    "minimumClientGapMs": 1000,
+    "previousBudgetsReused": false,
+    "scope": "Existing isolated producer and controlled fixture only; no public ECH, DoT, business Worker, billing, DNS or route changes"
+  },
+  "actual": {
+    "clientAttempts": 52,
+    "payloadAttempts": 50,
+    "warmupRequests": 16,
+    "measuredRequests": 34,
+    "measuredRequestsOriginallyPlanned": 38,
+    "stoppedAfterCaptureFailure": true,
+    "cleanupRequests": 2,
+    "captures": 2,
+    "profilesObtained": 0,
+    "minimumClientGapMs": 1051
+  },
+  "summary": {
+    "warmup": {
+      "n": 16,
+      "cpuMedianMs": 7,
+      "cpuMinMs": 5,
+      "cpuMaxMs": 37,
+      "cpuAbove10": 1,
+      "cpuAtLeast10": 1,
+      "wallMedianMs": 23,
+      "wallMinMs": 21,
+      "wallMaxMs": 139
+    },
+    "measuredPartial": {
+      "n": 34,
+      "cpuMedianMs": 6,
+      "cpuMinMs": 4,
+      "cpuMaxMs": 13,
+      "cpuAbove10": 1,
+      "cpuAtLeast10": 1,
+      "wallMedianMs": 22,
+      "wallMinMs": 20,
+      "wallMaxMs": 53
+    }
+  },
+  "captures": [
+    {
+      "kind": "canonical-id-capture",
+      "attempt": 1,
+      "startedAt": "2026-10-26T03:02:29.372Z",
+      "finishedAt": "2026-10-26T03:02:29.680Z",
+      "status": 404,
+      "error": [
+        {
+          "code": 10393,
+          "message": "No recent executions were found for this Worker."
+        }
+      ],
+      "workerId": "4469823865b04c96b95680ecbab4d3e7",
+      "requestedDurationMs": 10000,
+      "versionSelector": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "traffic": {
+        "precedingId": "db785454-0ae3-4b68-bd66-e99bdf623f07",
+        "precedingCompletionMsBeforeCapture": 1094,
+        "followingId": "f2e9d418-852e-4021-abe6-b2d58f8253c4",
+        "followingStartMsAfterCapture": 1203
+      }
+    },
+    {
+      "kind": "canonical-id-capture",
+      "attempt": 2,
+      "versionSelector": "latest-deployed",
+      "verifiedActiveVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:53.807Z",
+      "finishedAt": "2026-10-26T03:02:54.066Z",
+      "status": 404,
+      "error": [
+        {
+          "code": 10393,
+          "message": "No recent executions were found for this Worker."
+        }
+      ],
+      "workerId": "4469823865b04c96b95680ecbab4d3e7",
+      "requestedDurationMs": 10000,
+      "traffic": {
+        "precedingId": "3e1af275-d48d-46a2-913a-e63375572a54",
+        "precedingCompletionMsBeforeCapture": 336,
+        "followingId": "51c21153-189a-43c4-881a-9023ac63431b",
+        "followingStartMsAfterCapture": 723
+      }
+    }
+  ],
+  "samples": [
+    {
+      "sampleId": "d8316144-5fe6-4e31-9065-3a0f65d4eed6",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 0,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:01:56.154Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 1260.2348000000002,
+      "finishedAt": "2026-10-26T03:01:57.414Z",
+      "native": {
+        "requestId": "773883b70ac2d0bbe31fdb768a90af02",
+        "timestamp": 1792983718167,
+        "cpuMs": 37,
+        "wallMs": 139,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "5e394456-0e3b-46f5-b4b9-290b68460190",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 1,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:01:58.469Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 200.56619999999975,
+      "finishedAt": "2026-10-26T03:01:58.670Z",
+      "native": {
+        "requestId": "4c9a6a4d15a74eead8a02f4db846119b",
+        "timestamp": 1792983719465,
+        "cpuMs": 7,
+        "wallMs": 25,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "ac46f346-f7d1-4d0c-9568-4f1bf790f035",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 2,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:01:59.732Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 217.28950000000032,
+      "finishedAt": "2026-10-26T03:01:59.951Z",
+      "native": {
+        "requestId": "7200aba795a2f19cef51cd4f59953319",
+        "timestamp": 1792983720728,
+        "cpuMs": 8,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "e68ef859-5352-4403-9cd5-97fac385ff86",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 3,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:01.011Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 224.02919999999995,
+      "finishedAt": "2026-10-26T03:02:01.236Z",
+      "native": {
+        "requestId": "ccb7432c50bc9dc01074f4c4326d38c1",
+        "timestamp": 1792983722006,
+        "cpuMs": 7,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "ce0dee95-67a8-46af-ba2d-488f77a42660",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 4,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:02.301Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 261.5026000000007,
+      "finishedAt": "2026-10-26T03:02:02.564Z",
+      "native": {
+        "requestId": "567615691e026eee6016c72c89945650",
+        "timestamp": 1792983723345,
+        "cpuMs": 8,
+        "wallMs": 25,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "d78a0bc6-3e90-4c12-b19a-f63d847f2d07",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 5,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:03.624Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 231.39879999999994,
+      "finishedAt": "2026-10-26T03:02:03.857Z",
+      "native": {
+        "requestId": "005d42cbff0cb488f36f490ccb76f437",
+        "timestamp": 1792983724624,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "e93bcf82-68d2-484f-a7b4-3ae7a3606bc4",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 6,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:04.916Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 226.21960000000036,
+      "finishedAt": "2026-10-26T03:02:05.144Z",
+      "native": {
+        "requestId": "2f9c84e12d9efc84d26ad487db5b66d2",
+        "timestamp": 1792983725911,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "59ce8410-eba1-4dcb-996e-10e5893424c8",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 7,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:06.196Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 229.78679999999986,
+      "finishedAt": "2026-10-26T03:02:06.427Z",
+      "native": {
+        "requestId": "676fe3f165594bccb75dae1484cc9c19",
+        "timestamp": 1792983727193,
+        "cpuMs": 8,
+        "wallMs": 25,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "2db9f7de-9fbd-4e71-a5e2-135bc2a2bea6",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 8,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:07.489Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 223.34399999999914,
+      "finishedAt": "2026-10-26T03:02:07.713Z",
+      "native": {
+        "requestId": "5f5bd488d6cf9000c9655f19b93bb066",
+        "timestamp": 1792983728489,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "fef62592-3037-47e3-b4f1-c594f5c8703c",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 9,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:08.766Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 215.15129999999954,
+      "finishedAt": "2026-10-26T03:02:10.577Z",
+      "native": {
+        "requestId": "72058a2ed14e279f29bb738c80614bdb",
+        "timestamp": 1792983731342,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "ad9eced6-5c47-4704-881c-8628f41a7cc1",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 10,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:11.640Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 202.0663999999997,
+      "finishedAt": "2026-10-26T03:02:11.843Z",
+      "native": {
+        "requestId": "fd233993c2e4b1320ce272373764cd46",
+        "timestamp": 1792983732622,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "cb76354d-c320-416a-8552-c4d4d762ce19",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 11,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:12.900Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 189.46610000000146,
+      "finishedAt": "2026-10-26T03:02:13.091Z",
+      "native": {
+        "requestId": "56c8ab9a2a14b64c79ce04d58332e27c",
+        "timestamp": 1792983733884,
+        "cpuMs": 5,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "c6498f68-ca8e-4e73-90a1-a65adf989b43",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 12,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:14.150Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 192.13580000000002,
+      "finishedAt": "2026-10-26T03:02:14.343Z",
+      "native": {
+        "requestId": "c0ed0c1b9fc3beca88afb415adc4a41f",
+        "timestamp": 1792983735132,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "a72522e1-96e2-4b42-b324-19e4ca5e14c7",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 13,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:15.394Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 245.3751000000011,
+      "finishedAt": "2026-10-26T03:02:15.640Z",
+      "native": {
+        "requestId": "0b1f7364465280dac1eb4d225928f9c5",
+        "timestamp": 1792983736375,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "acc12903-c165-429c-9e76-41d6435cd72e",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 14,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:16.702Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 244.40389999999752,
+      "finishedAt": "2026-10-26T03:02:16.952Z",
+      "native": {
+        "requestId": "d0268a6da8be92873c828b50868e481f",
+        "timestamp": 1792983737687,
+        "cpuMs": 7,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "7ca4edbb-b1e6-4eeb-8681-df6dbc9d5211",
+      "label": "round1",
+      "phase": "warmup",
+      "index": 15,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:18.015Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 231.85049999999683,
+      "finishedAt": "2026-10-26T03:02:18.248Z",
+      "native": {
+        "requestId": "65719bd9f830c92cf4c1366fda76b323",
+        "timestamp": 1792983738998,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "a5e1afa5-2a5a-48e9-8c44-ebcbaab659cf",
+      "label": "round1",
+      "phase": "measured",
+      "index": 0,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:19.312Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 192.55609999999797,
+      "finishedAt": "2026-10-26T03:02:19.505Z",
+      "native": {
+        "requestId": "cc9c48492816b95f949779ab5ff504a1",
+        "timestamp": 1792983740293,
+        "cpuMs": 7,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "de9c0e4f-625b-4d2d-8f2b-246bb6d71e56",
+      "label": "round1",
+      "phase": "measured",
+      "index": 1,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:20.560Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 216.04079999999885,
+      "finishedAt": "2026-10-26T03:02:20.777Z",
+      "native": {
+        "requestId": "2d1f6288740f3b89b0d31d3f1d58fe65",
+        "timestamp": 1792983741541,
+        "cpuMs": 8,
+        "wallMs": 24,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "5e6fdb65-3a78-476a-95a1-224cacbb6766",
+      "label": "round1",
+      "phase": "measured",
+      "index": 2,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:21.840Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 195.0148999999983,
+      "finishedAt": "2026-10-26T03:02:22.036Z",
+      "native": {
+        "requestId": "472ca22868fb292762eeda58d1279401",
+        "timestamp": 1792983742821,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "61407eb7-c5c0-4e9a-ba0f-9a51034d36cd",
+      "label": "round1",
+      "phase": "measured",
+      "index": 3,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:23.091Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 178.00239999999758,
+      "finishedAt": "2026-10-26T03:02:23.271Z",
+      "native": {
+        "requestId": "e170ec1b7e3c66f2add9e30d2503c5fd",
+        "timestamp": 1792983744072,
+        "cpuMs": 5,
+        "wallMs": 20,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "f65af59a-bb0a-496d-8fa5-dcef41dbde7a",
+      "label": "round1",
+      "phase": "measured",
+      "index": 4,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:24.336Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 189.72829999999885,
+      "finishedAt": "2026-10-26T03:02:24.526Z",
+      "native": {
+        "requestId": "7e2ced21808bff03b583ae377393a5d9",
+        "timestamp": 1792983745317,
+        "cpuMs": 4,
+        "wallMs": 20,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "a1a80cd2-2d51-41ec-b28d-cf95f2e8affb",
+      "label": "round1",
+      "phase": "measured",
+      "index": 5,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:25.579Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 198.37639999999737,
+      "finishedAt": "2026-10-26T03:02:25.778Z",
+      "native": {
+        "requestId": "a9a4aa8899366787123b48ea34a87780",
+        "timestamp": 1792983746573,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "15225540-2e2c-46e7-81b0-f496e8dcfe16",
+      "label": "round1",
+      "phase": "measured",
+      "index": 6,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:26.842Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 179.95820000000094,
+      "finishedAt": "2026-10-26T03:02:27.023Z",
+      "native": {
+        "requestId": "8df68f1b0d30fa455833253969ffe13b",
+        "timestamp": 1792983747822,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "db785454-0ae3-4b68-bd66-e99bdf623f07",
+      "label": "round1",
+      "phase": "measured",
+      "index": 7,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:28.080Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 197.53989999999976,
+      "finishedAt": "2026-10-26T03:02:28.278Z",
+      "native": {
+        "requestId": "c2e8fa06f8eda624cf4a5027dbeae34b",
+        "timestamp": 1792983749075,
+        "cpuMs": 4,
+        "wallMs": 20,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "969fc75b-d79e-4604-8371-60b12129b7d2",
+      "label": "round1",
+      "phase": "measured",
+      "index": 8,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:29.340Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 178.1394999999975,
+      "finishedAt": "2026-10-26T03:02:29.519Z",
+      "native": {
+        "requestId": "b5c4a9f8e1ae38c6c639f39003312dd1",
+        "timestamp": 1792983750321,
+        "cpuMs": 6,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "f2e9d418-852e-4021-abe6-b2d58f8253c4",
+      "label": "round1",
+      "phase": "measured",
+      "index": 9,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:30.575Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 202.76929999999993,
+      "finishedAt": "2026-10-26T03:02:30.779Z",
+      "native": {
+        "requestId": "05d774a1be7af77f6d99903e28edda65",
+        "timestamp": 1792983751570,
+        "cpuMs": 6,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "b481ddd6-0e71-491f-9ed0-74f5081fa5ce",
+      "label": "round1",
+      "phase": "measured",
+      "index": 10,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:31.839Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 191.0864999999976,
+      "finishedAt": "2026-10-26T03:02:32.031Z",
+      "native": {
+        "requestId": "83cb5003a5484a7d9ff279b40b0f44de",
+        "timestamp": 1792983752823,
+        "cpuMs": 6,
+        "wallMs": 24,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "4af33342-d91a-4a94-8cc6-7cabb0f27d23",
+      "label": "round1",
+      "phase": "measured",
+      "index": 11,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:33.096Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 178.05019999999786,
+      "finishedAt": "2026-10-26T03:02:33.275Z",
+      "native": {
+        "requestId": "7f3583f8bb3bb4ab0882757fe4fd3f65",
+        "timestamp": 1792983754077,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "3d08f85d-b63f-4b25-9f6d-5435b6629c85",
+      "label": "round1",
+      "phase": "measured",
+      "index": 12,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:34.337Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 177.69380000000092,
+      "finishedAt": "2026-10-26T03:02:34.515Z",
+      "native": {
+        "requestId": "9fc734fc811cfc726e67ef376601335b",
+        "timestamp": 1792983755318,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "8f4e450a-d34f-497d-a906-3e1b5a7d3090",
+      "label": "round1",
+      "phase": "measured",
+      "index": 13,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:35.568Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 189.79430000000139,
+      "finishedAt": "2026-10-26T03:02:35.759Z",
+      "native": {
+        "requestId": "87f627cef7f20607b522e44b2147a7bc",
+        "timestamp": 1792983756550,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "1144aa94-249f-4f73-8d30-c6e49e4780c2",
+      "label": "round1",
+      "phase": "measured",
+      "index": 14,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:36.817Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 187.47449999999662,
+      "finishedAt": "2026-10-26T03:02:37.005Z",
+      "native": {
+        "requestId": "a81af466c9de28c9ef119c512dbb3382",
+        "timestamp": 1792983757796,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "e4a05687-7b42-45e8-b51e-559ef1066df1",
+      "label": "round1",
+      "phase": "measured",
+      "index": 15,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:38.064Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 216.01070000000618,
+      "finishedAt": "2026-10-26T03:02:38.280Z",
+      "native": {
+        "requestId": "ccf2977d5e7238245a8ae82a015d2f42",
+        "timestamp": 1792983759046,
+        "cpuMs": 7,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "df3758e5-d185-4d42-b40b-79cca135dd3f",
+      "label": "round1",
+      "phase": "measured",
+      "index": 16,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:39.342Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 179.0512000000017,
+      "finishedAt": "2026-10-26T03:02:39.522Z",
+      "native": {
+        "requestId": "7cfd4320b4c6f43d7e196311ff909d83",
+        "timestamp": 1792983760323,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "4c486ef2-cba2-4ffc-93c6-82eeecf76f49",
+      "label": "round1",
+      "phase": "measured",
+      "index": 17,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:40.575Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 280.23169999999664,
+      "finishedAt": "2026-10-26T03:02:40.857Z",
+      "native": {
+        "requestId": "485071e4bb7631bed41c5d06aa380c2e",
+        "timestamp": 1792983761571,
+        "cpuMs": 8,
+        "wallMs": 24,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "998bd851-dd62-477d-be8e-35328abd5cb2",
+      "label": "round1",
+      "phase": "measured",
+      "index": 18,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:41.917Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 206.69839999999385,
+      "finishedAt": "2026-10-26T03:02:42.124Z",
+      "native": {
+        "requestId": "095b7ba8153cbfb6c32553bcd7d4a568",
+        "timestamp": 1792983762919,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "792112fa-8f11-4697-975c-57dbf9ad25dc",
+      "label": "round1",
+      "phase": "measured",
+      "index": 19,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:43.176Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 204.67220000000088,
+      "finishedAt": "2026-10-26T03:02:43.382Z",
+      "native": {
+        "requestId": "04b9b593cdcb9185e52b5b8a573e163b",
+        "timestamp": 1792983764157,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "bbd030e1-ef55-444d-a517-c33395cddf46",
+      "label": "round1",
+      "phase": "measured",
+      "index": 20,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:44.434Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 188.90990000000602,
+      "finishedAt": "2026-10-26T03:02:44.624Z",
+      "native": {
+        "requestId": "bf541bccbe4819fefeadf84805ee3c3f",
+        "timestamp": 1792983765415,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "01c0086a-3868-43a0-b9c0-796d03355432",
+      "label": "round1",
+      "phase": "measured",
+      "index": 21,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:45.677Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 212.21140000000014,
+      "finishedAt": "2026-10-26T03:02:45.890Z",
+      "native": {
+        "requestId": "dd462582ff3f1ff1850acf588508d512",
+        "timestamp": 1792983766657,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "aa9cc077-b554-492d-b09d-9a853747fb49",
+      "label": "round1",
+      "phase": "measured",
+      "index": 22,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:46.956Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 212.030399999996,
+      "finishedAt": "2026-10-26T03:02:47.168Z",
+      "native": {
+        "requestId": "b15a3b8c69dd853a097d009ff99935c2",
+        "timestamp": 1792983767936,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "078464a7-8179-43d7-95b2-62239059ca46",
+      "label": "round1",
+      "phase": "measured",
+      "index": 23,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:48.231Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 215.7827000000034,
+      "finishedAt": "2026-10-26T03:02:48.447Z",
+      "native": {
+        "requestId": "bd049318b3932409ee3d67bf44a0c9ff",
+        "timestamp": 1792983769211,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "78eb4c3c-8122-4fb4-bd77-930479e80963",
+      "label": "round1",
+      "phase": "measured",
+      "index": 24,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:49.512Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 200.48940000000584,
+      "finishedAt": "2026-10-26T03:02:49.713Z",
+      "native": {
+        "requestId": "0758fe40d588ab2fff85ed91e054837a",
+        "timestamp": 1792983770492,
+        "cpuMs": 5,
+        "wallMs": 20,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "e2bd7ba9-ff2b-4d3b-bd62-118695ef256d",
+      "label": "round1",
+      "phase": "measured",
+      "index": 25,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:50.776Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 205.43860000000132,
+      "finishedAt": "2026-10-26T03:02:50.987Z",
+      "native": {
+        "requestId": "b4cc81e4588e7579c824a41a86bf4c4c",
+        "timestamp": 1792983771762,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "b0ef30a6-f57e-451b-8587-db93d074365a",
+      "label": "round1",
+      "phase": "measured",
+      "index": 26,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:52.052Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 178.26230000000214,
+      "finishedAt": "2026-10-26T03:02:52.231Z",
+      "native": {
+        "requestId": "9a00daa92da15d13ab31073dca38952a",
+        "timestamp": 1792983773032,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "3e1af275-d48d-46a2-913a-e63375572a54",
+      "label": "round1",
+      "phase": "measured",
+      "index": 27,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:53.283Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 187.03949999999895,
+      "finishedAt": "2026-10-26T03:02:53.471Z",
+      "native": {
+        "requestId": "c69344080f50aa84ba6ffd47886d8db0",
+        "timestamp": 1792983774265,
+        "cpuMs": 6,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "51c21153-189a-43c4-881a-9023ac63431b",
+      "label": "round1",
+      "phase": "measured",
+      "index": 28,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:54.530Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 181.67079999999987,
+      "finishedAt": "2026-10-26T03:02:54.712Z",
+      "native": {
+        "requestId": "4e1663391f430b0b22fa786a403f7ebf",
+        "timestamp": 1792983775510,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "5c38f7fe-388a-4f89-822e-17228cd8bbcc",
+      "label": "round1",
+      "phase": "measured",
+      "index": 29,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:55.776Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 219.94030000000203,
+      "finishedAt": "2026-10-26T03:02:55.997Z",
+      "native": {
+        "requestId": "5b33ec44b969db3a19a04ba0273b38d1",
+        "timestamp": 1792983776783,
+        "cpuMs": 5,
+        "wallMs": 21,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "9316f35c-0b26-4519-bf3d-b84976d007c1",
+      "label": "round1",
+      "phase": "measured",
+      "index": 30,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:57.061Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 386.90819999999803,
+      "finishedAt": "2026-10-26T03:02:57.448Z",
+      "native": {
+        "requestId": "5a921893d87365ae4fb619cb516ead5a",
+        "timestamp": 1792983778242,
+        "cpuMs": 13,
+        "wallMs": 53,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "7c46f644-6af6-4d8f-b063-c8d45bf42f79",
+      "label": "round1",
+      "phase": "measured",
+      "index": 31,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:58.512Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 179.40750000000116,
+      "finishedAt": "2026-10-26T03:02:58.692Z",
+      "native": {
+        "requestId": "1d445d4007126cb24c704884691b6bd7",
+        "timestamp": 1792983779494,
+        "cpuMs": 6,
+        "wallMs": 23,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "0c038f7f-7337-4acb-8b89-7675d5c9c2a7",
+      "label": "round1",
+      "phase": "measured",
+      "index": 32,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:02:59.744Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 181.19400000000314,
+      "finishedAt": "2026-10-26T03:02:59.927Z",
+      "native": {
+        "requestId": "4bad0522ffe9a66aabe838b722eb23fb",
+        "timestamp": 1792983780728,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "117fc9f8-9328-4ca0-9604-2605dc7088bc",
+      "label": "round1",
+      "phase": "measured",
+      "index": 33,
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "startedAt": "2026-10-26T03:03:00.989Z",
+      "httpStatus": 200,
+      "responseVersion": "77889cac-b81c-4c3f-a57f-71439c73c2ae",
+      "colo": "FRA",
+      "responseSha256": "8f9267f26475464339f4c9a1ff66fff7ecd5ad4f92b3ce6cc85b9bdde14747ef",
+      "dnsRcode": 0,
+      "correct": true,
+      "clientLatencyMs": 210.612000000001,
+      "finishedAt": "2026-10-26T03:03:01.200Z",
+      "native": {
+        "requestId": "4edde6de985b2d7267c59f5c5e304bd8",
+        "timestamp": 1792983781969,
+        "cpuMs": 6,
+        "wallMs": 22,
+        "outcome": "ok",
+        "resultMatches": 1,
+        "expectedFailure": {
+          "code": "UPSTREAM_FAILED",
+          "disposition": "rolled_back_continue"
+        }
+      }
+    },
+    {
+      "sampleId": "3ccf7e94-9420-46df-8846-c2c9c638bab3",
+      "label": "producer-restored",
+      "phase": "cleanup",
+      "index": 0,
+      "version": "f5ccd128-c42f-45f5-bd6f-7acdfc263a3c",
+      "startedAt": "2026-10-26T03:03:29.609Z",
+      "httpStatus": 200,
+      "responseVersion": null,
+      "colo": "FRA",
+      "responseSha256": "c89e2e07a7b1843d1d2281b51bb1330626c3edc8498a61311b5832ee554fa5a7",
+      "dnsRcode": 2,
+      "correct": true,
+      "clientLatencyMs": 1149.1639,
+      "finishedAt": "2026-10-26T03:03:30.845Z"
+    },
+    {
+      "sampleId": "2f529177-5ca7-464a-99fd-fc2ef48e1646",
+      "label": "fixture-restored",
+      "phase": "cleanup",
+      "index": 0,
+      "version": "f5ccd128-c42f-45f5-bd6f-7acdfc263a3c",
+      "startedAt": "2026-10-26T03:03:31.897Z",
+      "httpStatus": 503,
+      "responseVersion": null,
+      "colo": "FRA",
+      "responseSha256": "a3a1ee4c5d87c6895eba86dc26927b09f3159140de6a01570037f7aa3357f678",
+      "correct": true,
+      "clientLatencyMs": 1138.8886000000002,
+      "finishedAt": "2026-10-26T03:03:33.036Z"
+    }
+  ],
+  "telemetry": {
+    "queriedAt": "2026-10-26T03:03:46.383Z",
+    "timeframe": {
+      "from": "2026-10-26T03:01:50Z",
+      "to": "2026-10-26T03:03:10Z"
+    },
+    "eventCount": 150,
+    "nativeCount": 50,
+    "resultCount": 50,
+    "expectedFailureCount": 50,
+    "limit": 2000,
+    "missing": 0,
+    "ambiguous": 0,
+    "unmatched": 0,
+    "csvSha256": "df23fb13b2556fbeac24ef46baf4553714f61f6142336b2785d7eb3afde84e51",
+    "csv": "sampleId,nativeRequestId,version,timestamp,cpuMs,wallMs,outcome,resultMatches,resultStatus,failureCode,failureDisposition\n117fc9f8-9328-4ca0-9604-2605dc7088bc,4edde6de985b2d7267c59f5c5e304bd8,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983781969,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n0c038f7f-7337-4acb-8b89-7675d5c9c2a7,4bad0522ffe9a66aabe838b722eb23fb,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983780728,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n7c46f644-6af6-4d8f-b063-c8d45bf42f79,1d445d4007126cb24c704884691b6bd7,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983779494,6,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n9316f35c-0b26-4519-bf3d-b84976d007c1,5a921893d87365ae4fb619cb516ead5a,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983778242,13,53,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n5c38f7fe-388a-4f89-822e-17228cd8bbcc,5b33ec44b969db3a19a04ba0273b38d1,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983776783,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n51c21153-189a-43c4-881a-9023ac63431b,4e1663391f430b0b22fa786a403f7ebf,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983775510,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n3e1af275-d48d-46a2-913a-e63375572a54,c69344080f50aa84ba6ffd47886d8db0,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983774265,6,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nb0ef30a6-f57e-451b-8587-db93d074365a,9a00daa92da15d13ab31073dca38952a,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983773032,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ne2bd7ba9-ff2b-4d3b-bd62-118695ef256d,b4cc81e4588e7579c824a41a86bf4c4c,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983771762,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n78eb4c3c-8122-4fb4-bd77-930479e80963,0758fe40d588ab2fff85ed91e054837a,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983770492,5,20,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n078464a7-8179-43d7-95b2-62239059ca46,bd049318b3932409ee3d67bf44a0c9ff,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983769211,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\naa9cc077-b554-492d-b09d-9a853747fb49,b15a3b8c69dd853a097d009ff99935c2,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983767936,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n01c0086a-3868-43a0-b9c0-796d03355432,dd462582ff3f1ff1850acf588508d512,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983766657,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nbbd030e1-ef55-444d-a517-c33395cddf46,bf541bccbe4819fefeadf84805ee3c3f,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983765415,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n792112fa-8f11-4697-975c-57dbf9ad25dc,04b9b593cdcb9185e52b5b8a573e163b,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983764157,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n998bd851-dd62-477d-be8e-35328abd5cb2,095b7ba8153cbfb6c32553bcd7d4a568,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983762919,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n4c486ef2-cba2-4ffc-93c6-82eeecf76f49,485071e4bb7631bed41c5d06aa380c2e,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983761571,8,24,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ndf3758e5-d185-4d42-b40b-79cca135dd3f,7cfd4320b4c6f43d7e196311ff909d83,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983760323,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ne4a05687-7b42-45e8-b51e-559ef1066df1,ccf2977d5e7238245a8ae82a015d2f42,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983759046,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n1144aa94-249f-4f73-8d30-c6e49e4780c2,a81af466c9de28c9ef119c512dbb3382,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983757796,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n8f4e450a-d34f-497d-a906-3e1b5a7d3090,87f627cef7f20607b522e44b2147a7bc,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983756550,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n3d08f85d-b63f-4b25-9f6d-5435b6629c85,9fc734fc811cfc726e67ef376601335b,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983755318,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n4af33342-d91a-4a94-8cc6-7cabb0f27d23,7f3583f8bb3bb4ab0882757fe4fd3f65,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983754077,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nb481ddd6-0e71-491f-9ed0-74f5081fa5ce,83cb5003a5484a7d9ff279b40b0f44de,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983752823,6,24,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nf2e9d418-852e-4021-abe6-b2d58f8253c4,05d774a1be7af77f6d99903e28edda65,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983751570,6,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n969fc75b-d79e-4604-8371-60b12129b7d2,b5c4a9f8e1ae38c6c639f39003312dd1,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983750321,6,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ndb785454-0ae3-4b68-bd66-e99bdf623f07,c2e8fa06f8eda624cf4a5027dbeae34b,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983749075,4,20,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n15225540-2e2c-46e7-81b0-f496e8dcfe16,8df68f1b0d30fa455833253969ffe13b,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983747822,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\na1a80cd2-2d51-41ec-b28d-cf95f2e8affb,a9a4aa8899366787123b48ea34a87780,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983746573,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nf65af59a-bb0a-496d-8fa5-dcef41dbde7a,7e2ced21808bff03b583ae377393a5d9,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983745317,4,20,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n61407eb7-c5c0-4e9a-ba0f-9a51034d36cd,e170ec1b7e3c66f2add9e30d2503c5fd,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983744072,5,20,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n5e6fdb65-3a78-476a-95a1-224cacbb6766,472ca22868fb292762eeda58d1279401,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983742821,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nde9c0e4f-625b-4d2d-8f2b-246bb6d71e56,2d1f6288740f3b89b0d31d3f1d58fe65,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983741541,8,24,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\na5e1afa5-2a5a-48e9-8c44-ebcbaab659cf,cc9c48492816b95f949779ab5ff504a1,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983740293,7,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n7ca4edbb-b1e6-4eeb-8681-df6dbc9d5211,65719bd9f830c92cf4c1366fda76b323,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983738998,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nacc12903-c165-429c-9e76-41d6435cd72e,d0268a6da8be92873c828b50868e481f,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983737687,7,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\na72522e1-96e2-4b42-b324-19e4ca5e14c7,0b1f7364465280dac1eb4d225928f9c5,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983736375,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nc6498f68-ca8e-4e73-90a1-a65adf989b43,c0ed0c1b9fc3beca88afb415adc4a41f,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983735132,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ncb76354d-c320-416a-8552-c4d4d762ce19,56c8ab9a2a14b64c79ce04d58332e27c,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983733884,5,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nad9eced6-5c47-4704-881c-8628f41a7cc1,fd233993c2e4b1320ce272373764cd46,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983732622,5,21,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nfef62592-3037-47e3-b4f1-c594f5c8703c,72058a2ed14e279f29bb738c80614bdb,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983731342,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n2db9f7de-9fbd-4e71-a5e2-135bc2a2bea6,5f5bd488d6cf9000c9655f19b93bb066,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983728489,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n59ce8410-eba1-4dcb-996e-10e5893424c8,676fe3f165594bccb75dae1484cc9c19,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983727193,8,25,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ne93bcf82-68d2-484f-a7b4-3ae7a3606bc4,2f9c84e12d9efc84d26ad487db5b66d2,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983725911,7,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nd78a0bc6-3e90-4c12-b19a-f63d847f2d07,005d42cbff0cb488f36f490ccb76f437,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983724624,6,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nce0dee95-67a8-46af-ba2d-488f77a42660,567615691e026eee6016c72c89945650,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983723345,8,25,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\ne68ef859-5352-4403-9cd5-97fac385ff86,ccb7432c50bc9dc01074f4c4326d38c1,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983722006,7,22,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nac46f346-f7d1-4d0c-9568-4f1bf790f035,7200aba795a2f19cef51cd4f59953319,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983720728,8,23,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\n5e394456-0e3b-46f5-b4b9-290b68460190,4c9a6a4d15a74eead8a02f4db846119b,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983719465,7,25,ok,1,200,UPSTREAM_FAILED,rolled_back_continue\nd8316144-5fe6-4e31-9065-3a0f65d4eed6,773883b70ac2d0bbe31fdb768a90af02,77889cac-b81c-4c3f-a57f-71439c73c2ae,1792983718167,37,139,ok,1,200,UPSTREAM_FAILED,rolled_back_continue"
+  },
+  "configuration": [
+    {
+      "json": {
+        "geo": {
+          "cacheTtl": 60,
+          "fields": {
+            "asn": [
+              "network",
+              "asn"
+            ],
+            "country": [
+              "location",
+              "country"
+            ],
+            "ip": [
+              "ip"
+            ]
+          },
+          "ipParam": "ip",
+          "url": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/geo"
+        }
+      },
+      "name": "DNS_ADDRESS_SOURCES",
+      "type": "json"
+    },
+    {
+      "json": {
+        "selected": {
+          "format": "text",
+          "refreshIntervalMs": 60000,
+          "url": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/list-1000"
+        }
+      },
+      "name": "DNS_DOMAIN_LISTS",
+      "type": "json"
+    },
+    {
+      "json": true,
+      "name": "DNS_JSON",
+      "type": "json"
+    },
+    {
+      "json": {
+        "maxNetworkRequests": 5
+      },
+      "name": "DNS_LIMITS",
+      "type": "json"
+    },
+    {
+      "json": {
+        "order": 0,
+        "rules": [
+          {
+            "actions": [
+              {
+                "type": "queryUpstream",
+                "upstream": "selected"
+              },
+              {
+                "records": [
+                  {
+                    "name": "example.com",
+                    "rdata": {
+                      "Https": {
+                        "params": [
+                          {
+                            "data": [
+                              1,
+                              187
+                            ],
+                            "key": 3
+                          }
+                        ],
+                        "priority": 1,
+                        "target": "."
+                      }
+                    },
+                    "ttl": 60,
+                    "type": "HTTPS"
+                  }
+                ],
+                "type": "replaceRecords",
+                "where": {
+                  "field": "item.type",
+                  "op": "eq",
+                  "value": "HTTPS"
+                }
+              },
+              {
+                "records": [
+                  {
+                    "name": "example.com",
+                    "rdata": {
+                      "A": {
+                        "addr": "192.0.2.8"
+                      }
+                    },
+                    "ttl": 60,
+                    "type": "A"
+                  }
+                ],
+                "section": "additional",
+                "type": "addRecords"
+              },
+              {
+                "source": "geo",
+                "type": "enrichAddresses"
+              },
+              {
+                "name": "ech-source.example",
+                "type": "queryEch",
+                "upstream": "selected"
+              },
+              {
+                "type": "applyEch"
+              },
+              {
+                "onError": "continue",
+                "type": "queryUpstream",
+                "upstream": "broken"
+              }
+            ]
+          },
+          {
+            "actions": [
+              {
+                "ttl": 17,
+                "type": "setTtl"
+              }
+            ],
+            "when": {
+              "all": [
+                {
+                  "field": "lastAction.code",
+                  "op": "eq",
+                  "value": "UPSTREAM_FAILED"
+                },
+                {
+                  "field": "query.name",
+                  "op": "inListSuffix",
+                  "value": "selected"
+                },
+                {
+                  "collection": "response.addresses",
+                  "quantifier": "any",
+                  "where": {
+                    "all": [
+                      {
+                        "field": "item.asn",
+                        "op": "eq",
+                        "value": 64512
+                      },
+                      {
+                        "field": "item.country",
+                        "op": "eq",
+                        "value": "DE"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "name": "DNS_RULE_MAIN",
+      "type": "json"
+    },
+    {
+      "json": {
+        "broken": {
+          "transport": "https",
+          "url": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/fail"
+        },
+        "selected": {
+          "transport": "https",
+          "url": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns"
+        }
+      },
+      "name": "DNS_UPSTREAMS",
+      "type": "json"
+    },
+    {
+      "name": "RUN_EXPIRES",
+      "type": "json",
+      "json": 1792984600196
+    },
+    {
+      "name": "VERSION_METADATA",
+      "type": "version_metadata"
+    }
+  ],
+  "before": {
+    "superdoh": {
+      "version": "af13f853-ef91-4579-897f-df5ec44c026e",
+      "settings": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "annotations": {
+          "workers/message": "CPU diagnosis 20261026 cleanup: original exact modules, empty bindings",
+          "workers/triggered_by": "upload"
+        },
+        "bindings": []
+      }
+    },
+    "superdoh-dns-cpu-fixtures-20261024": {
+      "version": "d2c6d38d-873b-4c67-9877-7b05323da099",
+      "settings": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "annotations": {
+          "workers/triggered_by": "upload"
+        },
+        "bindings": [
+          {
+            "json": 0,
+            "name": "EXPIRES_AT",
+            "type": "json"
+          },
+          {
+            "name": "LIST_STATE",
+            "text": "good",
+            "type": "plain_text"
+          }
+        ]
+      }
+    }
+  },
+  "cleanup": {
+    "kind": "canonical-id-cleanup",
+    "restoredAt": "2026-10-26T03:03:19.313Z",
+    "hashes": [
+      {
+        "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+        "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+      },
+      {
+        "name": "worker.js",
+        "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+      }
+    ],
+    "producer": {
+      "versions": [
+        {
+          "version_id": "f5ccd128-c42f-45f5-bd6f-7acdfc263a3c",
+          "percentage": 100
+        }
+      ],
+      "settings": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "annotations": {
+          "workers/message": "Canonical-ID CPU diagnosis cleanup: original modules, empty bindings",
+          "workers/triggered_by": "upload"
+        },
+        "bindings": []
+      },
+      "activeBindings": []
+    },
+    "fixture": {
+      "versions": [
+        {
+          "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+          "percentage": 100
+        }
+      ],
+      "settings": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "annotations": {
+          "workers/triggered_by": "upload"
+        },
+        "bindings": [
+          {
+            "json": 0,
+            "name": "EXPIRES_AT",
+            "type": "json"
+          },
+          {
+            "name": "LIST_STATE",
+            "text": "good",
+            "type": "plain_text"
+          }
+        ]
+      },
+      "activeBindings": [
+        {
+          "json": 0,
+          "name": "EXPIRES_AT",
+          "type": "json"
+        },
+        {
+          "name": "LIST_STATE",
+          "text": "good",
+          "type": "plain_text"
+        }
+      ]
+    },
+    "independentReadback": {
+      "kind": "canonical-id-independent-restoration",
+      "verifiedAt": "2026-10-26T03:04:19.965Z",
+      "hashes": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ],
+      "producer": {
+        "versions": [
+          {
+            "version_id": "f5ccd128-c42f-45f5-bd6f-7acdfc263a3c",
+            "percentage": 100
+          }
+        ],
+        "bindings": [],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "activeBindings": []
+      },
+      "fixture": {
+        "versions": [
+          {
+            "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+            "percentage": 100
+          }
+        ],
+        "bindings": [
+          {
+            "json": 0,
+            "name": "EXPIRES_AT",
+            "type": "json"
+          },
+          {
+            "name": "LIST_STATE",
+            "text": "good",
+            "type": "plain_text"
+          }
+        ],
+        "observability": null,
+        "activeBindings": [
+          {
+            "json": 0,
+            "name": "EXPIRES_AT",
+            "type": "json"
+          },
+          {
+            "name": "LIST_STATE",
+            "text": "good",
+            "type": "plain_text"
+          }
+        ]
+      }
+    }
+  },
+  "reproduction": {
+    "runnerSource": "import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {randomUUID,createHash}from'node:crypto';import{setTimeout as delay}from'node:timers/promises';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';\nprocess.env.HTTP_PROXY=process.env.HTTPS_PROXY='http://127.0.0.1:7889';setGlobalProxyFromEnv();const dir=import.meta.dirname,mode=process.argv[2];assert.ok(['round1','round2','cleanup'].includes(mode));\nconst file=path.join(dir,'ledger-private.json');const save=()=>fs.writeFileSync(file,JSON.stringify(ledger,null,2));\nconst ledger=fs.existsSync(file)?JSON.parse(fs.readFileSync(file)): {cap:60,attempts:[],createdAt:new Date().toISOString(),sources:'controlled fixture only',profileEndpointAttempts:1};\nconst cfg=JSON.parse(fs.readFileSync(path.join(dir,mode==='cleanup'?'cleanup-control.json':'control.json')));assert.equal(ledger.cap,60);\nconst origin='https://superdoh.aloneowo0.workers.dev',fixture='https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev';\nconst wire=query('example.com',65),ech=Buffer.from('AD7+DQA6AQAgACABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fIAAEAAEAAQALZXhhbXBsZS5jb20AAA==','base64');\nasync function request(label,phase,i,target=origin){\n assert.ok(ledger.attempts.length<60);if(ledger.lastCompletedAt)await delay(Math.max(0,1050-(Date.now()-ledger.lastCompletedAt)));\n const row={sampleId:randomUUID(),label,phase,index:i,version:cfg.version,startedAt:new Date().toISOString()};ledger.attempts.push(row);save();const start=performance.now();\n try{const r=await fetch(target+'/dns-query',{method:'POST',headers:{'Content-Type':'application/dns-message','X-Acceptance-Sample-Id':row.sampleId},body:wire,redirect:'error',signal:AbortSignal.timeout(15000)});row.httpStatus=r.status;row.responseVersion=r.headers.get('X-Acceptance-Version');row.colo=r.headers.get('cf-ray')?.split('-').at(-1);\n const chunks=[];let size=0;const reader=r.body.getReader();try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>65535){await reader.cancel();throw Error('RESPONSE_BOUND');}chunks.push(value);}}finally{reader.releaseLock();}const b=Buffer.concat(chunks);row.responseSha256=createHash('sha256').update(b).digest('hex');\n if(mode==='cleanup'&&target===fixture){assert.equal(r.status,503);row.correct=true;return;}\n assert.equal(r.status,200);const d=decode(b);assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:'example.com',type:65,class:1}]);row.dnsRcode=d.flags&15;\n if(mode==='cleanup'){assert.equal(d.flags&15,2);assert.equal(d.records.filter(r=>r.section===0).length,0);row.correct=true;return;}\n assert.equal(row.responseVersion,cfg.version);assert.equal(d.flags&15,0);assert.equal(d.flags&32,0);const a=d.records.filter(r=>r.section===0),add=d.records.filter(r=>r.section===2);assert.equal(a.length,1);assert.equal(a[0].type,65);assert.equal(a[0].ttl,17);assert.deepEqual(a[0].data,[0,1,0,0,3,0,2,1,187,0,5,0,ech.length,...ech]);assert.equal(add.length,1);assert.equal(add[0].type,1);assert.equal(add[0].ttl,17);assert.deepEqual(add[0].data,[192,0,2,8]);row.correct=true;\n }catch(e){row.correct=false;row.error=e.code??'REQUEST_ASSERTION_OR_TRANSPORT_FAILED';throw e;}finally{row.clientLatencyMs=performance.now()-start;row.finishedAt=new Date().toISOString();ledger.lastCompletedAt=Date.now();save();}\n}\nif(mode==='cleanup'){await request('producer-restored','cleanup',0);await request('fixture-restored','cleanup',0,fixture);console.log(JSON.stringify({event:'CLEANUP_VERIFIED',attempts:ledger.attempts.length}));}\nelse{assert.equal(cfg.label,mode);console.log(JSON.stringify({event:'ROUND_START',label:mode,version:cfg.version}));for(let i=0;i<16;i++)await request(mode,'warmup',i);if(mode==='round2'){console.log(JSON.stringify({event:'PROFILE_READY',version:cfg.version}));const end=Date.now()+180000;while(!fs.existsSync(path.join(dir,'capture-go'))){if(fs.existsSync(path.join(dir,'stop'))||Date.now()>end)throw Error('PROFILE_GATE_STOPPED');await delay(250);}await delay(2000);}for(let i=0;i<38;i++){if(fs.existsSync(path.join(dir,'stop')))throw Error('STOP_REQUESTED');await request(mode,'measured',i);}console.log(JSON.stringify({event:'ROUND_COMPLETE',label:mode,attempts:ledger.attempts.length}));}\n",
+    "entryCommand": "node .acceptance/cpu-cloud-id-20261026/workload.mjs round1",
+    "control": {
+      "label": "round1",
+      "version": "77889cac-b81c-4c3f-a57f-71439c73c2ae"
+    },
+    "captureEndpoint": "/accounts/{account_id}/workers/workers/{canonical_worker_id}/versions/{version_selector}/profile",
+    "captureBody": {
+      "duration_ms": 10000,
+      "profile_type": "cpu"
+    },
+    "firstCaptureDelayAfterBackgroundLaunchMs": 25000,
+    "requiresSeparateLiveAuthorization": true
+  },
+  "verification": {
+    "typecheck": {
+      "command": "npm --prefix SuperDoH run typecheck",
+      "exitCode": 0
+    },
+    "cloudWireCorrect": 50,
+    "cloudCleanupCorrect": 2,
+    "existingTrackedModificationsPreserved": 15,
+    "localBehaviorTestsRun": false,
+    "fullNpmSuiteRun": false,
+    "reasonFullSuiteNotRun": "User requires cloud-only tests; full npm suite depends on local Miniflare/Node fixtures."
+  },
+  "conclusion": {
+    "completeFreeAcceptance": false,
+    "profileSelectionResolved": false,
+    "cpuRootCauseEstablished": false,
+    "productionOptimization": false,
+    "sourceRegressionLoopEstablished": false,
+    "limitations": [
+      "Both canonical exact UUID and verified latest-deployed selectors returned 10393 during ongoing traffic; changing selectors did not resolve capture in this run.",
+      "No profile, call-stack attribution, deterministic current median failure or minimized source repro.",
+      "Reported measured subset is 34/38, not a completed planned round; stopping was due to profile failure, not CPU.",
+      "All observed outcomes ok does not establish Free quota compliance; partial warmed median is not acceptance.",
+      "Native/client clocks are separate; traffic proximity does not prove exact isolate selection timing.",
+      "Historic deployed source differs from dirty local workspace; no causal performance comparison."
+    ]
+  }
+}
