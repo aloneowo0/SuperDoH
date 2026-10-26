@@ -6,11 +6,11 @@ SuperDoH is a single-configuration DNS-over-HTTPS Worker. Its production behavio
 
 - Serves standard RFC 8484 DNS wire-format requests at `/dns-query` over HTTPS (GET or POST).
 - Runs ordered `DNS_RULE_*` rule groups. Conditions inspect the current query/response and trusted client, edge, or explicitly enriched response-address properties.
-- Uses explicitly named HTTPS, TCP, or TLS upstreams only when a `queryUpstream` or `queryEch` action asks for one.
+- Uses explicitly named HTTPS or ordinary TCP upstreams only when a `queryUpstream` or `queryEch` action asks for one.
 - Supports an opt-in DNS JSON GET adapter through `DNS_JSON=true`; it uses the same rule pipeline as wire-format requests.
 - Provides explicit DNS response-address attribution, maintained domain lists, and ECH acquisition/application actions. These do not run implicitly during condition matching.
 
-The detailed runtime contract, fields, resource limits and failure semantics are in [docs/rules.md](docs/rules.md). Historical behavior and configuration changes are in [docs/migration.md](docs/migration.md); the verification matrix and current blockers are in [docs/acceptance.md](docs/acceptance.md). The [2026-10-22 isolated online results](docs/online-results-2026-10-22.md) include real CPU/wall evidence; full Free-plan acceptance is **not passed**.
+The detailed runtime contract, fields, resource limits and failure semantics are in [docs/rules.md](docs/rules.md). Historical configuration changes are in [docs/migration.md](docs/migration.md). The [current-source cloud smoke](docs/current-source-smoke-2026-10-26.md) verifies the HTTPS/TCP-only release and DoT rejection, with the initial TCP failure retained. The [practical Free policy and key checks](docs/practical-free-closeout-2026-10-26.md) distinguish occasional successful CPU overages from execution failures. These bounded checks do not establish the full online matrix; #25/#7 remain open. See [docs/acceptance.md](docs/acceptance.md) for verification coverage and historical evidence.
 
 ## Runtime configuration
 
@@ -21,13 +21,15 @@ Common bindings:
 | Binding | Purpose |
 | --- | --- |
 | `DNS_RULE_*` | Ordered conditions and actions |
-| `DNS_UPSTREAMS` | Named HTTPS, TCP, or TLS connections; definitions alone do not send requests |
+| `DNS_UPSTREAMS` | Named HTTPS or ordinary TCP connections; definitions alone do not send requests |
 | `DNS_CACHE` | Default policy for cached original upstream responses |
 | `DNS_LIMITS` | Bounded request, configuration, list, source and execution budgets |
 | `DNS_ADDRESS_SOURCES` | Trusted JSON mappings for explicit response-address attribution |
 | `DNS_DOMAIN_LISTS` | Inline or HTTPS-maintained domain data |
 | `DNS_JSON` | Opt-in DNS JSON GET endpoint; disabled unless true |
 | `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` |
+
+The current upstream scope is HTTPS and ordinary TCP. Any `DNS_UPSTREAMS` entry with `transport: "tls"` is rejected during configuration preflight, even if no rule references it. The Worker does not rewrite the transport or fall back to another source; see [ADR 0001](docs/adr/0001-exclude-dot-from-current-scope.md). This scope decision does not remove the separate TLS-based ECH probe or change its authentication defaults.
 
 Sensitive URLs should use a Secret binding and reference its **binding name** through `urlSecret`. The JSON examples use reserved `.example` hostnames and non-secret placeholder values for controlled test setups; replace them with sources you operate before deployment. Never commit real credentials or a real path key.
 

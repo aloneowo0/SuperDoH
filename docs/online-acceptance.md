@@ -1,6 +1,8 @@
 # Online acceptance runbook
 
-Status: **an explicitly authorized isolated run was executed on 2026-10-22; overall acceptance is not passed**. See the [dated results and limitations](online-results-2026-10-22.md). This runbook remains a procedure, not authorization for another run. The independent local ECH/OpenSSL check passed and was rerun with the updated runtime flags; reproduce it using [acceptance.md](acceptance.md) for release candidates.
+Status: **current-source isolated smoke completed on 2026-10-26; full acceptance is not declared**. See [source hashes, bounded cloud results and restoration](current-source-smoke-2026-10-26.md), [practical Free policy and key checks](practical-free-closeout-2026-10-26.md), and [historical 2026-10-22 evidence](online-results-2026-10-22.md). The smoke is not a full rerun of this matrix. This runbook does not authorize another run; local prerequisites below were not rerun during the cloud-only smoke.
+
+Current upstream scope, approved 2026-10-25, is HTTPS and ordinary DNS over TCP only. `transport: "tls"` in any `DNS_UPSTREAMS` definition is rejected before network work, including unused definitions; this runbook does not authorize DoT traffic. Earlier online DoT measurements remain historical evidence, not a passing current-scope test. The independent ECH TLS probe remains separate and unchanged; The complete #25 matrix remains unaccepted; previous key checks and practical CPU observations are recorded separately, not blanket failures. See [ADR 0001](adr/0001-exclude-dot-from-current-scope.md).
 
 ## Authorization gate
 
@@ -19,7 +21,7 @@ Keep normal production configuration unchanged. Prepare measurement-specific con
 
 1. Record the commit, lockfile, Wrangler/workerd versions, compatibility date, deployment version, account plan, configuration hashes (not secrets), application limits and platform quotas verified on the test date.
 2. Run `npm test`, `npm run typecheck`, local `wrangler deploy --dry-run`, and `npm run test:ech-interop` with an available ECH-capable OpenSSL build. Missing support remains a blocker, not an automatic skip or a reason to disable authentication.
-3. Preflight raw TCP destinations against platform restrictions before deploying: Cloudflare IP ranges are blocked, so a Cloudflare-hosted ECH target is not a valid raw-TCP success fixture. Explicitly select an allowed, authorized source; do not silently substitute one. Verify source reachability and TLS identity for HTTPS/TCP/TLS separately. Distinguish platform destination restrictions, certificate errors and invalid DNS responses. Never silently replace a failing transport or turn off verification.
+3. Preflight raw TCP destinations against platform restrictions before deploying: Cloudflare IP ranges are blocked, so a Cloudflare-hosted ECH target is not a valid raw-TCP success fixture. Explicitly select an allowed, authorized source; do not silently substitute one. Verify HTTPS source identity and ordinary TCP reachability separately. Any DNS upstream definition using `transport: "tls"` is rejected by current configuration policy before network work and is not an online matrix case. ECH probe TLS remains a separate feature. Distinguish platform destination restrictions, HTTPS certificate errors and invalid DNS responses; never turn off verification or silently replace a failing transport.
 4. Reuse checked-in JSON examples with explicitly configured, authorized sources. Keep the default original-response cache enabled for default scenarios; change its JSON policies explicitly for bypass cases.
 
 ## Measurement matrix
@@ -27,14 +29,14 @@ Keep normal production configuration unchanged. Prepare measurement-specific con
 | Case | Required observations |
 | --- | --- |
 | First/cold versus warm | Preserve first-request and subsequent warm samples separately. A fresh deployment or idle interval is only a cold-start candidate unless telemetry verifies isolate state; label uncertainty. |
-| HTTPS, TCP, authenticated TLS | Query each explicitly; validate question/ID association, NXDOMAIN/NODATA, full RCODE and identity failures. No hidden retry, race, fallback or default query. |
+| HTTPS and ordinary TCP | Query each supported transport explicitly; validate question/ID association, NXDOMAIN/NODATA, full RCODE and HTTPS identity failures. `transport: "tls"` is out of scope and must fail preflight; do not send a DoT request or substitute another transport. No hidden retry, race, fallback or default query. |
 | Cache miss/hit/bypass | Distinguish source access from final rewriting. Verify IDs/TTL aging, source/transport/query/Secret isolation, policy precedence, and rules running on hits. |
 | Sequential fallback | Separate failed transport/protocol from valid SERVFAIL/REFUSED. Branch through lastAction/RCODE and preserve failure events after later success. |
 | Rule scale | Compare bounded groups such as 1/10/50/100 rules; record actual visited actions/conditions and compilation, step or resource failures. Do not extrapolate to arbitrary input. |
 | Maintained lists | First load, warm snapshot, due replacement, failed refresh with old data unusable, and recovery. Record entry/byte counts; start with 100/1,000 entries, then the configured maximum if small cases are safe. Refresh interval is not DNS TTL. |
 | Address attribution | Single/multiple normalized addresses, same-address matching, hit/miss, missing fields, source fault, rollback and shared quotas. Metadata is not precise physical location. |
 | Direct/DNS ECH | Preserve other HTTPS parameters, clear AD/affected signatures only on modification, isolate source and target, and validate safe DNS reuse. |
-| Full authenticated probe | Separate complete handshake from cached configuration reuse. Select `verifyCertificate: true` explicitly for authenticated acceptance; separately cover the current default-unverified behavior, identity failure, timeout/byte limits and cleanup. Any explicitly configured verification-off diagnostic is separately labeled, never an automatic downgrade. |
+| Full authenticated ECH probe (separate TLS feature) | Separate complete handshake from cached configuration reuse. Select `verifyCertificate: true` explicitly for authenticated acceptance; separately cover the current default-unverified behavior, identity failure, timeout/byte limits and cleanup. Any explicitly configured verification-off diagnostic is separately labeled, never an automatic downgrade. |
 | Access/failure boundaries | Authorization before source work; invalid input versus execution failure; stop/return/completed finalization; no-answer SERVFAIL; cancellation and redaction. |
 
 Allocate the approved sample budget before sending traffic. For lightweight cases aim for at least 30 warm observations if the total budget permits; report the actual count. Label small heavy-probe samples and do not infer reliable tail percentiles from a handful of requests.

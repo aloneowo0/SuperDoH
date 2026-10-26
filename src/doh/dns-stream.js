@@ -3,14 +3,14 @@ import { RuleError } from '../rules/errors.js';
 
 /**
  * One connection, one framed query and one response; never wait for peer EOF.
- * @param {Exclude<import('../rules/types.js').ResolvedUpstream, { transport: 'https' }>} target
+ * @param {Extract<import('../rules/types.js').ResolvedUpstream, { transport: 'tcp' }>} target
  * @param {Uint8Array} query
  * @param {number} maximum
  * @param {ReturnType<typeof import('./budget.js').createBudget>} budget
  */
 export async function queryStream(target, query, maximum, budget) {
   budget.check();
-  let socket = connect({ hostname: target.address, port: target.port }, { secureTransport: target.transport === 'tls' ? 'starttls' : 'off', allowHalfOpen: false });
+  const socket = connect({ hostname: target.address, port: target.port }, { secureTransport: 'off', allowHalfOpen: false });
   socket.closed.catch(() => {});
   socket.opened.catch(() => {});
   let closed = false;
@@ -25,12 +25,6 @@ export async function queryStream(target, query, maximum, budget) {
   /** @type {ReadableStreamDefaultReader<Uint8Array> | undefined} */
   let reader;
   try {
-    if (target.transport === 'tls') {
-      // Upgrade immediately: no application data is sent before the TLS handshake.
-      socket = socket.startTls({ expectedServerHostname: target.serverName });
-      socket.opened.catch(() => {});
-      socket.closed.catch(() => {});
-    }
     const outputWriter = writer = socket.writable.getWriter();
     const inputReader = reader = socket.readable.getReader();
     await budget.run(() => socket.opened);

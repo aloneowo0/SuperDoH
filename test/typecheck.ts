@@ -113,10 +113,11 @@ const tcpSource: import('../src/rules/types.js').UpstreamConfig = { transport: '
 const badTcpPort: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', address: 'resolver.example', port: '53' };
 void [tcpSource, badTcpPort];
 
+// @ts-expect-error DoT is not a supported upstream transport.
 const tlsSource: import('../src/rules/types.js').UpstreamConfig = { transport: 'tls', address: '192.0.2.53', serverName: 'resolver.example' };
-// @ts-expect-error TLS does not expose an authentication downgrade.
-const insecureTls: import('../src/rules/types.js').UpstreamConfig = { transport: 'tls', address: 'resolver.example', verifyCertificate: false };
-void [tlsSource, insecureTls];
+// @ts-expect-error Plain TCP does not accept a TLS server identity.
+const tcpIdentity: import('../src/rules/types.js').UpstreamConfig = { transport: 'tcp', address: 'resolver.example', serverName: 'resolver.example' };
+void [tlsSource, tcpIdentity];
 
 const cachePolicy: import('../src/rules/types.js').CachePolicy = { read: true, write: false, maxTtl: 60 };
 const cacheAction: Action = { type: 'setCache', read: false, maxTtl: 0 };

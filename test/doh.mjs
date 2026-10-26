@@ -973,3 +973,20 @@ test('invalid lastAction predicates in unreachable branches are rejected before 
     assert.ok(logs.join('').includes('INVALID_CONFIG'));
   }
 });
+
+test('an unused DoT definition rejects HTTPS configuration before any source access', async () => {
+  await setup({
+    DNS_UPSTREAMS: {
+      default: { transport: 'https', url: 'https://resolver.test/private?token=secret-token' },
+      unused: { transport: 'tls', address: 'private.example', serverName: 'private-identity.example' },
+    },
+    DNS_RULE_MAIN: group([requestDefault]),
+  });
+  const result = await dns(await post());
+  assert.equal(result.flags & 15, 2);
+  assert.equal(result.records.length, 0);
+  assert.equal(calls.length, 0);
+  assert.ok(logs.join('').includes('INVALID_CONFIG'));
+  assert.ok(!logs.join('').includes('private-identity.example'));
+  assert.ok(!logs.join('').includes('secret-token'));
+});

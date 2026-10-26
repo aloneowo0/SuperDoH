@@ -1,6 +1,6 @@
 # Migration from historical SuperDoH configuration
 
-This guide describes the current JSON-only runtime. It does not preserve old automatic behavior. The parent contract is [issue #7](https://github.com/aloneowo0/SuperDoH/issues/7); the detailed runtime contract, fields, limits and failure semantics are in [rules.md](rules.md).
+This guide describes the current JSON-only runtime. Its supported named upstream transports are HTTPS and ordinary DNS over TCP. It does not preserve old automatic behavior. The parent contract is [issue #7](https://github.com/aloneowo0/SuperDoH/issues/7); the detailed runtime contract, fields, limits and failure semantics are in [rules.md](rules.md). The 2026-10-25 approved DoT scope decision is recorded in [ADR 0001](adr/0001-exclude-dot-from-current-scope.md).
 
 ## ECH probe verification default change (2026-10-23)
 
@@ -23,6 +23,7 @@ The current Worker entry is `src/worker.js` from the checked-in `wrangler.jsonc`
 | `defineCondition`, `defineAction`, custom JS/TS callbacks, extension registries, `extensions` | Removed. Express conditions with fields and `all`/`any`/`not`; use supported JSON actions. Unknown extensions/custom conditions/actions are rejected during preflight. |
 | `DNS_UPSTREAM`, default resolver, implicit default request | Removed. Define named entries in `DNS_UPSTREAMS`, then reference one explicitly with `queryUpstream` or `queryEch`. A configured source alone performs no request. |
 | `DNS_UPSTREAM_GROUPS`, `DNS_DEFAULT_UPSTREAM_GROUP`, group `members`, `accept` policy, group fallback/exhaustion | Removed. Write sequential rules that inspect `lastAction` and/or `response.rcode`, then explicitly request the next named source. There is no automatic retry, failover, race or response adoption policy. |
+| `transport: "tls"` in any `DNS_UPSTREAMS` definition, including unused definitions | Not supported in the current scope; whole-configuration preflight rejects it with `INVALID_CONFIG`. Do not translate it automatically to HTTPS/TCP and do not fall back. Choose a supported transport explicitly in a new configuration. This does not change the separate TLS-based ECH probe. |
 | Implicit fallback after no answer, after a failure, or after `stop` | Removed. A completed or stopped pipeline without a response returns the corresponding SERVFAIL behavior. Add an explicit request action if a request is intended. |
 | Old fields that decide whether NXDOMAIN, SERVFAIL or REFUSED is acceptable | Use explicit conditions on `response.rcode` and current `lastAction`. A valid DNS SERVFAIL/REFUSED is a successful upstream action; a later rule decides whether to query another source. A transport/protocol failure is a failed action and only continues when `onError: "continue"` is explicit. |
 | `superdoh.config.js`, file fallback, `configured` toggle, browser wizard, `ENTRANCE`/`PROXY`, custom homepage | Not part of the current Worker. Put JSON bindings in the runtime environment and use `/dns-query`; there is no configuration UI or disguised proxy route. |
@@ -36,7 +37,7 @@ Removed legacy fields are not ignored for compatibility. Known removed configura
 
 ## Build the new environment
 
-A `DNS_UPSTREAMS` value names connections, not policies. HTTPS entries use `transport: "https"` with `url` or `urlSecret`; TCP and TLS use their explicit `address`/`port` fields, and TLS may declare `serverName`. The only default cache is for original upstream responses; cache hits still execute configured rules. A query action may locally override its cache policy, but no cache setting makes a source run implicitly.
+A `DNS_UPSTREAMS` value names connections, not policies. HTTPS entries use `transport: "https"` with `url` or `urlSecret`; ordinary TCP entries use explicit `address`/`port` fields. A `transport: "tls"` entry is rejected during whole-configuration preflight even if unused. Current supported upstreams are HTTPS and ordinary TCP only; TLS identities in DNS upstream definitions are not accepted. The only default cache is for original upstream responses; cache hits still execute configured rules. A query action may locally override its cache policy, but no cache setting makes a source run implicitly. The independent TLS ECH probe remains separate from DNS upstream transport selection.
 
 Use `order` to place groups and keep rule/action array order explicit. The engine sorts groups by integer `order`, then binding name. A fallback is a later rule, for example a primary query with `onError: "continue"` followed by a condition on `lastAction.success` and `response.rcode`. The complete binding-object examples are in [`examples/`](../examples/); they use reserved example domains and require controlled endpoints or replacement before deployment.
 

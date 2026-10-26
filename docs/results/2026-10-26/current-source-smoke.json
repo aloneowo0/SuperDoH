@@ -1,0 +1,1320 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "kind": "Current-source HTTPS/TCP-only cloud smoke; not full Free acceptance",
+  "source": {
+    "parentCommit": "66753bd",
+    "productionBundle": {
+      "name": "worker.js",
+      "bytes": 1208784,
+      "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+    },
+    "baselineBundle": {
+      "name": "worker.js",
+      "bytes": 1209790,
+      "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+    },
+    "wasm": {
+      "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+      "bytes": 854948,
+      "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+    },
+    "productionManifest": {
+      "lib/dns-wasm/.gitignore": "29e17fdb2199afeee2c49a01ae6f46d9d0c88b60e8f34c0eb41db4395b3bafe0",
+      "lib/dns-wasm/LICENSE.domain": "6f09cb853e67e1151698870b4f02a83355d3a833b64349093f68a28c164f24a3",
+      "lib/dns-wasm/README.md": "db95237e491c6623bf7ba84dcaa21b58dc15228009c35ec61e370a021014231f",
+      "lib/dns-wasm/THIRD_PARTY_LICENSES.txt": "b89400339c60b2c3477ea52df38438f0685564bdc7429a5035333eba48e15ac7",
+      "lib/dns-wasm/build.sh": "cee7e3b1c0c5943a34810815c075d15bc0b84891885debf3dd6247c71b3a3841",
+      "lib/dns-wasm/dns_bindgen.d.ts": "053f4deb85ebd5f9bb30f57935df839a7119463d5913cc80f0c85f144a32fd74",
+      "lib/dns-wasm/dns_bindgen.js": "5d0054ef22eea5058a278daae383b39ff1a082357d0745148688c6ea148b074c",
+      "lib/dns-wasm/dns_bindgen_bg.wasm": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73",
+      "lib/dns-wasm/dns_bindgen_bg.wasm.d.ts": "9db02a35ad2d313c3ca6debed6efc035b0bcb43c5662e40a385412993ca63b0e",
+      "lib/dns-wasm/index.d.ts": "05cff9b7e8a4b68ab0292e234387d466c509eaf763e9649e2c1afdb0465b103a",
+      "lib/dns-wasm/index.js": "79ca2e610bfeb07b0ab7af7d8714f19de502f435ae25655c8568744d2383abca",
+      "lib/dns-wasm/native-rdata.d.ts": "908c0582d835fabe39d3f7a185a5af87df5914fa92d8ec7ca9311fe07cb12bee",
+      "lib/dns-wasm/package.json": "564f84fa5bfcd7e8dc87f616fa70b36cbf13bddb3a1296a111f61dd4e6009321",
+      "lib/dns-wasm/rust/Cargo.lock": "36fc8c4b282a51f13a5dc6ff7023cc09790fc6a771884f4b0a8cd82333576db5",
+      "lib/dns-wasm/rust/Cargo.toml": "7bdf14f7c74e10d4ce2fb66dbe94b4fc63f608f28b4bce6e11198b8e0c332b2d",
+      "lib/dns-wasm/rust/src/edns.rs": "b110c5076a8368a210e957511dc6270e3619d7d2fcf051a06511e5ceeae42dd8",
+      "lib/dns-wasm/rust/src/lib.rs": "a381749c2052085b493b1ade14e6bd9dc62b0b529f2af8197bab5254d183a860",
+      "lib/dns-wasm/rust/src/message.rs": "97fd28b57b7c35cae67921dda330a883c7737ad85541a542580eab522e74ec6e",
+      "lib/dns-wasm/rust/src/rdata.rs": "4cd000a4c080a831f1e0400e9ae86d07b14bd00e79ed8ed99fd9e8553bda0d37",
+      "lib/dns-wasm/rust/src/serde_bridge.rs": "c310fb9c05b5f1837fd7fe2904bac1b631c3a98d77a20c2e6a6b7712ce0bc71d",
+      "lib/dns-wasm/rust/src/svcb.rs": "f700e819410912f0cdb66eb54607876e9db134d69e75e1d48d17b4ce1e87d36c",
+      "lib/dns-wasm/rust/src/tests.rs": "fc4035c1db7b14c850033f5a9fa8c808d3c9837b70175c4205a5b61f59b21029",
+      "lib/dns-wasm/rust/src/validation.rs": "418095c8507934fa1d7b5490e68d3c984facf915e9cc173d815cf0266ef38c88",
+      "lib/dns-wasm/test/fixtures/native-models.json": "e6791b23a994f6cb333a6da6376e08030dcdd55cdf49890274b9cf4c11615825",
+      "lib/dns-wasm/test/fixtures/real-dns.json": "626301401edcd5a344d9fe0ba56948548bbe41e5f1c31a2692ac680dda892eed",
+      "lib/dns-wasm/test/fixtures/records.json": "e8af2b31558b59cf412b6a15aa6dd479ffdbab4fd3683e1ccd9b1e190d0f4f62",
+      "lib/dns-wasm/test/operations.mjs": "c85f3c0fe23d70226ad0ea89d6bf0169d29fb705be21559ba0a484fc72716a1a",
+      "lib/dns-wasm/test/smoke.mjs": "da449875bb116bf5ae11708d739e613aa2cecdc00c4555ed6ef620c66465fa9d",
+      "lib/dns-wasm/test/typecheck.ts": "757e277259707df210c8dba5bbe89bbea93013e9886080974d9e6524d89c4994",
+      "lib/dns-wasm/test/wire.mjs": "1f538d5a7e5a18d6b59481056b94aef94032e880442b9fb963c0e6ab708de8d0",
+      "lib/dns-wasm/test/worker.js": "17b58d577d048bb6f34b74966fb48e464c65ba917df471da2313076fb432ee5b",
+      "lib/ech-probe/.gitattributes": "db1bef5105a482f31227ce2e7695ed782710028e81d504629217e6d81c22d78b",
+      "lib/ech-probe/.gitignore": "4d56952b0fb13bf8f9b6c13a6d4c34a075bac3af447636a1df4335d7576e2f97",
+      "lib/ech-probe/README.md": "7b21c6ef2241202e26f4e6ae6c95a9513e25883cf459946de0acd229bc613cc7",
+      "lib/ech-probe/config.d.ts": "8bcc7bad4b407c5bfc70dd031d3327af75d4a67646008d9a205e3adc144f3963",
+      "lib/ech-probe/config.js": "b19481d4ec2b54b81763301947eda5b44210b638516fa575aee4b197678136c9",
+      "lib/ech-probe/examples/worker.js": "640854d1adf5038c8644815ad96ca6c860a42c98f50c0389d501410fd19c443e",
+      "lib/ech-probe/index.d.ts": "fcb21d3c68a4c7e43fbeeda7199edbce5a01c262e1c3ebe54f4fac4f6245db8a",
+      "lib/ech-probe/index.js": "9b051da01749e016d28391be6db4f635b7a53ce30c523e3638ef289513c07353",
+      "lib/ech-probe/internal/bytes.js": "0e51398c93872e8b41f7f92fc88a757c9926f584ea47de8293fbe0d0f29f9ab7",
+      "lib/ech-probe/internal/certificate.js": "2c906a1175b0317859b67fcc56fcfaee2ce99eb74beeac504eb9d503148378f0",
+      "lib/ech-probe/internal/crypto.js": "768c342127153d110c174dcf3f94c6736041abf7309febd2708299f77e714cfb",
+      "lib/ech-probe/internal/probe.js": "8815d571d88760360a40e978283b60c7806255f3ba7fa6ef8d71336ed4c82fca",
+      "lib/ech-probe/internal/target.js": "dd7a1bae34a48fead097c97cda3557f8461b20e69540e462476cbcb08ddc1de5",
+      "lib/ech-probe/internal/tls.js": "a8a54960c9ab36abb1b0328026e25954324ad6e3350bbf64f82e8af8b98bce17",
+      "lib/ech-probe/internal/trust-store.js": "3ee38f791f1d9f9297b8241fb9fa163a6e69952dc06d65864c1263cd0d5d2323",
+      "lib/ech-probe/package-lock.json": "981327dfd9d55a18d15118d7940cf2791c97a8a0c42549b047e4efa5a9b78815",
+      "lib/ech-probe/package.json": "da936d67cba9339ebedf276a04d6af61c3d941fa0388b5d08075824c6f6d61d1",
+      "lib/ech-probe/scripts/build-trust-store.mjs": "97bc30905d16d683d4ded054d92861189a116f1f4aa281e53d3c540cbab209eb",
+      "lib/ech-probe/scripts/build-vendor.mjs": "23db6647251212a43b8a98f4039c34d0469dd9b5b8f3cdea7c2cef6a44316c86",
+      "lib/ech-probe/scripts/pki-entry.js": "ac4513d14119b510768d3bb04c3430b14414b7e3cf18d50adc4c98b3fd1556b0",
+      "lib/ech-probe/test/certificate-tests.js": "d53de95904de564939e8d25875b95cd4819d8e27a8e49b0cbfaa0e68d406e375",
+      "lib/ech-probe/test/fixtures/certificates.json": "b82e2341db1da43a13bc873cb472c87fda6fe3d9ebdfd30e40814e009d804bd6",
+      "lib/ech-probe/test/fixtures/meta.json": "f97ac3f10b4153e39bf0fda5bb368c1866d1e07a5c07d4e34ed37b1f44fb3181",
+      "lib/ech-probe/test/interop-worker.js": "de3c8a351776c7c78ec84bf0330dccc87ec6a09950ae7fdcf925635b7e54c6f7",
+      "lib/ech-probe/test/interop.mjs": "bf4af4ea1e71d2c60d3d142880f041bd43699e6ddd2cba403e261027ca575595",
+      "lib/ech-probe/test/lazy-trust-entry.js": "4513f5c527b6a8481ec4f642bc713d17d45a521de5562f3f971a019fb991deef",
+      "lib/ech-probe/test/node.mjs": "fd23b40142b4bfe9b19bb67c579cb01bb179cb44a8accfec5af2377a7953c72f",
+      "lib/ech-probe/test/runtime.mjs": "b1b28d013116f47c65d4a8dea92f57b9424c8416d6592805bbb14e35964934c9",
+      "lib/ech-probe/test/suite.js": "7441b10e908cbeecc28c7b43564d6669337a187e73640ee5ddd0812cd4ae453a",
+      "lib/ech-probe/test/support.js": "dab47faf6c803c2aad6e73caf32c6fa202d0112bf402378bdbc7824fd84c66f7",
+      "lib/ech-probe/test/typecheck.ts": "701a633a91cb6d9facab8692f886d80d5eb2d30b5336f4d35f6d04721f82b64e",
+      "lib/ech-probe/test/worker.js": "22c4c60cc4fb14dbfc188c0a3e396b4272f1b8003c1226e01eb22cb346565ae3",
+      "lib/ech-probe/test/workerd.mjs": "438b8f71e22ab02602987b789f24ba031c124090569f9c9390c5334ed2362397",
+      "lib/ech-probe/vendor/README.md": "06e35eaf1d72a72463558135b1f82bf8662a7838fd411dcc9d8933f569e9f23b",
+      "lib/ech-probe/vendor/cacert.pem": "a41b5d356aea97a529fe27e0f7316d2f9d946d75927476cf9cf1b90637d00505",
+      "lib/ech-probe/vendor/licenses/asn1js.txt": "ebe5d98519d0dfcbcb80e20b22a56e7321e8557cd14355760434bbd4c1f4f683",
+      "lib/ech-probe/vendor/licenses/bytestreamjs.txt": "f0fd6a4bf9bf46cfcea2005f800305fbb72cd0152b3c269cf496388258ee08f9",
+      "lib/ech-probe/vendor/licenses/esbuild.txt": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681",
+      "lib/ech-probe/vendor/licenses/mozilla-ca-MPL-2.0.txt": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+      "lib/ech-probe/vendor/licenses/noble-hashes.txt": "4f221aee6e072336700c408c68ab3b96a3fc09f6aebe6f48f1bd99e5ef13faec",
+      "lib/ech-probe/vendor/licenses/pkijs.txt": "d27a2aa238102924ea75da808f79253484347d824b9b7b077837e4232f9493f5",
+      "lib/ech-probe/vendor/licenses/pvtsutils.txt": "c620c1d08a47c93ce242914a4269b86e41df5a97845325725a5f83d5d6f9d7fd",
+      "lib/ech-probe/vendor/licenses/pvutils.txt": "15c88630f1e778db64a446cb31b67362cc9eb7a048fdf5ac7ab51905b74464cd",
+      "lib/ech-probe/vendor/licenses/tslib.txt": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",
+      "lib/ech-probe/vendor/manifest.json": "9e3b05c976c1d721f98f2d7a4279e95fa26cdb98f675f808ee98482c7a3e6647",
+      "lib/ech-probe/vendor/pki-core.js": "2fddfe7bcc9ca2d302140b2ece9196f111136a74e495a72a066484c45b7f1ac2",
+      "package-lock.json": "d72d069e15482e344b6a6e105fb00a983238f505a0bb0998473124aaaa3e87c4",
+      "src/doh/attribution.js": "175bd2cf54b05826e1bf4af1aa7345c793337770ba70bd69cf1f3a892d538577",
+      "src/doh/body.js": "d00b9c1299c0f298c1c7616abe2269f0485ad4ab5354e60135582767ce9ec272",
+      "src/doh/budget.js": "0cf98d7ede2fbd9ac190b97b364346ae97333f6d0f5df14150e3d222175b6a00",
+      "src/doh/cache.js": "4128667190966317c9b22aff0857e12130add5ccb888a00f7b11c2b1b11d49b7",
+      "src/doh/dns-stream.js": "6ba8cfb637b4ee579e22aca5ee28c07312b62aa0cbb8412b1fd01f442568b030",
+      "src/doh/ech-probe.js": "3d70af42bb29a6d146b70b5554878f104a30a745aa78efa891750d4265636ad8",
+      "src/doh/metadata.js": "42b6fc64354e0c242e41e694268d6d27aba4bacb396975dc2f786474052e7468",
+      "src/doh/protocol.js": "6d995c1c409cf6973ba28e53f884aa98b80bc19963b60c973a5d64856c48f941",
+      "src/doh/upstream.js": "27bbb21872618d99f3747fd25d2069066ffaa97ab172173a86458d73f0f819f3",
+      "src/doh/upstreams.js": "06514cc578e1bb201f2c0a08c4d7bf58a4a05cc688aa06ca636194086a436755",
+      "src/index.js": "7024c9711172f4a23243fd6bd015bf907685922a7c704bd2f65039018c152637",
+      "src/rules/address-sources.js": "09409250198fdbd70e5c692b98ee24ce8d458073327fe57deee997b59a15590c",
+      "src/rules/cache-policy.js": "da573a028c361bb65516641b62b9b21202222dc06ffd064b273b4b41d366fcc7",
+      "src/rules/conditions.js": "98f7c2fa7ee421f1f352549a223fc6c554c38edbdefc20228de6ec513d8407f2",
+      "src/rules/config-budget.js": "8f32d7d39452fa4b9daf57f691109427697618ff3680f15373644d3cfc1b0572",
+      "src/rules/config.js": "47ad20ad78b3c66d3b4a289cf7bbb9342a4026a6dd5547998b627d001f70e5da",
+      "src/rules/context.js": "f5f7085cb0ed8b85ee5fc8371453d19ac0f29e9c5ffb2a23b4d9cae244312db1",
+      "src/rules/domain-lists.js": "009440e07d9d44f0703072312a7ec249996229867155bad007a57d295fb9c135",
+      "src/rules/ech.js": "e921bf680804fe22b2bf3e4af193d0b48f4ce1749c53c70c5d329b2eaf45b914",
+      "src/rules/errors.js": "2f681a8dc6896bb8671afb5b7ecac233e8f26921b9e1daa329aa91f6974fa384",
+      "src/rules/ip.js": "cb4a7950d6b6086f7c1cca9d021e1c4ce8c6de48774c77e2f39dbd88c9aae960",
+      "src/rules/limits.js": "5657f1553b3b030cc5b1d72ed3ccff2a825f3ec6f09fceebf68a0e01b8cf3691",
+      "src/rules/records.js": "4a590fb809937dfff48ec578b6612d8b89870d430b88480a15b831ae487bd762",
+      "src/rules/types.d.ts": "d3c2a382da0e24b83762cbd77cab9551e46a0be5f2cb63eb91bee9b6fe07f53d",
+      "src/rules/values.js": "1b7e80a069cf7f0c090d79a3d2a031ba19d4ca17fa75eef47295ab6eab1174ff",
+      "src/worker.js": "fd4da1da9c6086dd527a35314c092cc8d2f89199bb7229ae68f9c847a389736e"
+    },
+    "baselineVersion": "2e470072-a23f-4e12-a830-487815cf2f19",
+    "currentVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+    "exactIndependentBuildMatch": true,
+    "wrapperSeparate": true,
+    "wrapperSha256": "9376d88d4bbdf63f21b233dc59e52e225f2c8dd75be5d9e47e7ee7bd25420e54"
+  },
+  "scope": {
+    "clientCap": 20,
+    "clientAttempts": 17,
+    "profiles": 0,
+    "cpuMatrixRequests": 0,
+    "echProbes": 0,
+    "localBehaviorTests": 0,
+    "businessWorkerChanges": 0,
+    "temporarySecretsCreated": 0,
+    "fixtureModified": false,
+    "minimumGapMs": 1001
+  },
+  "summary": {
+    "baselineSensitiveRejection": {
+      "oldRcode": 0,
+      "newRcode": 2,
+      "newCode": "INVALID_CONFIG",
+      "newContractFailedOnBaseline": true
+    },
+    "initialCurrentChecks": 12,
+    "initialCurrentPassed": 11,
+    "initialCurrentFailed": 1,
+    "currentTcpConfirmationPassed": true,
+    "initialTcpFailureRetained": true,
+    "initialPassAllGreen": false,
+    "rawRunnerAssertionsPassed": 14,
+    "rawRunnerAssertionsFailed": 3,
+    "fixtureStoppedStatus": 503,
+    "completeAcceptance": false
+  },
+  "samples": [
+    {
+      "id": "f7e35161-b100-4100-9416-673cf4bd08d8",
+      "phase": "baseline",
+      "scenario": "tls-unused",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:17:24.473Z",
+      "expectedVersion": "2e470072-a23f-4e12-a830-487815cf2f19",
+      "expectedSha": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007",
+      "version": "2e470072-a23f-4e12-a830-487815cf2f19",
+      "sampleEcho": "f7e35161-b100-4100-9416-673cf4bd08d8",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 1,
+      "newTlsRejectionContractSatisfied": false,
+      "finishedAt": "2026-10-26T07:17:25.804Z"
+    },
+    {
+      "id": "231b264d-e68a-4a61-b541-14f030d59854",
+      "phase": "current",
+      "scenario": "fixed",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:04.281Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "231b264d-e68a-4a61-b541-14f030d59854",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 1,
+      "finishedAt": "2026-10-26T07:18:05.607Z"
+    },
+    {
+      "id": "ed917314-ce03-4af4-a1a8-0ce48b18a465",
+      "phase": "current",
+      "scenario": "fixed",
+      "method": "GET",
+      "startedAt": "2026-10-26T07:18:06.621Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "ed917314-ce03-4af4-a1a8-0ce48b18a465",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 1,
+      "finishedAt": "2026-10-26T07:18:06.927Z"
+    },
+    {
+      "id": "41999514-6de9-49af-ab9b-5d707eeaa341",
+      "phase": "current",
+      "scenario": "fixed",
+      "method": "JSON",
+      "startedAt": "2026-10-26T07:18:07.929Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "41999514-6de9-49af-ab9b-5d707eeaa341",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 1,
+      "finishedAt": "2026-10-26T07:18:08.194Z"
+    },
+    {
+      "id": "14558a08-95ae-4a9e-8846-f98e2a9c8b31",
+      "phase": "current",
+      "scenario": "https",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:09.206Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "14558a08-95ae-4a9e-8846-f98e2a9c8b31",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 2,
+      "finishedAt": "2026-10-26T07:18:09.513Z"
+    },
+    {
+      "id": "9d21ad51-ee3d-4b04-9ea5-88487143120b",
+      "phase": "current",
+      "scenario": "tcp",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:10.518Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": false,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "9d21ad51-ee3d-4b04-9ea5-88487143120b",
+      "failures": "UPSTREAM_INVALID",
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'UPSTREAM_INVALID'\n- ''\n"
+      },
+      "finishedAt": "2026-10-26T07:18:10.787Z"
+    },
+    {
+      "id": "ab2d3b0c-2e69-4acc-8d49-59e34e3029fd",
+      "phase": "current",
+      "scenario": "tls-unused",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:11.792Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "ab2d3b0c-2e69-4acc-8d49-59e34e3029fd",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:12.018Z"
+    },
+    {
+      "id": "f2ba06bc-8baa-48e2-b09d-508aa4c0c558",
+      "phase": "current",
+      "scenario": "tls-optional",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:13.022Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "f2ba06bc-8baa-48e2-b09d-508aa4c0c558",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:14.389Z"
+    },
+    {
+      "id": "200b1033-18d5-4f7a-b8ea-bd2c5fbcecae",
+      "phase": "current",
+      "scenario": "tls-unreachable",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:15.397Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "200b1033-18d5-4f7a-b8ea-bd2c5fbcecae",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:15.640Z"
+    },
+    {
+      "id": "834c680f-7f9b-4d42-b1aa-bf161844c717",
+      "phase": "current",
+      "scenario": "tls-mixed",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:16.644Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "834c680f-7f9b-4d42-b1aa-bf161844c717",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:16.914Z"
+    },
+    {
+      "id": "1e070e41-dc07-4a4f-8b9a-ff5ad577e37c",
+      "phase": "current",
+      "scenario": "tcp-identity",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:17.923Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "1e070e41-dc07-4a4f-8b9a-ff5ad577e37c",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:18.188Z"
+    },
+    {
+      "id": "dc360969-7561-41f4-a4dc-173123c0600c",
+      "phase": "current",
+      "scenario": "empty",
+      "method": "POST",
+      "startedAt": "2026-10-26T07:18:19.203Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 200,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "dc360969-7561-41f4-a4dc-173123c0600c",
+      "failures": "NO_RESPONSE",
+      "rcode": 2,
+      "answerCount": 0,
+      "finishedAt": "2026-10-26T07:18:19.448Z"
+    },
+    {
+      "id": "b5ccff50-5e60-4cef-86c7-5fc25c395072",
+      "phase": "current",
+      "scenario": "fixed",
+      "method": "JSON",
+      "startedAt": "2026-10-26T07:18:20.449Z",
+      "expectedVersion": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "expectedSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "correct": true,
+      "httpStatus": 400,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sampleEcho": "b5ccff50-5e60-4cef-86c7-5fc25c395072",
+      "failures": "INVALID_HTTP",
+      "errorCode": "DUPLICATE_PARAMETER",
+      "finishedAt": "2026-10-26T07:18:20.689Z"
+    },
+    {
+      "id": "5d3b6ab6-c0b6-4888-9c2e-bb200ff8e43c",
+      "phase": "tcp-baseline",
+      "scenario": "tcp",
+      "startedAt": "2026-10-26T07:19:55.458Z",
+      "correct": false,
+      "httpStatus": 200,
+      "version": "2e470072-a23f-4e12-a830-487815cf2f19",
+      "sourceSha": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 2,
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'UPSTREAM_INVALID'\n"
+      },
+      "finishedAt": "2026-10-26T07:19:56.618Z"
+    },
+    {
+      "id": "e3b25832-1d3f-47db-8c6f-9ee283a396d4",
+      "phase": "tcp-confirmation",
+      "scenario": "tcp",
+      "startedAt": "2026-10-26T07:20:36.613Z",
+      "correct": true,
+      "httpStatus": 200,
+      "version": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "answerCount": 2,
+      "transportSuccess": true,
+      "priorFailureRetained": true,
+      "finishedAt": "2026-10-26T07:20:37.720Z"
+    },
+    {
+      "phase": "cleanup",
+      "target": "producer",
+      "startedAt": "2026-10-26T07:24:08.060Z",
+      "correct": true,
+      "httpStatus": 200,
+      "rcode": 2,
+      "finishedAt": "2026-10-26T07:24:09.253Z"
+    },
+    {
+      "phase": "cleanup",
+      "target": "fixture",
+      "startedAt": "2026-10-26T07:24:10.257Z",
+      "correct": false,
+      "httpStatus": 503,
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected values to be strictly equal:\n\n503 !== 410\n"
+      },
+      "finishedAt": "2026-10-26T07:24:11.351Z"
+    }
+  ],
+  "validationIssues": [
+    {
+      "kind": "application-observation",
+      "sampleId": "9d21ad51-ee3d-4b04-9ea5-88487143120b",
+      "code": "UPSTREAM_INVALID",
+      "rootCauseEstablished": false,
+      "detail": "Initial TCP request failed its expected-success assertion. Baseline returned RCODE 0/two answers; one current-version confirmation independently passed. This does not prove transient network causation or TCP reliability. Initial body was not decoded after the failure-header assertion."
+    },
+    {
+      "kind": "harness-expectation",
+      "sampleId": "5d3b6ab6-c0b6-4888-9c2e-bb200ff8e43c",
+      "detail": "Baseline control wrongly expected the TCP failure to repeat. It instead observed RCODE 0/two answers. The hypothesis was refuted; failed assertion retained. This is not a demonstrated baseline transport failure."
+    },
+    {
+      "kind": "harness-expectation",
+      "detail": "Fixture cleanup expected 410 but observed 503. Downloaded unchanged fixture source explicitly returns 503 before route processing when EXPIRES_AT <= Date.now(); EXPIRES_AT remained 0 and active version unchanged. Source inspection resolved the expectation error without another request."
+    },
+    {
+      "kind": "client-runtime",
+      "detail": "Some failed Node assertions also triggered Windows UV_HANDLE_CLOSING abort output. All HTTP attempts had already been durably recorded; failed records were not replaced."
+    },
+    {
+      "kind": "control-preflight",
+      "detail": "First restoration reverse-patch anchor check stopped before upload due to string escaping. Base64-encoded original fragments then reproduced the original SHA before upload; independent readback verified restoration."
+    }
+  ],
+  "verification": {
+    "typecheck": {
+      "command": "npm --prefix SuperDoH run typecheck",
+      "exitCode": 0
+    },
+    "syntaxChecks": [
+      "src/doh/upstreams.js",
+      "src/doh/dns-stream.js",
+      "test/tls.mjs",
+      "test/doh.mjs"
+    ],
+    "fullNpmSuiteRun": false,
+    "rustSuiteRun": false,
+    "reason": "User requires cloud-only behavioral tests. Earlier 536-check result is historical only.",
+    "nativeCpuCollected": false,
+    "coldWarmIdentityEstablished": false,
+    "networkConnectionCountsInstrumented": false
+  },
+  "reproduction": {
+    "requiresFreshAuthorization": true,
+    "buildSource": "import fs from 'node:fs';import path from 'node:path';import{build}from'esbuild';import{execFileSync}from'node:child_process';import{createHash}from'node:crypto';\nconst root=path.resolve(import.meta.dirname,'../..'),dir=import.meta.dirname,original=fs.readFileSync(path.join(root,'.acceptance/tls-auth-negative-20261025/original-module-1'),'utf8');\nconst sha=s=>createHash('sha256').update(s).digest('hex');\nfor(const baseline of [true,false]){const result=await build({absWorkingDir:root,entryPoints:['src/worker.js'],outfile:'worker.js',bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',keepNames:true,sourcemap:'linked',external:['cloudflare:sockets'],plugins:[{name:'exact-modules',setup(api){api.onResolve({filter:/\\.wasm$/},()=>({path:'./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm',external:true}));if(baseline)api.onLoad({filter:/(upstreams|dns-stream)[.]js$/},a=>({contents:execFileSync('git',['-C',root,'show','66753bd:'+path.relative(root,a.path).split(path.sep).join('/')],{encoding:'utf8'}),loader:'js'}));}}]});const js=result.outputFiles.find(f=>f.path.endsWith('worker.js')).text;fs.writeFileSync(path.join(dir,baseline?'baseline.js':'current.js'),js);console.log(JSON.stringify({baseline,bytes:Buffer.byteLength(js),sha256:sha(js),originalSha256:sha(original),exactOriginal:js===original}));if(baseline&&js!==original){let i=0;while(js[i]===original[i]&&i<js.length)i++;console.log(JSON.stringify({firstDifference:i,built:js.slice(Math.max(0,i-80),i+180),original:original.slice(Math.max(0,i-80),i+180)}));}}\n",
+    "patch": {
+      "baselineSha": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007",
+      "currentSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "patches": [
+        {
+          "at": 1167606,
+          "remove": 169,
+          "oldSha": "888aa462c8b4f891bc38c90728871e4a5fceee109f601ec906e8cb5301687b2e",
+          "insert": "  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \"off\", allowHalfOpen: false });\n"
+        },
+        {
+          "at": 1168156,
+          "remove": 213,
+          "oldSha": "44b8ddfb81a08faa766f87f584245cae3da36cd4192c9fdb2b258d6fe8b1a09f",
+          "insert": ""
+        },
+        {
+          "at": 1176661,
+          "remove": 169,
+          "oldSha": "aeb468697ebc804fa1f0464d101d2f2afb964856d2663c8f983fe545926c55bf",
+          "insert": "      const value = fields(raw, [\"transport\", \"url\", \"urlSecret\", \"address\", \"port\"]);\n      if (value.transport === \"tcp\") {\n"
+        },
+        {
+          "at": 1177300,
+          "remove": 96,
+          "oldSha": "ba501b34ac6a8c943e39d50f46a6dbe7fca3cc7f35b8122bef8a54a0c2e0ba7b",
+          "insert": "        const port = value.port === void 0 ? 53 : value.port;\n"
+        },
+        {
+          "at": 1177508,
+          "remove": 720,
+          "oldSha": "38afb1a0615a52b61ff663d263babf83832238ac6b61f1e0ee00d7824caf3b53",
+          "insert": "        upstreams.set(name, { transport: \"tcp\", address: address2, port });\n"
+        },
+        {
+          "at": 1178254,
+          "remove": 111,
+          "oldSha": "2ce503d286728dbca2bb51de9543e03eeb7c9936e37f42339074deb5eb9edc7a",
+          "insert": "      if (value.address !== void 0 || value.port !== void 0) throw new Error();\n"
+        }
+      ]
+    },
+    "wrapper": "import {handleRequest} from './worker.js';\nconst fixed={type:'answer',records:[{name:'example.com',type:'A',ttl:60,rdata:{A:{addr:'192.0.2.8'}}}]};\nconst group=actions=>({order:0,rules:[{actions}]});\nconst tls={transport:'tls',address:'resolver.example',port:853};\nconst upstream={type:'queryUpstream',upstream:'primary'};\nconst https={transport:'https',url:'https://dns.quad9.net/dns-query'};\nconst configs={fixed:{DNS_RULE_MAIN:group([fixed])},https:{DNS_UPSTREAMS:{primary:https},DNS_RULE_MAIN:group([upstream])},tcp:{DNS_UPSTREAMS:{primary:{transport:'tcp',address:'9.9.9.9',port:53}},DNS_RULE_MAIN:group([upstream])},'tls-unused':{DNS_UPSTREAMS:{unused:tls},DNS_RULE_MAIN:group([fixed,{type:'return'}])},'tls-optional':{DNS_UPSTREAMS:{primary:tls},DNS_RULE_MAIN:group([fixed,{...upstream,onError:'continue'}])},'tls-unreachable':{DNS_UPSTREAMS:{primary:tls},DNS_RULE_MAIN:{order:0,rules:[{when:{field:'query.type',op:'eq',value:'AAAA'},actions:[upstream]},{actions:[fixed]}]}},'tls-mixed':{DNS_UPSTREAMS:{primary:https,unused:tls},DNS_RULE_MAIN:group([upstream])},'tcp-identity':{DNS_UPSTREAMS:{primary:{transport:'tcp',address:'9.9.9.9',serverName:'resolver.example'}},DNS_RULE_MAIN:group([upstream])},empty:{}};\nexport default {async fetch(request,env){const scenario=request.headers.get('x-release-case'),sample=request.headers.get('x-release-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!Object.hasOwn(configs,scenario)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const failures=[];const response=await handleRequest(request,{DNS_JSON:true,DNS_CACHE:{read:false,write:false},...configs[scenario]},{requestId:sample,onEvent:event=>{failures.push(event.code);}});const headers=new Headers(response.headers);headers.set('x-release-source',env.SOURCE_SHA);headers.set('x-release-version',env.VERSION.id);headers.set('x-release-sample',sample);headers.set('x-release-failures',failures.join(','));return new Response(response.body,{status:response.status,headers});}};\n",
+    "initialRunner": "import fs from 'node:fs';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';import {setGlobalProxyFromEnv} from 'node:http';import {query,decode} from '../../test/helpers/dns-wire.mjs';\nsetGlobalProxyFromEnv();\nconst dir=import.meta.dirname,control=JSON.parse(fs.readFileSync(dir+'/control.json')),phase=process.argv[2],setup=control.find(v=>v.kind===(phase==='baseline'?'release-baseline-setup':'release-current-setup'));\nassert.ok(setup);const expectedVersion=setup.versions[0].version_id,expectedSha=setup.moduleHashes.find(m=>m.name==='worker.js').sha256;\nconst ledgerPath=dir+'/ledger.json',ledger=fs.existsSync(ledgerPath)?JSON.parse(fs.readFileSync(ledgerPath)):[],wire=Buffer.from(query()),base='https://superdoh.aloneowo0.workers.dev/dns-query';\nconst cases=phase==='baseline'?[{scenario:'tls-unused',rcode:0,fixed:true}]:[\n{scenario:'fixed',rcode:0,fixed:true},{scenario:'fixed',method:'GET',rcode:0,fixed:true},{scenario:'fixed',json:true,rcode:0,fixed:true},\n{scenario:'https',rcode:0,upstream:true},{scenario:'tcp',rcode:0,upstream:true},\n...['tls-unused','tls-optional','tls-unreachable','tls-mixed','tcp-identity'].map(scenario=>({scenario,rcode:2,failure:'INVALID_CONFIG'})),\n{scenario:'empty',rcode:2,failure:'NO_RESPONSE'},{scenario:'fixed',json:true,duplicate:true,status:400}];\nfor(const c of cases){assert.ok(ledger.length<20);if(ledger.length)await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(ledger.at(-1).finishedAt)+1000-Date.now())));const sample={id:randomUUID(),phase,scenario:c.scenario,method:c.json?'JSON':c.method??'POST',startedAt:new Date().toISOString(),expectedVersion,expectedSha,correct:false};ledger.push(sample);fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));\ntry{const headers={'x-release-case':c.scenario,'x-release-sample':sample.id,Accept:c.json?'application/dns-json':'application/dns-message'};let url=base,method=c.method??'POST';if(c.json){method='GET';url+='?name=example.com&type=A'+(c.duplicate?'&name=other.example':'');}else if(method==='GET')url+='?dns='+wire.toString('base64url');else headers['Content-Type']='application/dns-message';\nconst response=await fetch(url,{method,headers,body:method==='POST'?wire:undefined,redirect:'manual',signal:AbortSignal.timeout(15000)});sample.httpStatus=response.status;sample.sourceSha=response.headers.get('x-release-source');sample.version=response.headers.get('x-release-version');sample.sampleEcho=response.headers.get('x-release-sample');sample.failures=response.headers.get('x-release-failures');assert.equal(sample.sourceSha,expectedSha);assert.equal(sample.version,expectedVersion);assert.equal(sample.sampleEcho,sample.id);assert.equal(response.status,c.status??200);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(sample.failures,c.failure??(c.status?'INVALID_HTTP':''));\nconst bytes=new Uint8Array(await response.arrayBuffer());assert.ok(bytes.length<=65535);assert.equal(response.headers.get('content-type')?.split(';')[0],c.json?'application/dns-json':'application/dns-message');\nif(c.json){const body=JSON.parse(Buffer.from(bytes).toString());if(c.status){assert.ok(body.error);sample.errorCode=body.error.code;}else{assert.equal(body.Status,c.rcode);assert.equal(body.Answer.length,1);assert.equal(body.Answer[0].data,'192.0.2.8');assert.equal(body.Answer[0].TTL,60);assert.equal(body.AD,false);sample.rcode=body.Status;sample.answerCount=body.Answer.length;}}\nelse{const result=decode(bytes);assert.equal(result.id,0x4242);assert.ok(result.flags&0x8000);assert.equal(result.flags&0x0200,0);assert.deepEqual(result.questions,[{name:'example.com',type:1,class:1}]);sample.rcode=result.flags&15;assert.equal(sample.rcode,c.rcode);sample.answerCount=result.records.filter(r=>r.section===0).length;if(c.fixed){assert.equal(result.records.length,1);assert.deepEqual(result.records[0],{name:'example.com',type:1,ttl:60,section:0,data:[192,0,2,8]});assert.equal(result.flags&0x20,0);}if(c.upstream){assert.ok(sample.answerCount>0);assert.ok(result.records.some(r=>r.section===0&&r.type===1&&r.data.length===4));}if(c.rcode===2)assert.equal(result.records.length,0);}\nsample.correct=true;if(phase==='baseline')sample.newTlsRejectionContractSatisfied=false;\n}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}}\nassert.ok(ledger.filter(s=>s.phase===phase).every(s=>s.correct),'Cloud smoke assertions failed; preserve ledger and clean up without retries.');\n",
+    "baselineTcpRunner": "import fs from 'node:fs';import assert from 'node:assert/strict';import {randomUUID}from'node:crypto';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';setGlobalProxyFromEnv();\nconst path=import.meta.dirname+'/ledger.json',ledger=JSON.parse(fs.readFileSync(path));assert.ok(ledger.length<18);const sample={id:randomUUID(),phase:'tcp-baseline',scenario:'tcp',startedAt:new Date().toISOString(),correct:false};ledger.push(sample);fs.writeFileSync(path,JSON.stringify(ledger,null,2));try{const r=await fetch('https://superdoh.aloneowo0.workers.dev/dns-query',{method:'POST',headers:{'Content-Type':'application/dns-message','x-release-case':'tcp','x-release-sample':sample.id},body:query(),signal:AbortSignal.timeout(15000),redirect:'manual'});sample.httpStatus=r.status;sample.version=r.headers.get('x-release-version');sample.sourceSha=r.headers.get('x-release-source');sample.failures=r.headers.get('x-release-failures');const d=decode(new Uint8Array(await r.arrayBuffer()));sample.rcode=d.flags&15;sample.answerCount=d.records.filter(r=>r.section===0).length;assert.equal(r.status,200);assert.equal(sample.version,'2e470072-a23f-4e12-a830-487815cf2f19');assert.equal(sample.sourceSha,'3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007');assert.equal(sample.failures,'UPSTREAM_INVALID');assert.equal(sample.rcode,2);assert.equal(d.records.length,0);assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:'example.com',type:1,class:1}]);sample.correct=true;sample.transportSuccess=false;sample.sameFailureOnBaseline=true;}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}assert.ok(sample.correct);\n",
+    "currentTcpRunner": "import fs from 'node:fs';import assert from 'node:assert/strict';import {randomUUID}from'node:crypto';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';setGlobalProxyFromEnv();\nconst path=import.meta.dirname+'/ledger.json',ledger=JSON.parse(fs.readFileSync(path));assert.ok(ledger.length<18);const sample={id:randomUUID(),phase:'tcp-confirmation',scenario:'tcp',startedAt:new Date().toISOString(),correct:false};ledger.push(sample);fs.writeFileSync(path,JSON.stringify(ledger,null,2));try{const r=await fetch('https://superdoh.aloneowo0.workers.dev/dns-query',{method:'POST',headers:{'Content-Type':'application/dns-message','x-release-case':'tcp','x-release-sample':sample.id},body:query(),signal:AbortSignal.timeout(15000),redirect:'manual'});sample.httpStatus=r.status;sample.version=r.headers.get('x-release-version');sample.sourceSha=r.headers.get('x-release-source');sample.failures=r.headers.get('x-release-failures');const d=decode(new Uint8Array(await r.arrayBuffer()));sample.rcode=d.flags&15;sample.answerCount=d.records.filter(r=>r.section===0).length;assert.equal(r.status,200);assert.equal(sample.version,'8a0129bd-3741-452b-8af5-523fb6c6cd1e');assert.equal(sample.sourceSha,'209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56');assert.equal(sample.failures,'');assert.equal(sample.rcode,0);assert.ok(d.records.some(r=>r.section===0&&r.type===1&&r.data.length===4));assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:'example.com',type:1,class:1}]);sample.correct=true;sample.transportSuccess=true;sample.priorFailureRetained=true;}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}assert.ok(sample.correct);\n",
+    "cleanupRunner": "import fs from'node:fs';import assert from'node:assert/strict';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';setGlobalProxyFromEnv();const path=import.meta.dirname+'/ledger.json',ledger=JSON.parse(fs.readFileSync(path));\nfor(const target of ['producer','fixture']){assert.ok(ledger.length<20);if(ledger.length)await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(ledger.at(-1).finishedAt)+1000-Date.now())));const sample={phase:'cleanup',target,startedAt:new Date().toISOString(),correct:false};ledger.push(sample);fs.writeFileSync(path,JSON.stringify(ledger,null,2));try{const r=await fetch(target==='producer'?'https://superdoh.aloneowo0.workers.dev/dns-query':'https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev',{method:target==='producer'?'POST':'GET',headers:target==='producer'?{'Content-Type':'application/dns-message'}:undefined,body:target==='producer'?query():undefined,redirect:'manual',signal:AbortSignal.timeout(15000)});sample.httpStatus=r.status;assert.equal(r.headers.get('x-release-source'),null);if(target==='producer'){assert.equal(r.status,200);const d=decode(new Uint8Array(await r.arrayBuffer()));sample.rcode=d.flags&15;assert.equal(sample.rcode,2);assert.equal(d.records.length,0);assert.equal(d.id,0x4242);assert.deepEqual(d.questions,[{name:'example.com',type:1,class:1}]);}else{await r.body?.cancel();assert.equal(r.status,410);}sample.correct=true;}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(path,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}}assert.ok(ledger.filter(s=>s.phase==='cleanup').every(s=>s.correct));\n",
+    "fixtureExpiryContract": "if (typeof env.EXPIRES_AT !== \"number\" || !Number.isFinite(env.EXPIRES_AT) || env.EXPIRES_AT <= Date.now()) return text(\"Fixture unavailable\", 503);",
+    "dependencies": "Repository esbuild and independent test/helpers/dns-wire.mjs; local process is an HTTP client/decoder, not a local Worker test."
+  },
+  "control": [
+    {
+      "kind": "release-preflight",
+      "at": "2026-10-26T07:14:08.901Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "secret"
+            },
+            "bindings": []
+          },
+          "deployment": {
+            "id": "cead038a-3fdf-4a3a-835f-d86527ed1a8e",
+            "versions": [
+              {
+                "version_id": "457cbcd9-27c8-4611-a2fc-c3a171781e90",
+                "percentage": 100
+              }
+            ]
+          },
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "deployment": {
+            "id": "1c13cc0e-f2fd-4c48-b3ed-8fbfa842b4f3",
+            "versions": [
+              {
+                "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+                "percentage": 100
+              }
+            ]
+          },
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      }
+    },
+    {
+      "kind": "release-module-preflight",
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    },
+    {
+      "kind": "release-baseline-setup",
+      "at": "2026-10-26T07:16:42.457Z",
+      "expiresAt": 1792999901243,
+      "versions": [
+        {
+          "version_id": "2e470072-a23f-4e12-a830-487815cf2f19",
+          "percentage": 100
+        }
+      ],
+      "moduleHashes": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ],
+      "wrapperSha256": "9376d88d4bbdf63f21b233dc59e52e225f2c8dd75be5d9e47e7ee7bd25420e54",
+      "wrapper": "import {handleRequest} from './worker.js';\nconst fixed={type:'answer',records:[{name:'example.com',type:'A',ttl:60,rdata:{A:{addr:'192.0.2.8'}}}]};\nconst group=actions=>({order:0,rules:[{actions}]});\nconst tls={transport:'tls',address:'resolver.example',port:853};\nconst upstream={type:'queryUpstream',upstream:'primary'};\nconst https={transport:'https',url:'https://dns.quad9.net/dns-query'};\nconst configs={fixed:{DNS_RULE_MAIN:group([fixed])},https:{DNS_UPSTREAMS:{primary:https},DNS_RULE_MAIN:group([upstream])},tcp:{DNS_UPSTREAMS:{primary:{transport:'tcp',address:'9.9.9.9',port:53}},DNS_RULE_MAIN:group([upstream])},'tls-unused':{DNS_UPSTREAMS:{unused:tls},DNS_RULE_MAIN:group([fixed,{type:'return'}])},'tls-optional':{DNS_UPSTREAMS:{primary:tls},DNS_RULE_MAIN:group([fixed,{...upstream,onError:'continue'}])},'tls-unreachable':{DNS_UPSTREAMS:{primary:tls},DNS_RULE_MAIN:{order:0,rules:[{when:{field:'query.type',op:'eq',value:'AAAA'},actions:[upstream]},{actions:[fixed]}]}},'tls-mixed':{DNS_UPSTREAMS:{primary:https,unused:tls},DNS_RULE_MAIN:group([upstream])},'tcp-identity':{DNS_UPSTREAMS:{primary:{transport:'tcp',address:'9.9.9.9',serverName:'resolver.example'}},DNS_RULE_MAIN:group([upstream])},empty:{}};\nexport default {async fetch(request,env){const scenario=request.headers.get('x-release-case'),sample=request.headers.get('x-release-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!Object.hasOwn(configs,scenario)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const failures=[];const response=await handleRequest(request,{DNS_JSON:true,DNS_CACHE:{read:false,write:false},...configs[scenario]},{requestId:sample,onEvent:event=>{failures.push(event.code);}});const headers=new Headers(response.headers);headers.set('x-release-source',env.SOURCE_SHA);headers.set('x-release-version',env.VERSION.id);headers.set('x-release-sample',sample);headers.set('x-release-failures',failures.join(','));return new Response(response.body,{status:response.status,headers});}};\n",
+      "metadata": {
+        "main_module": "release-smoke.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          },
+          {
+            "name": "SOURCE_SHA",
+            "type": "plain_text",
+            "text": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+          },
+          {
+            "name": "EXPIRES_AT",
+            "type": "plain_text",
+            "text": "1792999901243"
+          }
+        ],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": []
+      },
+      "settingsBefore": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "bindings": []
+      },
+      "clientCap": 20,
+      "baselineRequests": 1,
+      "profiles": 0
+    },
+    {
+      "kind": "release-current-setup",
+      "at": "2026-10-26T07:17:53.949Z",
+      "versions": [
+        {
+          "version_id": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+          "percentage": 100
+        }
+      ],
+      "moduleHashes": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "release-smoke.js",
+          "bytes": 2021,
+          "sha256": "9376d88d4bbdf63f21b233dc59e52e225f2c8dd75be5d9e47e7ee7bd25420e54"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1208784,
+          "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+        }
+      ],
+      "activeBindings": [
+        {
+          "name": "EXPIRES_AT",
+          "text": "1792999901243",
+          "type": "plain_text"
+        },
+        {
+          "name": "SOURCE_SHA",
+          "text": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+          "type": "plain_text"
+        },
+        {
+          "name": "VERSION",
+          "type": "version_metadata"
+        }
+      ],
+      "metadata": {
+        "main_module": "release-smoke.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [
+          {
+            "name": "EXPIRES_AT",
+            "text": "1792999901243",
+            "type": "plain_text"
+          },
+          {
+            "name": "SOURCE_SHA",
+            "text": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+            "type": "plain_text"
+          },
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          }
+        ],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": []
+      },
+      "exactLocalCurrentBuild": true,
+      "patches": [
+        {
+          "at": 1167606,
+          "remove": 169,
+          "oldSha": "888aa462c8b4f891bc38c90728871e4a5fceee109f601ec906e8cb5301687b2e",
+          "insert": "  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \"off\", allowHalfOpen: false });\n"
+        },
+        {
+          "at": 1168156,
+          "remove": 213,
+          "oldSha": "44b8ddfb81a08faa766f87f584245cae3da36cd4192c9fdb2b258d6fe8b1a09f",
+          "insert": ""
+        },
+        {
+          "at": 1176661,
+          "remove": 169,
+          "oldSha": "aeb468697ebc804fa1f0464d101d2f2afb964856d2663c8f983fe545926c55bf",
+          "insert": "      const value = fields(raw, [\"transport\", \"url\", \"urlSecret\", \"address\", \"port\"]);\n      if (value.transport === \"tcp\") {\n"
+        },
+        {
+          "at": 1177300,
+          "remove": 96,
+          "oldSha": "ba501b34ac6a8c943e39d50f46a6dbe7fca3cc7f35b8122bef8a54a0c2e0ba7b",
+          "insert": "        const port = value.port === void 0 ? 53 : value.port;\n"
+        },
+        {
+          "at": 1177508,
+          "remove": 720,
+          "oldSha": "38afb1a0615a52b61ff663d263babf83832238ac6b61f1e0ee00d7824caf3b53",
+          "insert": "        upstreams.set(name, { transport: \"tcp\", address: address2, port });\n"
+        },
+        {
+          "at": 1178254,
+          "remove": 111,
+          "oldSha": "2ce503d286728dbca2bb51de9543e03eeb7c9936e37f42339074deb5eb9edc7a",
+          "insert": "      if (value.address !== void 0 || value.port !== void 0) throw new Error();\n"
+        }
+      ]
+    },
+    {
+      "kind": "release-tcp-baseline-setup",
+      "at": "2026-10-26T07:19:40.380Z",
+      "versions": [
+        {
+          "version_id": "2e470072-a23f-4e12-a830-487815cf2f19",
+          "percentage": 100
+        }
+      ],
+      "expectedFailure": "UPSTREAM_INVALID",
+      "clientRequests": 1
+    },
+    {
+      "kind": "release-tcp-current-setup",
+      "at": "2026-10-26T07:20:16.386Z",
+      "versions": [
+        {
+          "version_id": "8a0129bd-3741-452b-8af5-523fb6c6cd1e",
+          "percentage": 100
+        }
+      ],
+      "clientRequests": 1
+    },
+    {
+      "kind": "release-cleanup",
+      "at": "2026-10-26T07:23:10.340Z",
+      "versions": [
+        {
+          "version_id": "ee6b1ee5-b031-4eb2-8f1f-5e8bdaa54dbe",
+          "percentage": 100
+        }
+      ],
+      "restoredModules": [
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        },
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        }
+      ],
+      "wrapperRemoved": true,
+      "temporarySecretsCreated": 0,
+      "metadata": {
+        "main_module": "worker.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": [],
+        "tags": []
+      }
+    },
+    {
+      "kind": "release-independent-restoration",
+      "at": "2026-10-26T07:23:27.644Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "ee6b1ee5-b031-4eb2-8f1f-5e8bdaa54dbe",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": []
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ]
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    }
+  ],
+  "cleanup": {
+    "upload": {
+      "kind": "release-cleanup",
+      "at": "2026-10-26T07:23:10.340Z",
+      "versions": [
+        {
+          "version_id": "ee6b1ee5-b031-4eb2-8f1f-5e8bdaa54dbe",
+          "percentage": 100
+        }
+      ],
+      "restoredModules": [
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        },
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        }
+      ],
+      "wrapperRemoved": true,
+      "temporarySecretsCreated": 0,
+      "metadata": {
+        "main_module": "worker.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [],
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": [],
+        "tags": []
+      }
+    },
+    "independentReadback": {
+      "kind": "release-independent-restoration",
+      "at": "2026-10-26T07:23:27.644Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "ee6b1ee5-b031-4eb2-8f1f-5e8bdaa54dbe",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": []
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ]
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    },
+    "producerPublicCheck": {
+      "phase": "cleanup",
+      "target": "producer",
+      "startedAt": "2026-10-26T07:24:08.060Z",
+      "correct": true,
+      "httpStatus": 200,
+      "rcode": 2,
+      "finishedAt": "2026-10-26T07:24:09.253Z"
+    },
+    "fixturePublicCheck": {
+      "phase": "cleanup",
+      "target": "fixture",
+      "startedAt": "2026-10-26T07:24:10.257Z",
+      "correct": false,
+      "httpStatus": 503,
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected values to be strictly equal:\n\n503 !== 410\n"
+      },
+      "finishedAt": "2026-10-26T07:24:11.351Z"
+    },
+    "fixtureExpectationResolvedBySourceInspection": true,
+    "originalModulesRestored": true,
+    "activeAndLatestBindingsEmpty": true,
+    "observabilityRestored": true,
+    "fixtureVersionUnchanged": true
+  },
+  "limitations": [
+    "Small correctness smoke only, not full online acceptance or a reliability estimate.",
+    "No native CPU metrics, ECH handshakes, cache identity isolation or new key-rotation tests in this round.",
+    "Initial TCP failure is unexplained and retained despite the later success.",
+    "Zero socket creation is asserted in checked-in local regressions but not independently instrumented by this smoke.",
+    "Separate wrapper uses fixed trusted scenarios, cache bypass and a failure-code observer; this is not a CPU baseline.",
+    "Isolated Worker restored to original modules, not left serving the candidate."
+  ]
+}

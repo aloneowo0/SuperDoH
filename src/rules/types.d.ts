@@ -98,10 +98,8 @@ export interface FailureReason {
 }
 
 export type UpstreamConfig = ({ transport: 'https' } & ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }))
-  | { transport: 'tcp'; address: string; port?: number }
-  | { transport: 'tls'; address: string; port?: number; serverName?: string };
-export type ResolvedUpstream = { transport: 'https'; url: string } | { transport: 'tcp'; address: string; port: number }
-  | { transport: 'tls'; address: string; port: number; serverName: string };
+  | { transport: 'tcp'; address: string; port?: number };
+export type ResolvedUpstream = { transport: 'https'; url: string } | { transport: 'tcp'; address: string; port: number };
 
 export interface AddressSourceFields {
   ip: string[];

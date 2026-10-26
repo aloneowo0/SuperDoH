@@ -1,8 +1,8 @@
-# 环境变量规则执行器（JSON-only / #15–#24、#26–#29）
+# 环境变量规则执行器（JSON-only / #15–#24、#26–#28）
 
-当前实现提供异步 `executeQuery` 和标准 DoH GET/POST。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。
+当前实现提供异步 `executeQuery` 和标准 DoH GET/POST；命名 DNS 上游仅支持 HTTPS 和普通 DNS over TCP。任何 `DNS_UPSTREAMS` 中的 `transport: "tls"` 定义（包括未使用项）均在整份配置预检时以 `INVALID_CONFIG` 拒绝；不会自动改写传输或回退。#26 已移除旧 #11 用户条件/动作代码扩展，DNS 行为仅由环境变量 JSON 的声明式条件和基础动作组成；异步网络、原始数据隔离、回滚及脱敏诊断继续保留。`test/worker.js` 只是旧规则测试适配器，生产入口为 `src/worker.js`。独立 ECH TLS 探测不是 DNS 上游传输，保持独立。
 
-**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 和认证 TLS 上游已在 #28/#29 交付；默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付，真实请求元数据适配已在 #17 交付；响应地址归属补全已在 #18 交付；域名列表已在 #19 交付，ECH 直接配置与 DNS HTTPS 来源已在 #20/#21 交付，#22 主动库探测适配及 #23 JSON 接口已接入；2026-10-22 已用隔离 WSL OpenSSL 构建通过公开入口与通用库的独立本地 ECH 互操作，但不能声明完整线上版本已验收。修订 #7 是目标规格，不是全部已实现声明；已于 2026-10-22/23 做隔离测试部署与线上 CPU/Wall 测量，但未部署业务 Worker，完整 Free 套餐验收仍未通过，测试资源已按记录清理。此前版本固定复测基线为 e5954e9；后续 539a750 已完成公共来源连接诊断，并对显式选择的 Meta 来源通过默认/认证完整握手及认证缓存命中，但未缓存握手的实测 CPU 仍超过 Free 阈值。现有测试实例已停用保留；详见 [最新连续未缓存 CPU](meta-uncached-cpu-2026-10-24.md)、[公网握手与缓存](meta-public-handshake-2026-10-23.md)、[连接诊断](connection-diagnosis-2026-10-23.md) 和 [验收状态](acceptance.md)。
+**分阶段迁移**：#26 已移除用户代码扩展；#27 已移除旧默认补查、策略组和采用条件，改为显式命名单 HTTPS 上游与只读最近动作结果。核心不自动回退、重试、补查或竞速。普通 TCP 由 #28 支持；#29 曾交付 DoT 本地实现和受控测试，但 2026-10-25 经用户批准从当前支持范围移除，任何 `transport: "tls"` 定义均须预检拒绝。此决定不声称 Workers 一概不能使用原生 TLS；未来若重新考虑 DoT，应重新验证并单独验收。默认上游原始响应缓存及 JSON 策略已在 #15 交付，通用记录改写已在 #16 交付，真实请求元数据适配已在 #17 交付；响应地址归属补全已在 #18 交付；域名列表已在 #19 交付，ECH 直接配置与 DNS HTTPS 来源已在 #20/#21 交付，#22 主动库探测适配及 #23 JSON 接口已接入。独立 ECH TLS 探测仍为单独能力；2026-10-22 已用隔离 WSL OpenSSL 构建通过公开入口与通用库的独立本地 ECH 互操作，但不能声明完整线上版本已验收。修订 #7 是目标规格，不是全部已实现声明；已于 2026-10-22/23 做隔离测试部署与线上 CPU/Wall 测量，但未部署业务 Worker，完整 Free 套餐验收仍未通过，测试资源已按记录清理。此前版本固定复测基线为 e5954e9；后续 539a750 已完成公共来源连接诊断，并对显式选择的 Meta 来源通过默认/认证完整握手及认证缓存命中，但未缓存握手的实测 CPU 仍超过 Free 阈值。现有测试实例已停用保留；详见 [最新连续未缓存 CPU](meta-uncached-cpu-2026-10-24.md)、[公网握手与缓存](meta-public-handshake-2026-10-23.md)、[连接诊断](connection-diagnosis-2026-10-23.md)、[2026-10-25 DoT 范围决策](adr/0001-exclude-dot-from-current-scope.md) 和 [验收状态](acceptance.md)。
 
 ## 公共入口
 
@@ -171,7 +171,7 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 
 | type | 字段 | 行为 |
 | --- | --- | --- |
-| `queryUpstream` | 必填 `upstream` 上游名 | 查询指定命名 HTTPS DoH 上游一次，以新响应替换当前响应；不合并、不隐式终止 |
+| `queryUpstream` | 必填 `upstream` 上游名 | 向指定 HTTPS DoH 或普通 TCP DNS 上游查询一次，以新响应替换当前响应；不合并、不隐式终止 |
 | `answer` | `records`，可选 `rcode`（默认 0） | 以自定义响应替换当前响应；不隐式返回，不追加到旧答案。`records: []` 是合法空答案 |
 | `setTtl` | `ttl` | 修改当前响应各普通记录 TTL；无响应报错 |
 | `rewriteQuery` | `name` 和/或 `queryType` | 修改当前问题，仅影响后续动作及匹配，不修改原始查询，不自动重命名已有答案 |
@@ -182,7 +182,7 @@ SVCB/HTTPS 目标 `.` 保持字面根值，不隐式替换为 owner；SOA 等多
 
 所有正常输出恢复原始请求 ID、Question、RD/CD，并经过统一编码与 matchResponse 校验。未改写上游保留适用 AD/RRSIG；自定义答案和响应改写不能携带失效认证声明。setTtl 仅修改普通 RR，保留 OPT 的 EDNS TTL 位字段，并移除覆盖实际改动 RRset 的 RRSIG。rewriteQuery 影响的上游答案按改写答案收尾，不能继承其 AD/签名；不自动重命名记录 owner。通用 DNS 库不包含业务策略。
 
-缓存、TCP/TLS、命名列表、来源补全、ECH 等属于后续切片；不提供上游策略组，不声明已完成父规格全部功能。
+当前范围支持 HTTPS 与普通 TCP 命名上游，不提供 DoT（`transport: "tls"` 一律整份配置预检失败）；原始缓存、域名列表、来源补全与 ECH 动作仍按后文契约执行。核心不提供上游策略组，不声明已完成父规格全部功能。
 
 ## 错误
 
@@ -342,7 +342,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | --- | --- |
 | `DNS_RULE_*` | 既有环境变量规则组 |
 | `DNS_LIMITS` | 可选资源边界 JSON/JSON 文本 |
-| `DNS_UPSTREAMS` | 可选命名 HTTPS/TCP/TLS 上游 JSON/JSON 文本，不能自行触发网络 |
+| `DNS_UPSTREAMS` | 可选命名 HTTPS/普通 TCP 上游 JSON/JSON 文本，不能自行触发网络 |
 | `DNS_CACHE` | 可选默认缓存策略 JSON/JSON 文本，字段 read、write、maxTtl；不触发上游请求 |
 | `DNS_PATH_KEY` | 可选 Workers Secret；未设置时公开，设置后启用路径密钥 |
 
@@ -371,7 +371,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 }
 ```
 
-`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。TCP/TLS 使用独立 address/port 字段；TLS 还支持显式 serverName，详见后文。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
+`BACKUP_URL` 是 Workers Secret 的绑定名，值是完整 HTTPS URL。URL 最多 2048 字符，拒绝 userinfo、fragment 和非 HTTPS 协议；敏感路径/查询参数使用 Secret，不放源码或普通配置。普通 TCP 使用独立 `address`/`port` 字段。任何 `transport: "tls"` 定义（包括未被动作引用的定义）都由完整预检以 `INVALID_CONFIG` 拒绝；不会改写成 HTTPS/TCP，也不会自动回退。未知字段、未引用的无效上游、缺失 Secret 和不可达动作中的坏引用都在任何动作/网络执行前失败。
 
 显式请求动作：
 
@@ -496,22 +496,11 @@ maxExecutionTimeMs 覆盖认证后的输入读取、执行器和网络响应读�
 
 Workers 出站 TCP 对 Cloudflare IP 范围等目标存在平台限制，生产环境本地地址的可达性也不同于 Miniflare；本地受控服务成功不证明任意公共解析器或所有端口可达。本票未进行公网解析、部署或线上 CPU/连接配额验证。平台说明：https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/ 。
 
-### 认证 TLS 命名上游（#29）
+### 当前不支持 DoT 上游（#29 范围决策，2026-10-25）
 
-```json
-{
-  "secure": { "transport": "tls", "address": "resolver.example", "port": 853 },
-  "secureIp": { "transport": "tls", "address": "192.0.2.53", "port": 853, "serverName": "resolver.example" }
-}
-```
+当前 `DNS_UPSTREAMS` 只接受 HTTPS 与普通 DNS over TCP。`transport: "tls"` 的任何定义，包括未引用的上游，均须在完整配置预检时以 `INVALID_CONFIG` 拒绝，且不得创建 socket；不自动改写为其他传输，不明文降级，也不切换其他来源。`npm run test:tls` 保留为 DoT 配置拒绝回归，不是 TLS 上游成功测试。
 
-TLS 是标准 DNS over TLS，默认端口 **853**，不等同明文 TCP。address/port 校验与 TCP 相同；serverName 为证书身份和 SNI 使用的 ASCII DNS 主机名，默认取地址中的主机名，连接 IP 时必须显式提供 DNS serverName。此接口不提供仅 IP SAN 身份认证、私有 CA 注入、关闭证书校验或明文降级开关；未知字段在预检阶段失败。TCP/HTTPS 项不接受 serverName。
-
-使用平台原生 socket.startTls 的 expectedServerHostname，在任何 DNS 应用数据发送前立即启用 TLS；没有 STARTTLS DNS 命令，也不会先发明文 DNS。信任链及服务端身份由平台验证。认证失败是明确的动作失败，不重连明文、不换来源、不请求默认上游。普通 DoT 不调用或复刻 ECH 探测库。
-
-握手、写入和读取共同使用单次 upstreamTimeoutMs，并受整体执行 deadline 和跨传输请求次数约束；握手失败、超时和取消均关闭连接。分帧、完整 RCODE、协议对应性、最近动作结果、回滚和最终 DNSSEC/EDNS 收尾与 TCP/HTTPS 共用。
-
-TLS 回归在真实 workerd 正式 DoH 入口连接受控 Node TLS DNS 服务。测试网络单独配置既有证书夹具的根信任，未向生产配置添加测试 CA，未关闭校验。覆盖正确身份、错误身份、不信任根、拆分响应、失败/扩展 RCODE、可选回滚、取消清理，以及原始 TCP 对端不完成 TLS 握手时的有界失败与不降级。通过这些测试不等于公网目标可达或线上 CPU/连接配额合格；平台底层诊断与外部代理日志仍需部署者另行审查。
+这是用户批准的当前产品范围取舍，不证明 Workers 一概不能使用原生 TLS，也不声称已验证所有原生 TLS 路径均不可行。未来重新考虑 DoT 时，须重新验证平台原生方案、预算/取消及身份失败语义，并单独完成验收。独立的 `probeEch` ECH TLS 探测及其 `verifyCertificate` 默认值、证书策略和 `no_nodejs_compat` 约束不受此决定影响；见 [ADR 0001](adr/0001-exclude-dot-from-current-scope.md)。
 
 
 ## 原始上游响应缓存（#15）
@@ -546,7 +535,7 @@ read/write 必须为布尔值；maxTtl 必须为 **0–86400 的整数秒**。�
 ### 安全复用与期限
 
 - 使用独立 Workers Cache API 命名空间 superdoh-original-v1，而非入口前缓存；每个 HTTP 请求都会执行规则。最终 HTTP 答案继续 no-store。
-- 键为命名上游名称、完整解析后连接身份（含 HTTPS Secret 实际地址、TCP 端口、TLS serverName）和出站查询 wire（仅清零 ID）的 SHA-256。类型、类、名称大小写、RD/CD、EDNS 大小、DO 和完整 ECS 均隔离；Secret 轮换自然换键。缓存键只含固定版本路径及摘要，不含明文 DNS 名称或敏感 URL。
+- 键为命名上游名称、完整规范化连接身份（HTTPS：完整解析后的 URL，含 Secret 实际值；TCP：规范化 address 与 port）和出站查询 wire（仅清零 ID）的 SHA-256。类型、类、名称大小写、RD/CD、EDNS 大小、DO 和完整 ECS 均隔离；Secret 轮换自然换键。缓存键只含固定版本路径及摘要，不含明文 DNS 名称或敏感 URL。
 - 按整份消息最短的普通记录 TTL、策略上限、适用 SOA 最小值、RRSIG 元数据时间窗及 HTTPS 新鲜度取保守交集。OPT 的 ttl 是协议位，不作为 DNS TTL 递减。命中按原始接收时刻递减普通记录 TTL，不刷新插入时间；存储耗时不能延长期限。RRSIG 适用性检查不代表执行 DNSSEC 密码学校验。
 - NXDOMAIN/NODATA 必须具有覆盖原始出站问题域名、同类的 SOA，按 min(SOA.ttl, SOA.minimum) 负缓存并规范化 SOA TTL；无证明、跨区别名的复杂负答案保守绕过，不猜测安全期限。
 - SERVFAIL/REFUSED 等故障 RCODE、TC 截断、零 TTL、高位异常 TTL、消息认证、ANY/区传送/密钥协商类查询不缓存。普通无状态 EDNS 和合法 ECS 可复用；COOKIE、未知/有连接状态的 EDNS 选项、多个选项或 ECS 返回身份不对应时保守绕过。ECS 仅复用完全相同查询，不跨网段扩大命中范围。
@@ -558,7 +547,7 @@ read/write 必须为布尔值；maxTtl 必须为 **0–86400 的整数秒**。�
 
 Cache API 读写、摘要及读取 body 共用执行总 deadline；实际出站才消耗 maxNetworkRequests，单次网络等待仍受 upstreamTimeoutMs 约束。缓存写入作为外部副作用不能因后续动作验证失败或取消而保证撤销；迟到缓存结果不提交 DNS 状态。缓存仅为数据中心本地、可随时清理的加速层，不是数据库，不保证跨地区或全球一致，不合并并发请求。
 
-测试使用真实 workerd 的公开 DoH HTTP 入口、出站次数、受控 HTTP Age 和有界实际等待验证 TTL/过期；另有真实本地 TCP/TLS 命中及 TLS 身份变化测试。协议预算回归显式关闭缓存，避免把命中误认为真实网络覆盖。未添加测试专用生产时钟/缓存注入 API；这些本地测试不是线上免费 CPU、生产 Cache API 可达性或公网证书互操作验收。
+测试使用真实 workerd 的公开 DoH HTTP 入口、出站次数、受控 HTTP Age 和有界实际等待验证 TTL/过期；普通 TCP 有真实本地缓存命中测试。`npm run test:tls` 是 `transport: "tls"` 的配置拒绝回归，不是 DoT 成功测试。另保留与 DNS 上游传输相互独立的 ECH Node/workerd TLS 握手回归。协议预算回归显式关闭缓存，避免把命中误认为真实网络覆盖。未添加测试专用生产时钟/缓存注入 API；这些本地测试不是线上免费 CPU、生产 Cache API 可达性或公网证书互操作验收。
 
 参考：[Workers Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/)、[本地缓存边界](https://developers.cloudflare.com/workers/reference/how-the-cache-works/)。
 
@@ -752,7 +741,7 @@ workerd 回归以公开 HTTP/DNS 入口观察两种格式、原子替换、失�
 ECH 配置不默认来自任何厂商；必须先用 JSON 动作取得数据，再用 applyEch 写入已有目标响应。结构解析成功不证明 TLS 身份认证、ECH 接受或连接可达性。
 
 - `{ "type": "loadEch", "config": "<标准带填充 Base64 ECHConfigList>" }`：直接从受信任环境 JSON 取得数据，完整预检损坏或不支持的配置；不联网。
-- `{ "type": "queryEch", "name": "source.example", "upstream": "primary", "cache": { "read": true, "write": true, "maxTtl": 60 } }`：通过已有命名 HTTPS/TCP/TLS 上游发出一次独立 IN/HTTPS 查询，不改当前查询或当前答案，不执行 CNAME/别名自动追踪、回退或重试。
+- `{ "type": "queryEch", "name": "source.example", "upstream": "primary", "cache": { "read": true, "write": true, "maxTtl": 60 } }`：通过已有命名 HTTPS 或普通 TCP 上游发出一次独立 IN/HTTPS 查询，不改当前查询或当前答案，不执行 CNAME/别名自动追踪、回退或重试。
 - `{ "type": "applyEch", "where": { "field": "item.name", "op": "eq", "value": "example.com" } }`：将当前已取得的 ECH 数据设置到当前响应 Answer 中命中的 HTTPS ServiceMode（priority 非零）记录。where 可省略以选择全部合格记录；选择器复用现有有界记录条件。仅改参数 key 5，保留优先级、目标、TTL、ALPN、端口和其他适用参数。
 
 要创建 HTTPS 记录，先显式 answer/addRecords；applyEch 不隐式创建、选择厂商或修复 AliasMode。无当前响应报 NO_RESPONSE，无已取得数据报 NO_ECH_CONFIG，无合格目标报 NO_ECH_RECORD。修改后清 AD 并移除被修改 HTTPS RRset 的相关签名，未涉及的记录与签名不无故丢失；写入完全相同 ECH 数据时不无故使原签名失效。
@@ -777,7 +766,7 @@ cacheTtl 默认 60 秒，通过 Workers Cache API 复用成功获取的 ECHConfi
 
 ### 验收边界与当前阻塞
 
-普通回归通过真实 workerd 公共 DoH 入口连接受控本地 TCP 服务，验证单次连接、TLS 收包上限、超时、取消、清理和原答案保留；另保留通用 ECH Node/workerd 离线握手回归。`npm run test:ech-interop` 是独立本地 ECH-capable OpenSSL 的真实成功/证书失败/缓存路径验收，要求设置 ECH_PROBE_OPENSSL。它不放入默认测试后假装通过，不在缺少程序时以 skip 伪装成功。
+ECH `probeEch` 回归通过真实 workerd 公共 DoH 入口连接受控本地 TLS/ECH 服务，验证单次探测、TLS 收包上限、超时、取消、清理和原答案保留；`test:tls` 则仅验证 DoT 上游配置拒绝。另保留通用 ECH Node/workerd 离线握手回归。`npm run test:ech-interop` 是独立本地 ECH-capable OpenSSL 的真实成功/证书失败/缓存路径验收，要求设置 ECH_PROBE_OPENSSL。它不放入默认测试后假装通过，不在缺少程序时以 skip 伪装成功。
 
 Windows 系统 OpenSSL 缺少 ECH 功能；2026-10-22 在 WSL 临时目录按官方源码 aff3d3cf25501f311f1e6a2946f4b6edc2b37d8c 构建 OpenSSL 4.2.0-dev，已通过公开 DoH 入口的独立认证握手、取得到改写、缓存命中、错误身份/信任根失败关闭及显式关闭验证用例；通用库 4 项独立互操作也通过，服务端收到 3 次客户端 Finished。构建与复现命令见 [acceptance.md](acceptance.md)。这仅解除 #22 的本地独立互操作阻塞，不代表公网可达或线上验收通过。主动探测的证书验证与完整握手是重型路径，elapsedMs/网络等待/后台执行均不能证明线上免费 CPU 合格；#25 仍需另行授权部署与实测。
 
