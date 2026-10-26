@@ -1,0 +1,1118 @@
+{
+  "version": 1,
+  "date": "2026-10-26",
+  "kind": "Current-source original-response cache isolation cloud checks",
+  "source": {
+    "commit": "65ef25f",
+    "bundleSha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+    "modules": [
+      {
+        "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+        "bytes": 854948,
+        "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+      },
+      {
+        "name": "worker.js",
+        "bytes": 1208784,
+        "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+      }
+    ],
+    "wrapperSha256": "e767919dbc4482516344443b5c15fa7f4d87272eaa0fb9e3c50a5dade38fdaa3",
+    "unchangedProductionCode": true,
+    "priorSourceManifest": "current-source-smoke.json#/source/productionManifest"
+  },
+  "scope": {
+    "clientCap": 24,
+    "clientAttempts": 14,
+    "payloadRequests": 12,
+    "cleanupRequests": 2,
+    "minimumGapMs": 1006,
+    "profiles": 0,
+    "newNativeCpuMetrics": false,
+    "echProbes": 0,
+    "businessChanges": 0,
+    "resources": [
+      "superdoh",
+      "superdoh-dns-cpu-fixtures-20261024"
+    ],
+    "publicPlaceholderNotCredential": true,
+    "secretBindingName": "ACCEPTANCE_SOURCE_URL"
+  },
+  "summary": {
+    "allAssertionsPassed": true,
+    "colo": "FRA",
+    "rulesReexecutedOnHit": true,
+    "requestIdRestored": true,
+    "sourceNameIsolated": true,
+    "resolvedUrlIsolated": true,
+    "queryNameIsolated": true,
+    "cdFlagIsolated": true,
+    "explicitBypassHonored": true,
+    "unusedTlsRejectedDespitePrimedCache": true,
+    "actualSecretBindingRotationIsolated": true,
+    "positiveControlAfterRotation": true,
+    "aHitAgeSincePrimeCompletionMs": 29304,
+    "bHitAgeSincePrimeCompletionMs": 32581,
+    "completeAcceptance": false,
+    "cacheHitWhileFixtureConfigured503": true
+  },
+  "samples": [
+    {
+      "id": "39ee5a32-2690-489b-a3e2-eb4320992713",
+      "phase": "prime",
+      "scenario": "base",
+      "startedAt": "2026-10-26T07:45:47.461Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "ttls": [
+        7
+      ],
+      "finishedAt": "2026-10-26T07:45:48.835Z"
+    },
+    {
+      "id": "1682cc40-d675-433b-aa27-0aafe014be1e",
+      "phase": "blocked",
+      "scenario": "hit",
+      "startedAt": "2026-10-26T07:46:18.139Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "ttls": [
+        9
+      ],
+      "finishedAt": "2026-10-26T07:46:19.388Z"
+    },
+    {
+      "id": "f965fb40-6968-46ad-893e-646a754a2205",
+      "phase": "blocked",
+      "scenario": "renamed",
+      "startedAt": "2026-10-26T07:46:20.396Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:20.630Z"
+    },
+    {
+      "id": "a8a4e101-e116-41cc-b27c-672ffee65f8f",
+      "phase": "blocked",
+      "scenario": "moved",
+      "startedAt": "2026-10-26T07:46:21.644Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:21.849Z"
+    },
+    {
+      "id": "9b33b4af-112d-4593-8f92-21a7ee661511",
+      "phase": "blocked",
+      "scenario": "secret",
+      "startedAt": "2026-10-26T07:46:22.857Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "ttls": [
+        9
+      ],
+      "finishedAt": "2026-10-26T07:46:23.050Z"
+    },
+    {
+      "id": "9c23059b-0f75-42b1-ba07-adaa30881e4a",
+      "phase": "blocked",
+      "scenario": "bypass",
+      "startedAt": "2026-10-26T07:46:24.057Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:24.263Z"
+    },
+    {
+      "id": "f9b6ccb7-0844-4ce5-8f41-e908e9c6c191",
+      "phase": "blocked",
+      "scenario": "hit",
+      "startedAt": "2026-10-26T07:46:25.270Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:25.491Z"
+    },
+    {
+      "id": "13196007-d14c-4102-97f7-ab842265a26b",
+      "phase": "blocked",
+      "scenario": "hit",
+      "startedAt": "2026-10-26T07:46:26.504Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:26.712Z"
+    },
+    {
+      "id": "115eec17-2a95-4f37-94eb-72738b6f8d0f",
+      "phase": "blocked",
+      "scenario": "tls",
+      "startedAt": "2026-10-26T07:46:27.720Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "INVALID_CONFIG",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:46:27.946Z"
+    },
+    {
+      "id": "07ce62c2-1d39-48fd-b0dc-62365dd356d2",
+      "phase": "seedB",
+      "scenario": "secret",
+      "startedAt": "2026-10-26T07:48:06.253Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "92d53d3f-6ee6-48b6-8efa-0b5f6dee294b",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "ttls": [
+        9
+      ],
+      "finishedAt": "2026-10-26T07:48:07.615Z"
+    },
+    {
+      "id": "eec47029-3ea0-4926-b52f-b4b1605148ea",
+      "phase": "rotatedBack",
+      "scenario": "secret",
+      "startedAt": "2026-10-26T07:48:38.019Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "799c9472-6bbf-490b-98a2-34e18525a44a",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "UPSTREAM_FAILED",
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:48:39.190Z"
+    },
+    {
+      "id": "7757cb25-5bef-45ce-a1d2-0ddd2e6b1c71",
+      "phase": "rotatedBack",
+      "scenario": "moved",
+      "startedAt": "2026-10-26T07:48:40.196Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": "FRA",
+      "version": "799c9472-6bbf-490b-98a2-34e18525a44a",
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "failures": "",
+      "rcode": 0,
+      "ttls": [
+        9
+      ],
+      "finishedAt": "2026-10-26T07:48:40.407Z"
+    },
+    {
+      "id": "2aca285b-a9a5-4436-be3f-309ea1c21684",
+      "phase": "cleanup",
+      "scenario": "producer",
+      "startedAt": "2026-10-26T07:50:05.777Z",
+      "correct": true,
+      "httpStatus": 200,
+      "colo": null,
+      "version": null,
+      "sourceSha": null,
+      "failures": null,
+      "rcode": 2,
+      "ttls": [],
+      "finishedAt": "2026-10-26T07:50:06.935Z"
+    },
+    {
+      "id": "d18319ea-f9d5-44f5-b7a3-c8c683d9915d",
+      "phase": "cleanup",
+      "scenario": "fixture",
+      "startedAt": "2026-10-26T07:50:07.945Z",
+      "correct": true,
+      "httpStatus": 503,
+      "colo": null,
+      "version": null,
+      "sourceSha": null,
+      "failures": null,
+      "finishedAt": "2026-10-26T07:50:09.335Z"
+    }
+  ],
+  "control": [
+    {
+      "kind": "cache-isolation-preflight",
+      "at": "2026-10-26T07:42:24.492Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "ee6b1ee5-b031-4eb2-8f1f-5e8bdaa54dbe",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      }
+    },
+    {
+      "kind": "cache-isolation-setup",
+      "at": "2026-10-26T07:45:25.245Z",
+      "clientCap": 24,
+      "expiresAt": 1793001623776,
+      "queryName": "cache-a3564a7c.example.com",
+      "run": "a3564a7c",
+      "urlA": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-a",
+      "urlB": "https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-b",
+      "publicPlaceholderNotCredential": true,
+      "sourceSha": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "moduleHashes": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1208784,
+          "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56"
+        }
+      ],
+      "wrapperSha256": "e767919dbc4482516344443b5c15fa7f4d87272eaa0fb9e3c50a5dade38fdaa3",
+      "wrapper": "const rollback = {\"reverse\":[{\"at\":1167606,\"match\":\"  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \\\"off\\\", allowHalfOpen: false });\\n\",\"insert\":\"  let socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: target2.transport === \\\"tls\\\" ? \\\"starttls\\\" : \\\"off\\\", allowHalfOpen: false });\\n\"},{\"at\":1168115,\"match\":\"\",\"insert\":\"    if (target2.transport === \\\"tls\\\") {\\n      socket = socket.startTls({ expectedServerHostname: target2.serverName });\\n      socket.opened.catch(() => {\\n      });\\n      socket.closed.catch(() => {\\n      });\\n    }\\n\"},{\"at\":1176407,\"match\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\"]);\\n      if (value.transport === \\\"tcp\\\") {\\n\",\"insert\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\", \\\"serverName\\\"]);\\n      if (value.transport === \\\"tcp\\\" || value.transport === \\\"tls\\\") {\\n\"},{\"at\":1177003,\"match\":\"        const port = value.port === void 0 ? 53 : value.port;\\n\",\"insert\":\"        const port = value.port === void 0 ? value.transport === \\\"tls\\\" ? 853 : 53 : value.port;\\n\"},{\"at\":1177177,\"match\":\"        upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n\",\"insert\":\"        if (value.transport === \\\"tls\\\") {\\n          const serverName = value.serverName === void 0 ? address2 : value.serverName;\\n          if (typeof serverName !== \\\"string\\\" || serverName.length === 0 || serverName.length > 253 || serverName.includes(\\\":\\\") || /^[0-9.]+$/.test(serverName) || serverName.replace(/\\\\.$/, \\\"\\\").split(\\\".\\\").some((label) => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();\\n          upstreams.set(name, { transport: \\\"tls\\\", address: address2, port, serverName: serverName.replace(/\\\\.$/, \\\"\\\") });\\n        } else {\\n          if (value.serverName !== void 0) throw new Error();\\n          upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n        }\\n\"},{\"at\":1177279,\"match\":\"      if (value.address !== void 0 || value.port !== void 0) throw new Error();\\n\",\"insert\":\"      if (value.address !== void 0 || value.port !== void 0 || value.serverName !== void 0) throw new Error();\\n\"}],\"settings\":{\"placement\":{},\"compatibility_date\":\"2026-10-19\",\"compatibility_flags\":[\"enable_request_signal\",\"global_fetch_strictly_public\",\"no_nodejs_compat\",\"no_nodejs_compat_v2\"],\"usage_model\":\"standard\",\"tags\":[],\"tail_consumers\":[],\"logpush\":false,\"observability\":{\"enabled\":true,\"head_sampling_rate\":1,\"redact_query_string\":false,\"logs\":{\"enabled\":true,\"head_sampling_rate\":1,\"persist\":true,\"invocation_logs\":true},\"traces\":{\"enabled\":true,\"persist\":true,\"head_sampling_rate\":1},\"issues\":{\"enabled\":false}},\"annotations\":{\"workers/triggered_by\":\"upload\"},\"bindings\":[]}};\nimport {handleRequest} from './worker.js';\nconst urlA=\"https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-a\",urlB=\"https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-b\";\nconst group=actions=>({order:0,rules:[{actions}]});\nexport default {async fetch(request,env){const c=request.headers.get('x-isolation-case'),sample=request.headers.get('x-isolation-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!['base','hit','renamed','moved','secret','bypass','tls'].includes(c)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const name=c==='renamed'?'secondary':'primary',source=c==='secret'?{transport:'https',urlSecret:'ACCEPTANCE_SOURCE_URL'}:{transport:'https',url:c==='moved'?urlB:urlA};const upstreams={[name]:source,...(c==='tls'?{unused:{transport:'tls',address:'resolver.example'}}:{})};const failures=[];const response=await handleRequest(request,{ACCEPTANCE_SOURCE_URL:env.ACCEPTANCE_SOURCE_URL,DNS_UPSTREAMS:upstreams,DNS_RULE_MAIN:group([{type:'queryUpstream',upstream:name,...(c==='bypass'?{cache:{read:false,write:false}}:{})},{type:'setTtl',ttl:c==='base'?7:9}])},{requestId:sample,onEvent:event=>{failures.push(event.code);}});const headers=new Headers(response.headers);headers.set('x-isolation-source',\"209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56\");headers.set('x-isolation-version',env.VERSION.id);headers.set('x-isolation-sample',sample);headers.set('x-isolation-colo',request.cf?.colo??'unknown');headers.set('x-isolation-failures',failures.join(','));return new Response(response.body,{status:response.status,headers});}};\n",
+      "versions": [
+        {
+          "version_id": "e71b85b5-1cee-4965-97d7-b33f98f75caa",
+          "percentage": 100
+        }
+      ],
+      "activeBindings": [
+        {
+          "name": "ACCEPTANCE_SOURCE_URL",
+          "type": "secret_text"
+        },
+        {
+          "name": "EXPIRES_AT",
+          "text": "1793001623776",
+          "type": "plain_text"
+        },
+        {
+          "name": "VERSION",
+          "type": "version_metadata"
+        }
+      ],
+      "settingsAfter": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "annotations": {
+          "workers/triggered_by": "upload"
+        },
+        "bindings": [
+          {
+            "name": "ACCEPTANCE_SOURCE_URL",
+            "type": "secret_text"
+          },
+          {
+            "name": "EXPIRES_AT",
+            "text": "1793001623776",
+            "type": "plain_text"
+          },
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          }
+        ]
+      },
+      "metadata": {
+        "main_module": "cache-isolation.js",
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "bindings": [
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          },
+          {
+            "name": "EXPIRES_AT",
+            "type": "plain_text",
+            "text": "1793001623776"
+          },
+          {
+            "name": "ACCEPTANCE_SOURCE_URL",
+            "type": "secret_text"
+          }
+        ],
+        "observability": {
+          "enabled": false,
+          "logs": {
+            "enabled": false,
+            "invocation_logs": false
+          },
+          "traces": {
+            "enabled": false
+          }
+        },
+        "logpush": false,
+        "tail_consumers": []
+      },
+      "settingsBefore": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "observability": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "redact_query_string": false,
+          "logs": {
+            "enabled": true,
+            "head_sampling_rate": 1,
+            "persist": true,
+            "invocation_logs": true
+          },
+          "traces": {
+            "enabled": true,
+            "persist": true,
+            "head_sampling_rate": 1
+          },
+          "issues": {
+            "enabled": false
+          }
+        },
+        "annotations": {
+          "workers/triggered_by": "upload"
+        },
+        "bindings": []
+      }
+    },
+    {
+      "kind": "cache-isolation-fixture-enabled",
+      "at": "2026-10-26T07:45:41.639Z",
+      "expiresAt": 1793001339550,
+      "versions": [
+        {
+          "version_id": "21650c63-db44-434e-bfa5-293ef0b831b6",
+          "percentage": 100
+        }
+      ],
+      "activeBindings": [
+        {
+          "json": 1793001339550,
+          "name": "EXPIRES_AT",
+          "type": "json"
+        },
+        {
+          "name": "LIST_STATE",
+          "text": "good",
+          "type": "plain_text"
+        }
+      ]
+    },
+    {
+      "kind": "cache-isolation-fixture-disabled",
+      "at": "2026-10-26T07:46:11.723Z",
+      "versions": [
+        {
+          "version_id": "c2ad15e1-335e-442d-9bcc-6b7ae7615a5e",
+          "percentage": 100
+        }
+      ],
+      "activeBindings": [
+        {
+          "json": 0,
+          "name": "EXPIRES_AT",
+          "type": "json"
+        },
+        {
+          "name": "LIST_STATE",
+          "text": "good",
+          "type": "plain_text"
+        }
+      ]
+    },
+    {
+      "kind": "cache-isolation-secret-rotated",
+      "at": "2026-10-26T07:46:52.737Z",
+      "versions": [
+        {
+          "version_id": "92d53d3f-6ee6-48b6-8efa-0b5f6dee294b",
+          "percentage": 100
+        }
+      ],
+      "activeBindings": [
+        {
+          "name": "ACCEPTANCE_SOURCE_URL",
+          "type": "secret_text"
+        },
+        {
+          "name": "EXPIRES_AT",
+          "text": "1793001623776",
+          "type": "plain_text"
+        },
+        {
+          "name": "VERSION",
+          "type": "version_metadata"
+        }
+      ],
+      "settings": {
+        "placement": {},
+        "compatibility_date": "2026-10-19",
+        "compatibility_flags": [
+          "enable_request_signal",
+          "global_fetch_strictly_public",
+          "no_nodejs_compat",
+          "no_nodejs_compat_v2"
+        ],
+        "usage_model": "standard",
+        "tags": [],
+        "tail_consumers": [],
+        "logpush": false,
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "bindings": [
+          {
+            "name": "ACCEPTANCE_SOURCE_URL",
+            "type": "secret_text"
+          },
+          {
+            "name": "EXPIRES_AT",
+            "text": "1793001623776",
+            "type": "plain_text"
+          },
+          {
+            "name": "VERSION",
+            "type": "version_metadata"
+          }
+        ]
+      },
+      "publicPlaceholderNotCredential": true
+    },
+    {
+      "kind": "cache-isolation-fixture-enabled-b",
+      "at": "2026-10-26T07:47:39.571Z",
+      "expiresAt": 1793001456464,
+      "versions": [
+        {
+          "version_id": "74f07b5c-4f01-4d69-977c-fca32c8b8895",
+          "percentage": 100
+        }
+      ],
+      "activeBindings": [
+        {
+          "json": 1793001456464,
+          "name": "EXPIRES_AT",
+          "type": "json"
+        },
+        {
+          "name": "LIST_STATE",
+          "text": "good",
+          "type": "plain_text"
+        }
+      ]
+    },
+    {
+      "kind": "cache-isolation-secret-rotated-back-fixture-off",
+      "at": "2026-10-26T07:48:21.320Z",
+      "workers": {
+        "producer": {
+          "versions": [
+            {
+              "version_id": "799c9472-6bbf-490b-98a2-34e18525a44a",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "name": "ACCEPTANCE_SOURCE_URL",
+              "type": "secret_text"
+            },
+            {
+              "name": "EXPIRES_AT",
+              "text": "1793001623776",
+              "type": "plain_text"
+            },
+            {
+              "name": "VERSION",
+              "type": "version_metadata"
+            }
+          ]
+        },
+        "fixture": {
+          "versions": [
+            {
+              "version_id": "f681b14d-7217-4204-af10-e9effc488f7f",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "cache-isolation-cleanup",
+      "at": "2026-10-26T07:49:34.728Z",
+      "secretDeletedBeforeCollectionRestored": true,
+      "wrapperRemoved": true,
+      "workers": {
+        "producer": {
+          "versions": [
+            {
+              "version_id": "93fb5bf5-15b2-490f-b2f2-11e68ca76f65",
+              "percentage": 100
+            }
+          ],
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "fixture": {
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      },
+      "uploadModules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    },
+    {
+      "kind": "cache-isolation-independent-restoration",
+      "at": "2026-10-26T07:50:47.995Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "93fb5bf5-15b2-490f-b2f2-11e68ca76f65",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    }
+  ],
+  "reproduction": {
+    "requiresFreshAuthorization": true,
+    "phaseOrder": [
+      "prime",
+      "blocked",
+      "seedB",
+      "rotatedBack",
+      "cleanup"
+    ],
+    "initialClientSource": "import fs from 'node:fs';import assert from 'node:assert/strict';import{randomUUID}from'node:crypto';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';setGlobalProxyFromEnv();\nconst dir=import.meta.dirname,phase=process.argv[2],control=JSON.parse(fs.readFileSync(dir+'/control.json')),setup=control.find(s=>s.kind==='cache-isolation-setup');assert.ok(setup);const ledgerPath=dir+'/ledger.json',ledger=fs.existsSync(ledgerPath)?JSON.parse(fs.readFileSync(ledgerPath)):[];\nconst cases={prime:[{scenario:'base',ttl:7}],blocked:[{scenario:'hit',ttl:9,id:0x4343},{scenario:'renamed',code:'UPSTREAM_FAILED'},{scenario:'moved',code:'UPSTREAM_FAILED'},{scenario:'secret',ttl:9},{scenario:'bypass',code:'UPSTREAM_FAILED'},{scenario:'hit',differentName:true,code:'UPSTREAM_FAILED'},{scenario:'hit',differentFlags:true,code:'UPSTREAM_FAILED'},{scenario:'tls',code:'INVALID_CONFIG'}],rotated:[{scenario:'secret',code:'UPSTREAM_FAILED'},{scenario:'hit',ttl:9}],seedB:[{scenario:'secret',ttl:9}],checkB:[{scenario:'secret',ttl:9}],cleanup:[{target:'producer'},{target:'fixture'}]}[phase];assert.ok(cases);\nfor(const c of cases){assert.ok(ledger.length<24);if(ledger.length)await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(ledger.at(-1).finishedAt)+1000-Date.now())));const sample={id:randomUUID(),phase,scenario:c.scenario??c.target,startedAt:new Date().toISOString(),correct:false};ledger.push(sample);fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));try{const wire=Buffer.from(query((c.differentName?'other.':'')+setup.queryName,1,c.differentFlags?0x0120:0x0130));if(c.id)wire.writeUInt16BE(c.id);const headers={'Content-Type':'application/dns-message','x-isolation-case':c.scenario??'hit','x-isolation-sample':sample.id};const r=await fetch(c.target==='fixture'?'https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev':'https://superdoh.aloneowo0.workers.dev/dns-query',{method:c.target==='fixture'?'GET':'POST',headers,body:c.target==='fixture'?undefined:wire,redirect:'manual',signal:AbortSignal.timeout(15000)});sample.httpStatus=r.status;sample.colo=r.headers.get('x-isolation-colo');sample.version=r.headers.get('x-isolation-version');sample.sourceSha=r.headers.get('x-isolation-source');sample.failures=r.headers.get('x-isolation-failures');if(c.target==='fixture'){await r.body?.cancel();assert.equal(r.status,503);}else{assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('content-type'),'application/dns-message');if(phase!=='cleanup'){assert.equal(sample.sourceSha,'209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56');assert.equal(r.headers.get('x-isolation-sample'),sample.id);assert.ok(sample.version);assert.ok(sample.colo);const prime=ledger.find(s=>s.phase==='prime'&&s.correct);if(prime)assert.equal(sample.colo,prime.colo);assert.equal(sample.failures,c.code??'');}else assert.equal(sample.sourceSha,null);const result=decode(new Uint8Array(await r.arrayBuffer()));sample.rcode=result.flags&15;sample.ttls=result.records.map(rr=>rr.ttl);assert.equal(result.id,c.id??0x4242);assert.deepEqual(result.questions,[{name:(c.differentName?'other.':'')+setup.queryName,type:1,class:1}]);assert.equal(result.flags&0x0200,0);assert.equal(sample.rcode,c.code||phase==='cleanup'?2:0);if(c.code||phase==='cleanup')assert.equal(result.records.length,0);else{assert.equal(result.records.length,1);assert.deepEqual(result.records[0].data,[192,0,2,8]);assert.equal(result.records[0].type,1);assert.equal(result.records[0].ttl,c.ttl);assert.equal(result.flags&0x20,0);}}sample.correct=true;}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}if(!sample.correct)break;}assert.ok(ledger.filter(s=>s.phase===phase).every(s=>s.correct),'Stop on failure; retain ledger and restore resources.');\n",
+    "laterClientSource": "import fs from 'node:fs';import assert from 'node:assert/strict';import{randomUUID}from'node:crypto';import{setGlobalProxyFromEnv}from'node:http';import{query,decode}from'../../test/helpers/dns-wire.mjs';setGlobalProxyFromEnv();\nconst dir=import.meta.dirname,phase=process.argv[2],control=JSON.parse(fs.readFileSync(dir+'/control.json')),setup=control.find(s=>s.kind==='cache-isolation-setup');assert.ok(setup);const ledgerPath=dir+'/ledger.json',ledger=fs.existsSync(ledgerPath)?JSON.parse(fs.readFileSync(ledgerPath)):[];\nconst cases={prime:[{scenario:'base',ttl:7}],blocked:[{scenario:'hit',ttl:9,id:0x4343},{scenario:'renamed',code:'UPSTREAM_FAILED'},{scenario:'moved',code:'UPSTREAM_FAILED'},{scenario:'secret',ttl:9},{scenario:'bypass',code:'UPSTREAM_FAILED'},{scenario:'hit',differentName:true,code:'UPSTREAM_FAILED'},{scenario:'hit',differentFlags:true,code:'UPSTREAM_FAILED'},{scenario:'tls',code:'INVALID_CONFIG'}],rotatedBack:[{scenario:'secret',code:'UPSTREAM_FAILED'},{scenario:'moved',ttl:9}],seedB:[{scenario:'secret',ttl:9}],checkB:[{scenario:'secret',ttl:9}],cleanup:[{target:'producer'},{target:'fixture'}]}[phase];assert.ok(cases);\nfor(const c of cases){assert.ok(ledger.length<24);if(ledger.length)await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(ledger.at(-1).finishedAt)+1000-Date.now())));const sample={id:randomUUID(),phase,scenario:c.scenario??c.target,startedAt:new Date().toISOString(),correct:false};ledger.push(sample);fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));try{const wire=Buffer.from(query((c.differentName?'other.':'')+setup.queryName,1,c.differentFlags?0x0120:0x0130));if(c.id)wire.writeUInt16BE(c.id);const headers={'Content-Type':'application/dns-message','x-isolation-case':c.scenario??'hit','x-isolation-sample':sample.id};const r=await fetch(c.target==='fixture'?'https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev':'https://superdoh.aloneowo0.workers.dev/dns-query',{method:c.target==='fixture'?'GET':'POST',headers,body:c.target==='fixture'?undefined:wire,redirect:'manual',signal:AbortSignal.timeout(15000)});sample.httpStatus=r.status;sample.colo=r.headers.get('x-isolation-colo');sample.version=r.headers.get('x-isolation-version');sample.sourceSha=r.headers.get('x-isolation-source');sample.failures=r.headers.get('x-isolation-failures');if(c.target==='fixture'){await r.body?.cancel();assert.equal(r.status,503);}else{assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('content-type'),'application/dns-message');if(phase!=='cleanup'){assert.equal(sample.sourceSha,'209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56');assert.equal(r.headers.get('x-isolation-sample'),sample.id);assert.ok(sample.version);assert.ok(sample.colo);const prime=ledger.find(s=>s.phase==='prime'&&s.correct);if(prime)assert.equal(sample.colo,prime.colo);assert.equal(sample.failures,c.code??'');}else assert.equal(sample.sourceSha,null);const result=decode(new Uint8Array(await r.arrayBuffer()));sample.rcode=result.flags&15;sample.ttls=result.records.map(rr=>rr.ttl);assert.equal(result.id,c.id??0x4242);assert.deepEqual(result.questions,[{name:(c.differentName?'other.':'')+setup.queryName,type:1,class:1}]);assert.equal(result.flags&0x0200,0);assert.equal(sample.rcode,c.code||phase==='cleanup'?2:0);if(c.code||phase==='cleanup')assert.equal(result.records.length,0);else{assert.equal(result.records.length,1);assert.deepEqual(result.records[0].data,[192,0,2,8]);assert.equal(result.records[0].type,1);assert.equal(result.records[0].ttl,c.ttl);assert.equal(result.flags&0x20,0);}}sample.correct=true;}catch(e){sample.error={name:e.name,message:e.message};}finally{sample.finishedAt=new Date().toISOString();fs.writeFileSync(ledgerPath,JSON.stringify(ledger,null,2));console.log(JSON.stringify(sample));}if(!sample.correct)break;}assert.ok(ledger.filter(s=>s.phase===phase).every(s=>s.correct),'Stop on failure; retain ledger and restore resources.');\n",
+    "initialClientPhases": [
+      "prime",
+      "blocked"
+    ],
+    "laterClientPhases": [
+      "seedB",
+      "rotatedBack",
+      "cleanup"
+    ],
+    "wrapper": "const rollback = {\"reverse\":[{\"at\":1167606,\"match\":\"  const socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: \\\"off\\\", allowHalfOpen: false });\\n\",\"insert\":\"  let socket = connect2({ hostname: target2.address, port: target2.port }, { secureTransport: target2.transport === \\\"tls\\\" ? \\\"starttls\\\" : \\\"off\\\", allowHalfOpen: false });\\n\"},{\"at\":1168115,\"match\":\"\",\"insert\":\"    if (target2.transport === \\\"tls\\\") {\\n      socket = socket.startTls({ expectedServerHostname: target2.serverName });\\n      socket.opened.catch(() => {\\n      });\\n      socket.closed.catch(() => {\\n      });\\n    }\\n\"},{\"at\":1176407,\"match\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\"]);\\n      if (value.transport === \\\"tcp\\\") {\\n\",\"insert\":\"      const value = fields(raw, [\\\"transport\\\", \\\"url\\\", \\\"urlSecret\\\", \\\"address\\\", \\\"port\\\", \\\"serverName\\\"]);\\n      if (value.transport === \\\"tcp\\\" || value.transport === \\\"tls\\\") {\\n\"},{\"at\":1177003,\"match\":\"        const port = value.port === void 0 ? 53 : value.port;\\n\",\"insert\":\"        const port = value.port === void 0 ? value.transport === \\\"tls\\\" ? 853 : 53 : value.port;\\n\"},{\"at\":1177177,\"match\":\"        upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n\",\"insert\":\"        if (value.transport === \\\"tls\\\") {\\n          const serverName = value.serverName === void 0 ? address2 : value.serverName;\\n          if (typeof serverName !== \\\"string\\\" || serverName.length === 0 || serverName.length > 253 || serverName.includes(\\\":\\\") || /^[0-9.]+$/.test(serverName) || serverName.replace(/\\\\.$/, \\\"\\\").split(\\\".\\\").some((label) => !/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(label))) throw new Error();\\n          upstreams.set(name, { transport: \\\"tls\\\", address: address2, port, serverName: serverName.replace(/\\\\.$/, \\\"\\\") });\\n        } else {\\n          if (value.serverName !== void 0) throw new Error();\\n          upstreams.set(name, { transport: \\\"tcp\\\", address: address2, port });\\n        }\\n\"},{\"at\":1177279,\"match\":\"      if (value.address !== void 0 || value.port !== void 0) throw new Error();\\n\",\"insert\":\"      if (value.address !== void 0 || value.port !== void 0 || value.serverName !== void 0) throw new Error();\\n\"}],\"settings\":{\"placement\":{},\"compatibility_date\":\"2026-10-19\",\"compatibility_flags\":[\"enable_request_signal\",\"global_fetch_strictly_public\",\"no_nodejs_compat\",\"no_nodejs_compat_v2\"],\"usage_model\":\"standard\",\"tags\":[],\"tail_consumers\":[],\"logpush\":false,\"observability\":{\"enabled\":true,\"head_sampling_rate\":1,\"redact_query_string\":false,\"logs\":{\"enabled\":true,\"head_sampling_rate\":1,\"persist\":true,\"invocation_logs\":true},\"traces\":{\"enabled\":true,\"persist\":true,\"head_sampling_rate\":1},\"issues\":{\"enabled\":false}},\"annotations\":{\"workers/triggered_by\":\"upload\"},\"bindings\":[]}};\nimport {handleRequest} from './worker.js';\nconst urlA=\"https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-a\",urlB=\"https://superdoh-dns-cpu-fixtures-20261024.aloneowo0.workers.dev/dns?isolation=a3564a7c-b\";\nconst group=actions=>({order:0,rules:[{actions}]});\nexport default {async fetch(request,env){const c=request.headers.get('x-isolation-case'),sample=request.headers.get('x-isolation-sample');if(Date.now()>=Number(env.EXPIRES_AT)||!['base','hit','renamed','moved','secret','bypass','tls'].includes(c)||!sample||!/^[a-z0-9-]{1,80}$/.test(sample))return new Response('Stopped.',{status:410});const name=c==='renamed'?'secondary':'primary',source=c==='secret'?{transport:'https',urlSecret:'ACCEPTANCE_SOURCE_URL'}:{transport:'https',url:c==='moved'?urlB:urlA};const upstreams={[name]:source,...(c==='tls'?{unused:{transport:'tls',address:'resolver.example'}}:{})};const failures=[];const response=await handleRequest(request,{ACCEPTANCE_SOURCE_URL:env.ACCEPTANCE_SOURCE_URL,DNS_UPSTREAMS:upstreams,DNS_RULE_MAIN:group([{type:'queryUpstream',upstream:name,...(c==='bypass'?{cache:{read:false,write:false}}:{})},{type:'setTtl',ttl:c==='base'?7:9}])},{requestId:sample,onEvent:event=>{failures.push(event.code);}});const headers=new Headers(response.headers);headers.set('x-isolation-source',\"209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56\");headers.set('x-isolation-version',env.VERSION.id);headers.set('x-isolation-sample',sample);headers.set('x-isolation-colo',request.cf?.colo??'unknown');headers.set('x-isolation-failures',failures.join(','));return new Response(response.body,{status:response.status,headers});}};\n",
+    "controlNote": "Enable fixture then prime A; disable fixture then blocked cases; rotate actual producer Secret to B and re-enable fixture; seed B; in one bounded control step disable fixture and rotate Secret back to A; run negative Secret-A and positive literal-B control before B lifetime expires; restore resources. The unused rotated and checkB client branches were not executed."
+  },
+  "adaptation": {
+    "reason": "Initial A entry expired before the first Secret update completed. No rotated-phase request was sent. Reverse direction B-to-A was verified with a still-valid B positive control rather than claiming an expired cache proved isolation.",
+    "firstAExpiryUpperBound": "2026-10-26T07:46:48.835Z",
+    "firstSecretRotationAt": "2026-10-26T07:46:52.737Z",
+    "extraRequestsFromAdaptation": 0
+  },
+  "cleanup": {
+    "secretDeletedBeforeCollectionRestored": true,
+    "producerActiveAndLatestBindingsEmpty": true,
+    "originalSourceAndWasmHashesVerified": true,
+    "observabilityRestored": true,
+    "fixtureOriginalVersionRestored": true,
+    "fixtureExpiry": 0,
+    "publicProducerServfail": true,
+    "publicFixtureStatus": 503,
+    "independentReadback": {
+      "kind": "cache-isolation-independent-restoration",
+      "at": "2026-10-26T07:50:47.995Z",
+      "workers": {
+        "superdoh": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "observability": {
+              "enabled": true,
+              "head_sampling_rate": 1,
+              "redact_query_string": false,
+              "logs": {
+                "enabled": true,
+                "head_sampling_rate": 1,
+                "persist": true,
+                "invocation_logs": true
+              },
+              "traces": {
+                "enabled": true,
+                "persist": true,
+                "head_sampling_rate": 1
+              },
+              "issues": {
+                "enabled": false
+              }
+            },
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": []
+          },
+          "versions": [
+            {
+              "version_id": "93fb5bf5-15b2-490f-b2f2-11e68ca76f65",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [],
+          "etag": "ee542903617041012c4b841a429a62c1ada6b67945b1de8fa9298cbb7b5457a3"
+        },
+        "superdoh-dns-cpu-fixtures-20261024": {
+          "settings": {
+            "placement": {},
+            "compatibility_date": "2026-10-19",
+            "compatibility_flags": [
+              "enable_request_signal",
+              "global_fetch_strictly_public",
+              "no_nodejs_compat",
+              "no_nodejs_compat_v2"
+            ],
+            "usage_model": "standard",
+            "tags": [],
+            "tail_consumers": [],
+            "logpush": false,
+            "annotations": {
+              "workers/triggered_by": "upload"
+            },
+            "bindings": [
+              {
+                "json": 0,
+                "name": "EXPIRES_AT",
+                "type": "json"
+              },
+              {
+                "name": "LIST_STATE",
+                "text": "good",
+                "type": "plain_text"
+              }
+            ]
+          },
+          "versions": [
+            {
+              "version_id": "c489c361-819f-485d-ba7f-6168ede2f3ce",
+              "percentage": 100
+            }
+          ],
+          "activeBindings": [
+            {
+              "json": 0,
+              "name": "EXPIRES_AT",
+              "type": "json"
+            },
+            {
+              "name": "LIST_STATE",
+              "text": "good",
+              "type": "plain_text"
+            }
+          ],
+          "etag": "b47af7c5d4fda1a788b58acf2c0d325b57f63bbdd212d8c79f71cf1ed3d6f98e"
+        }
+      },
+      "modules": [
+        {
+          "name": "./7ed2d4953e8bbcb378d65aef9e4f3e41c03a8441-dns_bindgen_bg.wasm",
+          "bytes": 854948,
+          "sha256": "b19b09a573512b21f50c943c72ec6553078328623f442a511ddf33cd0b1f3a73"
+        },
+        {
+          "name": "worker.js",
+          "bytes": 1209790,
+          "sha256": "3b32bd2b2bbee8242da529f0b8f504c7ac84911d34b71a85a6c6c340a52be007"
+        }
+      ]
+    }
+  },
+  "verification": {
+    "localBehaviorTestsRun": false,
+    "fullNpmSuiteRun": false,
+    "productionChanged": false,
+    "typecheck": {
+      "command": "npm --prefix SuperDoH run typecheck",
+      "exitCode": 0
+    },
+    "nativeCpuCollected": false,
+    "networkConnectionCountsInstrumented": false
+  },
+  "limitations": [
+    "One query family, one colo and small sample; not a complete cache-security matrix or reliability estimate.",
+    "Real Secret binding uses a public uncredentialed fixture URL, not an actual private credential; this tests reference/rotation semantics, not new credential redaction.",
+    "Different transport identity, ECS/DO variants, negative caching, signed DNSSEC rewrite combinations and persistent cross-colo behavior are not established here.",
+    "Producer code restored to original modules; current candidate is not left deployed.",
+    "Two run-specific original-response entries had at most 60-second lifetimes and were not globally purged; both lifetimes had elapsed before final cleanup checks.",
+    "No new CPU, profile, cold-isolate or ECH acceptance claim.",
+    "Fixture configured to reject DNS serving with HTTP 503; it was not shut down as a network endpoint. No claim of zero origin invocations."
+  ]
+}
