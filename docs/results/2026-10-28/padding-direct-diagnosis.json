@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-28",
+  "purpose": "Direct-access diagnosis, not a new production change or availability benchmark.",
+  "transport": "Native Node HTTPS/HTTP2, no proxy agent, explicit edge lookup, normal certificate verification. Browser NetLog separately verified DIRECT and production secure DoH.",
+  "fixedEdgesDiagnosticOnly": true,
+  "deadlineMs": 12000,
+  "sample": {
+    "attempted": 12,
+    "completedHttp": 3,
+    "clientDeadlines": 9,
+    "deadlinesWithoutTlsCompletion": 7
+  },
+  "requests": [
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h1",
+      "kind": "control404",
+      "tcpMs": 447,
+      "totalMs": 12010,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h2",
+      "kind": "control404",
+      "tlsMs": 762,
+      "headersMs": 2932,
+      "http": 404,
+      "totalMs": 2933,
+      "bytes": 10
+    },
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h1",
+      "kind": "metaA",
+      "tcpMs": 330,
+      "tlsMs": 8621,
+      "totalMs": 12008,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h2",
+      "kind": "metaA",
+      "totalMs": 12001,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h1",
+      "kind": "metaHttps",
+      "tcpMs": 196,
+      "tlsMs": 1882,
+      "totalMs": 12001,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "104.21.59.21",
+      "protocol": "h2",
+      "kind": "metaHttps",
+      "totalMs": 12007,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h1",
+      "kind": "control404",
+      "tcpMs": 337,
+      "tlsMs": 668,
+      "headersMs": 994,
+      "http": 404,
+      "totalMs": 994,
+      "bytes": 10
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h2",
+      "kind": "control404",
+      "totalMs": 12014,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h1",
+      "kind": "metaA",
+      "tcpMs": 255,
+      "totalMs": 12002,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h2",
+      "kind": "metaA",
+      "totalMs": 12006,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h1",
+      "kind": "metaHttps",
+      "tcpMs": 275,
+      "totalMs": 12001,
+      "error": "DIAGNOSTIC_12000MS_DEADLINE"
+    },
+    {
+      "ip": "172.67.211.120",
+      "protocol": "h2",
+      "kind": "metaHttps",
+      "tlsMs": 618,
+      "headersMs": 1430,
+      "http": 200,
+      "totalMs": 1431,
+      "bytes": 786,
+      "rcode": 0,
+      "answerTypes": [
+        65
+      ]
+    }
+  ],
+  "browserEvidence": [
+    {
+      "site": "Facebook",
+      "observation": "A/AAAA/HTTPS DoH streams received no headers/body before resolver HTTP/2 sessions failed with ERR_HTTP2_PING_FAILED (-352) at about 30 seconds. Navigation deadline was 20 seconds."
+    },
+    {
+      "site": "Instagram",
+      "observation": "A/AAAA completed around 15.2 seconds; HTTPS lookup did not complete. TCP connected to configured address; no completed TLS handshake observed before navigation cancellation."
+    },
+    {
+      "site": "linux.do",
+      "observation": "A response around 20.75 seconds; HTTPS headers around 22.03 seconds, no body in captured timeline. DNS already exceeded the 20-second page deadline."
+    },
+    {
+      "site": "X",
+      "observation": "TLS 1.3, accepted ECH and HTTP/2. Empty HTTP 403 with x-server: x-web and server: cloudflare envoy; no explicit cf-mitigated challenge header observed. Specific rejection policy unknown."
+    },
+    {
+      "site": "NodeSeek",
+      "observation": "TLS 1.3, accepted ECH and HTTP/2. HTTP 403 with cf-mitigated: challenge and Just a moment page."
+    }
+  ],
+  "productionConfiguration": {
+    "maxExecutionTimeMs": 10000,
+    "upstreamTimeoutMs": 2000,
+    "requiredInitialHttpsLookup": "DNS_RULE_ENV_META_QUERY matches all original HTTPS query types, not just Meta domains, and requires resolver lookup before later synthesis.",
+    "interpretation": "Additional serial dependency and optimization candidate; not established as the cause of pre-TLS or HTTP/2 ping failures. Removing it may change negative-response semantics."
+  },
+  "conclusions": [
+    "Upstream-free control requests also time out before TLS completion: at least part of the failure precedes HTTP request handling and cannot be caused by DNS cache eligibility or upstream lookup.",
+    "Both tested edges and both protocols have failures. Neither HTTP/2-only failure nor an edge-pinning fix is established.",
+    "A padded Facebook HTTPS query succeeds in 1431ms in one fixed-edge sample, so this query path is not permanently broken.",
+    "X and NodeSeek reach HTTP rejection/challenge after TLS and ECH; these are different from the DNS transport failures."
+  ],
+  "limitations": [
+    "No packet capture or matching server-side durations. Cannot assign responsibility to ISP, Wi-Fi gateway, Cloudflare edge or another intermediary.",
+    "Observability event tool failed its response schema because a requestId was absent. Calculation results contained ACCESS_DENIED events that cannot be attributed to these authorized probes; successful invocation logging was disabled.",
+    "Initial 12 harness attempts failed before connection due to an incorrect custom Node lookup contract; excluded from network-failure counts. Original private records retained.",
+    "Single bounded headless browser run and twelve corrected edge probes, not statistical availability measurements.",
+    "Raw NetLog, endpoint secret path, challenge URLs, tokens and local routing details remain private. No system settings or production rules changed."
+  ]
+}
