@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-28",
+  "status": "deployed",
+  "worker": "superdoh",
+  "codeCommit": "578934a34f7686cb6bae5c2e61f4f24448cba4f6",
+  "codeBuild": {
+    "id": "86f84430-5be4-4a4a-8b05-db0048e7c47b",
+    "outcome": "success",
+    "codeVersion": "ee8858c4-dc75-4550-b7ab-7007023049be"
+  },
+  "configuration": {
+    "verifiedAt": "2026-10-28T02:14:47.298Z",
+    "version": "55b4b80f-8240-4568-98bd-f6a069272580",
+    "trafficPercent": 100,
+    "beforeVariables": 31,
+    "variables": 17,
+    "ruleGroups": 11,
+    "oldCidrShardsRemaining": 0,
+    "ipListCacheTtlSeconds": {
+      "cloudflare": 3600,
+      "meta": 3600
+    },
+    "compatibilityDate": "2026-10-19",
+    "compatibilityFlags": [
+      "enable_request_signal",
+      "global_fetch_strictly_public",
+      "no_nodejs_compat",
+      "no_nodejs_compat_v2"
+    ],
+    "independentVerification": "Cloudflare MCP GET settings and deployments"
+  },
+  "moduleSha256": "d94d78a55b595003315661776a91458fec50bb23575e91116b6cc2da372667fd",
+  "backup": {
+    "retained": true,
+    "containsOAuthCredentials": false,
+    "preflightFailuresBeforeWrite": 2,
+    "successfulSettingsPatches": 1
+  },
+  "smoke": {
+    "passed": true,
+    "requests": 8,
+    "browserEchAcceptanceTest": false,
+    "results": [
+      {
+        "name": "www.cloudflare.com",
+        "type": 65,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "echBytes": 71,
+        "passed": true
+      },
+      {
+        "name": "www.facebook.com",
+        "type": 65,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "echBytes": 707,
+        "passed": true
+      },
+      {
+        "name": "www.instagram.com",
+        "type": 65,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "echBytes": 707,
+        "passed": true
+      },
+      {
+        "name": "x.com",
+        "type": 28,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [],
+        "echBytes": 0,
+        "passed": true
+      },
+      {
+        "name": "www.pixiv.net",
+        "type": 28,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [],
+        "echBytes": 0,
+        "passed": true
+      },
+      {
+        "name": "pbs.twimg.com",
+        "type": 28,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [],
+        "echBytes": 0,
+        "passed": true
+      },
+      {
+        "name": "example.net",
+        "type": 1,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1
+        ],
+        "echBytes": 0,
+        "passed": true
+      },
+      {
+        "name": "example.net",
+        "type": 28,
+        "httpStatus": 200,
+        "rcode": 0,
+        "answerTypes": [
+          28,
+          28
+        ],
+        "echBytes": 0,
+        "passed": true
+      }
+    ]
+  },
+  "scope": {
+    "includesUnreleasedEchExtensions": false,
+    "protectedUnrelatedFilesUnchanged": 23
+  },
+  "note": "Configuration version records the settings cutover. Later documentation-only CI deployments may issue a new version without changing runtime bindings or source."
+}

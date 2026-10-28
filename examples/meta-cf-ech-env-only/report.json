@@ -1,5 +1,5 @@
 {
-  "status": "candidate-not-deployed",
+  "status": "deployed",
   "cloudValidation": {
     "status": "passed",
     "date": "2026-10-28",
@@ -11,7 +11,7 @@
     "evidence": "../../docs/results/2026-10-28/ip-lists.json",
     "browserEchAcceptanceTest": false
   },
-  "requires": "Remote IP list library and thin runtime adapter; not compatible with unchanged production code",
+  "requires": "Remote IP list library and thin runtime adapter deployed with commit 578934a; not compatible with earlier unchanged production code",
   "previousVariables": 31,
   "variables": 17,
   "groups": 11,
@@ -36,5 +36,16 @@
     "DNS_IP_LISTS": 265,
     "DNS_RULE_ENV_CF": 1758,
     "DNS_RULE_ENV_META_IP": 1875
+  },
+  "production": {
+    "verifiedAt": "2026-10-28T02:14:47.298Z",
+    "codeCommit": "578934a34f7686cb6bae5c2e61f4f24448cba4f6",
+    "configurationVersion": "55b4b80f-8240-4568-98bd-f6a069272580",
+    "variables": 17,
+    "ruleGroups": 11,
+    "cacheTtl": 3600,
+    "smokePassed": 8,
+    "smokeRequests": 8,
+    "evidence": "../../docs/results/2026-10-28/ip-lists-production.json"
   }
 }
