@@ -1,0 +1,322 @@
+{
+  "date": "2026-10-28",
+  "commit": "bb1f5136dc861626f71e7ed990c664f154a74c2f",
+  "observedProductionVersion": "e54c4743-89ea-4a92-9db2-c964a6d3a09a",
+  "productionTrafficPercent": 100,
+  "bindingsUnchanged": true,
+  "bindingCount": 21,
+  "runtimeUnchanged": true,
+  "builds": {
+    "superdoh": "success",
+    "secondarySuperDoh": "failed: configured npm run build script does not exist; secondary production remains unchanged"
+  },
+  "proxyVerification": {
+    "curl": "--proxy empty --noproxy *, proxy environment removed; proxy_used=0",
+    "chrome": "isolated profile; --no-proxy-server; secure_dns_mode=2; expected production DoH template matches NetLog; proxy_info=DIRECT",
+    "certificateChecksDisabled": false,
+    "hostResolverPinning": false,
+    "normalBrowserOrSystemConfigChanged": false
+  },
+  "dns": {
+    "attempted": 10,
+    "validResponses": 5,
+    "transportTimeouts": 5,
+    "paddingBytes": 80,
+    "requests": [
+      {
+        "name": "www.facebook.com",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:02:25.581Z",
+        "status": "passed",
+        "curlExit": 0,
+        "http": 200,
+        "remoteIp": "104.21.59.21",
+        "httpVersion": "1.1",
+        "totalSeconds": 2.186196,
+        "proxyUsed": 0,
+        "rcode": 0,
+        "answerTypes": [
+          1
+        ],
+        "ttls": [
+          300
+        ],
+        "addresses": [
+          "57.144.44.1"
+        ]
+      },
+      {
+        "name": "www.facebook.com",
+        "type": 28,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:02:28.935Z",
+        "status": "passed",
+        "curlExit": 0,
+        "http": 200,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "1.1",
+        "totalSeconds": 5.938399,
+        "proxyUsed": 0,
+        "rcode": 0,
+        "answerTypes": [],
+        "ttls": []
+      },
+      {
+        "name": "www.instagram.com",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:02:36.053Z",
+        "status": "passed",
+        "curlExit": 0,
+        "http": 200,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "1.1",
+        "totalSeconds": 3.999244,
+        "proxyUsed": 0,
+        "rcode": 0,
+        "answerTypes": [
+          1
+        ],
+        "ttls": [
+          300
+        ],
+        "addresses": [
+          "57.144.44.34"
+        ]
+      },
+      {
+        "name": "x.com",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:02:42.867Z",
+        "status": "failed",
+        "curlExit": 0,
+        "http": 200,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "1.1",
+        "totalSeconds": 1.524028,
+        "proxyUsed": 0,
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1,
+          1
+        ],
+        "ttls": [
+          60,
+          60,
+          60
+        ],
+        "addresses": [
+          "104.26.11.221",
+          "172.67.73.25",
+          "104.26.10.221"
+        ],
+        "error": "false == true",
+        "reviewedOutcome": "valid DNS response; initial harness rejected valid Cloudflare 104.24.0.0/14 addresses because its hard-coded range predicate was incomplete"
+      },
+      {
+        "name": "x.com",
+        "type": 65,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:02:45.548Z",
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "0",
+        "totalSeconds": 20.012597,
+        "proxyUsed": 0,
+        "error": "curl: (28) Operation timed out after 20012 milliseconds with 0 bytes received\r\n\n\n28 !== 0\n"
+      },
+      {
+        "name": "www.cloudflare.com",
+        "type": 65,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:03:06.727Z",
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "0",
+        "totalSeconds": 20.010957,
+        "proxyUsed": 0,
+        "error": "curl: (28) Operation timed out after 20010 milliseconds with 0 bytes received\r\n\n\n28 !== 0\n"
+      },
+      {
+        "name": "example.net",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:03:27.900Z",
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "remoteIp": "",
+        "httpVersion": "0",
+        "totalSeconds": 8.011592,
+        "proxyUsed": 0,
+        "error": "curl: (28) Connection timed out after 8011 milliseconds\r\n\n\n28 !== 0\n"
+      },
+      {
+        "name": "example.net",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:03:37.090Z",
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "remoteIp": "",
+        "httpVersion": "0",
+        "totalSeconds": 8.008692,
+        "proxyUsed": 0,
+        "error": "curl: (28) Connection timed out after 8008 milliseconds\r\n\n\n28 !== 0\n"
+      },
+      {
+        "name": "linux.do",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:03:46.273Z",
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "remoteIp": "",
+        "httpVersion": "0",
+        "totalSeconds": 8.016485,
+        "proxyUsed": 0,
+        "error": "curl: (28) Connection timed out after 8016 milliseconds\r\n\n\n28 !== 0\n"
+      },
+      {
+        "name": "www.nodeseek.com",
+        "type": 1,
+        "paddingBytes": 80,
+        "startedAt": "2026-10-28T13:03:55.458Z",
+        "status": "passed",
+        "curlExit": 0,
+        "http": 200,
+        "remoteIp": "172.67.211.120",
+        "httpVersion": "1.1",
+        "totalSeconds": 3.092274,
+        "proxyUsed": 0,
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1,
+          1
+        ],
+        "ttls": [
+          300,
+          300,
+          300
+        ],
+        "addresses": [
+          "104.26.10.72",
+          "104.26.11.72",
+          "172.67.70.75"
+        ]
+      }
+    ]
+  },
+  "browser": {
+    "version": "156.0.8078.73",
+    "startedAt": "2026-10-28T13:03:20.853Z",
+    "finishedAt": "2026-10-28T13:04:36.503Z",
+    "secureDnsJobs": [
+      {
+        "host": "https://x.com",
+        "secureDnsMode": 2
+      },
+      {
+        "host": "https://www.facebook.com",
+        "secureDnsMode": 2
+      },
+      {
+        "host": "https://www.instagram.com",
+        "secureDnsMode": 2
+      },
+      {
+        "host": "https://linux.do",
+        "secureDnsMode": 2
+      },
+      {
+        "host": "https://www.nodeseek.com",
+        "secureDnsMode": 2
+      }
+    ],
+    "sites": [
+      {
+        "url": "https://x.com/",
+        "documents": [
+          {
+            "url": "https://x.com/",
+            "status": 403,
+            "remoteIp": "104.26.7.138",
+            "protocol": "h2",
+            "ech": true,
+            "tls": "TLS 1.3"
+          }
+        ],
+        "status": null,
+        "title": null,
+        "error": "page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at https://x.com/",
+        "failures": [
+          {
+            "error": "net::ERR_HTTP_RESPONSE_CODE_FAILURE",
+            "canceled": false
+          }
+        ]
+      },
+      {
+        "url": "https://www.facebook.com/",
+        "documents": [],
+        "status": null,
+        "title": null,
+        "error": "page.goto: Timeout 20000ms exceeded.",
+        "failures": []
+      },
+      {
+        "url": "https://www.instagram.com/",
+        "documents": [],
+        "status": null,
+        "title": null,
+        "error": "page.goto: Timeout 20000ms exceeded.",
+        "failures": []
+      },
+      {
+        "url": "https://linux.do/",
+        "documents": [],
+        "status": null,
+        "title": null,
+        "error": "page.goto: Timeout 20000ms exceeded.",
+        "failures": []
+      },
+      {
+        "url": "https://www.nodeseek.com/",
+        "documents": [
+          {
+            "url": "https://www.nodeseek.com/",
+            "status": 403,
+            "remoteIp": "104.26.10.72",
+            "protocol": "h2",
+            "ech": true,
+            "tls": "TLS 1.3",
+            "challenge": "challenge"
+          }
+        ],
+        "status": 403,
+        "title": "Just a moment...",
+        "error": null,
+        "failures": []
+      }
+    ]
+  },
+  "conclusion": "Patch deployed, but unrestricted usable direct access is not established: X returns 403; NodeSeek reaches Cloudflare challenge with 403; Facebook, Instagram and linux.do exceed the 20-second navigation deadline.",
+  "limitations": [
+    "Production HTTP200 or lower latency is not proof of an individual cache hit; deterministic cache reuse remains established by the separately recorded 124 cloud checks.",
+    "curl uses HTTP/1.1; Chrome used HTTP/2 where a document response completed.",
+    "No pinning or alternate-edge retries; each browser site had one navigation attempt.",
+    "No packet capture; do not attribute resets/timeouts/403 to a specific intermediary.",
+    "Raw navigation/NetLog and challenge URLs remain private.",
+    "Initial X A predicate failure remains in raw ledger; reviewed outcome corrects interpretation without rerunning or deleting evidence."
+  ]
+}

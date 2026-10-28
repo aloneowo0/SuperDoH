@@ -31,3 +31,21 @@ Source: `test/cloud/padding-cache/`. `build.mjs` bundles the check Worker and co
 ## Remaining work
 
 This repairs a demonstrated DNS-cache eligibility gap. It does not establish that X, Meta, linux.do or NodeSeek now open directly. The preliminary original-name HTTPS upstream query in runtime rules and the observed DoH HTTP/2/body-transfer instability are separate work. No Meta routing rules, production bindings, system DNS, hosts, proxy settings or normal browser profiles were changed. Production cutover and any new direct-browser acceptance run require the user's authorization.
+
+## Production follow-up: direct access
+
+After user authorization, commit `bb1f513` was fast-forward pushed to the intended `dev` branch. The accidentally published remote isolation branch was removed. Workers Builds deployed `superdoh` version `e54c4743-89ea-4a92-9db2-c964a6d3a09a` at 100% traffic. Comparing the old and new version resources confirmed all 21 bindings and runtime settings unchanged. The secondary `super-doh` build failed because its configured `npm run build` script does not exist; its production deployment did not change.
+
+At the user's request, production data-plane checks explicitly bypassed proxies. Ten serial curl POSTs with 80-byte EDNS Padding produced five valid DNS responses and five transport timeouts. The X A response was initially marked failed by an incomplete hard-coded Cloudflare-range predicate in the private smoke harness; reviewing the saved response against the Cloudflare `/ips` API confirmed its addresses belong to `104.24.0.0/14` and `172.64.0.0/13`, with TTL 60. This correction did not delete the initial failure or rerun the request. Repeated production requests do not independently prove cache hits.
+
+A separate isolated Chrome 156 profile used the actual production secure GET DoH template, no proxy, no resolver IP pinning and normal certificate checks. The completed NetLog confirms secure DNS mode 2, the expected resolver template and only `DIRECT` proxy resolution. One navigation per site showed:
+
+| Site | Direct-browser observation |
+| --- | --- |
+| X | HTTP 403; ECH accepted, TLS 1.3, HTTP/2 |
+| Facebook | 20-second navigation deadline exceeded; no document response |
+| Instagram | 20-second navigation deadline exceeded; no document response |
+| linux.do | 20-second navigation deadline exceeded; no document response |
+| NodeSeek | HTTP 403 Cloudflare challenge, `Just a moment...`; ECH accepted, TLS 1.3, HTTP/2 |
+
+Thus the patch is deployed, but usable unrestricted direct access is **not** established. Navigation deadlines are test limits, not server-generated timeout responses. No attempt was made to bypass site challenges. The temporary Chrome context was closed and only this run's isolated profile was removed; normal browser profiles and system settings were untouched. Raw NetLog, navigation records and challenge URLs remain private. Sanitized follow-up evidence: `docs/results/2026-10-28/padding-production-direct.json`.
