@@ -1,0 +1,1054 @@
+{
+  "date": "2026-10-28",
+  "feature": "edns-padding-cache",
+  "base": "5afd634aced7db68760043490dc0230c0ebb3b19",
+  "passed": true,
+  "productionDeployed": false,
+  "localBehavioralTestsRun": false,
+  "typecheckPassed": true,
+  "syntaxAndBundlePassed": true,
+  "cloudChecks": 124,
+  "paddingAndEcsChecks": 52,
+  "metaXParityChecks": 72,
+  "outerRequestBudget": 40,
+  "outerRequestsAttempted": 37,
+  "evidence": "Request-local createUpstream network callback counts plus unique per-upstream-invocation DNS TXT receipts; cache operations execute within the same Worker request/colo.",
+  "cacheKeyPolicy": "Unchanged: encoded query bytes with ID zeroed plus source name and upstream target, including Padding and ECS.",
+  "versions": {
+    "parityCheck": "c410913b-ac3f-4a66-a153-76e8e263aa77",
+    "finalPaddingCheck": "d867b7fb-d753-4f9d-bf5e-880f1a65b216",
+    "fixture": "9c183bc9-acbc-47bf-b440-5d72ca6e2474",
+    "productionUnchanged": "d702c08a-69d2-4746-a9d7-69b0741ac8f4"
+  },
+  "earlierFailedAttempts": [
+    {
+      "number": 1,
+      "suite": "eligibility",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 2,
+      "suite": "hits",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 3,
+      "suite": "isolation",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 4,
+      "suite": "bypass",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 5,
+      "suite": "pipeline",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 6,
+      "suite": "ecs",
+      "status": "failed",
+      "http": null,
+      "error": "TypeError",
+      "failedChecks": []
+    },
+    {
+      "number": 9,
+      "suite": "isolation",
+      "status": "failed",
+      "http": 200,
+      "error": null,
+      "failedChecks": [
+        {
+          "name": "upstream-name-and-target",
+          "passed": false,
+          "error": "CACHE_FAILED"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "suite": "pipeline",
+      "status": "failed",
+      "http": 200,
+      "error": null,
+      "failedChecks": [
+        {
+          "name": "duplicate-ecs",
+          "passed": false,
+          "error": "invalid query accepted"
+        },
+        {
+          "name": "duplicate-opt",
+          "passed": false,
+          "error": "wrong rejection code"
+        },
+        {
+          "name": "bad-ecs",
+          "passed": false,
+          "error": "wrong rejection code"
+        }
+      ]
+    }
+  ],
+  "failureNotes": [
+    "Attempts 1-6: Node fetch TypeError before HTTP response; proxy environment was absent. Subsequent cloud requests explicitly used the existing local HTTP proxy. All attempts remained charged to the ledger.",
+    "Attempt 9: source identity case returned CACHE_FAILED late in a larger suite. Root cause not established; isolated sources suite and shortened isolation suite passed. Not claimed to prove a platform subrequest-limit diagnosis.",
+    "Attempt 11: test expectations/construction errors. Duplicate ECS was checked with the opt-in policy disabled, and some invalid packets were rejected by the encoder before entrypoint invocation. Corrected tests construct raw invalid bytes and enable ECS; attempt 15 and final attempt 36 passed.",
+    "No core code changes were needed after initial cloud testing; later changes corrected the harness and updated the cache function comment."
+  ],
+  "cleanup": {
+    "checkWorkerDeleted": true,
+    "fixtureWorkerDeleted": true,
+    "apiDeleteStatus": [
+      200,
+      200
+    ]
+  },
+  "limitations": [
+    "No production cutover or git commit/push.",
+    "No new browser direct-access validation.",
+    "No local behavioral test suites were run; maintained local regression cases are syntax checked only.",
+    "Meta HTTPS preliminary upstream query and DoH HTTP/2/body transfer latency remain separate unresolved work.",
+    "Different Padding bytes/length/order still produce separate cache keys.",
+    "Malformed/duplicate ECS entrypoint rejection is asserted with ECS enabled; disabled-mode acceptance semantics were not expanded."
+  ],
+  "suites": [
+    {
+      "suite": "padding-cache-v1/eligibility",
+      "requestNumber": 31,
+      "startedAt": "2026-10-28T12:33:31.691Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "padding-empty",
+          "passed": true
+        },
+        {
+          "name": "padding-nonzero",
+          "passed": true
+        },
+        {
+          "name": "padding-chrome80",
+          "passed": true
+        },
+        {
+          "name": "ecs-padding",
+          "passed": true
+        },
+        {
+          "name": "padding-ecs",
+          "passed": true
+        },
+        {
+          "name": "duplicate-padding",
+          "passed": true
+        },
+        {
+          "name": "duplicate-ecs",
+          "passed": true
+        },
+        {
+          "name": "cookie-padding",
+          "passed": true
+        },
+        {
+          "name": "unknown-padding",
+          "passed": true
+        },
+        {
+          "name": "invalid-ecs-padding",
+          "passed": true
+        },
+        {
+          "name": "invalid-data-bytes",
+          "passed": true
+        },
+        {
+          "name": "duplicate-opt-global",
+          "passed": true
+        },
+        {
+          "name": "message-authentication",
+          "passed": true
+        },
+        {
+          "name": "query-type-exclusions",
+          "passed": true
+        },
+        {
+          "name": "response-padding-asymmetry",
+          "passed": true
+        },
+        {
+          "name": "response-ecs-identity",
+          "passed": true
+        },
+        {
+          "name": "exact-key-and-id",
+          "passed": true
+        },
+        {
+          "name": "negative-ttl-and-opt-flags",
+          "passed": true
+        }
+      ],
+      "proofs": [],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/hits",
+      "requestNumber": 32,
+      "startedAt": "2026-10-28T12:33:32.904Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "chrome80",
+          "passed": true
+        },
+        {
+          "name": "empty",
+          "passed": true
+        },
+        {
+          "name": "nonzero",
+          "passed": true
+        },
+        {
+          "name": "ecs-first",
+          "passed": true
+        },
+        {
+          "name": "padding-first",
+          "passed": true
+        },
+        {
+          "name": "response-add-padding",
+          "passed": true
+        },
+        {
+          "name": "response-drop-padding",
+          "passed": true
+        },
+        {
+          "name": "negative-soa",
+          "passed": true
+        }
+      ],
+      "proofs": [
+        {
+          "name": "chrome80",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "empty",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "nonzero",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "ecs-first",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "padding-first",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-add-padding",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-drop-padding",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        },
+        {
+          "name": "negative-soa",
+          "calls": 1,
+          "expected": 1,
+          "sameReceipt": true,
+          "colo": "FRA"
+        }
+      ],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/isolation",
+      "requestNumber": 33,
+      "startedAt": "2026-10-28T12:33:33.963Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "padding-content",
+          "passed": true
+        },
+        {
+          "name": "padding-length",
+          "passed": true
+        },
+        {
+          "name": "ecs-subnet",
+          "passed": true
+        },
+        {
+          "name": "option-order",
+          "passed": true
+        },
+        {
+          "name": "do",
+          "passed": true
+        },
+        {
+          "name": "cd",
+          "passed": true
+        },
+        {
+          "name": "udp-payload",
+          "passed": true
+        }
+      ],
+      "proofs": [
+        {
+          "name": "padding-content",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "padding-length",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "ecs-subnet",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "option-order",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "do",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "cd",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "udp-payload",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        }
+      ],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/bypass",
+      "requestNumber": 35,
+      "startedAt": "2026-10-28T12:33:36.077Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "cookie",
+          "passed": true
+        },
+        {
+          "name": "unknown",
+          "passed": true
+        },
+        {
+          "name": "duplicate-padding",
+          "passed": true
+        },
+        {
+          "name": "response-cookie",
+          "passed": true
+        },
+        {
+          "name": "response-unknown",
+          "passed": true
+        },
+        {
+          "name": "response-duplicate-padding",
+          "passed": true
+        },
+        {
+          "name": "response-zero-ttl",
+          "passed": true
+        },
+        {
+          "name": "response-unproven-negative",
+          "passed": true
+        },
+        {
+          "name": "response-truncated",
+          "passed": true
+        },
+        {
+          "name": "wrong-response-ecs",
+          "passed": true
+        }
+      ],
+      "proofs": [
+        {
+          "name": "cookie",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "unknown",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "duplicate-padding",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-cookie",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-unknown",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-duplicate-padding",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-zero-ttl",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-unproven-negative",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "response-truncated",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        },
+        {
+          "name": "wrong-response-ecs",
+          "calls": 2,
+          "expected": 2,
+          "sameReceipt": false,
+          "colo": "FRA"
+        }
+      ],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/pipeline",
+      "requestNumber": 36,
+      "startedAt": "2026-10-28T12:33:37.140Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "rules-run-on-hit",
+          "passed": true
+        },
+        {
+          "name": "duplicate-ecs",
+          "passed": true
+        },
+        {
+          "name": "duplicate-opt",
+          "passed": true
+        },
+        {
+          "name": "bad-ecs",
+          "passed": true
+        },
+        {
+          "name": "malformed-wire",
+          "passed": true
+        }
+      ],
+      "proofs": [],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/ecs",
+      "requestNumber": 37,
+      "startedAt": "2026-10-28T12:33:38.200Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "client-subnet-hit-and-isolation",
+          "passed": true
+        },
+        {
+          "name": "ipv6-subnet-hit-and-isolation",
+          "passed": true
+        },
+        {
+          "name": "query-ech-clean-padding-and-ecs",
+          "passed": true
+        }
+      ],
+      "proofs": [],
+      "colo": "FRA"
+    },
+    {
+      "suite": "padding-cache-v1/sources",
+      "requestNumber": 34,
+      "startedAt": "2026-10-28T12:33:35.021Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "upstream-name-and-target",
+          "passed": true
+        }
+      ],
+      "proofs": [],
+      "colo": "FRA"
+    },
+    {
+      "suite": "parity/core",
+      "requestNumber": 16,
+      "startedAt": "2026-10-28T12:31:05.102Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "bounded-name-values",
+          "passed": true
+        },
+        {
+          "name": "answer-and-query-references",
+          "passed": true
+        },
+        {
+          "name": "add-replace-materialization",
+          "passed": true
+        },
+        {
+          "name": "rename-and-original-query-restore",
+          "passed": true
+        },
+        {
+          "name": "unreachable-invalid-reference-preflight",
+          "passed": true
+        },
+        {
+          "name": "optional-size-rollback",
+          "passed": true
+        },
+        {
+          "name": "response-size-and-config-immutability",
+          "passed": true
+        },
+        {
+          "name": "rename-invalidates-old-and-new-signatures",
+          "passed": true
+        },
+        {
+          "name": "protected-records-and-noop",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map0",
+      "requestNumber": 17,
+      "startedAt": "2026-10-28T12:31:06.327Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:www.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:m.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:b-graph.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:fbsbx.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map1",
+      "requestNumber": 18,
+      "startedAt": "2026-10-28T12:31:07.379Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:instagram.com",
+          "passed": true
+        },
+        {
+          "name": "route:www.instagram.com",
+          "passed": true
+        },
+        {
+          "name": "route:i.instagram.com",
+          "passed": true
+        },
+        {
+          "name": "route:lookaside.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:connect.facebook.net",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map2",
+      "requestNumber": 19,
+      "startedAt": "2026-10-28T12:31:08.439Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:graph.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:edge-mqtt.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:messenger.com",
+          "passed": true
+        },
+        {
+          "name": "route:www.messenger.com",
+          "passed": true
+        },
+        {
+          "name": "route:threads.net",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map3",
+      "requestNumber": 20,
+      "startedAt": "2026-10-28T12:31:09.496Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:www.threads.net",
+          "passed": true
+        },
+        {
+          "name": "route:meta.com",
+          "passed": true
+        },
+        {
+          "name": "route:whatsapp.com",
+          "passed": true
+        },
+        {
+          "name": "route:web.whatsapp.com",
+          "passed": true
+        },
+        {
+          "name": "route:oculus.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map4",
+      "requestNumber": 21,
+      "startedAt": "2026-10-28T12:31:10.554Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:thefacebook.com",
+          "passed": true
+        },
+        {
+          "name": "route:asset.fbcdn.net",
+          "passed": true
+        },
+        {
+          "name": "route:asset.xx.fbcdn.net",
+          "passed": true
+        },
+        {
+          "name": "route:asset.cdninstagram.com",
+          "passed": true
+        },
+        {
+          "name": "route:asset.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "map5",
+      "requestNumber": 22,
+      "startedAt": "2026-10-28T12:31:11.610Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "route:asset.fb.com",
+          "passed": true
+        },
+        {
+          "name": "route:asset.whatsapp.com",
+          "passed": true
+        },
+        {
+          "name": "route:asset.whatsapp.net",
+          "passed": true
+        },
+        {
+          "name": "route:asset.fbsbx.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "ipv6",
+      "requestNumber": 23,
+      "startedAt": "2026-10-28T12:31:12.667Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "no-v6:www.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "no-v6:www.instagram.com",
+          "passed": true
+        },
+        {
+          "name": "no-v6:asset.fbcdn.net",
+          "passed": true
+        },
+        {
+          "name": "no-v6:x.com",
+          "passed": true
+        },
+        {
+          "name": "no-v6:pbs.twimg.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "https0",
+      "requestNumber": 24,
+      "startedAt": "2026-10-28T12:31:13.731Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "https:empty:x.com",
+          "passed": true
+        },
+        {
+          "name": "https:empty:asset.cdninstagram.com",
+          "passed": true
+        },
+        {
+          "name": "https:empty:asset.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "https1",
+      "requestNumber": 25,
+      "startedAt": "2026-10-28T12:31:15.311Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "https:cname:x.com",
+          "passed": true
+        },
+        {
+          "name": "https:cname:asset.cdninstagram.com",
+          "passed": true
+        },
+        {
+          "name": "https:cname:asset.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "https2",
+      "requestNumber": 26,
+      "startedAt": "2026-10-28T12:31:16.370Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "https:alias:x.com",
+          "passed": true
+        },
+        {
+          "name": "https:alias:asset.cdninstagram.com",
+          "passed": true
+        },
+        {
+          "name": "https:alias:asset.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "https3",
+      "requestNumber": 27,
+      "startedAt": "2026-10-28T12:31:17.426Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "https:existing:x.com",
+          "passed": true
+        },
+        {
+          "name": "https:existing:asset.cdninstagram.com",
+          "passed": true
+        },
+        {
+          "name": "https:existing:asset.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "fallback",
+      "requestNumber": 28,
+      "startedAt": "2026-10-28T12:31:18.483Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "secondary-source-no-client-ECS",
+          "passed": true
+        },
+        {
+          "name": "both-ECH-sources-fail-preserve-CNAME",
+          "passed": true
+        },
+        {
+          "name": "negative:negative:x.com",
+          "passed": true
+        },
+        {
+          "name": "negative:negative:www.facebook.com",
+          "passed": true
+        },
+        {
+          "name": "negative:refused:x.com",
+          "passed": true
+        },
+        {
+          "name": "negative:refused:www.facebook.com",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "addresses",
+      "requestNumber": 29,
+      "startedAt": "2026-10-28T12:31:19.544Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "CF-address:preferred",
+          "passed": true
+        },
+        {
+          "name": "CF-address:prefempty",
+          "passed": true
+        },
+        {
+          "name": "CF-address:prefbad",
+          "passed": true
+        },
+        {
+          "name": "CF-address:prefnx",
+          "passed": true
+        },
+        {
+          "name": "CF-address:preferr",
+          "passed": true
+        },
+        {
+          "name": "negative-original-A-not-overridden",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "suite": "controls",
+      "requestNumber": 30,
+      "startedAt": "2026-10-28T12:31:20.599Z",
+      "status": "passed",
+      "http": 200,
+      "passed": true,
+      "results": [
+        {
+          "name": "unrelated-A-not-remapped",
+          "passed": true
+        },
+        {
+          "name": "unrelated-AAAA-retained",
+          "passed": true
+        },
+        {
+          "name": "unrelated-HTTPS-not-synthesized",
+          "passed": true
+        },
+        {
+          "name": "IP-classified-Meta-HTTPS-synthesized",
+          "passed": true
+        },
+        {
+          "name": "native-CF-ECH-still-applied",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "hashes": {
+    "src/doh/cache.js": "b5f04c7bec478dd1415e69f689ac43d54f92dd850f4f504ffc91071a81545c8c",
+    "test/cache.mjs": "4074462d35ce65dff54df0dc6b537293af7c5a583716df8b4f1a50b5c015ec7d",
+    "test/cloud/padding-cache/common.js": "8a27591b7161285286736711b3410b505e31c3865fb12fe01a507b43044f7da1",
+    "test/cloud/padding-cache/fixture.js": "331ef88226dbfb5c1c6546b4587ac629d10f32880efa6a5760afaae02d18e976",
+    "test/cloud/padding-cache/eligibility.js": "5daea91e7edd5cbfe83ae0ff8ccfa29833718f7191130abade9a5d285000a148",
+    "test/cloud/padding-cache/main.js": "ea16812134f1e38f46a0c8ccb1849f456c9cb04bc2992ec8922f9afdee7c52e4",
+    "test/cloud/padding-cache/build.mjs": "6127ecdbdb81627a33b1c7a9d0404dde41fb6429dd3eaca7bbe3974148e389fb",
+    "test/cloud/padding-cache/runner.mjs": "26d1347ddfebc8bffae7cd8a2c2fa6ff6cb9dbebcd4b62151bdf9d662be03753",
+    "test/cloud/padding-cache/prepare.mjs": "de6966a237f78977f8081a79b0ebf679488c7f4285e236ca0cd512e0ebd4eb29"
+  }
+}

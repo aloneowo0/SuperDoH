@@ -104,16 +104,51 @@ test('negative cache uses SOA minimum and ages without extending its original de
   assert.equal(calls.length, 2);
 });
 
-function ednsQuery({ flags = 0, code = 8, data = [0, 1, 24, 0, 192, 0, 2] } = {}) {
+function ednsQuery({ flags = 0, code = 8, data = [0, 1, 24, 0, 192, 0, 2], options } = {}) {
   const wire = query(); wire[11] = 1;
-  const options = [code >>> 8, code & 255, 0, data.length, ...data];
-  return Uint8Array.from([...wire, 0, 0, 41, 4, 208, 0, 0, flags >>> 8, flags & 255, 0, options.length, ...options]);
+  const encoded = (options ?? [{ code, data }]).flatMap(option => [option.code >>> 8, option.code & 255, option.data.length >>> 8, option.data.length & 255, ...option.data]);
+  return Uint8Array.from([...wire, 0, 0, 41, 4, 208, 0, 0, flags >>> 8, flags & 255, encoded.length >>> 8, encoded.length & 255, ...encoded]);
 }
 
 test('connection-specific or malformed EDNS options never become reusable through policy overrides', async () => {
   for (const [code, data] of [[10, [1,2,3,4,5,6,7,8]], [65001, [1]]]) {
     await setup({ DNS_UPSTREAMS: source(`https://cache.test/unsafe-${code}-${data.length}`), DNS_RULE_UP: group([{ ...requestDefault, cache: { maxTtl: 86400 } }]) });
     const wire = ednsQuery({ code, data });
+    await dns(await post(undefined, wire)); await dns(await post(undefined, wire));
+    assert.equal(calls.length, 2);
+  }
+});
+
+test('Padding queries cache without normalizing their exact identity', async () => {
+  await setup({ DNS_UPSTREAMS: source('https://cache.test/padding'), DNS_RULE_UP: group([requestDefault]) });
+  for (const data of [[], Array(80).fill(0), [1, 255]]) {
+    const wire = ednsQuery({ code: 12, data });
+    const first = await dns(await post(undefined, wire));
+    const next = wire.slice(); next[1] ^= 1;
+    const second = await dns(await post(undefined, next));
+    assert.equal(second.id, first.id ^ 1);
+  }
+  assert.equal(calls.length, 3);
+});
+
+test('ECS plus Padding supports both orders and retains subnet isolation', async () => {
+  await setup({ DNS_UPSTREAMS: source('https://cache.test/ecs-padding'), DNS_RULE_UP: group([requestDefault]) });
+  const padding = { code: 12, data: Array(80).fill(0) };
+  for (const network of [100, 101]) {
+    const ecs = { code: 8, data: [0, 1, 24, 0, 198, 51, network] };
+    for (const options of [[ecs, padding], [padding, ecs]]) {
+      const wire = ednsQuery({ options });
+      await dns(await post(undefined, wire)); await dns(await post(undefined, wire));
+    }
+  }
+  assert.equal(calls.length, 4);
+});
+
+test('unknown options and duplicate Padding still bypass caching', async () => {
+  const padding = { code: 12, data: [] };
+  for (const options of [[padding, padding], [padding, { code: 65001, data: [7] }], [padding, { code: 10, data: [1,2,3,4,5,6,7,8] }]]) {
+    await setup({ DNS_UPSTREAMS: source('https://cache.test/padding-bypass'), DNS_RULE_UP: group([requestDefault]) });
+    const wire = ednsQuery({ options });
     await dns(await post(undefined, wire)); await dns(await post(undefined, wire));
     assert.equal(calls.length, 2);
   }

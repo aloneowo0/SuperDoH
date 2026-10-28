@@ -4,16 +4,23 @@ import { readBody } from './body.js';
 
 /** @typedef {import('../../lib/dns-wasm/index.js').DnsMessage} Message */
 
-/** Only stateless EDNS or validated ECS is reusable; exact query bytes remain in the key. @param {Message} message @param {boolean} [isQuery] */
+/** Only stateless EDNS, Padding or validated ECS is reusable; exact query bytes remain in the key. @param {Message} message @param {boolean} [isQuery] */
 export function reusable(message, isQuery = false) {
   if (isQuery && [41, 249, 250, 251, 252, 253, 254, 255].includes(message.questions[0].rtype)) return false;
+  let optCount = 0;
   for (const rr of [...message.answers, ...message.authority, ...message.additional]) {
     if (rr.rtype === TYPES.TSIG || rr.rtype === 24) return false;
     if (rr.rtype !== TYPES.OPT) continue;
-    if (!('Opt' in rr.rdata)) return false;
-    if (rr.rdata.Opt.options.length > 1) return false;
-    for (const option of rr.rdata.Opt.options) {
-      if (option.code !== 8) return false;
+    if (++optCount > 1 || !('Opt' in rr.rdata)) return false;
+    const options = rr.rdata.Opt.options;
+    if (!Array.isArray(options) || options.length > 2) return false;
+    const seen = new Set();
+    for (const option of options) {
+      if (![8, 12].includes(option.code) || seen.has(option.code)) return false;
+      seen.add(option.code);
+      if (!(Array.isArray(option.data) || option.data instanceof Uint8Array) || option.data.length > 65535 || !Array.from(option.data).every(byte => Number.isInteger(byte) && byte >= 0 && byte <= 255)) return false;
+      // RFC 7830 permits empty Padding and requires accepting arbitrary octets.
+      if (option.code === 12) continue;
       const bytes = Uint8Array.from(option.data);
       if (bytes.length < 4) return false;
       const family = bytes[0] * 256 + bytes[1], source = bytes[2], scope = bytes[3];
