@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-28",
+  "status": "passed",
+  "scope": "Temporary production-baseline-derived IP-list candidate only; no production deploy, commit, or push",
+  "runner": {
+    "path": "test/ip-list-cloud-runner.mjs",
+    "ledger": ".acceptance/ip-list-20261028/request-ledger.json",
+    "requests": 34,
+    "suite": { "cases": 26, "passed": 26, "failed": 0 },
+    "serialized": true,
+    "minimumRequestSpacingMs": 1050
+  },
+  "library": {
+    "persistentCacheApi": {
+      "first": "origin",
+      "second": "cache",
+      "originLoads": 1,
+      "storedAt": 1793151416831,
+      "storedAtPreserved": true,
+      "independentStoreInstances": true
+    },
+    "crossRequestReuse": { "scenario": "text2", "firstOriginCalls": 1, "secondOriginCalls": 0, "note": "Observed across two Worker requests; does not alone distinguish isolate memory from Cache API. The independent-store case above demonstrates Cache API reuse." },
+    "sourceScenarios": {
+      "text": "ok",
+      "json": "ok",
+      "fail": "IP_LIST_FAILED",
+      "redirect": "IP_LIST_FAILED",
+      "html": "IP_LIST_INVALID",
+      "utf8": "IP_LIST_INVALID",
+      "badEntry": "IP_LIST_INVALID",
+      "byteLimit": "RESOURCE_LIMIT",
+      "entryLimit": "RESOURCE_LIMIT",
+      "stateByteLimit": "RESOURCE_LIMIT",
+      "nullTtl": "INVALID_CONFIG",
+      "listTimeout": "IP_LIST_TIMEOUT",
+      "executionDeadline": "EXECUTION_TIMEOUT",
+      "networkBudget": "RESOURCE_LIMIT",
+      "cancel": "REQUEST_CANCELLED"
+    },
+    "ttl": { "defaultSeconds": 3600, "expiry": "Validated by controlled clock in suite; no real-hour wait." }
+  },
+  "cidrEquivalence": {
+    "cloudflare": { "entries": 780, "checked": 1638, "passed": true },
+    "meta": { "entries": 118, "checked": 248, "passed": true },
+    "source": "Configured GitHub text lists imported during cloud run"
+  },
+  "dns": {
+    "ledgerRequests": 13,
+    "cases": {
+      "cloudflare": { "question": "www.cloudflare.com HTTPS", "rcode": 0, "echSvcParam5Bytes": 64, "exactMatch": "Fixture Base64 bytes; coordinator read-only comparison" },
+      "metaFixedDomain": { "question": "www.facebook.com HTTPS", "rcode": 0, "echSvcParam5Bytes": 707, "exactMatch": "Historical 707-byte value; coordinator read-only comparison" },
+      "metaIp": { "question": "example.net HTTPS via dns-meta address path", "rcode": 0, "echSvcParam5Bytes": 707, "exactMatch": "Historical 707-byte value; coordinator read-only comparison" },
+      "nonTarget": { "question": "example.net HTTPS", "rcode": 0, "echSvcParam5": false },
+      "negative": { "question": "example.net HTTPS", "rcode": 3, "answers": 0 },
+      "ipv4": { "question": "example.net A", "answer": "192.0.2.9" },
+      "ipv6": { "question": "example.net AAAA", "answer": "2001:db8::" },
+      "noIpv6": ["www.pixiv.net AAAA", "pbs.twimg.com AAAA", "www.pixiv.net AAAA"],
+      "preflight": { "missingReference": "INVALID_CONFIG", "unusedInvalidDefinition": "INVALID_CONFIG", "selectorReference": "INVALID_CONFIG" }
+    },
+    "browserEchAcceptanceTest": false,
+    "metaAcceptanceConclusion": "Unchanged; DNS record presence does not imply browser acceptance for every Meta domain."
+  },
+  "testBundle": {
+    "sha256": "5f643afe0d67bc878fa2c20d812ae3d608da8d61c75d94939f234d2d69542854",
+    "bytes": 1284812,
+    "wasmImport": "./dns_bindgen_bg.wasm"
+  },
+  "temporaryWorkers": {
+    "test": { "name": "superdoh-iplist-test-20261028", "versionId": "e3a64bb7-3fca-470c-9dcd-651b4ef28b4a", "deleted": true },
+    "fixture": { "name": "superdoh-iplist-fixture-20261028", "versionId": "5196b93e-7916-4aa5-993a-d8a880a9d634", "deleted": true },
+    "postDeleteScriptsStillPresent": []
+  },
+  "candidateConfig": { "status": "candidate-not-deployed", "bindings": 17, "groups": 11, "maximumVariableBytes": 4826 },
+  "productionPatch": {
+    "base": "be69de28",
+    "ipListRelatedSourceFiles": 11,
+    "normalizedLineEndingComparison": true,
+    "applyCheck": "passed",
+    "includesUnreleasedLookupDnsUpsertReuseExtensions": false
+  },
+  "productionUnchanged": {
+    "worker": "superdoh",
+    "configVersion": "321b9034-bbf8-448e-b52a-f812a6d5c950",
+    "bindings": 31,
+    "deploymentTrafficPercent": 100,
+    "compatibilityDateAndFlags": "unchanged",
+    "pushOrCommit": false,
+    "unrelatedFileHashesMatched": 23
+  },
+  "evidenceBasis": [
+    "Read-only extraction from .acceptance/ip-list-20261028/request-ledger.json",
+    "Coordinator-reported Cloudflare API cleanup and production settings/deployments checks",
+    "Coordinator-reported read-only exact byte comparisons of ECH parameter 5"
+  ]
+}

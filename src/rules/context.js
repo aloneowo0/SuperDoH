@@ -39,7 +39,9 @@ export function loadContext(raw, limits) {
     const edge = value.edge === undefined ? {} : attributes(value.edge);
     /** @type {Map<string, import('./domain-lists.js').ListSnapshot>} */
     const lists = new Map();
-    return { addresses, client, edge, lists };
+    /** @type {Map<string, import('./ip-lists.js').IpListSnapshot>} */
+    const ipLists = new Map();
+    return { addresses, client, edge, lists, ipLists };
   } catch (error) {
     if (error instanceof RuleError) throw error;
     throw new RuleError('INVALID_CONTEXT', 'Invalid matching context.');

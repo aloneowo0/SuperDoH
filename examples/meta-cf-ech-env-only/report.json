@@ -1,0 +1,40 @@
+{
+  "status": "candidate-not-deployed",
+  "cloudValidation": {
+    "status": "passed",
+    "date": "2026-10-28",
+    "temporaryWorkersDeleted": true,
+    "requests": 34,
+    "suiteCases": 26,
+    "cfCidrs": 780,
+    "metaCidrs": 118,
+    "evidence": "../../docs/results/2026-10-28/ip-lists.json",
+    "browserEchAcceptanceTest": false
+  },
+  "requires": "Remote IP list library and thin runtime adapter; not compatible with unchanged production code",
+  "previousVariables": 31,
+  "variables": 17,
+  "groups": 11,
+  "cacheTtl": 3600,
+  "removedCidrShards": 17,
+  "maximumVariableBytes": 4826,
+  "variableSizes": {
+    "DNS_UPSTREAMS": 225,
+    "DNS_LIMITS": 151,
+    "DNS_CACHE": 39,
+    "DNS_JSON": 4,
+    "DNS_DOMAIN_LISTS": 298,
+    "DNS_RULE_ENV_BASE": 167,
+    "DNS_RULE_ENV_META_QUERY": 1264,
+    "DNS_RULE_ENV_META_FIXED_0": 4826,
+    "DNS_RULE_ENV_META_FIXED_1": 4200,
+    "DNS_RULE_ENV_META_SUFFIX": 319,
+    "DNS_RULE_ENV_CF_REMAP": 1390,
+    "DNS_RULE_ENV_A_QUERY": 143,
+    "DNS_RULE_ENV_RESTORE": 145,
+    "DNS_RULE_ENV_NO_IPV6": 228,
+    "DNS_IP_LISTS": 265,
+    "DNS_RULE_ENV_CF": 1758,
+    "DNS_RULE_ENV_META_IP": 1875
+  }
+}

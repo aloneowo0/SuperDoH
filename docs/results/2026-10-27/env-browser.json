@@ -1,0 +1,444 @@
+{
+  "date": "2026-10-27",
+  "production": {
+    "appliedAt": "2026-10-27T09:51:27.049Z",
+    "bindings": 31,
+    "codeSha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+    "beforeVersion": [
+      {
+        "version_id": "9b2a5c1f-cc4f-47f5-b146-31106c15b05d",
+        "percentage": 100
+      }
+    ],
+    "afterVersion": [
+      {
+        "version_id": "321b9034-bbf8-448e-b52a-f812a6d5c950",
+        "percentage": 100
+      }
+    ],
+    "compatibilityUnchanged": true,
+    "backup": true,
+    "finalIndependentVerification": {
+      "version": "321b9034-bbf8-448e-b52a-f812a6d5c950",
+      "bindings": 31,
+      "codeUnchanged": true,
+      "sha256": "209ab06c48b59319efee096bcba1482f7dedea800b4c22ecf4484b6dfe124b56",
+      "via": "Cloudflare MCP independent GET settings/deployments/script"
+    }
+  },
+  "dnsChecks": [
+    {
+      "name": "www.facebook.com",
+      "type": 65,
+      "startedAt": "2026-10-27T09:52:04.353Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "www.facebook.com",
+          "type": 65,
+          "ttl": 300,
+          "echBytes": 707
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:05.695Z"
+    },
+    {
+      "name": "www.instagram.com",
+      "type": 65,
+      "startedAt": "2026-10-27T09:52:06.754Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "www.instagram.com",
+          "type": 65,
+          "ttl": 300,
+          "echBytes": 707
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:07.073Z"
+    },
+    {
+      "name": "www.cloudflare.com",
+      "type": 65,
+      "startedAt": "2026-10-27T09:52:08.125Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "www.cloudflare.com",
+          "type": 65,
+          "ttl": 300,
+          "echBytes": 71
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:08.431Z"
+    },
+    {
+      "name": "crypto.cloudflare.com",
+      "type": 65,
+      "startedAt": "2026-10-27T09:52:09.487Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "crypto.cloudflare.com",
+          "type": 65,
+          "ttl": 300,
+          "echBytes": 71
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:09.823Z"
+    },
+    {
+      "name": "x.com",
+      "type": 28,
+      "startedAt": "2026-10-27T09:52:10.879Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:11.112Z"
+    },
+    {
+      "name": "www.pixiv.net",
+      "type": 28,
+      "startedAt": "2026-10-27T09:52:12.172Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:12.401Z"
+    },
+    {
+      "name": "pbs.twimg.com",
+      "type": 28,
+      "startedAt": "2026-10-27T09:52:13.469Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:13.693Z"
+    },
+    {
+      "name": "x.com",
+      "type": 1,
+      "startedAt": "2026-10-27T09:52:16.109Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "x.com",
+          "type": 1,
+          "ttl": 82,
+          "echBytes": 0
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:16.366Z"
+    },
+    {
+      "name": "www.pixiv.net",
+      "type": 1,
+      "startedAt": "2026-10-27T09:52:17.433Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "www.pixiv.net",
+          "type": 1,
+          "ttl": 300,
+          "echBytes": 0
+        },
+        {
+          "name": "www.pixiv.net",
+          "type": 1,
+          "ttl": 300,
+          "echBytes": 0
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:17.726Z"
+    },
+    {
+      "name": "www.cloudflare.com",
+      "type": 28,
+      "startedAt": "2026-10-27T09:52:18.784Z",
+      "status": 200,
+      "rcode": 0,
+      "answers": [
+        {
+          "name": "www.cloudflare.com",
+          "type": 28,
+          "ttl": 300,
+          "echBytes": 0
+        },
+        {
+          "name": "www.cloudflare.com",
+          "type": 28,
+          "ttl": 300,
+          "echBytes": 0
+        }
+      ],
+      "correct": true,
+      "finishedAt": "2026-10-27T09:52:19.002Z"
+    }
+  ],
+  "browserRounds": [
+    {
+      "label": "proxy-remote-DNS negative control",
+      "validWorkerDnsTest": false,
+      "version": "153.5.1",
+      "certificateValidation": true,
+      "mode": "headless normal browser page navigation, existing SOCKS5 transport",
+      "startedAt": "2026-10-27T09:58:24.703Z",
+      "finishedAt": "2026-10-27T09:58:52.983Z",
+      "pages": [
+        {
+          "url": "https://www.cloudflare.com/cdn-cgi/trace",
+          "startedAt": "2026-10-27T09:58:27.189Z",
+          "content": {
+            "value": {
+              "url": "https://www.cloudflare.com/cdn-cgi/trace",
+              "title": "",
+              "text": "fl=470f316\nh=www.cloudflare.com\nip=[redacted]\nts=1793095108.000\nvisit_scheme=https\nuag=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0\ncolo=FRA\nsliver=none\nhttp=http/2\nloc=DE\ntls=TLSv1.3\nsni=plaintext\nwarp=off\ngateway=off\nrbi=off\nkex=X25519MLKEM768\n"
+            }
+          },
+          "finishedAt": "2026-10-27T09:58:28.267Z"
+        },
+        {
+          "url": "https://www.facebook.com/",
+          "startedAt": "2026-10-27T09:58:28.268Z",
+          "error": "Navigation exceeded 18s",
+          "finishedAt": "2026-10-27T09:58:46.299Z"
+        },
+        {
+          "url": "https://www.instagram.com/",
+          "startedAt": "2026-10-27T09:58:46.299Z",
+          "content": {
+            "value": {
+              "url": "https://www.instagram.com/",
+              "title": "Instagram",
+              "text": null
+            }
+          },
+          "finishedAt": "2026-10-27T09:58:52.980Z"
+        }
+      ],
+      "connections": [
+        {
+          "host": "www.cloudflare.com",
+          "path": "/cdn-cgi/trace",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": false,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "www.cloudflare.com"
+        },
+        {
+          "host": "www.facebook.com",
+          "path": "/",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": false,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.facebook.com"
+        },
+        {
+          "host": "www.instagram.com",
+          "path": "/",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": false,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.www.instagram.com"
+        }
+      ]
+    },
+    {
+      "label": "Worker DoH with SOCKS5 local DNS",
+      "validWorkerDnsTest": true,
+      "version": "153.5.1",
+      "certificateValidation": true,
+      "mode": "headless normal browser page navigation, existing SOCKS5 transport",
+      "startedAt": "2026-10-27T09:59:44.327Z",
+      "finishedAt": "2026-10-27T09:59:55.410Z",
+      "pages": [
+        {
+          "url": "https://www.cloudflare.com/cdn-cgi/trace",
+          "startedAt": "2026-10-27T09:59:46.827Z",
+          "content": {
+            "value": {
+              "url": "https://www.cloudflare.com/cdn-cgi/trace",
+              "title": "",
+              "text": "fl=929f99\nh=www.cloudflare.com\nip=[redacted]\nts=1793095188.000\nvisit_scheme=https\nuag=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0\ncolo=FRA\nsliver=050-tier1\nhttp=http/2\nloc=DE\ntls=TLSv1.3\nsni=encrypted\nwarp=off\ngateway=off\nrbi=off\nkex=X25519MLKEM768\n"
+            }
+          },
+          "finishedAt": "2026-10-27T09:59:48.097Z"
+        },
+        {
+          "url": "https://www.facebook.com/",
+          "startedAt": "2026-10-27T09:59:48.098Z",
+          "content": {
+            "value": {
+              "url": "https://www.facebook.com/",
+              "title": "Facebook",
+              "text": null
+            }
+          },
+          "finishedAt": "2026-10-27T09:59:52.254Z"
+        },
+        {
+          "url": "https://www.instagram.com/",
+          "startedAt": "2026-10-27T09:59:52.254Z",
+          "content": {
+            "value": {
+              "url": "https://www.instagram.com/",
+              "title": "Instagram",
+              "text": null
+            }
+          },
+          "finishedAt": "2026-10-27T09:59:55.408Z"
+        }
+      ],
+      "connections": [
+        {
+          "host": "www.cloudflare.com",
+          "path": "/cdn-cgi/trace",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": true,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "www.cloudflare.com"
+        },
+        {
+          "host": "www.facebook.com",
+          "path": "/",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.facebook.com"
+        },
+        {
+          "host": "www.instagram.com",
+          "path": "/",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.www.instagram.com"
+        }
+      ]
+    },
+    {
+      "label": "Meta root and Graph follow-up",
+      "validWorkerDnsTest": true,
+      "version": "153.5.1",
+      "certificateValidation": true,
+      "mode": "headless normal browser page navigation, existing SOCKS5 transport",
+      "startedAt": "2026-10-27T10:01:20.835Z",
+      "finishedAt": "2026-10-27T10:01:34.434Z",
+      "pages": [
+        {
+          "url": "https://www.cloudflare.com/cdn-cgi/trace",
+          "startedAt": "2026-10-27T10:01:23.196Z",
+          "content": {
+            "value": {
+              "url": "https://www.cloudflare.com/cdn-cgi/trace",
+              "title": "",
+              "text": "fl=472f112\nh=www.cloudflare.com\nip=[redacted]\nts=1793095291.000\nvisit_scheme=https\nuag=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:153.0) Gecko/20100101 Firefox/153.0\ncolo=FRA\nsliver=050-tier1\nhttp=http/2\nloc=DE\ntls=TLSv1.3\nsni=encrypted\nwarp=off\ngateway=off\nrbi=off\nkex=X25519MLKEM768\n"
+            }
+          },
+          "finishedAt": "2026-10-27T10:01:31.755Z"
+        },
+        {
+          "url": "https://graph.facebook.com/",
+          "startedAt": "2026-10-27T10:01:31.756Z",
+          "content": {
+            "value": {
+              "url": "https://graph.facebook.com/",
+              "title": "",
+              "text": null
+            }
+          },
+          "finishedAt": "2026-10-27T10:01:33.202Z"
+        },
+        {
+          "url": "https://facebook.com/",
+          "startedAt": "2026-10-27T10:01:33.203Z",
+          "content": {
+            "value": {
+              "url": "https://facebook.com/",
+              "title": "4xx Client Error",
+              "text": null
+            }
+          },
+          "finishedAt": "2026-10-27T10:01:34.431Z"
+        }
+      ],
+      "connections": [
+        {
+          "host": "www.cloudflare.com",
+          "path": "/cdn-cgi/trace",
+          "status": 200,
+          "isDocument": true,
+          "isAcceptedEch": true,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "www.cloudflare.com"
+        },
+        {
+          "host": "graph.facebook.com",
+          "path": "/",
+          "status": 400,
+          "isDocument": true,
+          "isAcceptedEch": false,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.facebook.com"
+        },
+        {
+          "host": "facebook.com",
+          "path": "/",
+          "status": 404,
+          "isDocument": true,
+          "isAcceptedEch": true,
+          "usedPrivateDNS": true,
+          "protocolVersion": 4,
+          "cipherName": "TLS_AES_128_GCM_SHA256",
+          "certificateName": "*.facebook.com"
+        }
+      ]
+    }
+  ],
+  "chromium": {
+    "secureDnsWorkerConfigured": true,
+    "directNavigation": "18s timeout",
+    "acceptanceClaim": false
+  },
+  "conclusions": {
+    "cloudflare": "Confirmed twice: isAcceptedEch=true, usedPrivateDNS=true, TLS1.3, HTTP200, server sni=encrypted",
+    "meta": "Partial only: facebook.com root accepted ECH but HTTP404; www.facebook.com and www.instagram.com HTTP200 with acceptedEch=false; graph.facebook.com HTTP400 with acceptedEch=false. Not a blanket Meta success or expired-key conclusion.",
+    "ipv6": "x.com, www.pixiv.net, pbs.twimg.com AAAA empty NOERROR; A usable; unrelated Cloudflare AAAA retained."
+  }
+}

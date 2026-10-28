@@ -17,6 +17,8 @@
   },
   "include": [
     "src/**/*.js",
+    "lib/ip-list/**/*.js",
+    "lib/ip-list/test/typecheck.ts",
     "src/**/*.ts",
     "test/typecheck.ts",
     "lib/dns-wasm/test/typecheck.ts",

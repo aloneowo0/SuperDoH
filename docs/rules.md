@@ -781,3 +781,14 @@ DNS_JSON 默认为关闭；仅接受布尔 true/false 或精确字符串 "true"/
 这是输入/输出适配，不是第二套解析器：JSON 输入先生成受限 wire query，随后复用同一配置、规则顺序、上游/缓存、平台元数据、动作状态、失败回滚、协议及 DNSSEC 收尾。没有隐式默认上游。合法 NXDOMAIN 保持 HTTP 200 / Status 3；合法 DNS 查询在规则执行中失败或无答案保持 HTTP 200 / Status 2，不伪造成功记录。非法参数/HTTP 使用对应 400/405/406/414 等状态和 {error:{code,message}} 脱敏 JSON；配置不合法且尚未取得有效查询时为 HTTP 500。所有响应 no-store。
 
 JSON 风格请求在功能关闭时为 404；JSON 查询只允许 GET（405 的 Allow 为 GET），不新增 POST JSON body 接口。标准 wire GET/POST 不变，且 JSON 开启不改变 wire 的 Accept 语义。路径认证在 JSON 参数解析、配置和网络工作前执行；未授权统一返回不含密钥的 404，不使用客户端上传的配置或认证请求头。应用日志不输出密钥路径或原始查询参数。
+
+
+## 远程 IP/CIDR 列表
+
+`DNS_IP_LISTS` 是命名来源对象，定义形如 `{"cloudflare":{"url":"https://example.net/ranges.txt","format":"text","cacheTtl":3600}}`；敏感 URL 可用 `urlSecret` 绑定名替代 `url`。来源必须 HTTPS、无 userinfo/fragment，拒绝重定向及非成功响应。格式支持 UTF-8 `text`（逐行 IP/CIDR，空行和整行注释可忽略）与 JSON 字符串数组。整份数据严格校验；坏行、错误 UTF-8、空来源及资源超限均使来源不可用，不跳过或截断。
+
+`inList` 只用于 IP 类型字段，包括 `client.ip`、`edge.ip`、集合内的 `item.ip`：`{"field":"item.ip","op":"inList","value":"cloudflare"}`。域名字段继续使用 `DNS_DOMAIN_LISTS` 的 `inList` / `inListSuffix`；两种列表不能互换。全部定义/引用及不可达分支都会预检；只在规则引用的列表上、流水线前做有界加载，匹配条件自身不联网。普通来源失败会记录为本请求的不可用快照，仅在实际求值依赖它的匹配时明确失败，不转成 false 或空列表；RESOURCE_LIMIT、IP_LIST_TIMEOUT、请求取消及整体截止时间会在准备阶段立即中止。
+
+`cacheTtl` 单位为秒，默认 3600，0 禁用，最大 86400。仅复用成功且完整验证的快照；到期刷新失败时不使用旧快照，也无负缓存。缓存身份包括规范化来源 URL、格式、TTL、解析限制及版本；持久缓存键是 URL 等身份材料的摘要，内存缓存身份会包含这些输入但不会写入诊断日志。有限内存 LRU 与 Workers Cache API 共同复用，持久缓存内容读回会重新解析验证。Workers Cache API 仅在数据中心本地生效、可能被淘汰，不保证跨地区/隔离实例命中或全球持久保存；TTL 是列表快照最大复用期，与 DNS 答案 TTL 完全独立。缓存异常可视为 miss，但取消、整体截止时间及 RESOURCE_LIMIT 不会被吞掉。并发冷请求各自加载，不共享请求间 Promise/Response/signal。
+
+默认限制：maxIpLists=16、maxIpListEntries=4096、maxIpListBytes=262144、ipListTimeoutMs=2000、maxIpListStateBytes=4194304；硬上限分别为 64、65536、2097152、10000、16777216。来源请求计入共享 maxNetworkRequests 和执行 deadline。日志/诊断不暴露 URL。静态类型/云端测试脚本及未部署配置候选见本库与 `examples/meta-cf-ech-env-only/README.md`；云端验收需单独运行，不能将待测候选描述为已部署或已验收。

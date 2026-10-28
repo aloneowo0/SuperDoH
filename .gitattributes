@@ -1,0 +1,2 @@
+# Preserve public CIDR snapshot hashes on Windows checkouts.
+examples/meta-cf-ech/*.txt text eol=lf

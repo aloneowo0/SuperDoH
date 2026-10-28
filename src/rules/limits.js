@@ -2,6 +2,7 @@ import { RuleError } from './errors.js';
 
 const defaults = Object.freeze({
   maxEchProbeTimeoutMs: 1500, maxEchProbeBytes: 65536,
+  maxIpLists: 16, maxIpListEntries: 4096, maxIpListBytes: 262144, ipListTimeoutMs: 2000, maxIpListStateBytes: 4194304,
   maxDomainLists: 16, maxDomainListEntries: 4096, maxDomainListBytes: 262144, domainListTimeoutMs: 1500, maxDomainListStateBytes: 4194304,
   maxUpstreams: 16, maxAddressSources: 16, maxAttributionAddresses: 16, maxAttributionBytes: 16384, attributionTimeoutMs: 1500,
   maxNetworkRequests: 2, maxExecutionTimeMs: 3000, upstreamTimeoutMs: 1500,
@@ -11,6 +12,7 @@ const defaults = Object.freeze({
 });
 const ceilings = Object.freeze({
   maxEchProbeTimeoutMs: 10000, maxEchProbeBytes: 1048576,
+  maxIpLists: 64, maxIpListEntries: 65536, maxIpListBytes: 2097152, ipListTimeoutMs: 10000, maxIpListStateBytes: 16777216,
   maxDomainLists: 64, maxDomainListEntries: 65536, maxDomainListBytes: 2097152, domainListTimeoutMs: 10000, maxDomainListStateBytes: 16777216,
   maxUpstreams: 64, maxAddressSources: 64, maxAttributionAddresses: 256, maxAttributionBytes: 262144, attributionTimeoutMs: 10000,
   maxNetworkRequests: 16, maxExecutionTimeMs: 30000, upstreamTimeoutMs: 10000,

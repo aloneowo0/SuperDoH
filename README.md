@@ -26,6 +26,7 @@ Common bindings:
 | `DNS_LIMITS` | Bounded request, configuration, list, source and execution budgets |
 | `DNS_ADDRESS_SOURCES` | Trusted JSON mappings for explicit response-address attribution |
 | `DNS_DOMAIN_LISTS` | Inline or HTTPS-maintained domain data |
+| `DNS_IP_LISTS` | HTTPS IP/CIDR lists with configurable reuse (default 3600 seconds) |
 | `DNS_JSON` | Opt-in DNS JSON GET endpoint; disabled unless true |
 | `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` |
 
@@ -39,6 +40,8 @@ Small complete binding-object examples:
 - [Platform client-country selection](examples/client-selection.json)
 - [Response-address attribution and matching](examples/attribution.json)
 - [Maintained external domain list](examples/domain-list.json)
+- [Meta/Cloudflare runtime configuration using remote CIDR lists](examples/meta-cf-ech-env-only/README.md)
+- [Generic IP-list library](lib/ip-list/README.md) and [bounded cloud validation](docs/ip-lists-2026-10-28.md)
 - [Direct ECHConfigList loading and application](examples/ech-direct.json)
 - [ECH lookup from a DNS HTTPS answer](examples/ech-query.json)
 - [Authenticated TLS ECH probe and application](examples/ech-probe.json)

@@ -1,6 +1,7 @@
 import { probeEch } from './doh/ech-probe.js';
 import { parseEchConfigList } from '../lib/ech-probe/config.js';
 import { directEch, queryEch, applyEch } from './rules/ech.js';
+import { loadIpLists } from './rules/ip-lists.js';
 import { loadDomainLists } from './rules/domain-lists.js';
 import { loadAddressSources } from './rules/address-sources.js';
 import { createAttribution } from './doh/attribution.js';
@@ -96,6 +97,7 @@ export async function executeQuery(queryWire, env, options = {}) {
     const enrich = createAttribution(limits, execution, spendNetwork);
     let properties = context;
     const domainLists = loadDomainLists(env, limits, configBudget);
+    const ipLists = loadIpLists(env, limits, configBudget);
     const groups = loadGroups(env, limits, configBudget);
     for (const group of groups) {
       for (const [ruleIndex, rule] of group.rules.entries()) {
@@ -110,8 +112,9 @@ export async function executeQuery(queryWire, env, options = {}) {
         }
       }
     }
+    for (const name of configBudget.ipListReferences) ipLists.resolve(name);
     for (const name of configBudget.listReferences) domainLists.resolve(name);
-    properties = { ...properties, lists: await domainLists.prepare(configBudget.listReferences, execution, spendNetwork) };
+    properties = { ...properties, ipLists: await ipLists.prepare(configBudget.ipListReferences, execution, spendNetwork), lists: await domainLists.prepare(configBudget.listReferences, execution, spendNetwork) };
     /** @type {import('./rules/types.js').ActionResult | undefined} */
     let lastAction;
     /** @type {import('./rules/ech.js').EchCandidate | undefined} */

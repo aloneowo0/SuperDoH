@@ -27,7 +27,7 @@ type NumberPredicate<F> = Compare<F, number> | Presence<F>
   | { field: F; op: 'lt' | 'lte' | 'gt' | 'gte'; value: number };
 type TypePredicate<F> = Compare<F, number | string> | Presence<F>;
 type TextPredicate<F> = Compare<F, string> | Presence<F>;
-type IpPredicate<F> = Compare<F, string> | Presence<F> | { field: F; op: 'cidr'; value: string };
+type IpPredicate<F> = Compare<F, string> | Presence<F> | { field: F; op: 'cidr' | 'inList'; value: string };
 type GlobalPredicate =
   | NamePredicate<'query.name' | 'original.name'>
   | TypePredicate<'query.type' | 'original.type'>
@@ -126,3 +126,5 @@ export type EchProbeConfig = {
   | { verifyCertificate?: false; caCertificates?: never }
   | { verifyCertificate: boolean; caCertificates?: never }
 );
+
+export type IpListConfig = ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; cacheTtl?: number };

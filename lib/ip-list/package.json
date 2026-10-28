@@ -1,0 +1,1 @@
+{"name":"@superdoh/ip-list","version":"0.1.0","private":true,"type":"module","exports":{".":{"types":"./index.d.ts","default":"./index.js"},"./ip":"./ip.js"}}

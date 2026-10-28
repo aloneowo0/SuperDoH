@@ -6,7 +6,12 @@ export function createConfigBudget(limits) {
   let bytes = 0, nodes = 0, patterns = 0;
   /** @type {Set<string>} */
   const listReferences = new Set();
+  /** @type {Set<string>} */
+  const ipListReferences = new Set();
   return {
+    ipListReferences,
+    /** @param {unknown} name */
+    ipList(name) { ipListReferences.add(upstreamName(name)); },
     listReferences,
     /** @param {unknown} name */
     list(name) { listReferences.add(upstreamName(name)); },

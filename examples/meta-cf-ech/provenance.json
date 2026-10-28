@@ -1,0 +1,19 @@
+{
+  "retrievedAt": "2026-10-27T05:20:06.411Z",
+  "sources": [
+    {
+      "file": "cloudflare.txt",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/cloudflare.txt",
+      "sha256": "ae1b76e191811172dd4b6c647fffc707716382315626b6d66213e95dc2528f1f",
+      "bytes": 12294,
+      "entries": 780
+    },
+    {
+      "file": "facebook.txt",
+      "url": "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/text/facebook.txt",
+      "sha256": "65186dc4084c124afbf05f6e8f755cf91276064cba1c8fc9bd7c0c6cb98a1849",
+      "bytes": 2037,
+      "entries": 118
+    }
+  ]
+}
