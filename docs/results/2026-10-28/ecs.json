@@ -1,0 +1,185 @@
+{
+  "date": "2026-10-28",
+  "feature": "DNS_ECS",
+  "releaseBase": "a3d317474aa305d44598d1e97c903ca34ffb326a",
+  "clientRequests": 3,
+  "maxClientRequests": 40,
+  "finalPassed": 31,
+  "finalTotal": 32,
+  "result": {
+    "suite": "ecs-fixed-fixtures-v2",
+    "runId": "1d64e114-e07b-4bff-be06-8d3975508f7f",
+    "checks": {
+      "disabledDefaults": true,
+      "fullUpstreamPreflight": true,
+      "clientPrefixesAndOptPreservation": true,
+      "ipv6Truncation": true,
+      "nonBytePrefix": true,
+      "fixedNormalization": true,
+      "incomingZeroAndPrefixCaps": true,
+      "invalidIncomingEcsRejected": true,
+      "badResponsesRejected": true,
+      "nonBytePaddingRejected": true,
+      "responseIdentityRestore": true,
+      "untrustedRequestHeadersIgnored": true,
+      "cloudClientIpv4": true,
+      "cloudClientIpv6": true,
+      "cloudFixedSubnet": true,
+      "cloudMissingTrustedIp": true,
+      "cloudConfiguredPrefixZero": true,
+      "cloudInboundZero": true,
+      "responseSanitized": true,
+      "notSelectedUpstreamUnaffected": true,
+      "cloudDefaultDisabled": true,
+      "doAdOtherOptAndExtendedRcode": true,
+      "extendedRcodeWithoutClientOptRejected": true,
+      "optionalRollback": true,
+      "queryEchIsolated": true,
+      "cancelledBeforeNetwork": true,
+      "responseIdentityMismatchRejected": true,
+      "cacheResultsSuccessful": true,
+      "cacheStatsSameColo": true,
+      "cacheStatsSameIsolate": true,
+      "cacheSameSubnetHitAndCrossSubnetMiss": true,
+      "fixedResolverBoundary": false
+    },
+    "cacheStats": {
+      "events": [
+        {
+          "scenario": "cache-scope",
+          "type": 1,
+          "ecs": {
+            "address": "198.51.100.0",
+            "source": 24
+          },
+          "colo": "FRA",
+          "isolate": "5cf8aa2f-5c29-4786-be2b-964fc484ac0f"
+        },
+        {
+          "scenario": "cache-scope",
+          "type": 1,
+          "ecs": {
+            "address": "203.0.113.0",
+            "source": 24
+          },
+          "colo": "FRA",
+          "isolate": "5cf8aa2f-5c29-4786-be2b-964fc484ac0f"
+        }
+      ],
+      "colo": "FRA",
+      "isolate": "5cf8aa2f-5c29-4786-be2b-964fc484ac0f",
+      "error": null
+    },
+    "googleResolverError": {
+      "name": "AssertionError",
+      "code": "RESOLVER_ASSERTION_FAILED",
+      "message": "Resolver did not return successful A data with internal ECS stripped."
+    },
+    "googleResolverDiagnostics": {
+      "rcode": 5,
+      "lastActionSuccess": true,
+      "answerTypes": [],
+      "ecsNull": true
+    },
+    "limitation": "Fixture counters are isolate-local. Cache evidence is accepted only when the fixture query events and stats read share both colo and isolate; restarts or routing across isolates make the cache assertion fail rather than aggregate. The single Google boundary probe checks DNS success and ECS stripping only, not location steering; 203.0.113.0/24 is reserved documentation space and may be rejected.",
+    "missing": [
+      "fixedResolverBoundary"
+    ]
+  },
+  "priorAttempts": [
+    {
+      "budget": 40,
+      "used": 1,
+      "startedAt": "2026-10-28T07:33:41.926Z",
+      "result": "failed",
+      "httpStatus": 200,
+      "failedChecks": [
+        "cacheStatsSameColo",
+        "cacheStatsSameIsolate",
+        "cacheSameSubnetHitAndCrossSubnetMiss",
+        "fixedResolverBoundary"
+      ],
+      "cacheStats": {
+        "coloMatched": false,
+        "isolateMatched": false
+      }
+    },
+    {
+      "suite": "ecs-fixed-fixtures-v2",
+      "runId": "4f7893a2-bd2b-4f2a-a7ad-33f4e8247cc9",
+      "checks": {
+        "disabledDefaults": true,
+        "fullUpstreamPreflight": true,
+        "clientPrefixesAndOptPreservation": true,
+        "ipv6Truncation": true,
+        "nonBytePrefix": true,
+        "fixedNormalization": true,
+        "incomingZeroAndPrefixCaps": true,
+        "invalidIncomingEcsRejected": true,
+        "badResponsesRejected": true,
+        "nonBytePaddingRejected": true,
+        "responseIdentityRestore": true,
+        "untrustedRequestHeadersIgnored": true,
+        "cloudClientIpv4": true,
+        "cloudClientIpv6": true,
+        "cloudFixedSubnet": true,
+        "cloudMissingTrustedIp": true,
+        "cloudConfiguredPrefixZero": true,
+        "cloudInboundZero": true,
+        "responseSanitized": true,
+        "notSelectedUpstreamUnaffected": true,
+        "cloudDefaultDisabled": true,
+        "doAdOtherOptAndExtendedRcode": true,
+        "extendedRcodeWithoutClientOptRejected": true,
+        "optionalRollback": true,
+        "queryEchIsolated": true,
+        "cancelledBeforeNetwork": true,
+        "responseIdentityMismatchRejected": true,
+        "cacheResultsSuccessful": true,
+        "cacheStatsSameColo": false,
+        "cacheStatsSameIsolate": false,
+        "cacheSameSubnetHitAndCrossSubnetMiss": false,
+        "fixedResolverBoundary": false
+      },
+      "cacheStats": {
+        "events": [],
+        "error": {
+          "name": "TypeError",
+          "code": "UNKNOWN",
+          "message": "Invalid redirect value, must be one of \"follow\" or \"manual\" (\"error\" won't be implemented since it does not make sense at the edge; use \"manual\" and check the response status code)."
+        }
+      },
+      "googleResolverError": {
+        "name": "AssertionError",
+        "code": "RESOLVER_ASSERTION_FAILED",
+        "message": "Resolver did not return successful A data with internal ECS stripped."
+      },
+      "limitation": "Fixture counters are isolate-local. Cache evidence is accepted only when the fixture query events and stats read share both colo and isolate; restarts or routing across isolates make the cache assertion fail rather than aggregate. The single Google boundary probe checks DNS success and ECS stripping only, not location steering; 203.0.113.0/24 is reserved documentation space and may be rejected.",
+      "missing": [
+        "cacheStatsSameColo",
+        "cacheStatsSameIsolate",
+        "cacheSameSubnetHitAndCrossSubnetMiss",
+        "fixedResolverBoundary"
+      ]
+    }
+  ],
+  "temporaryWorkers": [
+    {
+      "name": "superdoh-ecs-check-20261028",
+      "version": "5e177e48-99cb-4e78-bf38-7499532af9bf",
+      "deleted": true
+    },
+    {
+      "name": "superdoh-ecs-fixture-20261028",
+      "version": "acca24d8-dc1f-4923-a986-c3478e4cb133",
+      "deleted": true
+    }
+  ],
+  "cleanupVerified": true,
+  "productionEcsEnabled": false,
+  "limitations": [
+    "Google refused documentation subnet 203.0.113.0/24 with RCODE 5; successful location steering against Google was not verified.",
+    "No controlled public TCP ECS test; TCP uses the shared outgoing-query transport boundary.",
+    "No local behavioral suites or browser tests run."
+  ]
+}

@@ -18,7 +18,8 @@ export { RuleError } from './rules/errors.js';
 import { loadGroups, recordType, domain } from './rules/config.js';
 import { matches } from './rules/conditions.js';
 import { loadContext } from './rules/context.js';
-import { buildResponse, parseMessage, encodeMessage, getRcode, TYPES } from '../lib/dns-wasm/index.js';
+import { buildResponse, parseMessage, encodeMessage, getRcode, getEcs, TYPES } from '../lib/dns-wasm/index.js';
+import { loadEcs, validateIncomingEcs, outgoingEcs, checkEcsResponse, stripResponseEcs } from './doh/ecs.js';
 
 /** @template T @param {T} value @returns {T} */
 function freeze(value) {
@@ -38,8 +39,15 @@ function sameQuery(a, b) {
   return domain(first.name) === domain(second.name) && first.rtype === second.rtype && first.class === second.class && a.flags === b.flags && JSON.stringify(a.additional) === JSON.stringify(b.additional);
 }
 /** @param {import('../lib/dns-wasm/index.js').DnsMessage} response @param {import('../lib/dns-wasm/index.js').DnsMessage} current @param {import('../lib/dns-wasm/index.js').DnsMessage} original */
-function upstreamForClient(response, current, original) {
-  if (sameQuery(current, original)) return response;
+function upstreamForClient(response, current, original, internalEcs = false) {
+  if (sameQuery(current, original)) {
+    if (!internalEcs || original.additional.some(rr => rr.rtype === TYPES.OPT)) return response;
+    const result = { ...response, additional: [...response.additional] };
+    const rcode = getRcode(result);
+    result.additional = result.additional.filter(rr => rr.rtype !== TYPES.OPT);
+    if (rcode > 15) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response cannot be represented for this query.');
+    return result;
+  }
   const result = invalidateResponse(response);
   // Do not pass through EDNS metadata produced for different client options.
   if (JSON.stringify(current.additional) !== JSON.stringify(original.additional)) {
@@ -90,6 +98,8 @@ export async function executeQuery(queryWire, env, options = {}) {
     let responseWire;
     const configBudget = createConfigBudget(limits);
     const upstreams = loadUpstreams(env, limits, configBudget);
+    const ecsPolicy = loadEcs(env.DNS_ECS, env, limits, configBudget, /** @param {string} name */ name => upstreams.resolve(name));
+    const incomingEcs = ecsPolicy ? validateIncomingEcs(originalQuery) : null;
     let cache = loadCachePolicy(env.DNS_CACHE, configBudget);
     const spendNetwork = createNetworkAllowance(limits.maxNetworkRequests, execution);
     const transport = createUpstream(limits, execution, spendNetwork);
@@ -158,7 +168,19 @@ export async function executeQuery(queryWire, env, options = {}) {
             let nextProperties = properties;
             let nextEch = ech;
             if (action.type === 'queryUpstream') {
-              candidate.response = upstreamForClient(await transport(upstreams.resolve(action.upstream), candidate.query, { ...cache, ...action.cache }, action.upstream), candidate.query, originalQuery);
+              const targetName = action.upstream;
+              const sendQuery = ecsPolicy?.upstreams.has(targetName)
+                ? outgoingEcs(ecsPolicy, candidate.query, incomingEcs, context.client.ip, limits)
+                : candidate.query;
+              let upstreamResponse = await transport(upstreams.resolve(targetName), sendQuery, { ...cache, ...action.cache }, targetName);
+              if (ecsPolicy?.upstreams.has(targetName)) {
+                checkEcsResponse(upstreamResponse, sendQuery);
+                const internalEcs = JSON.stringify(getEcs(sendQuery)) !== JSON.stringify(getEcs(candidate.query));
+                upstreamResponse = stripResponseEcs(upstreamResponse, incomingEcs);
+                candidate.response = upstreamForClient(upstreamResponse, candidate.query, originalQuery, internalEcs);
+              } else {
+                candidate.response = upstreamForClient(upstreamResponse, candidate.query, originalQuery);
+              }
             } else if (action.type === 'loadEch') {
               nextEch = directEch(action.config);
             } else if (action.type === 'queryEch') {

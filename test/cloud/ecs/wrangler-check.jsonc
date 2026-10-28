@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../node_modules/wrangler/config-schema.json",
+  "name": "superdoh-ecs-check-20261028",
+  "main": "../../../.acceptance/ecs-20261028/dist/check.js",
+  "compatibility_date": "2026-10-19",
+  "compatibility_flags": [
+    "enable_request_signal",
+    "global_fetch_strictly_public",
+    "no_nodejs_compat",
+    "no_nodejs_compat_v2"
+  ],
+  "workers_dev": true,
+  "vars": {
+    "ECS_CHECK_EXPIRES": 0,
+    "ECS_FIXTURE_URL": "https://REPLACE_WITH_FIXTURE_HOST/REPLACE_WITH_FIXTURE_SECRET_PATH/dns-query"
+  },
+  "rules": [
+    { "type": "CompiledWasm", "globs": ["**/*.wasm"] }
+  ]
+}

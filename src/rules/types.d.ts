@@ -97,6 +97,10 @@ export interface FailureReason {
   readonly message: string;
 }
 
+export type DnsEcsConfig =
+  | { mode: 'client'; upstreams: string[]; ipv4Prefix?: number; ipv6Prefix?: number }
+  | { mode: 'fixed'; upstreams: string[]; subnet: string };
+
 export type UpstreamConfig = ({ transport: 'https' } & ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }))
   | { transport: 'tcp'; address: string; port?: number };
 export type ResolvedUpstream = { transport: 'https'; url: string } | { transport: 'tcp'; address: string; port: number };

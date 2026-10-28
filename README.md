@@ -22,6 +22,7 @@ Common bindings:
 | --- | --- |
 | `DNS_RULE_*` | Ordered conditions and actions |
 | `DNS_UPSTREAMS` | Named HTTPS or ordinary TCP connections; definitions alone do not send requests |
+| `DNS_ECS` | Optional, fully preflighted EDNS Client Subnet policy; absent/false keeps current behavior |
 | `DNS_CACHE` | Default policy for cached original upstream responses |
 | `DNS_LIMITS` | Bounded request, configuration, list, source and execution budgets |
 | `DNS_ADDRESS_SOURCES` | Trusted JSON mappings for explicit response-address attribution |
@@ -39,6 +40,7 @@ Sensitive URLs should use a Secret binding and reference its **binding name** th
 
 Small complete binding-object examples:
 
+- [Explicit ECS opt-in configuration](examples/ecs.json)
 - [Explicit sequential fallback](examples/fallback.json)
 - [Platform client-country selection](examples/client-selection.json)
 - [Response-address attribution and matching](examples/attribution.json)

@@ -66,7 +66,13 @@ try {
 - 每条规则进入时只判断一次。后续动作读取当前状态；后续规则重新判断自己的条件。不隐式重跑规则。
 - 所有组、规则、动作及条件分支在执行前完整校验，即使在未命中或终止动作之后也不跳过错误配置。
 - 未知字段、动作、条件操作符和引用明确报错，不回退文件。无 `DNS_RULE_*` 变量可通过配置校验，但空流水线无响应，执行时以 NO_RESPONSE 失败。
-- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`、`DNS_CACHE`、`DNS_ADDRESS_SOURCES`、`DNS_DOMAIN_LISTS`、`DNS_IP_LISTS`、`DNS_JSON`、`DNS_PATHS`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
+- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`、`DNS_ECS`、`DNS_CACHE`、`DNS_ADDRESS_SOURCES`、`DNS_DOMAIN_LISTS`、`DNS_IP_LISTS`、`DNS_JSON`、`DNS_PATHS`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
+
+`DNS_ECS` 缺省、`false` 或字符串 `"false"` 时完全不改动当前上游查询语义。显式启用格式见 [独立示例](../examples/ecs.json)：`client` 模式仅使用经 `requestContext`/可信 `executeQuery` context 校验的 client.ip；不采信 X-Forwarded-For。前缀范围为 IPv4 0..24、IPv6 0..56，默认 /24 和 /56；/0 不发送客户端 ECS。`fixed` 模式只接受 `subnet` CIDR，并将主机位规范化，同样不允许超过 IPv4 /24、IPv6 /56。`upstreams` 必须是非空、去重、已定义且可解析的命名上游列表；全部策略与引用在执行前预检，即使从未命中/引用。策略仅改写列出的 `queryUpstream` 出站查询；不会作用于 `queryEch`、ECH 探测、列表及地址归属请求，不会增加重试或更换上游。仅配置不等于启用生产行为。
+
+启用时，重复/损坏的入站 ECS 或非零 query scope 会拒绝；合法 source `/0` 不替换。其他合法入站 ECS 不会扩大披露前缀；出站 source 取入站前缀与策略上限中更隐私的一方（client 模式使用配置的 IPv4/IPv6 上限，fixed 模式上限为 /24、/56），必要时截短地址，配置上限 `/0` 会发送无身份的 ECS `/0`。如果上游返回匹配出站身份的 ECS，回复客户端时恢复其原始 ECS 地址/source prefix，并保留真实上游 scope；不会伪造或扩大 scope。出站查询使用独立副本，`state.query`、原始查询与调用者数据不变；有效 ECS 参与现有完整 wire 缓存键，缓存不跨不同网段共享，也不做 scope/LPM 扩大复用。出站策略生成的响应 ECS 必须与请求来源匹配，否则作为 `UPSTREAM_INVALID` 拒绝；没有客户端原始 ECS 可恢复时，内部注入 ECS 从返回给客户端的 OPT 中剥除。无关 OPT 选项、DO、AD 或 DNSSEC 答案记录均保留；原查询含 OPT 时也保留扩展 RCODE。若原查询没有 OPT、内部 ECS 是唯一加入 OPT 的原因，而上游返回大于 15 的扩展 RCODE，无法在不改变客户端查询能力的前提下表示该码，故以 `UPSTREAM_INVALID` 拒绝。无可信 client.ip 时，client 模式不添加 ECS，不回退到任意请求头。ECS 只影响递归解析器的解析视角，不转发网页流量，也不保证访问可达性、ECH 接受或 CDN 结果改善；向上游披露网段属于显式隐私选择。
+
+命名上游、规则动作预检完成后，未引用的错误 DNS_ECS 配置仍会导致 INVALID_CONFIG。普通 TCP 只复用 ECS 查询边界，不代表任何受控公网 TCP 上游已完成云端验收。
 
 ### 条件
 
@@ -343,6 +349,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | `DNS_RULE_*` | 既有环境变量规则组 |
 | `DNS_LIMITS` | 可选资源边界 JSON/JSON 文本 |
 | `DNS_UPSTREAMS` | 可选命名 HTTPS/普通 TCP 上游 JSON/JSON 文本，不能自行触发网络 |
+| `DNS_ECS` | 可选 ECS 策略 JSON/JSON 文本；缺省/false 完全关闭 |
 | `DNS_CACHE` | 可选默认缓存策略 JSON/JSON 文本，字段 read、write、maxTtl；不触发上游请求 |
 | `DNS_PATHS` | 可选 DoH 路径列表（数组或 JSON 文本）；省略时默认为 `/dns-query` 和 `/resolve` |
 | `DNS_PATH_KEY` | 可选 Workers Secret；未设置时公开，设置后启用路径密钥 |

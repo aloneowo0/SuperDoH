@@ -1,0 +1,19 @@
+{
+  "DNS_UPSTREAMS": {
+    "resolver": { "transport": "https", "url": "https://resolver.example/dns-query" }
+  },
+  "DNS_ECS": {
+    "mode": "client",
+    "upstreams": ["resolver"],
+    "ipv4Prefix": 24,
+    "ipv6Prefix": 56
+  },
+  "DNS_RULE_MAIN": {
+    "order": 0,
+    "rules": [
+      { "actions": [
+        { "type": "queryUpstream", "upstream": "resolver" }
+      ] }
+    ]
+  }
+}
