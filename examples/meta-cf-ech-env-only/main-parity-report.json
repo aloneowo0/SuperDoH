@@ -1,0 +1,30 @@
+{
+  "sourceCommit": "8e8cb022f1ff274d23bf745c61e133963a9cb76b",
+  "preferred": "cf.090227.xyz",
+  "exactRoutes": 21,
+  "suffixRoutes": 8,
+  "variables": 20,
+  "variableSizes": {
+    "DNS_CACHE": 39,
+    "DNS_DOMAIN_LISTS": 547,
+    "DNS_IP_LISTS": 265,
+    "DNS_JSON": 4,
+    "DNS_LIMITS": 151,
+    "DNS_PATHS": 25,
+    "DNS_RULE_ENV_A_QUERY": 143,
+    "DNS_RULE_ENV_BASE": 167,
+    "DNS_RULE_ENV_CF": 1758,
+    "DNS_RULE_ENV_CF_ADDRESS": 2171,
+    "DNS_RULE_ENV_CF_REMAP": 1596,
+    "DNS_RULE_ENV_META_A_0": 4552,
+    "DNS_RULE_ENV_META_A_1": 1422,
+    "DNS_RULE_ENV_META_A_SUFFIX": 2285,
+    "DNS_RULE_ENV_META_IP": 2058,
+    "DNS_RULE_ENV_META_QUERY": 141,
+    "DNS_RULE_ENV_META_SUFFIX": 1570,
+    "DNS_RULE_ENV_NO_IPV6": 299,
+    "DNS_RULE_ENV_RESTORE": 145,
+    "DNS_UPSTREAMS": 225
+  },
+  "totalBytes": 19992
+}

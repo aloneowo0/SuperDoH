@@ -5,7 +5,7 @@ import { loadIpLists } from './rules/ip-lists.js';
 import { loadDomainLists } from './rules/domain-lists.js';
 import { loadAddressSources } from './rules/address-sources.js';
 import { createAttribution } from './doh/attribution.js';
-import { editRecords } from './rules/records.js';
+import { editRecords, materializeRecords } from './rules/records.js';
 import { loadCachePolicy } from './rules/cache-policy.js';
 import { createConfigBudget } from './rules/config-budget.js';
 import { loadUpstreams } from './doh/upstreams.js';
@@ -17,6 +17,7 @@ import { RuleError, createReporter, normalizeFailure } from './rules/errors.js';
 export { RuleError } from './rules/errors.js';
 import { loadGroups, recordType, domain } from './rules/config.js';
 import { matches } from './rules/conditions.js';
+import { resolveName } from './rules/values.js';
 import { loadContext } from './rules/context.js';
 import { buildResponse, parseMessage, encodeMessage, getRcode, getEcs, TYPES } from '../lib/dns-wasm/index.js';
 import { loadEcs, validateIncomingEcs, outgoingEcs, checkEcsResponse, stripResponseEcs } from './doh/ecs.js';
@@ -158,7 +159,7 @@ export async function executeQuery(queryWire, env, options = {}) {
               break pipeline;
             }
             // Only in-place writers need private data; all other actions read committed state.
-            const editsRecords = ['removeRecords', 'replaceRecords', 'addRecords', 'setTtl'].includes(action.type);
+            const editsRecords = ['removeRecords', 'replaceRecords', 'addRecords', 'setTtl', 'setRecordName'].includes(action.type);
             const candidate = {
               query: action.type === 'rewriteQuery' ? structuredClone(state.query) : state.query,
               response: editsRecords && state.response ? structuredClone(state.response) : state.response,
@@ -205,11 +206,11 @@ export async function executeQuery(queryWire, env, options = {}) {
               const { type, onError, ...policy } = action;
               nextCache = { ...cache, ...policy };
             } else if (action.type === 'answer') {
-              candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: action.records.map(({ type, ...rr }) => ({ ...rr, class: rr.class ?? 1, rtype: recordType(type) })) }));
-            } else if (action.type === 'removeRecords' || action.type === 'replaceRecords' || action.type === 'addRecords' || action.type === 'setTtl') {
+              candidate.response = parseMessage(buildResponse(candidate.query, { rcode: action.rcode ?? 0, answers: materializeRecords(action.records, { current: candidate.query.questions[0], original: originalQuery.questions[0] }) }));
+            } else if (action.type === 'removeRecords' || action.type === 'replaceRecords' || action.type === 'addRecords' || action.type === 'setTtl' || action.type === 'setRecordName') {
               candidate.response = await editRecords(action, { current: candidate.query.questions[0], original: originalQuery.questions[0], response: candidate.response, properties, spend, lastAction }, limits, location);
             } else if (action.type === 'rewriteQuery') {
-              if (action.name !== undefined) candidate.query.questions[0].name = action.name;
+              if (action.name !== undefined) candidate.query.questions[0].name = resolveName(action.name, { current: candidate.query.questions[0], original: originalQuery.questions[0] });
               if (action.queryType !== undefined) candidate.query.questions[0].rtype = recordType(action.queryType);
               within(encodeMessage(candidate.query).byteLength, limits.maxQueryBytes, location);
             }

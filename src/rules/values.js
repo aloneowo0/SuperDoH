@@ -29,6 +29,18 @@ export function domain(value) {
   return normalized;
 }
 
+/** @param {unknown} value @returns {import('./types.js').NameValue} */
+export function nameValue(value) {
+  if (typeof value === 'string') return domain(value);
+  const ref = fields(value, ['from']);
+  if (ref.from !== 'original.name' && ref.from !== 'query.name') throw new Error();
+  return { from: ref.from };
+}
+/** @param {import('./types.js').NameValue} value @param {{ current: { name: string }, original: { name: string } }} context */
+export function resolveName(value, context) {
+  return typeof value === 'string' ? value : domain(value.from === 'original.name' ? context.original.name : context.current.name);
+}
+
 /** @param {unknown} value @returns {string} */
 export function upstreamName(value) {
   if (typeof value !== 'string' || !/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(value)) throw new Error();

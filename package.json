@@ -8,7 +8,7 @@
     "test:rules": "node --test test/rules.mjs test/pipeline-ownership.mjs",
     "test:ecs": "node --test test/ecs.mjs",
     "test:libraries": "node lib/dns-wasm/test/smoke.mjs && node lib/dns-wasm/test/operations.mjs && node lib/ech-probe/test/node.mjs && node lib/ech-probe/test/workerd.mjs && node --test test/trust-store.mjs",
-    "test": "npm run typecheck && npm run test:runtime && npm run test:rules && npm run test:ecs && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:json && npm run test:acceptance && npm run test:online-fixtures && npm run test:measurement && npm run test:libraries",
+    "test": "npm run typecheck && npm run test:runtime && npm run test:rules && npm run test:ecs && npm run test:name-values && npm run test:doh && npm run test:tcp && npm run test:tls && npm run test:cache && npm run test:records && npm run test:metadata && npm run test:attribution && npm run test:lists && npm run test:ech && npm run test:ech-probe && npm run test:json && npm run test:acceptance && npm run test:online-fixtures && npm run test:measurement && npm run test:libraries",
     "test:doh": "node --test test/doh.mjs",
     "test:tcp": "node --test test/tcp.mjs",
     "test:tls": "node --test test/tls.mjs",
@@ -24,7 +24,8 @@
     "test:acceptance": "node --test test/acceptance.mjs",
     "test:measurement": "node --test test/acceptance-runner.mjs test/acceptance-report.mjs test/acceptance-safety.mjs",
     "test:online-fixtures": "node --test test/online-fixtures.mjs",
-    "test:runtime": "node --test test/runtime-config.mjs"
+    "test:runtime": "node --test test/runtime-config.mjs",
+    "test:name-values": "node --test test/name-values.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",

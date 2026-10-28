@@ -1,13 +1,24 @@
 # Meta / CF ECH 运行时配置
 
-**截至 2026-10-28 的正式 Worker 是 17 变量，已通过生产 DoH 检查。** 对应代码提交为 `578934a`，未包含先前未发布的 ECH 执行器扩展。当前示例在这17项运行时变量之外新增 `DNS_PATHS`（`["/resolve", "/dns-query"]`），因此示例总计18项；这项代码/配置变更尚不代表已部署，`report.json` 中 `production` 字段保留原17变量发布记录。
+当前示例补齐 main 的 Meta 静态 IPv4 路由、Meta/重映射域名空 AAAA、任意匹配子域 HTTPS 重建，以及 X/重映射域名的 CF 优选地址与 ECH 合成。
 
-- `bindings.json`、`dashboard.txt`：18项当前示例运行时变量，包含11个规则组；应整套配置，不能追加到仍启用的旧CIDR分片后面。
-- `report.json`：当前示例配置大小、云端验收及历史生产切换记录。
-- `bindings.literal.json`、`report.literal.json`：切换前31变量方案的历史快照，不是当前配置。
+- `bindings.json`、`dashboard.txt`：20 项示例变量，规则按显式 order 执行；不要和旧 CIDR 分片或旧 Meta 枚举规则一起追加使用。
+- `meta-routes.json`：main 提交的 21 条精确映射和 8 条子域映射，包含来源 commit。
+- `main-parity-report.json`：当前大小与来源；每变量小于5KB、整套约20KB。
+- `report.json`：当前配置计数及历史验收记录；其中 `production` 是最初17变量 IP-list 切换的历史记录，不代表最新部署。
+- `bindings.literal.json`、`report.literal.json`：更早的31变量历史快照，不是当前配置。
 
-`DNS_IP_LISTS` 从明确配置的 HTTPS 链接取得 CF/Meta CIDR，缓存 TTL 为3600秒；规则使用 `item.ip` 的 `inList` 匹配。此期限与DNS答案TTL无关。内存索引与 Workers Cache API 复用成功数据，缓存可被淘汰且不保证跨地区命中；到期更新失败不返回过期数据作为成功结果。
+生成方式：
 
-保留既有Meta固定域名/HTTPS改写、CF来源回退及X/Pixiv/Twimg等域名的空AAAA政策，其他A/AAAA不全局禁用。生产8项DoH检查通过；这不是浏览器ECH接受测试，不改变先前Meta仅部分域名已知接受的结论。
+```sh
+node scripts/generate-ip-list-ech.mjs
+node scripts/generate-main-parity.mjs
+```
 
-[生产发布记录](../../docs/ip-lists-production-2026-10-28.md) · [生产结果](../../docs/results/2026-10-28/ip-lists-production.json) · [发布前34请求云验](../../docs/ip-lists-2026-10-28.md)。
+示例 `DNS_PATHS` 仍是模板入口。应用到现有部署时，必须保留实际 `DNS_PATHS`、已按用户选择启用的 `DNS_ECS`、命名上游和其他无关绑定；不要用整套示例替换生产的访问配置。
+
+`DNS_IP_LISTS` 从指定 HTTPS 来源取得 CF/Meta CIDR，成功数据缓存3600秒；规则使用 IP `inList` 匹配。缓存可被淘汰，不保证跨地区命中；过期更新失败不会伪装成成功。规则中的 CF 优选域名为 `cf.090227.xyz`，地址必须通过CF归属过滤，否则显式回退原解析。
+
+首轮云端72项检查通过，覆盖静态映射、动态owner、IPv6策略、HTTPS合成、负响应保护、ECH来源回退、优选地址回退和DNSSEC失效处理。这不是用户本地浏览器的ECH接受或网络可达性测试。
+
+[当前策略与验证说明](../../docs/main-parity-2026-10-28.md) · [当前云端证据](../../docs/results/2026-10-28/main-parity.json) · [历史IP-list发布记录](../../docs/ip-lists-production-2026-10-28.md)。

@@ -5,7 +5,7 @@ import { createConfigBudget } from './config-budget.js';
 import { within } from './limits.js';
 import { decodeRdata, encodeRdata, TYPES } from '../../lib/dns-wasm/index.js';
 import { RuleError, normalizeFailure } from './errors.js';
-import { object, fields, integer, domain, recordType, upstreamName } from './values.js';
+import { object, fields, integer, domain, nameValue, recordType, upstreamName } from './values.js';
 import { compileCondition } from './conditions.js';
 export { domain, recordType } from './values.js';
 
@@ -32,7 +32,7 @@ function validateRecord(value) {
   // The library validates the type/RDATA pairing, IPs and native record fields.
   const bytes = encodeRdata(rtype, /** @type {import('../../lib/dns-wasm/index.js').Rdata} */ (data));
   if (!Object.hasOwn(data, 'Raw')) knownFields(data, decodeRdata(rtype, bytes));
-  return { name: domain(rr.name), type: rtype, class: rr.class === undefined ? 1 : integer(rr.class, 65535), ttl: integer(rr.ttl, 0xffffffff), rdata: /** @type {import('../../lib/dns-wasm/index.js').Rdata} */ (data) };
+  return { name: nameValue(rr.name), type: rtype, class: rr.class === undefined ? 1 : integer(rr.class, 65535), ttl: integer(rr.ttl, 0xffffffff), rdata: /** @type {import('../../lib/dns-wasm/index.js').Rdata} */ (data) };
 }
 /** @param {unknown} value @param {() => void} countRecord @param {(value: unknown) => import('./conditions.js').Predicate} compileSelector @returns {import('./types.js').CompiledAction} */
 function action(value, countRecord, compileSelector) {
@@ -64,13 +64,17 @@ function actionValue(value, countRecord) {
       const common = { section: /** @type {import('./types.js').RecordSection} */ (v.section ?? 'answer'), records: v.records.map(rr => { countRecord(); return validateRecord(rr); }) };
       return v.type === 'replaceRecords' ? { ...common, type: 'replaceRecords', where: /** @type {import('./types.js').RecordCondition} */ (v.where) } : { ...common, type: 'addRecords' };
     }
+    case 'setRecordName':
+      fields(v, ['type', 'name', 'where']);
+      if (v.where === undefined) throw new Error();
+      return { type: 'setRecordName', name: nameValue(v.name), where: /** @type {import('./types.js').RecordCondition} */ (v.where) };
     case 'setTtl':
       fields(v, ['type', 'ttl', 'where']);
       return { type: 'setTtl', ttl: integer(v.ttl, 0xffffffff), where: /** @type {import('./types.js').RecordCondition | undefined} */ (v.where) };
     case 'rewriteQuery':
       fields(v, ['type', 'name', 'queryType']);
       if (v.name === undefined && v.queryType === undefined) throw new Error();
-      return { type: 'rewriteQuery', name: v.name === undefined ? undefined : domain(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
+      return { type: 'rewriteQuery', name: v.name === undefined ? undefined : nameValue(v.name), queryType: v.queryType === undefined ? undefined : recordType(v.queryType) };
     case 'probeEch':
       fields(v, ['type', 'options']);
       validateProbeOptions(v.options);

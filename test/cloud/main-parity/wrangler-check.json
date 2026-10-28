@@ -1,0 +1,28 @@
+{
+  "name": "superdoh-main-parity-check-20261028",
+  "main": "../../../.acceptance/main-parity-20261028/dist/check.js",
+  "compatibility_date": "2026-10-19",
+  "compatibility_flags": [
+    "enable_request_signal",
+    "global_fetch_strictly_public",
+    "no_nodejs_compat",
+    "no_nodejs_compat_v2"
+  ],
+  "workers_dev": true,
+  "observability": {
+    "enabled": false
+  },
+  "rules": [
+    {
+      "type": "CompiledWasm",
+      "globs": [
+        "**/*.wasm"
+      ],
+      "fallthrough": false
+    }
+  ],
+  "vars": {
+    "EXPIRES": 0,
+    "FIXTURE": "https://REPLACE_WITH_FIXTURE_HOST/REPLACE_WITH_ACCESS_KEY"
+  }
+}

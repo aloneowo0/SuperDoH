@@ -1,5 +1,6 @@
 import type { DnsRecord } from '../../lib/dns-wasm/index.js';
-export type RecordConfig = Omit<DnsRecord, 'rtype' | 'class' | 'data'> & { type: string | number; class?: number };
+export type NameValue = string | { from: 'original.name' | 'query.name' };
+export type RecordConfig = Omit<DnsRecord, 'name' | 'rtype' | 'class' | 'data'> & { name: NameValue; type: string | number; class?: number };
 export interface CachePolicy { read: boolean; write: boolean; maxTtl: number; }
 export type RecordSection = 'answer' | 'authority' | 'additional';
 type ActionValue =
@@ -8,6 +9,7 @@ type ActionValue =
   | { type: 'addRecords'; section?: RecordSection; records: RecordConfig[] }
   | { type: 'answer'; records: RecordConfig[]; rcode?: number }
   | { type: 'setTtl'; ttl: number; where?: RecordCondition }
+  | { type: 'setRecordName'; name: NameValue; where: RecordCondition }
   | { type: 'stop' | 'return' }
   | { type: 'probeEch'; options: EchProbeConfig }
   | { type: 'loadEch'; config: string }
@@ -16,7 +18,7 @@ type ActionValue =
   | { type: 'enrichAddresses'; source: string }
   | { type: 'queryUpstream'; upstream: string; cache?: Partial<CachePolicy> }
   | ({ type: 'setCache' } & Partial<CachePolicy>)
-  | { type: 'rewriteQuery'; name?: string; queryType?: number | string };
+  | { type: 'rewriteQuery'; name?: NameValue; queryType?: number | string };
 export type Action = ActionValue & { onError?: 'fail' | 'continue' };
 type Compare<F, V> = { field: F; op: 'eq' | 'ne'; value: V } | { field: F; op: 'in'; value: V[] };
 type Presence<F> = { field: F; op: 'exists'; value: boolean };

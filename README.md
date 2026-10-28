@@ -40,6 +40,7 @@ Sensitive URLs should use a Secret binding and reference its **binding name** th
 
 Small complete binding-object examples:
 
+- [Main-compatible Meta/X routing and ECH policy](docs/main-parity-2026-10-28.md)
 - [Explicit ECS opt-in configuration](examples/ecs.json)
 - [Explicit sequential fallback](examples/fallback.json)
 - [Platform client-country selection](examples/client-selection.json)

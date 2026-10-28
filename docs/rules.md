@@ -804,3 +804,24 @@ JSON 风格请求在功能关闭时为 404；JSON 查询只允许 GET（405 的 
 `cacheTtl` 单位为秒，默认 3600，0 禁用，最大 86400。仅复用成功且完整验证的快照；到期刷新失败时不使用旧快照，也无负缓存。缓存身份包括规范化来源 URL、格式、TTL、解析限制及版本；持久缓存键是 URL 等身份材料的摘要，内存缓存身份会包含这些输入但不会写入诊断日志。有限内存 LRU 与 Workers Cache API 共同复用，持久缓存内容读回会重新解析验证。Workers Cache API 仅在数据中心本地生效、可能被淘汰，不保证跨地区/隔离实例命中或全球持久保存；TTL 是列表快照最大复用期，与 DNS 答案 TTL 完全独立。缓存异常可视为 miss，但取消、整体截止时间及 RESOURCE_LIMIT 不会被吞掉。并发冷请求各自加载，不共享请求间 Promise/Response/signal。
 
 默认限制：maxIpLists=16、maxIpListEntries=4096、maxIpListBytes=262144、ipListTimeoutMs=2000、maxIpListStateBytes=4194304；硬上限分别为 64、65536、2097152、10000、16777216。来源请求计入共享 maxNetworkRequests 和执行 deadline。日志/诊断不暴露 URL。静态类型/云端测试脚本及未部署配置候选见本库与 `examples/meta-cf-ech-env-only/README.md`；云端验收需单独运行，不能将待测候选描述为已部署或已验收。
+
+### 问题域名引用与记录 owner 改写
+
+记录配置的 `name` 和 `rewriteQuery.name` 除字面量域名外，还接受以下两个受限引用：
+
+```json
+{"from":"original.name"}
+{"from":"query.name"}
+```
+
+`original.name` 始终是客户端原始问题，`query.name` 是该动作开始时的当前问题。引用只用于域名，不支持字符串插值、任意对象路径、动态 RDATA 或网络读取。所有引用在完整配置预检时验证；生成记录时复制配置数据，不修改原始问题、配置或先前答案。
+
+`setRecordName` 使用必需的 `name`、`where` 修改已存在记录的 owner，例如：
+
+```json
+{"type":"setRecordName","name":{"from":"original.name"},"where":{"all":[{"field":"item.section","op":"eq","value":"answer"},{"field":"item.type","op":"eq","value":"A"}]}}
+```
+
+它不改 CNAME/HTTPS 的 target，不重新解析地址；选择到 OPT/RRSIG/TSIG/SIG 会失败并按既有动作语义回滚。实际改名清除 AD，并移除覆盖旧 owner 或新 owner 的失效 RRset 签名，保留不相关签名与适用 EDNS；无变化不清除认证状态。输出仍受既有执行、条件与响应大小预算约束。
+
+完整 Meta/X 示例见 [main 兼容策略](main-parity-2026-10-28.md)。站点列表、静态 IP、优选域名与 ECH 来源均由环境规则声明，不在核心中隐式启用。

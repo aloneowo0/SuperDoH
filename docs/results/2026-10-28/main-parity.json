@@ -1,0 +1,516 @@
+{
+  "date": "2026-10-28",
+  "feature": "main-meta-x-parity",
+  "base": "29e29ab6fe2e9a3916d8b266f758dbc46242cf62",
+  "mainReference": "8e8cb022f1ff274d23bf745c61e133963a9cb76b",
+  "clientRequests": 16,
+  "cloudSuites": 15,
+  "checks": 72,
+  "passed": true,
+  "preflight": {
+    "used": 1,
+    "maximum": 40,
+    "stage": "preferred-source-readonly",
+    "name": "cf.090227.xyz",
+    "type": 1,
+    "attemptedAt": "2026-10-28T09:41:44.644Z",
+    "httpStatus": 200,
+    "rcode": 0,
+    "answers": [
+      {
+        "name": "cf.090227.xyz",
+        "type": 5,
+        "ttl": 300
+      },
+      {
+        "name": "cf.090227.xyz.cdn.cloudflare.net",
+        "type": 1,
+        "address": "104.21.71.249",
+        "ttl": 300
+      },
+      {
+        "name": "cf.090227.xyz.cdn.cloudflare.net",
+        "type": 1,
+        "address": "172.67.172.155",
+        "ttl": 300
+      }
+    ],
+    "completed": true
+  },
+  "suites": [
+    {
+      "suite": "core",
+      "startedAt": "2026-10-28T09:59:26.210Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "passed": true,
+        "results": [
+          {
+            "name": "bounded-name-values",
+            "passed": true
+          },
+          {
+            "name": "answer-and-query-references",
+            "passed": true
+          },
+          {
+            "name": "add-replace-materialization",
+            "passed": true
+          },
+          {
+            "name": "rename-and-original-query-restore",
+            "passed": true
+          },
+          {
+            "name": "unreachable-invalid-reference-preflight",
+            "passed": true
+          },
+          {
+            "name": "optional-size-rollback",
+            "passed": true
+          },
+          {
+            "name": "response-size-and-config-immutability",
+            "passed": true
+          },
+          {
+            "name": "rename-invalidates-old-and-new-signatures",
+            "passed": true
+          },
+          {
+            "name": "protected-records-and-noop",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map0",
+      "startedAt": "2026-10-28T09:59:27.361Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map0",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:www.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:m.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:b-graph.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:fbsbx.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map1",
+      "startedAt": "2026-10-28T09:59:28.418Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map1",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:instagram.com",
+            "passed": true
+          },
+          {
+            "name": "route:www.instagram.com",
+            "passed": true
+          },
+          {
+            "name": "route:i.instagram.com",
+            "passed": true
+          },
+          {
+            "name": "route:lookaside.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:connect.facebook.net",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map2",
+      "startedAt": "2026-10-28T09:59:29.476Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map2",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:graph.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:edge-mqtt.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:messenger.com",
+            "passed": true
+          },
+          {
+            "name": "route:www.messenger.com",
+            "passed": true
+          },
+          {
+            "name": "route:threads.net",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map3",
+      "startedAt": "2026-10-28T09:59:30.538Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map3",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:www.threads.net",
+            "passed": true
+          },
+          {
+            "name": "route:meta.com",
+            "passed": true
+          },
+          {
+            "name": "route:whatsapp.com",
+            "passed": true
+          },
+          {
+            "name": "route:web.whatsapp.com",
+            "passed": true
+          },
+          {
+            "name": "route:oculus.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map4",
+      "startedAt": "2026-10-28T09:59:31.596Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map4",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:thefacebook.com",
+            "passed": true
+          },
+          {
+            "name": "route:asset.fbcdn.net",
+            "passed": true
+          },
+          {
+            "name": "route:asset.xx.fbcdn.net",
+            "passed": true
+          },
+          {
+            "name": "route:asset.cdninstagram.com",
+            "passed": true
+          },
+          {
+            "name": "route:asset.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "map5",
+      "startedAt": "2026-10-28T09:59:32.650Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "map5",
+        "passed": true,
+        "results": [
+          {
+            "name": "route:asset.fb.com",
+            "passed": true
+          },
+          {
+            "name": "route:asset.whatsapp.com",
+            "passed": true
+          },
+          {
+            "name": "route:asset.whatsapp.net",
+            "passed": true
+          },
+          {
+            "name": "route:asset.fbsbx.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "ipv6",
+      "startedAt": "2026-10-28T09:59:33.703Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "ipv6",
+        "passed": true,
+        "results": [
+          {
+            "name": "no-v6:www.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "no-v6:www.instagram.com",
+            "passed": true
+          },
+          {
+            "name": "no-v6:asset.fbcdn.net",
+            "passed": true
+          },
+          {
+            "name": "no-v6:x.com",
+            "passed": true
+          },
+          {
+            "name": "no-v6:pbs.twimg.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "https0",
+      "startedAt": "2026-10-28T09:59:34.759Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "https0",
+        "passed": true,
+        "results": [
+          {
+            "name": "https:empty:x.com",
+            "passed": true
+          },
+          {
+            "name": "https:empty:asset.cdninstagram.com",
+            "passed": true
+          },
+          {
+            "name": "https:empty:asset.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "https1",
+      "startedAt": "2026-10-28T09:59:35.816Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "https1",
+        "passed": true,
+        "results": [
+          {
+            "name": "https:cname:x.com",
+            "passed": true
+          },
+          {
+            "name": "https:cname:asset.cdninstagram.com",
+            "passed": true
+          },
+          {
+            "name": "https:cname:asset.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "https2",
+      "startedAt": "2026-10-28T09:59:36.872Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "https2",
+        "passed": true,
+        "results": [
+          {
+            "name": "https:alias:x.com",
+            "passed": true
+          },
+          {
+            "name": "https:alias:asset.cdninstagram.com",
+            "passed": true
+          },
+          {
+            "name": "https:alias:asset.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "https3",
+      "startedAt": "2026-10-28T09:59:37.932Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "https3",
+        "passed": true,
+        "results": [
+          {
+            "name": "https:existing:x.com",
+            "passed": true
+          },
+          {
+            "name": "https:existing:asset.cdninstagram.com",
+            "passed": true
+          },
+          {
+            "name": "https:existing:asset.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "fallback",
+      "startedAt": "2026-10-28T09:59:38.988Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "fallback",
+        "passed": true,
+        "results": [
+          {
+            "name": "secondary-source-no-client-ECS",
+            "passed": true
+          },
+          {
+            "name": "both-ECH-sources-fail-preserve-CNAME",
+            "passed": true
+          },
+          {
+            "name": "negative:negative:x.com",
+            "passed": true
+          },
+          {
+            "name": "negative:negative:www.facebook.com",
+            "passed": true
+          },
+          {
+            "name": "negative:refused:x.com",
+            "passed": true
+          },
+          {
+            "name": "negative:refused:www.facebook.com",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "addresses",
+      "startedAt": "2026-10-28T09:59:40.045Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "addresses",
+        "passed": true,
+        "results": [
+          {
+            "name": "CF-address:preferred",
+            "passed": true
+          },
+          {
+            "name": "CF-address:prefempty",
+            "passed": true
+          },
+          {
+            "name": "CF-address:prefbad",
+            "passed": true
+          },
+          {
+            "name": "CF-address:prefnx",
+            "passed": true
+          },
+          {
+            "name": "CF-address:preferr",
+            "passed": true
+          },
+          {
+            "name": "negative-original-A-not-overridden",
+            "passed": true
+          }
+        ]
+      }
+    },
+    {
+      "suite": "controls",
+      "startedAt": "2026-10-28T09:59:41.103Z",
+      "status": "passed",
+      "http": 200,
+      "body": {
+        "suite": "controls",
+        "passed": true,
+        "results": [
+          {
+            "name": "unrelated-A-not-remapped",
+            "passed": true
+          },
+          {
+            "name": "unrelated-AAAA-retained",
+            "passed": true
+          },
+          {
+            "name": "unrelated-HTTPS-not-synthesized",
+            "passed": true
+          },
+          {
+            "name": "IP-classified-Meta-HTTPS-synthesized",
+            "passed": true
+          },
+          {
+            "name": "native-CF-ECH-still-applied",
+            "passed": true
+          }
+        ]
+      }
+    }
+  ],
+  "localBehavioralTestsRun": false,
+  "productionCutover": "Performed separately after code deployment; preserve enabled ECS, random path, upstreams and IP-list bindings.",
+  "temporaryWorkersDeleted": [
+    "superdoh-main-parity-check-20261028",
+    "superdoh-main-parity-fixture-20261028"
+  ],
+  "cleanupIndependentlyVerified": true
+}
