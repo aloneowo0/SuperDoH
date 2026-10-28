@@ -92,10 +92,36 @@ test('the /resolve alias shares public and keyed wire handling with /dns-query',
     const result = await dns(await post('https://doh.test' + path));
     assert.equal(result.records[0].ttl, 60);
   }
-  for (const path of ['/resolve', '/dns-query', '/private-key/other']) {
+  for (const path of ['/resolve', '/dns-query', '/private-key/other', '/']) {
     assert.equal((await post('https://doh.test' + path)).status, 404, path);
   }
   assert.equal(calls.length, 0);
+});
+
+test('DNS_PATHS accepts JSON text and array bindings and limits public/keyed routes exactly', async () => {
+  await setup({ DNS_PATHS: '["/v1/q"]', DNS_RULE_FIXED: group([fixed]) });
+  assert.equal((await dns(await post('https://doh.test/v1/q'))).records[0].ttl, 60);
+  for (const path of ['/dns-query', '/resolve']) assert.equal((await post('https://doh.test' + path)).status, 404, path);
+
+  await setup({ DNS_PATHS: ['/v1/q'], DNS_PATH_KEY: 'private-key', DNS_RULE_FIXED: group([fixed]) });
+  assert.equal((await dns(await post('https://doh.test/private-key/v1/q'))).records[0].ttl, 60);
+  for (const path of ['/v1/q', '/private-key/dns-query', '/private-key/resolve']) {
+    assert.equal((await post('https://doh.test' + path)).status, 404, path);
+  }
+  const longKey = 'k'.repeat(128), longPath = '/' + 'p'.repeat(127);
+  await setup({ DNS_PATHS: [longPath], DNS_PATH_KEY: longKey, DNS_RULE_FIXED: group([fixed]) });
+  assert.equal((await dns(await post('https://doh.test/' + longKey + longPath))).records[0].ttl, 60);
+  assert.equal(calls.length, 0);
+});
+
+test('invalid DNS_PATHS fails before malformed request bodies or upstream work', async () => {
+  const invalid = [null, false, {}, 'not-json', 'null', '[]', [], ['/resolve', '/resolve'], [null], ['/'], [''], ['/trail/'], ['/double//segment'], ['/dot/../segment'], ['/encoded%2Fsegment'], ['/query?value'], ['/fragment#value'], ['/back\\slash'], ['/' + 'x'.repeat(128)], Array.from({ length: 9 }, (_, i) => '/p' + i)];
+  for (const DNS_PATHS of invalid) {
+    await setup({ DNS_PATHS, DNS_RULE_FIXED: group([fixed]), DNS_UPSTREAMS: source('https://resolver.test/dns-query') });
+    const response = await post('https://doh.test/resolve', new Uint8Array());
+    assert.equal(response.status, 500, JSON.stringify(DNS_PATHS));
+    assert.equal(calls.length, 0);
+  }
 });
 
 test('an explicitly configured named upstream supplies one validated DNS response', async () => {

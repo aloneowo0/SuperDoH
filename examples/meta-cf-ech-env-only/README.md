@@ -1,9 +1,9 @@
 # Meta / CF ECH 运行时配置
 
-**17 变量方案已于 2026-10-28 写入正式 Worker，并通过生产 DoH 检查。** 对应代码提交为 `578934a`，未包含先前未发布的 ECH 执行器扩展。
+**截至 2026-10-28 的正式 Worker 是 17 变量，已通过生产 DoH 检查。** 对应代码提交为 `578934a`，未包含先前未发布的 ECH 执行器扩展。当前示例在这17项运行时变量之外新增 `DNS_PATHS`（`["/resolve", "/dns-query"]`），因此示例总计18项；这项代码/配置变更尚不代表已部署，`report.json` 中 `production` 字段保留原17变量发布记录。
 
-- `bindings.json`、`dashboard.txt`：已部署的17项运行时变量，包含11个规则组；应整套配置，不能追加到仍启用的旧CIDR分片后面。
-- `report.json`：配置大小、云端验收及生产切换记录。
+- `bindings.json`、`dashboard.txt`：18项当前示例运行时变量，包含11个规则组；应整套配置，不能追加到仍启用的旧CIDR分片后面。
+- `report.json`：当前示例配置大小、云端验收及历史生产切换记录。
 - `bindings.literal.json`、`report.literal.json`：切换前31变量方案的历史快照，不是当前配置。
 
 `DNS_IP_LISTS` 从明确配置的 HTTPS 链接取得 CF/Meta CIDR，缓存 TTL 为3600秒；规则使用 `item.ip` 的 `inList` 匹配。此期限与DNS答案TTL无关。内存索引与 Workers Cache API 复用成功数据，缓存可被淘汰且不保证跨地区命中；到期更新失败不返回过期数据作为成功结果。

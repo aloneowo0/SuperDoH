@@ -72,16 +72,16 @@ test('opt-in JSON GET reuses the standard response pipeline and preserves respon
   assert.equal(calls.length, 0);
 });
 
-test('JSON GET and method validation are unchanged at the /resolve alias', async () => {
-  await setup({ DNS_JSON: true, DNS_PATH_KEY: 'json-key', DNS_RULE_FIXED: group([fixed]) });
-  const result = await json(await mf.dispatchFetch('https://doh.test/json-key/resolve?name=example.com'));
+test('JSON GET and method validation are unchanged at a custom DNS_PATHS path', async () => {
+  await setup({ DNS_JSON: true, DNS_PATHS: ['/v1/q'], DNS_PATH_KEY: 'json-key', DNS_RULE_FIXED: group([fixed]) });
+  const result = await json(await mf.dispatchFetch('https://doh.test/json-key/v1/q?name=example.com'));
   assert.equal(result.Status, 0);
   assert.deepEqual(result.Answer.map(rr => [rr.name, rr.type, rr.TTL, rr.data]), [['example.com', 1, 60, '192.0.2.8']]);
-  const post = await mf.dispatchFetch('https://doh.test/json-key/resolve?name=example.com', {
+  const post = await mf.dispatchFetch('https://doh.test/json-key/v1/q?name=example.com', {
     method: 'POST', headers: { 'Content-Type': 'application/dns-message' }, body: query(),
   });
   assert.equal(post.status, 405);
-  assert.equal((await mf.dispatchFetch('https://doh.test/resolve?name=example.com')).status, 404);
+  assert.equal((await mf.dispatchFetch('https://doh.test/v1/q?name=example.com')).status, 404);
 });
 
 test('JSON accepts numeric type and CD, and forwards one type-specific query through the named upstream', async () => {

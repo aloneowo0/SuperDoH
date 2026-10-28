@@ -10,6 +10,9 @@ DNS_CACHE
 DNS_JSON
 true
 
+DNS_PATHS
+["/resolve","/dns-query"]
+
 DNS_DOMAIN_LISTS
 {"meta":{"domains":["facebook.com","fbcdn.net","instagram.com","cdninstagram.com","messenger.com","whatsapp.com","whatsapp.net","threads.net","meta.com","oculus.com","fbsbx.com","thefacebook.com","connect.facebook.net"]},"cfRemap":{"domains":["twimg.com","twitter.com","x.com","t.co","pixiv.net"]}}
 

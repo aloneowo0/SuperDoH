@@ -13,7 +13,7 @@
   },
   "requires": "Remote IP list library and thin runtime adapter deployed with commit 578934a; not compatible with earlier unchanged production code",
   "previousVariables": 31,
-  "variables": 17,
+  "variables": 18,
   "groups": 11,
   "cacheTtl": 3600,
   "removedCidrShards": 17,
@@ -35,7 +35,8 @@
     "DNS_RULE_ENV_NO_IPV6": 228,
     "DNS_IP_LISTS": 265,
     "DNS_RULE_ENV_CF": 1758,
-    "DNS_RULE_ENV_META_IP": 1875
+    "DNS_RULE_ENV_META_IP": 1875,
+    "DNS_PATHS": 25
   },
   "production": {
     "verifiedAt": "2026-10-28T02:14:47.298Z",

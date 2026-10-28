@@ -28,7 +28,10 @@ Common bindings:
 | `DNS_DOMAIN_LISTS` | Inline or HTTPS-maintained domain data |
 | `DNS_IP_LISTS` | HTTPS IP/CIDR lists with configurable reuse (default 3600 seconds) |
 | `DNS_JSON` | Opt-in DNS JSON GET endpoint; disabled unless true |
-| `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` and `/<key>/resolve` |
+| `DNS_PATHS` | Optional JSON array of public DoH paths; defaults to `["/dns-query", "/resolve"]` |
+| `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/<configured-path>` |
+
+`DNS_PATHS` may be a JSON array binding or JSON text containing one (for example, `["/resolve", "/dns-query"]`); if omitted, the default remains `["/dns-query", "/resolve"]`. Configure 1–8 unique absolute paths, each 1–128 ASCII characters, using non-empty slash-separated segments made only of letters, digits, `_` and `-`. Root, trailing or repeated slashes, dot segments, percent-encoding, and query/fragment syntax are rejected as `INVALID_CONFIG` (HTTP 500), not silently replaced by defaults.
 
 The current upstream scope is HTTPS and ordinary TCP. Any `DNS_UPSTREAMS` entry with `transport: "tls"` is rejected during configuration preflight, even if no rule references it. The Worker does not rewrite the transport or fall back to another source; see [ADR 0001](docs/adr/0001-exclude-dot-from-current-scope.md). This scope decision does not remove the separate TLS-based ECH probe or change its authentication defaults.
 
@@ -52,7 +55,9 @@ There is no hidden default upstream. If a rule pipeline produces no response, th
 
 ## HTTP API
 
-The API accepts standard DNS wire requests at either `/dns-query` or its equivalent `/resolve` alias:
+The accepted endpoint paths come from `DNS_PATHS` (default `/dns-query` and `/resolve`); each path runs the same wire/JSON handlers, rules, cache and method checks. For Chrome's secure DNS template, enter a full URL including the configured path, such as `https://doh.example/resolve`, not only the hostname or `/`. If a path key is enabled, use `https://doh.example/<key>/resolve` (the key prefix is added to each configured path). The Worker root `/` remains 404.
+
+The following request forms show the default paths; replace `/dns-query` or `/resolve` with a path from `DNS_PATHS` when customized.
 
 - `GET /dns-query?dns=<canonical-base64url>` or `GET /resolve?dns=<canonical-base64url>` with an acceptable `Accept: application/dns-message` header.
 - `POST /dns-query` or `POST /resolve` with `Content-Type: application/dns-message` and a DNS wire body.
@@ -66,7 +71,7 @@ Accept: application/dns-json
 
 `name` is required; `type` is an optional DNS type name or decimal code (default A); `cd` is optional and accepts only `true` or `false`. Duplicate, unknown or mixed wire/JSON query parameters are rejected. The response uses `application/dns-json` and the DNS library's `toDnsJson` representation; this is not a provider-specific JSON compatibility guarantee. A valid DNS failure is represented in its DNS status, while invalid HTTP/JSON parameters use an HTTP error object. Both entry formats share the same rules, cache, actions, authorization and DNSSEC cleanup.
 
-If `DNS_PATH_KEY` is configured as a Secret, both endpoints and entry formats use the exact forms `/<configured-key>/dns-query` or `/<configured-key>/resolve`; unprefixed paths are then closed. The secret value is not a query parameter or request header. Authentication happens before reading a query or doing configuration/network work.
+If `DNS_PATH_KEY` is configured as a Secret, each configured endpoint is available only as `/<configured-key><configured-path>`; all unprefixed paths are then closed. The secret value is not a query parameter or request header. Authentication happens before reading a query or doing configuration/network work.
 
 ## Deploying with Cloudflare Workers Builds
 

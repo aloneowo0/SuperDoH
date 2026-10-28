@@ -100,18 +100,36 @@ function jsonDnsResponse(wire) {
   return new Response(JSON.stringify(toDnsJson(wire)), { headers: { 'Content-Type': jsonMediaType, 'Cache-Control': 'no-store' } });
 }
 
-/** @param {string} pathname @param {unknown} key */
-async function authorize(pathname, key) {
-  if (key === undefined) return pathname === '/dns-query' || pathname === '/resolve';
+/** @param {unknown} value @returns {string[]} */
+function loadPaths(value) {
+  /** @type {unknown} */
+  let paths = value;
+  if (typeof value === 'string') {
+    try { paths = JSON.parse(value); }
+    catch { throw new RuleError('INVALID_CONFIG', 'Invalid DNS path configuration.'); }
+  }
+  if (value === undefined) return ['/dns-query', '/resolve'];
+  if (!Array.isArray(paths) || paths.length < 1 || paths.length > 8) throw new RuleError('INVALID_CONFIG', 'Invalid DNS path configuration.');
+  const unique = new Set();
+  for (const path of paths) {
+    if (typeof path !== 'string' || path.length < 2 || path.length > 128 || !/^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*$/.test(path) || unique.has(path)) {
+      throw new RuleError('INVALID_CONFIG', 'Invalid DNS path configuration.');
+    }
+    unique.add(path);
+  }
+  return paths;
+}
+/** @param {string} pathname @param {unknown} key @param {string[]} paths */
+async function authorize(pathname, key, paths) {
+  if (key === undefined) return paths.includes(pathname);
   if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(key)) throw new RuleError('INVALID_CONFIG', 'Invalid access configuration.');
-  if (pathname.length > 256) return false;
+  if (pathname.length > 260) return false;
   const encoder = new TextEncoder();
   const actual = await crypto.subtle.digest('SHA-256', encoder.encode(pathname));
-  const expectedPaths = ['/dns-query', '/resolve'].map(path => '/' + key + path);
-  const [legacy, alias] = await Promise.all(expectedPaths.map(path => crypto.subtle.digest('SHA-256', encoder.encode(path))));
-  const legacyMatch = crypto.subtle.timingSafeEqual(actual, legacy);
-  const aliasMatch = crypto.subtle.timingSafeEqual(actual, alias);
-  return legacyMatch || aliasMatch;
+  const expected = await Promise.all(paths.map(path => crypto.subtle.digest('SHA-256', encoder.encode('/' + key + path))));
+  let matched = false;
+  for (const digest of expected) matched = crypto.subtle.timingSafeEqual(actual, digest) || matched;
+  return matched;
 }
 /** @param {string} value @param {number} maximum */
 function decodeGet(value, maximum) {
@@ -164,7 +182,8 @@ export async function handleRequest(request, env, options = {}) {
   let jsonRequest = false;
   try {
     const url = new URL(request.url);
-    if (!await authorize(url.pathname, env.DNS_PATH_KEY)) {
+    const paths = loadPaths(env.DNS_PATHS);
+    if (!await authorize(url.pathname, env.DNS_PATH_KEY, paths)) {
       report(new RuleError('ACCESS_DENIED', 'The requested endpoint is not available.'));
       return httpError(404, jsonRequest, 'ACCESS_DENIED', 'The requested endpoint is not available.');
     }

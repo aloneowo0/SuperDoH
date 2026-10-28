@@ -66,7 +66,7 @@ try {
 - 每条规则进入时只判断一次。后续动作读取当前状态；后续规则重新判断自己的条件。不隐式重跑规则。
 - 所有组、规则、动作及条件分支在执行前完整校验，即使在未命中或终止动作之后也不跳过错误配置。
 - 未知字段、动作、条件操作符和引用明确报错，不回退文件。无 `DNS_RULE_*` 变量可通过配置校验，但空流水线无响应，执行时以 NO_RESPONSE 失败。
-- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`、`DNS_CACHE`、`DNS_ADDRESS_SOURCES`、`DNS_DOMAIN_LISTS`、`DNS_JSON`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
+- 其他无关环境绑定不作规则解析；配置入口包括 `DNS_RULE_*`、`DNS_LIMITS`、`DNS_UPSTREAMS`、`DNS_CACHE`、`DNS_ADDRESS_SOURCES`、`DNS_DOMAIN_LISTS`、`DNS_IP_LISTS`、`DNS_JSON`、`DNS_PATHS`，HTTP 入口还读取可选 Secret `DNS_PATH_KEY`。在其他名称的变量中放置规则不会启用规则。
 
 ### 条件
 
@@ -344,11 +344,16 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | `DNS_LIMITS` | 可选资源边界 JSON/JSON 文本 |
 | `DNS_UPSTREAMS` | 可选命名 HTTPS/普通 TCP 上游 JSON/JSON 文本，不能自行触发网络 |
 | `DNS_CACHE` | 可选默认缓存策略 JSON/JSON 文本，字段 read、write、maxTtl；不触发上游请求 |
+| `DNS_PATHS` | 可选 DoH 路径列表（数组或 JSON 文本）；省略时默认为 `/dns-query` 和 `/resolve` |
 | `DNS_PATH_KEY` | 可选 Workers Secret；未设置时公开，设置后启用路径密钥 |
 
-HTTP DoH 入口提供等价的 `/dns-query` 和 `/resolve` 路径，均使用相同 wire/JSON 处理、方法校验、规则流水线与缓存。未配置密钥时两者均可公开访问。配置密钥后仅接受 `/<key>/dns-query` 和 `/<key>/resolve`，未带密钥前缀的两条路径均关闭；旧的 `/dns-query` 及其带密钥形式继续保留兼容。key 格式为 1–128 个 ASCII 字母、数字、下划线、连字符，使用高熵值；空串、null、其他类型或非法字符是配置错误，不当作“未配置”。根据 URL pathname 精确匹配，不接受尾斜杠或 percent-encoded 密钥拼写；平台/代理可能先做 URL 规范化，不能把路径规范化当作额外认证手段。密钥比较使用 SHA-256 摘要及固定长度 timingSafeEqual，不用普通字符串比较秘密。
+`DNS_PATHS` 必须是 1–8 个不重复路径组成的数组；每条路径为 1–128 个 ASCII 字节，以 `/` 开始，且由非空字母、数字、`_` 或 `-` 段组成（可嵌套）。不接受根路径、尾斜杠、重复斜杠、点段、百分号编码、查询/片段字符、反斜杠、空列表、null 或其他类型。非法值为 `INVALID_CONFIG`，HTTP 返回 500，不静默回退到默认值。
 
-认证先于规则/limits/上游预检与请求体读取；错误路径返回固定 404，非法 Secret 配置返回固定 500。仅支持路径密钥，不接受 Authorization/Bearer 或查询参数密钥。路径密钥可能进入客户端历史、代理或平台访问日志；应用不记录路径，不等于整个链路不会保存 URL。不要把真实密钥写进源码、wrangler.jsonc、测试、命令参数或报告。
+HTTP DoH 入口只匹配配置中的精确路径，所有路径共用 wire/JSON 处理、方法校验、规则流水线与缓存。省略 `DNS_PATHS` 时 `/dns-query` 和 `/resolve` 均公开；配置密钥后只接受 `/<key><configured-path>`，所有未带前缀路径均关闭。旧 `/dns-query` 默认路径及其带密钥形式继续兼容。key 格式为 1–128 个 ASCII 字母、数字、下划线、连字符，使用高熵值；空串、null、其他类型或非法字符是配置错误，不当作“未配置”。匹配基于 URL pathname 精确比较；一次计算全部预期路径摘要，并对每个摘要执行固定长度 `timingSafeEqual` 比较。路径规范化不应作为额外认证手段。
+
+Chrome 的安全 DNS 模板应填写完整的 DoH URL，例如 `https://doh.example/resolve`，而不是仅填主机名或 `/`；配置路径密钥时填写 `https://doh.example/<key>/resolve`。`/` 根路径始终返回 404。
+
+认证和路径配置校验先于规则/limits/上游预检与请求体读取；错误路径返回固定 404，非法配置返回固定 500。仅支持路径密钥，不接受 Authorization/Bearer 或查询参数密钥。路径密钥可能进入客户端历史、代理或平台访问日志；应用不记录路径，不等于整个链路不会保存 URL。不要把真实密钥写进源码、wrangler.jsonc、测试、命令参数或报告。
 
 `wrangler.jsonc` 指向正式入口，并启用 `enable_request_signal`。其兼容日期与本仓库已验证的 workerd 版本保持为 2026-07-30，不启用 nodejs_compat；更新日期/运行时时应再跑协议回归。配置中未放入 Secret 或默认上游，并关闭会自动携带 URL 的 invocation logs 和 traces，仅保留应用的固定脱敏事件；这不代表客户端、代理或平台其他日志已全链路脱敏。Wrangler 为本地开发依赖；本次仅使用本地类型生成，没有部署。`worker-configuration.d.ts` 由 `wrangler types --include-runtime=false` 生成；规则/可选 Secret 仍需环境绑定并在运行时严格校验，不由客户端自行声明。
 
