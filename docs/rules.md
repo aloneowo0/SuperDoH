@@ -346,7 +346,7 @@ executeQuery 继续返回 Promise；保留 signal、context、requestId 和 onEv
 | `DNS_CACHE` | 可选默认缓存策略 JSON/JSON 文本，字段 read、write、maxTtl；不触发上游请求 |
 | `DNS_PATH_KEY` | 可选 Workers Secret；未设置时公开，设置后启用路径密钥 |
 
-未配置密钥时路径为 `/dns-query`。配置密钥后仅接受 `/<key>/dns-query`，旧的公开路径也关闭。key 格式为 1–128 个 ASCII 字母、数字、下划线、连字符，使用高熵值；空串、null、其他类型或非法字符是配置错误，不当作“未配置”。根据 URL pathname 精确匹配，不接受尾斜杠或 percent-encoded 密钥拼写；平台/代理可能先做 URL 规范化，不能把路径规范化当作额外认证手段。密钥比较使用 SHA-256 摘要及固定长度 timingSafeEqual，不用普通字符串比较秘密。
+HTTP DoH 入口提供等价的 `/dns-query` 和 `/resolve` 路径，均使用相同 wire/JSON 处理、方法校验、规则流水线与缓存。未配置密钥时两者均可公开访问。配置密钥后仅接受 `/<key>/dns-query` 和 `/<key>/resolve`，未带密钥前缀的两条路径均关闭；旧的 `/dns-query` 及其带密钥形式继续保留兼容。key 格式为 1–128 个 ASCII 字母、数字、下划线、连字符，使用高熵值；空串、null、其他类型或非法字符是配置错误，不当作“未配置”。根据 URL pathname 精确匹配，不接受尾斜杠或 percent-encoded 密钥拼写；平台/代理可能先做 URL 规范化，不能把路径规范化当作额外认证手段。密钥比较使用 SHA-256 摘要及固定长度 timingSafeEqual，不用普通字符串比较秘密。
 
 认证先于规则/limits/上游预检与请求体读取；错误路径返回固定 404，非法 Secret 配置返回固定 500。仅支持路径密钥，不接受 Authorization/Bearer 或查询参数密钥。路径密钥可能进入客户端历史、代理或平台访问日志；应用不记录路径，不等于整个链路不会保存 URL。不要把真实密钥写进源码、wrangler.jsonc、测试、命令参数或报告。
 

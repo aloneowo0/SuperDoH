@@ -4,7 +4,7 @@ SuperDoH is a single-configuration DNS-over-HTTPS Worker. Its production behavio
 
 ## What it does
 
-- Serves standard RFC 8484 DNS wire-format requests at `/dns-query` over HTTPS (GET or POST).
+- Serves standard RFC 8484 DNS wire-format requests at `/dns-query` and the equivalent `/resolve` alias over HTTPS (GET or POST).
 - Runs ordered `DNS_RULE_*` rule groups. Conditions inspect the current query/response and trusted client, edge, or explicitly enriched response-address properties.
 - Uses explicitly named HTTPS or ordinary TCP upstreams only when a `queryUpstream` or `queryEch` action asks for one.
 - Supports an opt-in DNS JSON GET adapter through `DNS_JSON=true`; it uses the same rule pipeline as wire-format requests.
@@ -28,7 +28,7 @@ Common bindings:
 | `DNS_DOMAIN_LISTS` | Inline or HTTPS-maintained domain data |
 | `DNS_IP_LISTS` | HTTPS IP/CIDR lists with configurable reuse (default 3600 seconds) |
 | `DNS_JSON` | Opt-in DNS JSON GET endpoint; disabled unless true |
-| `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` |
+| `DNS_PATH_KEY` | Optional Worker Secret that restricts access to `/<key>/dns-query` and `/<key>/resolve` |
 
 The current upstream scope is HTTPS and ordinary TCP. Any `DNS_UPSTREAMS` entry with `transport: "tls"` is rejected during configuration preflight, even if no rule references it. The Worker does not rewrite the transport or fall back to another source; see [ADR 0001](docs/adr/0001-exclude-dot-from-current-scope.md). This scope decision does not remove the separate TLS-based ECH probe or change its authentication defaults.
 
@@ -52,10 +52,10 @@ There is no hidden default upstream. If a rule pipeline produces no response, th
 
 ## HTTP API
 
-The default API accepts standard DNS wire requests:
+The API accepts standard DNS wire requests at either `/dns-query` or its equivalent `/resolve` alias:
 
-- `GET /dns-query?dns=<canonical-base64url>` with an acceptable `Accept: application/dns-message` header.
-- `POST /dns-query` with `Content-Type: application/dns-message` and a DNS wire body.
+- `GET /dns-query?dns=<canonical-base64url>` or `GET /resolve?dns=<canonical-base64url>` with an acceptable `Accept: application/dns-message` header.
+- `POST /dns-query` or `POST /resolve` with `Content-Type: application/dns-message` and a DNS wire body.
 
 The optional JSON adapter is off by default. Set the normal environment binding `DNS_JSON` to boolean `true` (or the exact string `"true"`) and send a GET with `Accept: application/dns-json`, for example:
 
@@ -66,7 +66,7 @@ Accept: application/dns-json
 
 `name` is required; `type` is an optional DNS type name or decimal code (default A); `cd` is optional and accepts only `true` or `false`. Duplicate, unknown or mixed wire/JSON query parameters are rejected. The response uses `application/dns-json` and the DNS library's `toDnsJson` representation; this is not a provider-specific JSON compatibility guarantee. A valid DNS failure is represented in its DNS status, while invalid HTTP/JSON parameters use an HTTP error object. Both entry formats share the same rules, cache, actions, authorization and DNSSEC cleanup.
 
-If `DNS_PATH_KEY` is configured as a Secret, both entry formats use the same exact path form `/<configured-key>/dns-query`; the secret value is not a query parameter or request header. Authentication happens before reading a query or doing configuration/network work.
+If `DNS_PATH_KEY` is configured as a Secret, both endpoints and entry formats use the exact forms `/<configured-key>/dns-query` or `/<configured-key>/resolve`; unprefixed paths are then closed. The secret value is not a query parameter or request header. Authentication happens before reading a query or doing configuration/network work.
 
 ## Deploying with Cloudflare Workers Builds
 

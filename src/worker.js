@@ -102,15 +102,16 @@ function jsonDnsResponse(wire) {
 
 /** @param {string} pathname @param {unknown} key */
 async function authorize(pathname, key) {
-  if (key === undefined) return pathname === '/dns-query';
+  if (key === undefined) return pathname === '/dns-query' || pathname === '/resolve';
   if (typeof key !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(key)) throw new RuleError('INVALID_CONFIG', 'Invalid access configuration.');
   if (pathname.length > 256) return false;
   const encoder = new TextEncoder();
-  const [actual, expected] = await Promise.all([
-    crypto.subtle.digest('SHA-256', encoder.encode(pathname)),
-    crypto.subtle.digest('SHA-256', encoder.encode('/' + key + '/dns-query')),
-  ]);
-  return crypto.subtle.timingSafeEqual(actual, expected);
+  const actual = await crypto.subtle.digest('SHA-256', encoder.encode(pathname));
+  const expectedPaths = ['/dns-query', '/resolve'].map(path => '/' + key + path);
+  const [legacy, alias] = await Promise.all(expectedPaths.map(path => crypto.subtle.digest('SHA-256', encoder.encode(path))));
+  const legacyMatch = crypto.subtle.timingSafeEqual(actual, legacy);
+  const aliasMatch = crypto.subtle.timingSafeEqual(actual, alias);
+  return legacyMatch || aliasMatch;
 }
 /** @param {string} value @param {number} maximum */
 function decodeGet(value, maximum) {

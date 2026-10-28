@@ -79,6 +79,25 @@ test('public DoH GET and POST return custom DNS answers without contacting an up
   assert.equal(calls.length, 0);
 });
 
+test('the /resolve alias shares public and keyed wire handling with /dns-query', async () => {
+  await setup({ DNS_RULE_FIXED: group([fixed]) });
+  const publicAlias = await dns(await post('https://doh.test/resolve'));
+  const publicLegacy = await dns(await post('https://doh.test/dns-query'));
+  assert.deepEqual(publicAlias.records, publicLegacy.records);
+  assert.equal((await dns(await mf.dispatchFetch('https://doh.test/resolve?dns=' + Buffer.from(query()).toString('base64url')))).records[0].ttl, 60);
+  assert.equal(calls.length, 0);
+
+  await setup({ DNS_PATH_KEY: 'private-key', DNS_RULE_FIXED: group([fixed]) });
+  for (const path of ['/private-key/dns-query', '/private-key/resolve']) {
+    const result = await dns(await post('https://doh.test' + path));
+    assert.equal(result.records[0].ttl, 60);
+  }
+  for (const path of ['/resolve', '/dns-query', '/private-key/other']) {
+    assert.equal((await post('https://doh.test' + path)).status, 404, path);
+  }
+  assert.equal(calls.length, 0);
+});
+
 test('an explicitly configured named upstream supplies one validated DNS response', async () => {
   await setup({ DNS_UPSTREAMS: source('https://resolver.test/private-source?token=private-token'), DNS_RULE_UP: group([requestDefault]) });
   const result = await dns(await post());
