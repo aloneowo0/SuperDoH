@@ -4,3 +4,8 @@
 .env*
 
 /.acceptance/
+
+# Deployment-specific compiled IP lists (regenerated before every deploy).
+/src/generated/ip-lists.js
+/src/generated/ip-lists.manifest.json
+/src/generated/*.tmp

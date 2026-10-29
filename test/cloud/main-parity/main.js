@@ -18,7 +18,7 @@ export default {async fetch(request,env){
     assert(scenarios.includes(scenario),'unlisted fixture');
     const values=structuredClone(config),base=env.FIXTURE;
     values.DNS_UPSTREAMS={resolver:{transport:'https',url:base+'/'+scenario+'/resolver'},echPrimary:{transport:'https',url:base+'/'+scenario+'/primary'},echSecondary:{transport:'https',url:base+'/'+scenario+'/secondary'}};
-    values.DNS_IP_LISTS={cloudflare:{url:base+'/cf-list',format:'text',cacheTtl:3600},meta:{url:base+'/meta-list',format:'text',cacheTtl:3600}};
+    values.DNS_IP_LISTS=env.CHECK_IP_LISTS ? JSON.parse(env.CHECK_IP_LISTS) : {cloudflare:{url:base+'/cf-list',format:'text',cacheTtl:3600},meta:{url:base+'/meta-list',format:'text',cacheTtl:3600}};
     values.DNS_CACHE={read:false,write:false};
     values.DNS_ECS={mode:'client',upstreams:['resolver'],ipv4Prefix:24,ipv6Prefix:56};
     const result=await executeQuery(buildQuery(name,type),values,{context:{client:{ip:'203.0.113.9'}},onEvent(){}});

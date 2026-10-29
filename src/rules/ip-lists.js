@@ -1,10 +1,17 @@
-import { createIpListStore, IpListError } from '../../lib/ip-list/index.js';
+import { createIpListStore, IpListError, restoreSnapshot } from '../../lib/ip-list/index.js';
 import { RuleError } from './errors.js';
 import { within } from './limits.js';
 import { object, fields, upstreamName } from './values.js';
 import { createBudget } from '../doh/budget.js';
 import { readBody } from '../doh/body.js';
 
+import embeddedData from '../generated/ip-lists.js';
+
+// Only immutable, validated indexes are shared; no request-scoped I/O or promises.
+const embedded = new Map(Object.entries(embeddedData).map(([name, value]) => {
+  if (!/^[a-f0-9]{64}$/.test(value.sha256) || !Number.isFinite(Date.parse(value.fetchedAt))) throw new Error('Invalid embedded IP list metadata.');
+  return [name, { index: restoreSnapshot(value.snapshot, 65536, 2097152, 16777216), sourceBytes: value.snapshot.sourceBytes }];
+}));
 const store = createIpListStore();
 /** @typedef {{ name: string, url: string, format: 'text' | 'json', cacheTtl: number }} Definition */
 /** @typedef {{ index: import('../../lib/ip-list/index.js').Index } | { error: RuleError }} IpListSnapshot */
@@ -75,10 +82,21 @@ export function loadIpLists(env, limits, configBudget) {
   try {
     const entries = Object.entries(env.DNS_IP_LISTS === undefined ? {} : object(configBudget.parse(env.DNS_IP_LISTS)));
     within(entries.length, limits.maxIpLists);
-    /** @type {Map<string, Definition>} */ const definitions = new Map();
+    /** @type {Map<string, Definition | { name: string, embedded: string, index: import('../../lib/ip-list/index.js').Index }>} */ const definitions = new Map();
+    let embeddedBytes = 0;
     for (const [name, raw] of entries) {
       upstreamName(name);
-      const value = fields(raw, ['url', 'urlSecret', 'format', 'cacheTtl']);
+      const value = fields(raw, ['url', 'urlSecret', 'format', 'cacheTtl', 'embedded']);
+      if (value.embedded !== undefined) {
+        fields(value, ['embedded']);
+        const key = upstreamName(value.embedded), data = embedded.get(key);
+        if (!data) throw new Error();
+        within(data.index.entries, limits.maxIpListEntries);
+        within(data.sourceBytes, limits.maxIpListBytes);
+        within(embeddedBytes += data.index.bytes, limits.maxIpListStateBytes);
+        definitions.set(name, { name, embedded: key, index: data.index });
+        continue;
+      }
       if ((value.url !== undefined) === (value.urlSecret !== undefined)) throw new Error();
       const rawUrl = value.urlSecret === undefined ? value.url : env[upstreamName(value.urlSecret)];
       if (typeof rawUrl !== 'string' || !rawUrl.length || rawUrl.length > 2048 || rawUrl.includes('#')) throw new Error();
@@ -101,6 +119,8 @@ export function loadIpLists(env, limits, configBudget) {
         /** @type {Map<string, IpListSnapshot>} */ const snapshots = new Map();
         for (const name of references) {
           const definition = this.resolve(name);
+          execution.check();
+          if ('embedded' in definition) { snapshots.set(name, { index: definition.index }); continue; }
           try { snapshots.set(name, { index: (await prepare(definition, limits, execution, spendNetwork)).index }); }
           catch (error) {
             const code = error instanceof RuleError ? error.code : error instanceof IpListError ? error.code : 'IP_LIST_FAILED';

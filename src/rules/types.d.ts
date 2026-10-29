@@ -133,4 +133,5 @@ export type EchProbeConfig = {
   | { verifyCertificate: boolean; caCertificates?: never }
 );
 
-export type IpListConfig = ({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; cacheTtl?: number };
+export type IpListConfig = (({ url: string; urlSecret?: never } | { urlSecret: string; url?: never }) & { format: 'text' | 'json'; cacheTtl?: number; embedded?: never })
+  | { embedded: string; url?: never; urlSecret?: never; format?: never; cacheTtl?: never };

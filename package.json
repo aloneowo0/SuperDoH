@@ -25,7 +25,8 @@
     "test:measurement": "node --test test/acceptance-runner.mjs test/acceptance-report.mjs test/acceptance-safety.mjs",
     "test:online-fixtures": "node --test test/online-fixtures.mjs",
     "test:runtime": "node --test test/runtime-config.mjs",
-    "test:name-values": "node --test test/name-values.mjs"
+    "test:name-values": "node --test test/name-values.mjs",
+    "build:ip-lists": "node scripts/build-ip-lists.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20261019.1",

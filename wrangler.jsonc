@@ -2,6 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "superdoh",
   "main": "src/worker.js",
+  "build": { "command": "node scripts/build-ip-lists.mjs" },
   // Runtime JSON variables are managed in the Dashboard; do not erase them on code deploy.
   "keep_vars": true,
   // Keep the public entry aligned with the pinned workerd behavior tests.

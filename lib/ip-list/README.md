@@ -21,3 +21,11 @@ snapshot.index.contains('192.0.2.1');
 `cacheTtl` 秒，默认 3600，0 关闭复用，上限 86400。内存 LRU 仅保存成功的已编译索引和时间/大小标量；注入的持久缓存只保存通过验证的原始文本与 `storedAt`，读取时重新编译。身份包括 URL/格式/TTL/限制/版本。过期即重新加载；来源失败不返回 stale 数据、不缓存失败。缓存 I/O 可由调用方视为 miss（`onError` 可传播取消、截止时间及资源限制）。
 
 Workers 适配器使用 Workers Cache API。它是数据中心本地、可淘汰的 best-effort 缓存，不是全局或持久存储保证；3600 秒是最大复用期限，不是 DNS TTL。该库不保存跨请求 Promise、Response、reader 或 AbortSignal，也不合并并发加载。
+
+## 预编译快照
+
+`exportSnapshot(index, sourceBytes)` 导出有版本的区间快照，`restoreSnapshot(snapshot, maxEntries, maxBytes, maxStateBytes)` 验证并恢复不可变索引，复用同一个二分查找实现。恢复不再解析 CIDR、排序或合并；仍拒绝非法家族/位宽、倒置/重叠/相邻/未排序区间、空索引、未知版本和超限快照。原始文本条目数和字节数用于运行限制检查，快照对象变更不会改变恢复后的索引。
+
+生产可使用 `DNS_IP_LISTS={"cloudflare":{"embedded":"cloudflare"},"meta":{"embedded":"meta"}}` 引用部署时内置索引。embedded 定义与 URL、format、cacheTtl 互斥，引用缺失或损坏必须失败，不回退到远程来源。适配器在 isolate 初始化时恢复成功索引，后续查询无列表 fetch、Cache API 或重新编译；DNS 响应本身的缓存仍按原策略工作。
+
+部署说明见 `docs/embedded-ip-lists.md`。既有显式 URL 模式继续可用，但不是生产内置列表的备用通道。

@@ -173,3 +173,8 @@ const implicitProbeCa: Action = { type: 'probeEch', options: { hostname: 'exampl
 // @ts-expect-error disabled verification cannot accept custom CA material.
 const disabledProbeCa: Action = { type: 'probeEch', options: { hostname: 'example.com', verifyCertificate: false, caCertificates: ['pem'] } };
 void [implicitProbeCa, disabledProbeCa];
+
+const embeddedIpList: import('../src/rules/types.js').IpListConfig = { embedded: 'cloudflare' };
+// @ts-expect-error Embedded sources cannot also be remote.
+const mixedIpList: import('../src/rules/types.js').IpListConfig = { embedded: 'cloudflare', url: 'https://example.com/list', format: 'text' };
+void embeddedIpList; void mixedIpList;

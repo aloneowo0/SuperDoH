@@ -22,3 +22,7 @@ export interface Snapshot { readonly index: Index; readonly storedAt: number; re
 export class IpListError extends Error { readonly code: 'IP_LIST_INVALID' | 'RESOURCE_LIMIT'; constructor(code?: 'IP_LIST_INVALID' | 'RESOURCE_LIMIT'); }
 export function compileList(bytes: Uint8Array, format: Format, maxEntries: number, maxBytes: number): Index;
 export function createIpListStore(): { load(options: LoadOptions): Promise<Snapshot> };
+
+export interface CompiledSnapshot { version: 1; entries: number; sourceBytes: number; ranges: string[][][] }
+export function exportSnapshot(index: Index, sourceBytes: number): CompiledSnapshot;
+export function restoreSnapshot(raw: unknown, maxEntries: number, maxBytes: number, maxStateBytes: number): Index;
