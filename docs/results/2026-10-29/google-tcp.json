@@ -1,0 +1,298 @@
+{
+  "date": "2026-10-29",
+  "productionChanged": true,
+  "productionCodeChanged": false,
+  "upstreams": {
+    "resolver": {
+      "transport": "tcp",
+      "address": "8.8.8.8",
+      "port": 53
+    },
+    "echPrimary": {
+      "transport": "tcp",
+      "address": "8.8.8.8",
+      "port": 53
+    },
+    "echSecondary": {
+      "transport": "tcp",
+      "address": "8.8.8.8",
+      "port": 53
+    }
+  },
+  "changedBindings": [
+    "DNS_UPSTREAMS"
+  ],
+  "bindingsPreserved": 20,
+  "runtimeSettingsPreserved": true,
+  "metadataNote": "Cloudflare changed workers/triggered_by annotation from version_upload to upload on the settings PATCH.",
+  "productionVersion": [
+    {
+      "version_id": "b23f3ecc-3510-454d-9060-ea3ffc732116",
+      "percentage": 100
+    }
+  ],
+  "cloud": {
+    "colo": "FRA",
+    "requestsAttempted": 13,
+    "requestBudget": 20,
+    "latestPassingCases": 11,
+    "results": [
+      {
+        "name": "a",
+        "passed": true,
+        "ms": 10,
+        "stages": [
+          {
+            "source": "resolver",
+            "queryType": 1,
+            "ms": 10
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "aaaa",
+        "passed": true,
+        "ms": 9,
+        "stages": [
+          {
+            "source": "resolver",
+            "queryType": 28,
+            "ms": 9
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          28,
+          28
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "https",
+        "passed": true,
+        "ms": 12,
+        "stages": [
+          {
+            "source": "resolver",
+            "queryType": 65,
+            "ms": 12
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "padding",
+        "passed": true,
+        "ms": 8,
+        "stages": [
+          {
+            "source": "resolver",
+            "queryType": 1,
+            "ms": 8
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "ecs",
+        "passed": true,
+        "ms": 7,
+        "stages": [
+          {
+            "source": "full-pipeline",
+            "ms": 7
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "echPrimary",
+        "passed": true,
+        "ms": 7,
+        "stages": [
+          {
+            "source": "echPrimary",
+            "queryType": 65,
+            "ms": 7
+          }
+        ],
+        "answerTypes": [],
+        "echBytes": 71,
+        "colo": "FRA"
+      },
+      {
+        "name": "echSecondary",
+        "passed": true,
+        "ms": 8,
+        "stages": [
+          {
+            "source": "echSecondary",
+            "queryType": 65,
+            "ms": 8
+          }
+        ],
+        "answerTypes": [],
+        "echBytes": 71,
+        "colo": "FRA"
+      },
+      {
+        "name": "production-a",
+        "passed": true,
+        "ms": 421,
+        "stages": [
+          {
+            "source": "full-pipeline",
+            "ms": 421
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          1,
+          1
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "production-facebook",
+        "passed": true,
+        "ms": 17,
+        "stages": [
+          {
+            "source": "full-pipeline",
+            "ms": 17
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "production-instagram",
+        "passed": true,
+        "ms": 17,
+        "stages": [
+          {
+            "source": "full-pipeline",
+            "ms": 17
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "colo": "FRA"
+      },
+      {
+        "name": "production-x",
+        "passed": true,
+        "ms": 27,
+        "stages": [
+          {
+            "source": "full-pipeline",
+            "ms": 27
+          }
+        ],
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ],
+        "colo": "FRA"
+      }
+    ],
+    "earlierFailures": [
+      {
+        "number": 5,
+        "name": "ecs",
+        "error": "INVALID_CONFIG"
+      },
+      {
+        "number": 12,
+        "name": "ecs",
+        "error": "INVALID_CONFIG"
+      }
+    ],
+    "failureExplanation": "ECS harness rule was initially an array instead of the required order/rules object. An attempted quoting-sensitive replacement did not apply, so the first explicit rerun repeated INVALID_CONFIG. Verified harness correction then passed. Production transport code was unchanged.",
+    "deploymentSetupFailure": "First temporary upload exceeded the per-binding size limit when private test configuration was one 24kB binding. It was split into bounded bindings before deployment; no production settings were affected.",
+    "connectionNote": "Outer cloud-check HTTP invocations used the existing proxy. Inside Workers the tested DNS transport was direct native TCP to Google, with no DoH/UDP/TLS fallback.",
+    "checkVersion": "484d988f-0244-42cd-a5a8-5835a6820584"
+  },
+  "productionDirect": {
+    "proxy": "disabled explicitly; proxy env removed",
+    "passed": 1,
+    "attempted": 3,
+    "requests": [
+      {
+        "name": "example.com",
+        "type": 1,
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "proxyUsed": 0,
+        "totalSeconds": 8.006399
+      },
+      {
+        "name": "www.facebook.com",
+        "type": 65,
+        "status": "failed",
+        "curlExit": 28,
+        "http": 0,
+        "proxyUsed": 0,
+        "totalSeconds": 8.011465
+      },
+      {
+        "name": "x.com",
+        "type": 65,
+        "status": "passed",
+        "curlExit": 0,
+        "http": 200,
+        "proxyUsed": 0,
+        "totalSeconds": 2.888345,
+        "rcode": 0,
+        "answerTypes": [
+          65
+        ]
+      }
+    ]
+  },
+  "cleanup": {
+    "temporaryWorkerDeleted": true,
+    "apiStatus": 200
+  },
+  "limitations": [
+    "Cloud test times are a small FRA sample, not direct-client latency or comparative DoH/TCP benchmarking.",
+    "Production direct smoke had two connection timeouts before any HTTP response; one padded X HTTPS query returned a valid answer.",
+    "No browser navigation rerun, no proof that site HTTP 403 or challenges are resolved.",
+    "Three upstream names share the same Google address; secondary is not independent provider redundancy.",
+    "Plain TCP has no TLS encryption or server certificate authentication.",
+    "Local behavioral test suites not run; cloud checks plus local syntax/build/typecheck only."
+  ],
+  "hashes": {
+    "src/doh/upstreams.js": "ace28152734f005ab0ffd742ba433dc00ee5960d73db58064dfed8415cafdf61",
+    "src/doh/dns-stream.js": "e1fbd1d49ebd196d4e6f6da28f698aa1d0b6a6e82d63d1c189421832d76ba5a3",
+    "src/doh/upstream.js": "115d8818d89f767d279aaaed3dac2e57dc3df32757679367a1dce88f8172920f",
+    "src/doh/cache.js": "b5f04c7bec478dd1415e69f689ac43d54f92dd850f4f504ffc91071a81545c8c",
+    "test/cloud/google-tcp/main.js": "e636fae9720966d738855d127b4383592ac1fa89c28f31635d463026d56719fd"
+  }
+}
