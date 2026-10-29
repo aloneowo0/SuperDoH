@@ -1,0 +1,319 @@
+{
+  "date": "2026-10-29",
+  "feature": "accept-ecs-scope-longer-than-source",
+  "productionBeforeVersion": "c0963b2d-eec5-4851-a72b-e32104b3a2d5",
+  "direct": [
+    {
+      "name": "example.com",
+      "ecs": "normal-client-policy",
+      "http": 200,
+      "proxy": 0,
+      "rcode": 2,
+      "answerTypes": [],
+      "totalSeconds": 2.187391
+    },
+    {
+      "name": "example.com",
+      "ecs": "explicit-ipv6-zero-prefix",
+      "http": 200,
+      "proxy": 0,
+      "rcode": 0,
+      "answerTypes": [
+        1,
+        1
+      ],
+      "totalSeconds": 0.807742
+    },
+    {
+      "name": "x.com",
+      "ecs": "normal-client-policy",
+      "http": 200,
+      "proxy": 0,
+      "rcode": 0,
+      "answerTypes": [
+        1
+      ],
+      "totalSeconds": 1.971891
+    },
+    {
+      "name": "x.com",
+      "ecs": "explicit-ipv6-zero-prefix",
+      "http": 200,
+      "proxy": 0,
+      "rcode": 0,
+      "answerTypes": [
+        1,
+        1
+      ],
+      "totalSeconds": 1.924531
+    }
+  ],
+  "correlation": {
+    "matchedResponseRays": true,
+    "example": "UPSTREAM_INVALID in DNS_RULE_ENV_BASE rule 0 action 0 terminated",
+    "x": "UPSTREAM_INVALID in DNS_RULE_ENV_CF_ADDRESS rule 2 action 1 rolled_back_continue"
+  },
+  "cloud": {
+    "budget": 8,
+    "attempted": 8,
+    "transportFailures": [
+      {
+        "number": 1,
+        "name": "raw-ecs",
+        "exit": 28,
+        "http": 0
+      },
+      {
+        "number": 2,
+        "name": "raw-noecs",
+        "exit": 28,
+        "http": 0
+      }
+    ],
+    "beforeRaw": {
+      "name": "raw-ecs",
+      "colo": "FRA",
+      "clientFamily": 6,
+      "expectedEcs": {
+        "family": 6,
+        "source": 56,
+        "scope": 0
+      },
+      "actualEcs": {
+        "family": 6,
+        "source": 56,
+        "scope": 64
+      },
+      "ednsVersion": 0,
+      "rcode": 0,
+      "sameSubnet": true,
+      "passed": false,
+      "stage": "ecs",
+      "error": "UPSTREAM_INVALID",
+      "detail": "The DNS upstream response is invalid.",
+      "events": [],
+      "ms": 7
+    },
+    "beforeRegression": {
+      "passed": false,
+      "results": [
+        {
+          "name": "ipv4-source24-scope0",
+          "passed": true
+        },
+        {
+          "name": "ipv4-source24-scope24",
+          "passed": true
+        },
+        {
+          "name": "ipv4-source24-scope25",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        },
+        {
+          "name": "ipv4-source24-scope32",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        },
+        {
+          "name": "ipv6-source56-scope0",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope56",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope64",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        },
+        {
+          "name": "ipv6-source56-scope128",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        },
+        {
+          "name": "nonbyte-source17-scope24",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        },
+        {
+          "name": "reject-wrong-family",
+          "passed": true
+        },
+        {
+          "name": "reject-wrong-source",
+          "passed": true
+        },
+        {
+          "name": "reject-wrong-subnet",
+          "passed": true
+        },
+        {
+          "name": "reject-scope-outside-family",
+          "passed": true
+        },
+        {
+          "name": "pipeline-scope56-cache-and-sanitization",
+          "passed": true
+        },
+        {
+          "name": "pipeline-scope64-cache-and-sanitization",
+          "passed": false,
+          "error": "UPSTREAM_INVALID"
+        }
+      ]
+    },
+    "afterRegression": {
+      "passed": true,
+      "results": [
+        {
+          "name": "ipv4-source24-scope0",
+          "passed": true
+        },
+        {
+          "name": "ipv4-source24-scope24",
+          "passed": true
+        },
+        {
+          "name": "ipv4-source24-scope25",
+          "passed": true
+        },
+        {
+          "name": "ipv4-source24-scope32",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope0",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope56",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope64",
+          "passed": true
+        },
+        {
+          "name": "ipv6-source56-scope128",
+          "passed": true
+        },
+        {
+          "name": "nonbyte-source17-scope24",
+          "passed": true
+        },
+        {
+          "name": "reject-wrong-family",
+          "passed": true
+        },
+        {
+          "name": "reject-wrong-source",
+          "passed": true
+        },
+        {
+          "name": "reject-wrong-subnet",
+          "passed": true
+        },
+        {
+          "name": "reject-scope-outside-family",
+          "passed": true
+        },
+        {
+          "name": "pipeline-scope56-cache-and-sanitization",
+          "passed": true
+        },
+        {
+          "name": "pipeline-scope64-cache-and-sanitization",
+          "passed": true
+        }
+      ]
+    },
+    "afterRaw": {
+      "name": "raw-ecs",
+      "colo": "FRA",
+      "clientFamily": 6,
+      "expectedEcs": {
+        "family": 6,
+        "source": 56,
+        "scope": 0
+      },
+      "actualEcs": {
+        "family": 6,
+        "source": 56,
+        "scope": 64
+      },
+      "ednsVersion": 0,
+      "rcode": 0,
+      "sameSubnet": true,
+      "passed": true,
+      "events": [],
+      "ms": 9
+    },
+    "afterLiveRules": {
+      "passed": true,
+      "results": [
+        {
+          "domain": "example.com",
+          "type": 1,
+          "rcode": 0,
+          "answerTypes": [
+            1,
+            1
+          ],
+          "passed": true,
+          "events": [],
+          "ms": 14
+        },
+        {
+          "domain": "www.cloudflare.com",
+          "type": 65,
+          "rcode": 0,
+          "answerTypes": [
+            65
+          ],
+          "passed": true,
+          "events": [],
+          "ms": 76
+        },
+        {
+          "domain": "x.com",
+          "type": 65,
+          "rcode": 0,
+          "answerTypes": [
+            65
+          ],
+          "passed": true,
+          "events": [],
+          "ms": 16
+        },
+        {
+          "domain": "www.instagram.com",
+          "type": 65,
+          "rcode": 0,
+          "answerTypes": [
+            65
+          ],
+          "passed": true,
+          "events": [],
+          "ms": 15
+        }
+      ]
+    }
+  },
+  "validation": {
+    "typecheck": true,
+    "cloudChecks": 20,
+    "localBehavioralSuitesRun": false
+  },
+  "cleanup": {
+    "temporaryWorkerDeleted": true,
+    "deleteApiStatus": 200
+  },
+  "limitations": [
+    "First two outer direct connections failed before HTTP. Subsequent six outer invocations used the existing control-plane proxy; actual Google TCP and behavioral checks executed in Workers.",
+    "Candidate full rules replay the observed IPv6 identity privately; no browser navigation success is claimed.",
+    "Production publication is verified separately after dev push."
+  ]
+}

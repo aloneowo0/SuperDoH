@@ -4,6 +4,7 @@ import { createBudget } from '../../../src/doh/budget.js';
 import { loadLimits } from '../../../src/rules/limits.js';
 import { buildQuery, parseMessage, encodeMessage, setEdns, getEcs, getEdns, TYPES, FLAGS } from '../../../lib/dns-wasm/index.js';
 import parity, { suiteNames as paritySuites } from '../main-parity/main.js';
+import { scope } from '../ecs/scope.js';
 import { eligibility } from './eligibility.js';
 import { authorized, check, pad, ecs, cookie, unknown } from './common.js';
 
@@ -15,7 +16,7 @@ export default { async fetch(request, env) {
     url.pathname = `/${env.KEY}/${parts[3]}`;
     return parity.fetch(new Request(url, request), { ...env, FIXTURE: env.FIXTURE + '/parity' });
   }
-  if (!['eligibility', 'hits', 'isolation', 'sources', 'bypass', 'pipeline', 'ecs'].includes(suite)) return new Response('', { status: 404 });
+  if (!['eligibility', 'hits', 'isolation', 'sources', 'bypass', 'pipeline', 'ecs', 'ecs-scope'].includes(suite)) return new Response('', { status: 404 });
   const results = [], proofs = [];
   const test = async (name, fn) => {
     try { await fn(); results.push({ name, passed: true }); }
@@ -44,6 +45,7 @@ export default { async fetch(request, env) {
       proofs.push({ name, calls, expected, sameReceipt: receipt(first) === receipt(second), colo: request.cf?.colo ?? null });
     } finally { budget.dispose(); }
   };
+  if (suite === 'ecs-scope') await scope(test);
   if (suite === 'eligibility') await eligibility(test);
   if (suite === 'hits') {
     for (const [name, options] of [['chrome80', [pad()]], ['empty', [pad([])]], ['nonzero', [pad([42, 255])]], ['ecs-first', [ecs(), pad()]], ['padding-first', [pad(), ecs()]]]) await test(name, () => transportTest(name, options, 1));

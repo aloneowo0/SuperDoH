@@ -146,7 +146,8 @@ export function checkEcsResponse(response, query) {
   if (actual) {
     if (!expected) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response is invalid.');
     const a = ip(actual.address), e = ip(expected.address);
-    if (a.family !== e.family || actual.source_prefix !== expected.source_prefix || actual.scope_prefix > actual.source_prefix) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response is invalid.');
+    // RFC 7871 permits scope > source for this client; cache reuse rejects it separately.
+    if (a.family !== e.family || actual.source_prefix !== expected.source_prefix || actual.scope_prefix > a.family) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response is invalid.');
     const mask = BigInt(a.family - actual.source_prefix);
     if ((a.bits >> mask) !== (e.bits >> mask)) throw new RuleError('UPSTREAM_INVALID', 'The DNS upstream response is invalid.');
   }

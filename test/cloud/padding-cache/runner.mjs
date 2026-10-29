@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { setTimeout } from 'node:timers/promises';
 import { setGlobalProxyFromEnv } from 'node:http';
 setGlobalProxyFromEnv();
-const counts = { eligibility: 18, hits: 8, isolation: 7, sources: 1, bypass: 10, pipeline: 5, ecs: 3, 'parity/core': 9,
+const counts = { 'ecs-scope': 15, eligibility: 18, hits: 8, isolation: 7, sources: 1, bypass: 10, pipeline: 5, ecs: 3, 'parity/core': 9,
   ...Object.fromEntries(Array.from({ length: 6 }, (_, i) => ['parity/map' + i, i === 5 ? 4 : 5])),
   'parity/ipv6': 5, 'parity/https0': 3, 'parity/https1': 3, 'parity/https2': 3, 'parity/https3': 3, 'parity/fallback': 6, 'parity/addresses': 6, 'parity/controls': 5 };
 const selected = process.argv.slice(2);

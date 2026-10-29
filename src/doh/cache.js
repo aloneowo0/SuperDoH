@@ -24,6 +24,7 @@ export function reusable(message, isQuery = false) {
       const bytes = Uint8Array.from(option.data);
       if (bytes.length < 4) return false;
       const family = bytes[0] * 256 + bytes[1], source = bytes[2], scope = bytes[3];
+      // A valid response scope longer than source must not be shared under this query key.
       if (![1, 2].includes(family) || source > (family === 1 ? 32 : 128) || scope > source || (isQuery && scope !== 0) || bytes.length !== 4 + Math.ceil(source / 8)) return false;
       if (source % 8 && (bytes[bytes.length - 1] & ((1 << (8 - source % 8)) - 1))) return false;
     }
